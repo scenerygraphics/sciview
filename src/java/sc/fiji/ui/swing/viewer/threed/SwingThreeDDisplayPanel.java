@@ -85,7 +85,7 @@ public class SwingThreeDDisplayPanel extends JPanel implements ThreeDDisplayPane
 		imagePane = new JPanel();
 		imagePane.setLayout(new MigLayout("ins 0,wrap 1", "fill,grow",
 			"[fill,grow|]"));
-		imagePane.add(displayViewer.getCanvas());
+		//imagePane.add(displayViewer.getCanvas()); // DISABLED
 
 		final int colorBarHeight = 8;
 		colorBar = new SwingColorBar(colorBarHeight);
@@ -137,7 +137,7 @@ public class SwingThreeDDisplayPanel extends JPanel implements ThreeDDisplayPane
 		updateColorBar(0);
 		sliderPanel.setVisible(sliderPanel.getComponentCount() > 0);
 		doInitialSizing();
-		displayViewer.getCanvas().rebuild();
+		//displayViewer.getCanvas().rebuild(); // DISABLED
 		revalidate();
 
 		final int newSliderHeight = sliderPanel.getPreferredSize().height;
@@ -164,7 +164,7 @@ public class SwingThreeDDisplayPanel extends JPanel implements ThreeDDisplayPane
 		final DatasetView view = threeDDisplayService.getActiveDatasetView(display);
 		if (view == null || view.getProjector() == null) return; // no active dataset
 		view.getProjector().map();
-		displayViewer.getCanvas().update();
+		// displayViewer.getCanvas().update(); // DISABLED
 	}
 
 	// -- Event handlers --
@@ -174,7 +174,7 @@ public class SwingThreeDDisplayPanel extends JPanel implements ThreeDDisplayPane
 		if (event.getDisplay() != getDisplay()) return;
 		final AxisType axis = event.getAxis();
 		updateAxis(axis);
-		eventService.publish(new DelayedPositionEvent(display, axis));
+		//eventService.publish(new DelayedPositionEvent(display, axis)); // DISABLED
 	}
 
 	@EventHandler
@@ -255,12 +255,12 @@ public class SwingThreeDDisplayPanel extends JPanel implements ThreeDDisplayPane
 	private void doInitialSizing() {
 		final double scale = findFullyVisibleScale();
 		final double zoomLevel = display.getCanvas().getBestZoomLevel(scale);
-		final ImageCanvas canvas = displayViewer.getDisplay().getCanvas();
-		canvas.setZoomAndCenter(zoomLevel);
-		if (!initialScaleCalculated) {
-			canvas.setInitialScale(canvas.getZoomFactor());
-			initialScaleCalculated = true;
-		}
+		//final ImageCanvas canvas = displayViewer.getDisplay().getCanvas(); // DISABLED
+		//canvas.setZoomAndCenter(zoomLevel);// DISABLED
+		//if (!initialScaleCalculated) {// DISABLED
+		//	canvas.setInitialScale(canvas.getZoomFactor());// DISABLED
+		//	initialScaleCalculated = true;// DISABLED
+		//}// DISABLED
 	}
 
 	// NB - BDZ would like to streamline this to avoid extra display updates.
@@ -279,8 +279,8 @@ public class SwingThreeDDisplayPanel extends JPanel implements ThreeDDisplayPane
 	}
 
 	private double findFullyVisibleScale() {
-		final JHotDrawImageCanvas canvas = displayViewer.getCanvas();
-		final Dimension canvasSize = canvas.getPreferredSize();
+		//final JHotDrawImageCanvas canvas = displayViewer.getCanvas(); // DISABLED
+		//final Dimension canvasSize = canvas.getPreferredSize(); // DISABLED
 		final Rectangle deskBounds = StaticSwingUtils.getWorkSpaceBounds();
 
 		// calc height variables
@@ -299,21 +299,23 @@ public class SwingThreeDDisplayPanel extends JPanel implements ThreeDDisplayPane
 		final int maxViewWidth = deskBounds.width - extraSpace;
 
 		// is canvas bigger than largest viewable panel?
-		if ((canvasSize.width > maxViewWidth) ||
-			(canvasSize.height > maxViewHeight))
-		{
+
+		// DISABLED if below
+		//if ((canvasSize.width > maxViewWidth) ||
+		//	(canvasSize.height > maxViewHeight))
+		//{
 			// yes it is
 			// so calc best scale that brings whole image into max viewable panel size
 
-			final double canvasAspect = 1.0 * canvasSize.width / canvasSize.height;
-			final double viewAspect = 1.0 * maxViewWidth / maxViewHeight;
-			if (canvasAspect < viewAspect) {
+		//	final double canvasAspect = 1.0 * canvasSize.width / canvasSize.height;
+		//	final double viewAspect = 1.0 * maxViewWidth / maxViewHeight;
+		//	if (canvasAspect < viewAspect) {
 				// image height the issue
-				return 1.0 * maxViewHeight / canvasSize.height;
-			}
+		//		return 1.0 * maxViewHeight / canvasSize.height;
+		//	}
 			// else image width the issue
-			return 1.0 * maxViewWidth / canvasSize.width;
-		}
+		//	return 1.0 * maxViewWidth / canvasSize.width;
+		//}
 
 		// else canvas fits on screen as is
 		return 1;

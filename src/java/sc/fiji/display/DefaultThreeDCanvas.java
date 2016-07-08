@@ -139,7 +139,7 @@ public class DefaultThreeDCanvas implements ThreeDCanvas {
 		viewportSize.x = width;
 		viewportSize.y = height;
 		if (eventService != null) {
-			eventService.publish(new ViewportResizeEvent(this));
+			//eventService.publish(new ViewportResizeEvent(this)); // DISABLED
 		}
 	}
 
@@ -173,7 +173,7 @@ public class DefaultThreeDCanvas implements ThreeDCanvas {
 	@Override
 	public void setCursor(final MouseCursor cursor) {
 		mouseCursor = cursor;
-		if (eventService != null) eventService.publish(new MouseCursorEvent(this));
+		//if (eventService != null) eventService.publish(new MouseCursorEvent(this)); // DISABLED
 	}
 
 	// -- Pannable methods --
@@ -370,7 +370,7 @@ public class DefaultThreeDCanvas implements ThreeDCanvas {
 	// -- Helper methods --
 
 	private void publishPanZoomEvent() {
-		if (eventService != null) eventService.publish(new PanZoomEvent(this));
+		//if (eventService != null) eventService.publish(new PanZoomEvent(this)); // DISABLED
 	}
 
 	// -- Helper methods --

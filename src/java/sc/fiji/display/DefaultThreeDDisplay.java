@@ -142,7 +142,7 @@ public class DefaultThreeDDisplay extends AbstractDisplay<DataView> implements
 
 		// notify interested parties of the change
 		if (eventService != null) {
-			eventService.publish(new AxisActivatedEvent(this, activeAxis));
+			//eventService.publish(new AxisActivatedEvent(this, activeAxis)); // DISABLED
 		}
 	}
 
@@ -444,7 +444,7 @@ public class DefaultThreeDDisplay extends AbstractDisplay<DataView> implements
 		if (eventService != null) {
 			// NB: BDZ changed from publish() to publishLater(). This fixes bug #1234.
 			// We may want to change order of events to allow publish() instead.
-			eventService.publishLater(new AxisPositionEvent(this, axis));
+			//eventService.publishLater(new AxisPositionEvent(this, axis)); // DISABLED
 		}
 	}
 
