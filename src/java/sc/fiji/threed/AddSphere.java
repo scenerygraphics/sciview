@@ -6,12 +6,12 @@ import org.scijava.command.Command;
 import sc.fiji.ThreeDViewer;
 
 @Plugin(type = Command.class, 
-		menuPath = "ThreeDViewer>Add>Box")
-public class AddBox  implements Command {
+		menuPath = "ThreeDViewer>Add>Sphere")
+public class AddSphere  implements Command {
 		
 	@Override
 	public void run() {
-		ThreeDViewer.addBox();
+		ThreeDViewer.addSphere();
 	}
 
 }

@@ -11,8 +11,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+import org.scijava.nativelib.NativeLoader;
 
 import com.jogamp.opengl.GLAutoDrawable;
 import scenery.*;
@@ -26,8 +28,14 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 		super("ThreeDViewer", 800, 600);
 	}
 	
-    public ThreeDViewer(String applicationName, int windowWidth, int windowHeight) {
+    public ThreeDViewer(String applicationName, int windowWidth, int windowHeight) {    	
         super(applicationName, windowWidth, windowHeight);
+        try {
+			NativeLoader.loadLibrary("jinput-osx");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     public void init(GLAutoDrawable pDrawable) {
@@ -78,25 +86,36 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         final Box box = new Box(new GLVector(1.0f, 1.0f, 1.0f) );
         box.setMaterial( boxmaterial );
         box.setPosition( new GLVector(0.0f, 0.0f, 0.0f) );
-
-        Thread rotator = new Thread(){
-            public void run() {
-                while (true) {
-                    box.getRotation().rotateByAngleY(0.01f);
-                    box.setNeedsUpdate(true);
-
-                    try {
-                        Thread.sleep(20);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        };
-        
-        rotator.start();
         
         viewer.getScene().addChild(box);
+    }
+    
+    public static void addSphere() {
+    	Material material = new Material();
+    	material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
+    	material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
+    	material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
+        //boxmaterial.getTextures().put("diffuse", SceneViewer3D.class.getResource("textures/helix.png").getFile() );
+
+        final Sphere sphere = new Sphere( 1.0f, 20 );
+        sphere.setMaterial( material );
+        sphere.setPosition( new GLVector(0.0f, 0.0f, 0.0f) );        
+        
+        viewer.getScene().addChild(sphere);
+    }
+    
+    public static void addPointLight() {
+    	Material material = new Material();
+    	material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
+    	material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
+    	material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
+        //boxmaterial.getTextures().put("diffuse", SceneViewer3D.class.getResource("textures/helix.png").getFile() );
+
+        final PointLight light = new PointLight();
+        light.setMaterial( material );
+        light.setPosition( new GLVector(0.0f, 0.0f, 0.0f) );        
+        
+        viewer.getScene().addChild(light);
     }
     
     public static void writeSCMesh( String filename, Mesh scMesh ) {
@@ -160,6 +179,14 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         scMesh.setPosition( new GLVector(1.0f, 1.0f, 1.0f) );        
         	            	
     	viewer.getScene().addChild( scMesh );
+    }
+    
+    public static ThreeDViewer getViewer() {
+    	return viewer;
+    }
+    
+    public static ArrayList<Node> getSceneNodes() {
+    	return viewer.getScene().getChildren();
     }
     
 	public static void main(String... args)
