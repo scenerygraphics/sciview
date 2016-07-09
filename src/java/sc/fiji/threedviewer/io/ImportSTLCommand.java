@@ -9,7 +9,7 @@ import org.scijava.command.Command;
 import sc.fiji.ThreeDViewer;
 
 @Plugin(type = Command.class, 
-		menuPath = "ThreeDViewer>Import STL")
+		menuPath = "ThreeDViewer>Import>STL")
 public class ImportSTLCommand  implements Command {
 	
 	@Parameter

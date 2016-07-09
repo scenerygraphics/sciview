@@ -12,7 +12,14 @@ public class RotateView  implements Command {
 		
 	@Override
 	public void run() {
-		Thread rotator = new Thread(){
+		Thread rotator = ThreeDViewer.getAnimationThread();
+		if( rotator != null && ( 
+				rotator.getState() == Thread.State.RUNNABLE ||
+				rotator.getState() == Thread.State.WAITING ) ) {
+			rotator = null;
+		}
+		
+		rotator = new Thread(){
 		    public void run() {
 		        while (true) {
 		        	for( Node node : ThreeDViewer.getSceneNodes() ) {
@@ -31,6 +38,8 @@ public class RotateView  implements Command {
 		    }
 		};        
 		rotator.start();
+		
+		ThreeDViewer.setAnimationThread( rotator );
 	}
 
 }

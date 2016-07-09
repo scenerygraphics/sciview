@@ -1,10 +1,15 @@
 package sc.fiji;
 
 import cleargl.*;
+import ij.ImagePlus;
 import net.imagej.ops.geom.geom3d.mesh.TriangularFacet;
 import net.imagej.ops.geom.geom3d.mesh.Vertex;
 import sc.fiji.display.process.MeshConverter;
 
+import java.awt.AWTException;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -23,6 +28,8 @@ import scenery.rendermodules.opengl.DeferredLightingRenderer;
 public class ThreeDViewer extends SceneryDefaultApplication {
 	
 	static ThreeDViewer viewer;
+	static Thread animationThread;
+	static Mesh aMesh = null;
 	
 	public ThreeDViewer() {
 		super("ThreeDViewer", 800, 600);
@@ -161,6 +168,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         scMesh.setMaterial( material );
         scMesh.setPosition( new GLVector(0.0f, 0.0f, 0.0f) );
         
+        aMesh = scMesh;
+        
     	viewer.getScene().addChild( scMesh );
     }
     
@@ -177,8 +186,41 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     	
         scMesh.setMaterial( material );
         scMesh.setPosition( new GLVector(1.0f, 1.0f, 1.0f) );        
+        
+        aMesh = scMesh;
         	            	
     	viewer.getScene().addChild( scMesh );
+    }
+    
+    public static Mesh getMostRecentMesh() {
+    	return aMesh;
+    }
+    
+    public static Thread getAnimationThread() {
+    	return ThreeDViewer.animationThread;
+    }
+    
+    public static void setAnimationThread( Thread newAnimator ) {
+    	ThreeDViewer.animationThread = newAnimator;
+    }
+    
+    public static void takeScreenshot() {
+    	float[] bounds = viewer.getGlWindow().getBounds();
+    	try {
+			Robot robot = new Robot();
+			
+			BufferedImage screenshot = robot.createScreenCapture( new Rectangle( (int)bounds[0], (int)bounds[1], (int)bounds[2], (int)bounds[3] ) );
+			
+			ImagePlus imp = new ImagePlus( "ThreeDViewer_Screenshot", screenshot );
+			
+			imp.show();
+			
+		} catch (AWTException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+    	//viewer.getGlWindow().
     }
     
     public static ThreeDViewer getViewer() {

@@ -21,7 +21,7 @@ import sc.fiji.ThreeDViewer;
 import sc.fiji.display.process.MeshConverter;
 
 @Plugin(type = Command.class, 
-		menuPath = "ThreeDViewer>Import Isosurface")
+		menuPath = "ThreeDViewer>Import>Isosurface")
 public class ImportIsosurface  implements Command {
 	
 	@Parameter
