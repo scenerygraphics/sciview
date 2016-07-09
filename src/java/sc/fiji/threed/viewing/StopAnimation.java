@@ -14,6 +14,7 @@ public class StopAnimation  implements Command {
 	public void run() {
 		Thread animator = ThreeDViewer.getAnimationThread();
 		if( animator != null ) {
+			animator.stop();
 			ThreeDViewer.setAnimationThread( null );
 		}
 

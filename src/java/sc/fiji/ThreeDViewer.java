@@ -174,9 +174,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     }
     
     public static void addMesh( net.imagej.ops.geom.geom3d.mesh.Mesh mesh ) {
-    	MeshConverter converter = new MeshConverter( mesh );
-    	
-    	Mesh scMesh = converter.getSceneryMesh();
+    	Mesh scMesh = MeshConverter.getSceneryMesh( mesh );
     	
     	Material material = new Material();
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
@@ -216,11 +214,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 			imp.show();
 			
 		} catch (AWTException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-    	
-    	//viewer.getGlWindow().
     }
     
     public static ThreeDViewer getViewer() {
@@ -235,5 +230,6 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 	{		
 		ThreeDViewer viewer = new ThreeDViewer( "ThreeDViewer", 800, 600 );
         viewer.main();
+        // Add extra keybinds like mouse wheel zoom here=
 	}
 }
