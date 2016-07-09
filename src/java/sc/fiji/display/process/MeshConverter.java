@@ -64,7 +64,7 @@ public class MeshConverter {
 		return null;
 	}
 	
-	public static Mesh getOpsMesh( scenery.Mesh scMesh ) {		
+	/*public static Mesh getOpsMesh( scenery.Mesh scMesh ) {		
 		
 		if( scMesh != null ) {
 			DefaultMesh mesh = new DefaultMesh();
@@ -89,6 +89,6 @@ public class MeshConverter {
 		}
 		
 		return null;		
-	}
+	}*/
 
 }

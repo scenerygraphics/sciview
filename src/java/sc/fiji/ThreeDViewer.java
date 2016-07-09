@@ -227,8 +227,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     }
     
 	public static void main(String... args)
-	{		
-		ThreeDViewer viewer = new ThreeDViewer( "ThreeDViewer", 800, 600 );
+	{	
+		ThreeDViewer viewer = new ThreeDViewer( "ThreeDViewer", 800, 600 );		
         viewer.main();
         // Add extra keybinds like mouse wheel zoom here=
 	}

@@ -1,8 +1,25 @@
 package sc.fiji;
 
+import java.io.File;
+import java.net.URL;
+
 import org.scijava.command.Command;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Plugin;
+import org.scijava.ui.swing.script.FileFunctions;
+
+import org.scijava.util.FileUtils;
+
+/*
+import org.scijava.util.FileUtils;
+import net.imagej.ui.swing.script.FileFunctions
+
+//print( FileUtils.findResources( ".*jinput.*", null, null ) )
+
+//print( FileFunctions.findResources( "/(lib)?jinput.*", "/" ) )
+
+print( FileFunctions.findResources( ".*jinput.*", "/" ).values() )
+	*/
 
 @Plugin(type = Command.class, 
 		menu = {@Menu(label = "ThreeDViewer"),
@@ -10,6 +27,21 @@ import org.scijava.plugin.Plugin;
 public class ThreeDViewerLauncher implements Command {
 	@Override
 	public void run() {	
+		String extraPath;
+				
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("windows")){
+        	extraPath = ":" + Thread.currentThread().getContextClassLoader().getResource( "jinput-raw.dll" ).getPath().split("!")[0];
+        }else if (os.contains("linux") || os.contains("freebsd") || os.contains("sunos")){
+        	extraPath = ":" + Thread.currentThread().getContextClassLoader().getResource( "libjinput-linux.so" ).getPath().split("!")[0];
+        }else if (os.contains("mac os x")){
+        	extraPath = ":" + Thread.currentThread().getContextClassLoader().getResource( "libjinput-osx.jnilib" ).getPath().split("!")[0];
+        }else{
+            throw new UnsupportedOperationException("The specified platform: "+os+" is not supported.");
+        }
+
+		System.setProperty("java.class.path", System.getProperty("java.class.path") + extraPath ); 
+		
 		ThreeDViewer.viewer = new ThreeDViewer( "ThreeDViewer", 800, 600 );
 		ThreeDViewer.viewer.main();
 	}
