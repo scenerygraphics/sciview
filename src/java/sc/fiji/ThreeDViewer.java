@@ -188,9 +188,15 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         aMesh = scMesh;
         	            	
     	viewer.getScene().addChild( scMesh );
+    	
+		System.err.println( "Number of nodes in scene: " + ThreeDViewer.getSceneNodes().size() );
     }
     
-    public static Mesh getMostRecentMesh() {
+    public static void removeMesh( Mesh scMesh ) {
+    	viewer.getScene().removeChild( scMesh );
+    }
+    
+    public static Mesh getSelectedMesh() {
     	return aMesh;
     }
     

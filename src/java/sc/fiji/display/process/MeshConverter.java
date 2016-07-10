@@ -64,16 +64,15 @@ public class MeshConverter {
 		return null;
 	}
 	
-	/*public static Mesh getOpsMesh( scenery.Mesh scMesh ) {		
+	public static Mesh getOpsMesh( scenery.Mesh scMesh ) {		
 		
 		if( scMesh != null ) {
 			DefaultMesh mesh = new DefaultMesh();
 			
 			float[] scVertices = scMesh.getVertices();
 			float[] scNormals = scMesh.getNormals();
-			int[] scFaces = scMesh.getIndices();
-						
-			for( int facetIdx = 0; facetIdx < scFaces.length/3; facetIdx++ ) {
+									
+			for( int facetIdx = 0; facetIdx < scVertices.length/9; facetIdx++ ) {
 				int offset = facetIdx * 9;
 				Vertex[] triVerts = new Vertex[3];
 				for( int vIdx = 0; vIdx < 3; vIdx++ ) {
@@ -84,11 +83,11 @@ public class MeshConverter {
 				tri.setNormal( new Vector3D( scNormals[offset], scNormals[offset+1], scNormals[offset+2] ) );
 				mesh.addFace(tri);
 			}
-			
+						
 			return mesh;
 		}
 		
 		return null;		
-	}*/
+	}
 
 }

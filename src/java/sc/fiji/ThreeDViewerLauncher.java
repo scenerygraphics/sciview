@@ -10,17 +10,6 @@ import org.scijava.ui.swing.script.FileFunctions;
 
 import org.scijava.util.FileUtils;
 
-/*
-import org.scijava.util.FileUtils;
-import net.imagej.ui.swing.script.FileFunctions
-
-//print( FileUtils.findResources( ".*jinput.*", null, null ) )
-
-//print( FileFunctions.findResources( "/(lib)?jinput.*", "/" ) )
-
-print( FileFunctions.findResources( ".*jinput.*", "/" ).values() )
-	*/
-
 @Plugin(type = Command.class, 
 		menu = {@Menu(label = "ThreeDViewer"),
 				@Menu(label = "Launch", weight = 3) })

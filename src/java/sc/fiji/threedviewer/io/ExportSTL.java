@@ -25,7 +25,7 @@ public class ExportSTL  implements Command {
 
 	@Override
 	public void run() {
-		Mesh mesh = ThreeDViewer.getMostRecentMesh();				
+		Mesh mesh = ThreeDViewer.getSelectedMesh();				
 		
 		if ( mesh != null )
 		{
