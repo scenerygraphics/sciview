@@ -45,7 +45,7 @@ public class MeshConverter {
 			for( Facet facet : facets ) {
 				TriangularFacet tri = (TriangularFacet) facet;
 				vertices = tri.getVertices();
-				Vector3D normal = tri.getNormal();
+				Vertex normal = tri.getNormal();
 				for( Vertex v : vertices ) {
 					for( int d = 0; d < numDimension; d++ ) {
 						scVertices[count] = (float) v.getDoublePosition(d);
@@ -80,7 +80,7 @@ public class MeshConverter {
 					triVerts[vIdx] = new Vertex( scVertices[offset+voffset], scVertices[offset+voffset+1], scVertices[offset+voffset+2] );
 				}				
 				TriangularFacet tri = new TriangularFacet( triVerts[0], triVerts[1], triVerts[2] );
-				tri.setNormal( new Vector3D( scNormals[offset], scNormals[offset+1], scNormals[offset+2] ) );
+				tri.setNormal( new Vertex( scNormals[offset], scNormals[offset+1], scNormals[offset+2] ) );
 				mesh.addFace(tri);
 			}
 						

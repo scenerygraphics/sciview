@@ -2,8 +2,10 @@ package sc.fiji;
 
 import cleargl.*;
 import ij.ImagePlus;
+import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
 import net.imagej.ops.geom.geom3d.mesh.TriangularFacet;
 import net.imagej.ops.geom.geom3d.mesh.Vertex;
+import net.imglib2.RealLocalizable;
 import sc.fiji.display.process.MeshConverter;
 
 import java.awt.AWTException;
@@ -23,6 +25,8 @@ import org.scijava.nativelib.NativeLoader;
 
 import com.jogamp.opengl.GLAutoDrawable;
 import scenery.*;
+import scenery.controls.behaviours.TargetArcBallCameraControl;
+import scenery.controls.behaviours.FPSCameraControl;
 import scenery.rendermodules.opengl.DeferredLightingRenderer;
 
 public class ThreeDViewer extends SceneryDefaultApplication {
@@ -84,20 +88,42 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     }
 
     public static void addBox() {
+    	addBox( new GLVector(0.0f, 0.0f, 0.0f) );    	
+    }
+    
+    public static void addBox( GLVector position ) {
+    	addBox( position, new GLVector(0.0f, 0.0f, 0.0f) );    	
+    }
+    
+    public static void addBox( GLVector position, GLVector size ) {
     	Material boxmaterial = new Material();
         boxmaterial.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
-        boxmaterial.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
+        //boxmaterial.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
+        boxmaterial.setDiffuse( new GLVector(0.7f, 0.7f, 0.7f) );
         boxmaterial.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
+        boxmaterial.setDoubleSided(true);
         //boxmaterial.getTextures().put("diffuse", SceneViewer3D.class.getResource("textures/helix.png").getFile() );
 
-        final Box box = new Box(new GLVector(1.0f, 1.0f, 1.0f) );
+        final Box box = new Box( size );
         box.setMaterial( boxmaterial );
-        box.setPosition( new GLVector(0.0f, 0.0f, 0.0f) );
+        box.setPosition( position );
         
         viewer.getScene().addChild(box);
     }
     
+    /*public static void boundingBox( GLVector position, GLVector size ) {
+    	float thickness = 0.5f;
+    	GLVector botRight = position;
+    	GLVector topLeft = position.plus( size );
+    	
+    	addBox( position, new GLVector(size.x(), size.y(), thickness) );    	
+    }*/
+    
     public static void addSphere() {
+    	addSphere( new GLVector(0.0f, 0.0f, 0.0f) );
+    }
+    
+    public static void addSphere( GLVector position ) {
     	Material material = new Material();
     	material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
     	material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
@@ -106,7 +132,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 
         final Sphere sphere = new Sphere( 1.0f, 20 );
         sphere.setMaterial( material );
-        sphere.setPosition( new GLVector(0.0f, 0.0f, 0.0f) );        
+        sphere.setPosition( position );        
         
         viewer.getScene().addChild(sphere);
     }
@@ -222,6 +248,47 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 		} catch (AWTException e) {
 			e.printStackTrace();
 		}
+    }
+    
+    public static void enableArcBallControl() {
+    	GLVector target;
+    	if( getSelectedMesh() == null ) {
+    		target = new GLVector( 0, 0, 0 );
+    	} else {
+    		net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( getSelectedMesh() );
+    		RealLocalizable center = ((DefaultMesh) opsMesh).getCenter();
+    		target = new GLVector( center.getFloatPosition(0), center.getFloatPosition(1), center.getFloatPosition(2) );
+    		
+    		addSphere( target );
+    		
+    		//System.out.println( "Center: " + center.getFloatPosition(0) + ", " + center.getFloatPosition(1) + ", " + center.getFloatPosition(2) );
+    		//target = new GLVector( 0, 0, 0 );
+    	}
+    	
+    	TargetArcBallCameraControl targetArcball = new TargetArcBallCameraControl("mouse_control", viewer.getScene().findObserver(), 
+    			viewer.getGlWindow().getWidth(), viewer.getGlWindow().getHeight(), target);
+    	targetArcball.setMaximumDistance(Float.MAX_VALUE);
+    	viewer.getInputHandler().addBehaviour("mouse_control", targetArcball);
+    	viewer.getInputHandler().addBehaviour("scroll_arcball", targetArcball);
+    	viewer.getInputHandler().addKeyBinding("scroll_arcball", "scroll");
+    }
+    
+    public static void enableFPSControl() {
+    	FPSCameraControl fpsControl = new FPSCameraControl("mouse_control", viewer.getScene().findObserver(), 
+    			viewer.getGlWindow().getWidth(), viewer.getGlWindow().getHeight());
+    			
+    	viewer.getInputHandler().addBehaviour("mouse_control", fpsControl);
+    	viewer.getInputHandler().removeBehaviour("scroll_arcball");
+    	//GLMatrix m = new GLMatrix();
+    	//m.mult(pGLMatrix);
+        
+    }
+    
+    public static void drawBoundingBox() {
+    	if( getSelectedMesh() != null ) {
+    		net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( getSelectedMesh() );
+    		
+    	}
     }
     
     public static ThreeDViewer getViewer() {
