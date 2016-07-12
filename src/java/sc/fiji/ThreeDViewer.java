@@ -190,43 +190,21 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     	Mesh scMesh = new Mesh();
     	scMesh.readFromSTL( filename );
     	
-    	// For centering the mesh
-    	//net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );
-    	//((DefaultMesh) opsMesh).centerMesh();
-    	//scMesh = MeshConverter.getSceneryMesh( opsMesh );
-    	
-    	Material material = new Material();
-        material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
-        material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
-        material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
-    	
-        scMesh.setMaterial( material );
-        scMesh.setPosition( new GLVector(0.0f, 0.0f, 0.0f) );
-        
-        aMesh = scMesh;
-        
-    	viewer.getScene().addChild( scMesh );
+    	net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );
+    	((DefaultMesh) opsMesh).centerMesh();
+    	scMesh = MeshConverter.getSceneryMesh( opsMesh );
+
+    	addMesh( opsMesh );
     }
     
     public static void addObj( String filename ) {    	
     	Mesh scMesh = new Mesh();
     	scMesh.readFromOBJ( filename, false );// Could check if there is a MTL to use to toggle flag
     	
-    	//net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );    	
-    	//((DefaultMesh) opsMesh).centerMesh();    	
-    	//scMesh = MeshConverter.getSceneryMesh( opsMesh );
-    	
-    	Material material = new Material();
-        material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
-        material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
-        material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
-    	
-        scMesh.setMaterial( material );
-        scMesh.setPosition( new GLVector(0.0f, 0.0f, 0.0f) );
-        
-        aMesh = scMesh;
-        
-    	viewer.getScene().addChild( scMesh );
+    	net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );    	
+    	((DefaultMesh) opsMesh).centerMesh();    	
+
+    	addMesh( opsMesh );
     }
     
     public static void addMesh( net.imagej.ops.geom.geom3d.mesh.Mesh mesh ) {
