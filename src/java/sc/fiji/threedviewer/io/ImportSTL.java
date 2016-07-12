@@ -10,7 +10,7 @@ import sc.fiji.ThreeDViewer;
 
 @Plugin(type = Command.class, 
 		menuPath = "ThreeDViewer>Import>STL")
-public class ImportSTLCommand  implements Command {
+public class ImportSTL  implements Command {
 	
 	@Parameter
 	private File stlFile;

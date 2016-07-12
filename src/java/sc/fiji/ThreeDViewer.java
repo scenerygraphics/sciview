@@ -3,9 +3,11 @@ package sc.fiji;
 import cleargl.*;
 import ij.ImagePlus;
 import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
+import net.imagej.ops.geom.geom3d.mesh.Facet;
 import net.imagej.ops.geom.geom3d.mesh.TriangularFacet;
 import net.imagej.ops.geom.geom3d.mesh.Vertex;
 import net.imglib2.RealLocalizable;
+import net.imglib2.RealPoint;
 import sc.fiji.display.process.MeshConverter;
 
 import java.awt.AWTException;
@@ -19,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.scijava.nativelib.NativeLoader;
@@ -120,17 +123,18 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     }*/
     
     public static void addSphere() {
-    	addSphere( new GLVector(0.0f, 0.0f, 0.0f) );
+    	addSphere( new GLVector(0.0f, 0.0f, 0.0f), 1 );
     }
     
-    public static void addSphere( GLVector position ) {
+    public static void addSphere( GLVector position, float radius ) {
     	Material material = new Material();
     	material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
-    	material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
+    	//material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
+    	material.setDiffuse( new GLVector(1.0f, 0.0f, 0.0f) );
     	material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
         //boxmaterial.getTextures().put("diffuse", SceneViewer3D.class.getResource("textures/helix.png").getFile() );
 
-        final Sphere sphere = new Sphere( 1.0f, 20 );
+        final Sphere sphere = new Sphere( radius, 20 );
         sphere.setMaterial( material );
         sphere.setPosition( position );        
         
@@ -185,6 +189,32 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     public static void addSTL( String filename ) {    	
     	Mesh scMesh = new Mesh();
     	scMesh.readFromSTL( filename );
+    	
+    	// For centering the mesh
+    	//net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );
+    	//((DefaultMesh) opsMesh).centerMesh();
+    	//scMesh = MeshConverter.getSceneryMesh( opsMesh );
+    	
+    	Material material = new Material();
+        material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
+        material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
+        material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
+    	
+        scMesh.setMaterial( material );
+        scMesh.setPosition( new GLVector(0.0f, 0.0f, 0.0f) );
+        
+        aMesh = scMesh;
+        
+    	viewer.getScene().addChild( scMesh );
+    }
+    
+    public static void addObj( String filename ) {    	
+    	Mesh scMesh = new Mesh();
+    	scMesh.readFromOBJ( filename, false );// Could check if there is a MTL to use to toggle flag
+    	
+    	//net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );    	
+    	//((DefaultMesh) opsMesh).centerMesh();    	
+    	//scMesh = MeshConverter.getSceneryMesh( opsMesh );
     	
     	Material material = new Material();
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
@@ -259,7 +289,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     		RealLocalizable center = ((DefaultMesh) opsMesh).getCenter();
     		target = new GLVector( center.getFloatPosition(0), center.getFloatPosition(1), center.getFloatPosition(2) );
     		
-    		addSphere( target );
+    		//addSphere( target );
     		
     		//System.out.println( "Center: " + center.getFloatPosition(0) + ", " + center.getFloatPosition(1) + ", " + center.getFloatPosition(2) );
     		//target = new GLVector( 0, 0, 0 );

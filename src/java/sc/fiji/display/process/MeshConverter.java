@@ -20,14 +20,6 @@ import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
  * 		   Kyle Harrington, University of Idaho
  */
 public class MeshConverter {
-	//private Mesh mesh;
-	//scenery.Mesh scMesh;
-
-	//public MeshConverter(Mesh mesh)
-	//{
-	//    this.mesh = mesh;
-	//}
-
 	public static scenery.Mesh getSceneryMesh(Mesh mesh)
 	{
 		scenery.Mesh scMesh;
