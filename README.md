@@ -12,6 +12,6 @@ See: https://github.com/fiji/3D_Viewer/issues/19
 
 ## Contributors
 
-Kyle Harrington (University of Idaho)
-Ulrik Guenther (MPI-CBG)
-Robert Haase (MPI-CBG)
+Kyle Harrington (University of Idaho)  
+Ulrik Guenther (MPI-CBG)  
+Robert Haase (MPI-CBG)  
