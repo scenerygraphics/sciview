@@ -7,9 +7,11 @@ import cleargl.GLVector;
 import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
 import net.imagej.ops.geom.geom3d.mesh.Mesh;
 import net.imglib2.RealLocalizable;
+import net.imglib2.RealPoint;
 
 import org.scijava.command.Command;
 
+import sc.fiji.MeshUtils;
 import sc.fiji.ThreeDViewer;
 import sc.fiji.display.process.MeshConverter;
 
@@ -23,8 +25,14 @@ public class AddSphere  implements Command {
 	@Override
 	public void run() {
 		//GLVector pos = ThreeDViewer.getSelectedMesh().getPosition();
-		Mesh mesh = MeshConverter.getOpsMesh( ThreeDViewer.getSelectedMesh() );
-		RealLocalizable center = ((DefaultMesh) mesh).getCenter();
+		RealLocalizable center;
+		if( ThreeDViewer.getSelectedMesh() != null ) {
+			Mesh mesh = MeshConverter.getOpsMesh( ThreeDViewer.getSelectedMesh() );
+			center = MeshUtils.getCenter( mesh );
+		} else {
+			center = new RealPoint( 0, 0, 0 );
+		}
+		//RealLocalizable center = ((DefaultMesh) mesh).getCenter();
 		GLVector pos = new GLVector( center.getFloatPosition(0), center.getFloatPosition(1), center.getFloatPosition(2) );
 		ThreeDViewer.addSphere( pos, radius );
 	}

@@ -21,11 +21,10 @@ import org.scijava.ui.behaviour.ClickBehaviour;
 import com.jogamp.opengl.GLAutoDrawable;
 import scenery.*;
 import scenery.controls.behaviours.TargetArcBallCameraControl;
-import scenery.controls.ClearGLInputHandler;
 import scenery.controls.behaviours.FPSCameraControl;
 import scenery.rendermodules.opengl.DeferredLightingRenderer;
 
-public class ThreeDViewer extends SceneryDefaultApplication {
+public class ThreeDViewer extends SceneryDefaultJPanelApplication {
 	
 	static ThreeDViewer viewer;
 	static Thread animationThread;
