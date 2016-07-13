@@ -3,11 +3,7 @@ package sc.fiji;
 import cleargl.*;
 import ij.ImagePlus;
 import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
-import net.imagej.ops.geom.geom3d.mesh.Facet;
-import net.imagej.ops.geom.geom3d.mesh.TriangularFacet;
-import net.imagej.ops.geom.geom3d.mesh.Vertex;
 import net.imglib2.RealLocalizable;
-import net.imglib2.RealPoint;
 import sc.fiji.display.process.MeshConverter;
 
 import java.awt.AWTException;
@@ -19,16 +15,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
-import org.scijava.nativelib.NativeLoader;
+import org.scijava.ui.behaviour.ClickBehaviour;
 
 import com.jogamp.opengl.GLAutoDrawable;
 import scenery.*;
 import scenery.controls.behaviours.TargetArcBallCameraControl;
+import scenery.controls.ClearGLInputHandler;
 import scenery.controls.behaviours.FPSCameraControl;
 import scenery.rendermodules.opengl.DeferredLightingRenderer;
 
@@ -43,13 +36,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 	}
 	
     public ThreeDViewer(String applicationName, int windowWidth, int windowHeight) {    	
-        super(applicationName, windowWidth, windowHeight);
-        try {
-			NativeLoader.loadLibrary("jinput-osx");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        super(applicationName, windowWidth, windowHeight);        
     }
 
     public void init(GLAutoDrawable pDrawable) {
@@ -73,21 +60,23 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         cam.setProjection( new GLMatrix().setPerspectiveProjectionMatrix( (float) (70.0f / 180.0f * java.lang.Math.PI), 1024f / 1024f, 0.1f, 1000.0f) );
         cam.setActive( true );
         getScene().addChild(cam);
-        
-//        Box hullbox = new Box(new GLVector(50.0f, 50.0f, 50.0f));
-//        Material hullboxMaterial = new Material();
-//        hullboxMaterial.setDoubleSided(true);
-//        hullbox.setMaterial(hullboxMaterial);
-        
-//        getScene().addChild(hullbox);
 
         getDeferredRenderer().initializeScene(getScene());
 
-        //getRepl().addAccessibleObject(getScene());
-        //getRepl().addAccessibleObject(getDeferredRenderer());
-        //getRepl().showConsoleWindow();
-
         viewer = this;
+    }
+    
+    public void inputSetup() {
+    	//setInputHandler((ClearGLInputHandler) viewer.getHub().get(SceneryElement.INPUT));
+    	ClickBehaviour objectSelector = new ClickBehaviour() {
+
+            public void click( int x, int y ) {
+            	System.out.println( "Clicked at x=" + x + " y=" + y );                
+            }
+        };
+        viewer.getInputHandler().useDefaultBindings("");
+        viewer.getInputHandler().addBehaviour("object_selection_mode", objectSelector);
+
     }
 
     public static void addBox() {
@@ -99,10 +88,13 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     }
     
     public static void addBox( GLVector position, GLVector size ) {
+    	addBox( position, size, new GLVector( 0.9f, 0.9f, 0.9f ) ); 
+    }
+    
+    public static void addBox( GLVector position, GLVector size, GLVector color ) {
     	Material boxmaterial = new Material();
         boxmaterial.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
-        //boxmaterial.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
-        boxmaterial.setDiffuse( new GLVector(0.7f, 0.7f, 0.7f) );
+        boxmaterial.setDiffuse( color );
         boxmaterial.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
         boxmaterial.setDoubleSided(true);
         //boxmaterial.getTextures().put("diffuse", SceneViewer3D.class.getResource("textures/helix.png").getFile() );
@@ -113,24 +105,19 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         
         viewer.getScene().addChild(box);
     }
-    
-    /*public static void boundingBox( GLVector position, GLVector size ) {
-    	float thickness = 0.5f;
-    	GLVector botRight = position;
-    	GLVector topLeft = position.plus( size );
-    	
-    	addBox( position, new GLVector(size.x(), size.y(), thickness) );    	
-    }*/
-    
+
     public static void addSphere() {
     	addSphere( new GLVector(0.0f, 0.0f, 0.0f), 1 );
     }
     
     public static void addSphere( GLVector position, float radius ) {
+    	addSphere( position, radius, new GLVector( 0.9f, 0.9f, 0.9f ) );
+    }
+    
+    public static void addSphere( GLVector position, float radius, GLVector color ) {
     	Material material = new Material();
     	material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
-    	//material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
-    	material.setDiffuse( new GLVector(1.0f, 0.0f, 0.0f) );
+    	material.setDiffuse( color );
     	material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
         //boxmaterial.getTextures().put("diffuse", SceneViewer3D.class.getResource("textures/helix.png").getFile() );
 
@@ -177,10 +164,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 			out.write( "endsolid vcg\n".getBytes() );
 	        out.close();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
         
@@ -266,11 +251,6 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     		net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( getSelectedMesh() );
     		RealLocalizable center = ((DefaultMesh) opsMesh).getCenter();
     		target = new GLVector( center.getFloatPosition(0), center.getFloatPosition(1), center.getFloatPosition(2) );
-    		
-    		//addSphere( target );
-    		
-    		//System.out.println( "Center: " + center.getFloatPosition(0) + ", " + center.getFloatPosition(1) + ", " + center.getFloatPosition(2) );
-    		//target = new GLVector( 0, 0, 0 );
     	}
     	
     	TargetArcBallCameraControl targetArcball = new TargetArcBallCameraControl("mouse_control", viewer.getScene().findObserver(), 
@@ -287,16 +267,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     			
     	viewer.getInputHandler().addBehaviour("mouse_control", fpsControl);
     	viewer.getInputHandler().removeBehaviour("scroll_arcball");
-    	//GLMatrix m = new GLMatrix();
-    	//m.mult(pGLMatrix);
-        
-    }
-    
-    public static void drawBoundingBox() {
-    	if( getSelectedMesh() != null ) {
-    		net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( getSelectedMesh() );
-    		
-    	}
+
     }
     
     public static ThreeDViewer getViewer() {
@@ -311,6 +282,5 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 	{	
 		ThreeDViewer viewer = new ThreeDViewer( "ThreeDViewer", 800, 600 );		
         viewer.main();
-        // Add extra keybinds like mouse wheel zoom here=
 	}
 }

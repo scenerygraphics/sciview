@@ -3,7 +3,6 @@ package sc.fiji.threed.ops;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import cleargl.GLVector;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
 import net.imglib2.RandomAccessibleInterval;

@@ -1,13 +1,8 @@
 package sc.fiji.display.process;
 
-import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import cleargl.GLVector;
 import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
-import net.imagej.ops.geom.geom3d.mesh.Mesh;
-import net.imglib2.RealLocalizable;
-
 import org.scijava.command.Command;
 
 import sc.fiji.ThreeDViewer;

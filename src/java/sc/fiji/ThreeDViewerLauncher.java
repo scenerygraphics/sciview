@@ -1,14 +1,8 @@
 package sc.fiji;
 
-import java.io.File;
-import java.net.URL;
-
 import org.scijava.command.Command;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Plugin;
-import org.scijava.ui.swing.script.FileFunctions;
-
-import org.scijava.util.FileUtils;
 
 @Plugin(type = Command.class, 
 		menu = {@Menu(label = "ThreeDViewer"),
@@ -32,6 +26,12 @@ public class ThreeDViewerLauncher implements Command {
 		System.setProperty("java.class.path", System.getProperty("java.class.path") + extraPath ); 
 		
 		ThreeDViewer.viewer = new ThreeDViewer( "ThreeDViewer", 800, 600 );
-		ThreeDViewer.viewer.main();
+		
+		Thread mainThread = new Thread() {
+			public void run() {
+				ThreeDViewer.viewer.main();
+			}
+		};
+		mainThread.start();		
 	}
 }
