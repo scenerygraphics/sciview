@@ -24,7 +24,7 @@ import scenery.controls.behaviours.TargetArcBallCameraControl;
 import scenery.controls.behaviours.FPSCameraControl;
 import scenery.rendermodules.opengl.DeferredLightingRenderer;
 
-public class ThreeDViewer extends SceneryDefaultJPanelApplication {
+public class ThreeDViewer extends SceneryDefaultApplication {
 	
 	static ThreeDViewer viewer;
 	static Thread animationThread;
