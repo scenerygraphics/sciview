@@ -27,11 +27,6 @@ public class ThreeDViewerLauncher implements Command {
 		
 		ThreeDViewer.viewer = new ThreeDViewer( "ThreeDViewer", 800, 600 );
 		
-		Thread mainThread = new Thread() {
-			public void run() {
-				ThreeDViewer.viewer.main();
-			}
-		};
-		mainThread.start();		
+		ThreeDViewer.viewer.main();	
 	}
 }

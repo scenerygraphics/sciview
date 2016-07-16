@@ -20,14 +20,16 @@ import org.scijava.ui.behaviour.ClickBehaviour;
 
 import com.jogamp.opengl.GLAutoDrawable;
 import scenery.*;
-import scenery.controls.behaviours.TargetArcBallCameraControl;
+import scenery.controls.behaviours.ArcballCameraControl;
 import scenery.controls.behaviours.FPSCameraControl;
 import scenery.rendermodules.opengl.DeferredLightingRenderer;
 
 public class ThreeDViewer extends SceneryDefaultApplication {
 	
 	static ThreeDViewer viewer;
+	
 	static Thread animationThread;
+	
 	static Mesh aMesh = null;
 	
 	public ThreeDViewer() {
@@ -64,7 +66,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 
         viewer = this;
     }
-    
+
     public void inputSetup() {
     	//setInputHandler((ClearGLInputHandler) viewer.getHub().get(SceneryElement.INPUT));
     	ClickBehaviour objectSelector = new ClickBehaviour() {
@@ -78,7 +80,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 
     }
 
-    public static void addBox() {
+    public static void addBox() {    	
     	addBox( new GLVector(0.0f, 0.0f, 0.0f) );    	
     }
     
@@ -86,11 +88,14 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     	addBox( position, new GLVector(0.0f, 0.0f, 0.0f) );    	
     }
     
+    
     public static void addBox( GLVector position, GLVector size ) {
     	addBox( position, size, new GLVector( 0.9f, 0.9f, 0.9f ) ); 
     }
     
     public static void addBox( GLVector position, GLVector size, GLVector color ) {
+    	System.err.println( "Adding box" );
+    	
     	Material boxmaterial = new Material();
         boxmaterial.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
         boxmaterial.setDiffuse( color );
@@ -102,7 +107,11 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         box.setMaterial( boxmaterial );
         box.setPosition( position );
         
+        System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
+        
         viewer.getScene().addChild(box);
+        
+        System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
     }
 
     public static void addSphere() {
@@ -175,8 +184,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     	scMesh.readFromSTL( filename );
     	
     	net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );
-    	((DefaultMesh) opsMesh).centerMesh();
-    	scMesh = MeshConverter.getSceneryMesh( opsMesh );
+    	//((DefaultMesh) opsMesh).centerMesh();
 
     	addMesh( opsMesh );
     }
@@ -186,7 +194,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     	scMesh.readFromOBJ( filename, false );// Could check if there is a MTL to use to toggle flag
     	
     	net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );    	
-    	((DefaultMesh) opsMesh).centerMesh();    	
+    	//((DefaultMesh) opsMesh).centerMesh();    	
 
     	addMesh( opsMesh );
     }
@@ -228,6 +236,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     
     public static void takeScreenshot() {
     	float[] bounds = viewer.getGlWindow().getBounds();
+    	// if we're in a jpanel, this isn't the way to get bounds
     	try {
 			Robot robot = new Robot();
 			
@@ -252,7 +261,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     		target = new GLVector( center.getFloatPosition(0), center.getFloatPosition(1), center.getFloatPosition(2) );
     	}
     	
-    	TargetArcBallCameraControl targetArcball = new TargetArcBallCameraControl("mouse_control", viewer.getScene().findObserver(), 
+    	ArcballCameraControl targetArcball = new ArcballCameraControl("mouse_control", viewer.getScene().findObserver(), 
     			viewer.getGlWindow().getWidth(), viewer.getGlWindow().getHeight(), target);
     	targetArcball.setMaximumDistance(Float.MAX_VALUE);
     	viewer.getInputHandler().addBehaviour("mouse_control", targetArcball);

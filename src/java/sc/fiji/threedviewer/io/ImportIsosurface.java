@@ -1,7 +1,5 @@
 package sc.fiji.threedviewer.io;
 
-import java.io.File;
-
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
@@ -9,8 +7,6 @@ import net.imagej.ImgPlus;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
 import net.imagej.ops.geom.geom3d.mesh.Mesh;
-import net.imagej.ops.geom.geom3d.mesh.Vertex;
-import net.imglib2.RealLocalizable;
 import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -18,7 +14,6 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.scijava.command.Command;
 
 import sc.fiji.ThreeDViewer;
-import sc.fiji.display.process.MeshConverter;
 
 @Plugin(type = Command.class, 
 		menuPath = "ThreeDViewer>Import>Isosurface")
