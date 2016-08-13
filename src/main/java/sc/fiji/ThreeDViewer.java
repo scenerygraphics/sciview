@@ -303,4 +303,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 		ThreeDViewer viewer = new ThreeDViewer( "ThreeDViewer", 800, 600 );		
         viewer.main();
 	}
+
+	public static void deleteSelectedMesh() {
+		viewer.getScene().removeChild( ThreeDViewer.getSelectedMesh() );
+	}
 }
