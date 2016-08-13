@@ -267,7 +267,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     		target = new GLVector( 0, 0, 0 );
     	} else {
     		net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( getSelectedMesh() );
-    		RealLocalizable center = ((DefaultMesh) opsMesh).getCenter();
+    		RealLocalizable center = MeshUtils.getCenter(opsMesh);
     		target = new GLVector( center.getFloatPosition(0), center.getFloatPosition(1), center.getFloatPosition(2) );
     	}
     	
