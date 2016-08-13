@@ -16,6 +16,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import org.scijava.ui.behaviour.ClickBehaviour;
 
 import com.jogamp.opengl.GLAutoDrawable;
@@ -27,10 +29,10 @@ import scenery.rendermodules.opengl.DeferredLightingRenderer;
 public class ThreeDViewer extends SceneryDefaultApplication {
 	
 	static ThreeDViewer viewer;
-	
 	static Thread animationThread;
-	
 	static Mesh aMesh = null;
+	
+	static Boolean defaultArcBall = true;
 	
 	public ThreeDViewer() {
 		super("ThreeDViewer", 800, 600);
@@ -63,7 +65,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         getScene().addChild(cam);
 
         getDeferredRenderer().initializeScene(getScene());
-
+        
         viewer = this;
     }
 
@@ -78,6 +80,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         viewer.getInputHandler().useDefaultBindings("");
         viewer.getInputHandler().addBehaviour("object_selection_mode", objectSelector);
 
+        enableArcBallControl();
+        
     }
 
     public static void addBox() {    	
@@ -107,11 +111,13 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         box.setMaterial( boxmaterial );
         box.setPosition( position );
         
-        System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
+        //System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
         
         viewer.getScene().addChild(box);
         
-        System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
+        if( defaultArcBall ) enableArcBallControl();
+        
+        //System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
     }
 
     public static void addSphere() {
@@ -134,6 +140,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         sphere.setPosition( position );        
         
         viewer.getScene().addChild(sphere);
+        
+        if( defaultArcBall ) enableArcBallControl();
     }
     
     public static void addPointLight() {
@@ -215,7 +223,9 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         	            	
     	viewer.getScene().addChild( scMesh );
     	
-		System.err.println( "Number of nodes in scene: " + ThreeDViewer.getSceneNodes().size() );
+    	if( defaultArcBall ) enableArcBallControl();
+    	
+//		System.err.println( "Number of nodes in scene: " + ThreeDViewer.getSceneNodes().size() );
     }
     
     public static void removeMesh( Mesh scMesh ) {
@@ -282,8 +292,10 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     	return viewer;
     }
     
-    public static ArrayList<Node> getSceneNodes() {
-    	return viewer.getScene().getChildren();
+    public static Node[] getSceneNodes() {
+    	CopyOnWriteArrayList<Node> children = viewer.getScene().getChildren();
+    	
+    	return viewer.getScene().getChildren().toArray( new Node[children.size()] );
     }
     
 	public static void main(String... args)
