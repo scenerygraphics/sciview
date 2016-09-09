@@ -1,17 +1,10 @@
 package sc.fiji.display.process;
 
-import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
-import net.imagej.ops.geom.geom3d.mesh.Facet;
-import net.imagej.ops.geom.geom3d.mesh.Mesh;
-import net.imagej.ops.geom.geom3d.mesh.TriangularFacet;
-import net.imagej.ops.geom.geom3d.mesh.Vertex;
-import net.imglib2.RealLocalizable;
-import net.imglib2.RealRandomAccessibleRealInterval;
-
-import java.util.ArrayList;
-import java.util.List;
-
+import net.imagej.ops.geom.geom3d.mesh.*;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+import scenery.BufferUtils;
+
+import java.util.List;
 
 /**
  * ImageJ OPs Mesh to Scenery Mesh converter
@@ -49,8 +42,8 @@ public class MeshConverter {
 				}
 			}
 
-			scMesh.setVertices( scVertices );
-			scMesh.setNormals( scNormals );
+			scMesh.setVertices(BufferUtils.BufferUtils.allocateFloatAndPut(scVertices) );
+			scMesh.setNormals( BufferUtils.BufferUtils.allocateFloatAndPut(scNormals) );
 			return scMesh;
 		}
 		return null;
@@ -61,8 +54,8 @@ public class MeshConverter {
 		if( scMesh != null ) {
 			DefaultMesh mesh = new DefaultMesh();
 			
-			float[] scVertices = scMesh.getVertices();
-			float[] scNormals = scMesh.getNormals();
+			float[] scVertices = scMesh.getVertices().array();
+			float[] scNormals = scMesh.getNormals().array();
 									
 			for( int facetIdx = 0; facetIdx < scVertices.length/9; facetIdx++ ) {
 				int offset = facetIdx * 9;
