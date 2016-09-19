@@ -118,6 +118,7 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-ops</artifactId>
+			<version>0.33.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
