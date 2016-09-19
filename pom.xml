@@ -37,6 +37,19 @@
 							<goal>install-file</goal>
 						</goals>
 					</execution>
+					<execution>
+					        <phase>initialize</phase>
+						<goals>
+						        <goal>install-file</goal>
+						</goals>
+						<configuration>
+						        <file>scenery/jars/openvr-0.1.jar</file>
+							<groupId>scenery</groupId>
+							<artifactId>openvr</artifactId>
+							<version>0.1</version>
+							<packaging>jar</packaging>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 		</plugins>
@@ -137,4 +150,8 @@
 			<artifactId>imglib2-ij</artifactId>
 		</dependency>
 	</dependencies>
+
+
+
+	
 </project>
