@@ -13,7 +13,7 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then /usr/libexec/java_home -V; fi
 
 install:
-  - git clone -n git@github.com:ClearVolume/scenery.git --depth 1
+  - git clone -n https://github.com/ClearVolume/scenery.git --depth 1
   - cd scenery/
   - git checkout HEAD jars/openvr-0.1.jar
 
