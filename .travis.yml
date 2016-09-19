@@ -16,6 +16,7 @@ install:
   - git clone -n https://github.com/ClearVolume/scenery.git --depth 1
   - cd scenery/
   - git checkout HEAD jars/openvr-0.1.jar
+  - cd ..
 
 script:
   - mvn jar
