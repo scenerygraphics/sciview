@@ -19,7 +19,7 @@ install:
   - cd ..
 
 script:
-  - mvn jar
+  - mvn build
     
 #after_success:
 #    - gradle uploadArchives -Plocal=true
