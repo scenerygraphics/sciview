@@ -13,7 +13,8 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then /usr/libexec/java_home -V; fi
 
 script:
-  - mvn jar  
+  - mvn jar
+  x
     
 #after_success:
 #    - gradle uploadArchives -Plocal=true
