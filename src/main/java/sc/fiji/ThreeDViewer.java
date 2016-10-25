@@ -190,8 +190,6 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 			
 			FloatBuffer normalsFB = scMesh.getNormals();
 			FloatBuffer verticesFB = scMesh.getVertices();
-			normalsFB.flip();
-			verticesFB.flip();
 			
 			while( verticesFB.hasRemaining() && normalsFB.hasRemaining() ) {
 				out.write( ("facet normal " + normalsFB.get() + " " + normalsFB.get() + " " + normalsFB.get() + "\n").getBytes() );
