@@ -11,7 +11,7 @@ import sc.fiji.ThreeDViewer;
 import scenery.Mesh;
 
 @Plugin(type = Command.class, 
-		menuPath = "ThreeDViewer>Export>STL")
+		menuPath = "ThreeDViewer>Export>STL_", label = "Export STL")
 public class ExportSTL  implements Command {
 	
 	//@Parameter

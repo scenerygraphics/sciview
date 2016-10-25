@@ -4,6 +4,7 @@ import net.imagej.ops.geom.geom3d.mesh.*;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import scenery.BufferUtils;
 
+import java.nio.FloatBuffer;
 import java.util.List;
 
 /**
@@ -54,21 +55,35 @@ public class MeshConverter {
 		if( scMesh != null ) {
 			DefaultMesh mesh = new DefaultMesh();
 			
-			float[] scVertices = scMesh.getVertices().array();
-			float[] scNormals = scMesh.getNormals().array();
-									
-			for( int facetIdx = 0; facetIdx < scVertices.length/9; facetIdx++ ) {
-				int offset = facetIdx * 9;
+			//float[] scVertices = scMesh.getVertices().array();
+			
+			FloatBuffer verts = scMesh.getVertices();
+			
+			System.out.println( "Converting mesh a: initial has remaining: " + verts.hasRemaining() );
+			
+			// Flip if it looks like we're on the wrong side
+			if( ! verts.hasRemaining() )
+				verts.flip();
+						
+			//float[] scNormals = scMesh.getNormals().array();
+			
+			// rewrite to use scMesh.getVertices().get(index)									
+			//for( int facetIdx = 0; facetIdx < scVertices.length/9; facetIdx++ ) {
+			
+			//System.out.println( "Converting mesh b: initial has remaining: " + verts.hasRemaining() );
+			
+			while( verts.hasRemaining() ) {
+
 				Vertex[] triVerts = new Vertex[3];
-				for( int vIdx = 0; vIdx < 3; vIdx++ ) {
-					int voffset = vIdx * 3;
-					triVerts[vIdx] = new Vertex( scVertices[offset+voffset], scVertices[offset+voffset+1], scVertices[offset+voffset+2] );
-				}				
+				for( int vIdx = 0; vIdx < 3; vIdx++ ) 
+					triVerts[vIdx] = new Vertex( verts.get(), verts.get(), verts.get() );
 				TriangularFacet tri = new TriangularFacet( triVerts[0], triVerts[1], triVerts[2] );
 				//tri.setNormal( new Vector3D( scNormals[offset], scNormals[offset+1], scNormals[offset+2] ) );
-				tri.getNormal();// Just do this to trigger a computeNormal and hope that it makes the right normal (^.-)
+				//tri.getNormal();// Just do this to trigger a computeNormal and hope that it makes the right normal (^.-)				
 				mesh.addFace(tri);
 			}
+			
+			verts.flip();
 						
 			return mesh;
 		}
