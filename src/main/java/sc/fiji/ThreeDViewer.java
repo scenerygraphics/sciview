@@ -4,13 +4,15 @@ import cleargl.GLMatrix;
 import cleargl.GLVector;
 import com.jogamp.opengl.GLAutoDrawable;
 import ij.ImagePlus;
+import net.imagej.ImageJ;
 import net.imglib2.RealLocalizable;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import sc.fiji.display.process.MeshConverter;
 import scenery.*;
 import scenery.controls.behaviours.ArcballCameraControl;
 import scenery.controls.behaviours.FPSCameraControl;
-import scenery.rendermodules.opengl.DeferredLightingRenderer;
+import scenery.backends.Renderer;
+import scenery.backends.opengl.DeferredLightingRenderer;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -34,10 +36,10 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         super(applicationName, windowWidth, windowHeight);        
     }
 
-    public void init(GLAutoDrawable pDrawable) {
+    public void init() {
 
-        setDeferredRenderer( new DeferredLightingRenderer( pDrawable.getGL().getGL4(), getGlWindow().getWidth(), getGlWindow().getHeight() ) );
-        getHub().add(SceneryElement.RENDERER, getDeferredRenderer());
+    	setRenderer( Renderer.Companion.createRenderer( getApplicationName(), getScene(), 512, 512));
+        getHub().add(SceneryElement.RENDERER, getRenderer());
 
         PointLight[] lights = new PointLight[2];
 
@@ -55,8 +57,6 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         cam.setProjection( new GLMatrix().setPerspectiveProjectionMatrix( (float) (70.0f / 180.0f * java.lang.Math.PI), 1024f / 1024f, 0.1f, 2000.0f) );
         cam.setActive( true );
         getScene().addChild(cam);
-
-        getDeferredRenderer().initializeScene(getScene());
         
         viewer = this;
     }
@@ -274,7 +274,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     }
     
     public static void takeScreenshot() {
-    	float[] bounds = viewer.getGlWindow().getBounds();
+    	
+    	float[] bounds = viewer.getRenderer().getWindow().getClearglWindow().getBounds();
     	// if we're in a jpanel, this isn't the way to get bounds
     	try {
 			Robot robot = new Robot();
@@ -301,7 +302,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     	}
     	
     	ArcballCameraControl targetArcball = new ArcballCameraControl("mouse_control", viewer.getScene().findObserver(), 
-    			viewer.getGlWindow().getWidth(), viewer.getGlWindow().getHeight(), target);
+    			viewer.getRenderer().getWindow().getClearglWindow().getWidth(), 
+    			viewer.getRenderer().getWindow().getClearglWindow().getHeight(), target);
     	targetArcball.setMaximumDistance(Float.MAX_VALUE);
     	viewer.getInputHandler().addBehaviour("mouse_control", targetArcball);
     	viewer.getInputHandler().addBehaviour("scroll_arcball", targetArcball);
@@ -310,7 +312,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     
     public static void enableFPSControl() {
     	FPSCameraControl fpsControl = new FPSCameraControl("mouse_control", viewer.getScene().findObserver(), 
-    			viewer.getGlWindow().getWidth(), viewer.getGlWindow().getHeight());
+    			viewer.getRenderer().getWindow().getClearglWindow().getWidth(), 
+    			viewer.getRenderer().getWindow().getClearglWindow().getHeight());
     			
     	viewer.getInputHandler().addBehaviour("mouse_control", fpsControl);
     	viewer.getInputHandler().removeBehaviour("scroll_arcball");
@@ -327,13 +330,16 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     	return viewer.getScene().getChildren().toArray( new Node[children.size()] );
     }
     
-	public static void main(String... args)
-	{	
-		ThreeDViewer viewer = new ThreeDViewer( "ThreeDViewer", 800, 600 );		
-        viewer.main();
-	}
-
 	public static void deleteSelectedMesh() {
 		viewer.getScene().removeChild( ThreeDViewer.getSelectedMesh() );
+	}
+    
+	public static void main(String... args)
+	{	
+		ImageJ ij = new ImageJ();
+		ij.ui().showUI();
+
+		ThreeDViewer viewer = new ThreeDViewer( "ThreeDViewer", 800, 600 );		
+        viewer.main();
 	}
 }
