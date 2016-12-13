@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ $TRAVIS_BRANCH == 'master' ]]
+if [[ $TRAVIS_BRANCH == 'master' ]] && [[ "$TRAVIS_OS_NAME" == "linux" ]]
 then
    mvn deploy --settings settings.xml
    curl -O http://downloads.imagej.net/fiji/latest/fiji-nojre.zip
