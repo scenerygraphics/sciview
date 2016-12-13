@@ -12,7 +12,6 @@ import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
 import org.scijava.util.ColorRGB;
 import org.scijava.widget.NumberWidget;
-import sc.fiji.ThreeDViewer;
 
 import java.util.ArrayList;
 

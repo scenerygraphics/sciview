@@ -1,4 +1,4 @@
-package sc.fiji;
+package sc.fiji.threed;
 
 import cleargl.GLMatrix;
 import cleargl.GLVector;
@@ -6,8 +6,10 @@ import com.jogamp.opengl.GLAutoDrawable;
 import ij.ImagePlus;
 import net.imagej.ImageJ;
 import net.imglib2.RealLocalizable;
+import sc.fiji.threed.process.MeshConverter;
+
 import org.scijava.ui.behaviour.ClickBehaviour;
-import sc.fiji.display.process.MeshConverter;
+
 import scenery.*;
 import scenery.controls.behaviours.ArcballCameraControl;
 import scenery.controls.behaviours.FPSCameraControl;

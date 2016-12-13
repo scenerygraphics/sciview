@@ -12,3 +12,4 @@ then
    chmod a+x upload-site-simple.sh
    ./upload-site-simple.sh ThreeDViewer ThreeDViewer
 fi
+# update force pristine

@@ -1,4 +1,4 @@
-package sc.fiji;
+package sc.fiji.threed;
 
 import org.scijava.command.Command;
 import org.scijava.plugin.Menu;

@@ -8,12 +8,9 @@ import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
 import net.imagej.ops.geom.geom3d.mesh.Mesh;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
+import sc.fiji.threed.process.MeshConverter;
 
 import org.scijava.command.Command;
-
-import sc.fiji.MeshUtils;
-import sc.fiji.ThreeDViewer;
-import sc.fiji.display.process.MeshConverter;
 
 @Plugin(type = Command.class, 
 		menuPath = "ThreeDViewer>Add>Sphere")
