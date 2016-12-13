@@ -2,9 +2,9 @@ package sc.fiji.threed.edit;
 
 import org.scijava.plugin.Plugin;
 
-import org.scijava.command.Command;
+import sc.fiji.threed.ThreeDViewer;
 
-import sc.fiji.ThreeDViewer;
+import org.scijava.command.Command;
 
 @Plugin(type = Command.class, 
 		menuPath = "ThreeDViewer>Edit>Delete Node")

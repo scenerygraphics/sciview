@@ -1,4 +1,4 @@
-package sc.fiji;
+package sc.fiji.threed;
 
 import net.imagej.ops.geom.geom3d.mesh.Facet;
 import net.imagej.ops.geom.geom3d.mesh.Mesh;

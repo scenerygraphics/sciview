@@ -5,9 +5,11 @@ import java.io.File;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.FileWidget;
+
+import sc.fiji.threed.ThreeDViewer;
+
 import org.scijava.command.Command;
 
-import sc.fiji.ThreeDViewer;
 import scenery.Mesh;
 
 @Plugin(type = Command.class, 

@@ -13,10 +13,9 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import sc.fiji.threed.ThreeDViewer;
 
 import org.scijava.command.Command;
-
-import sc.fiji.ThreeDViewer;
 
 @Plugin(type = Command.class, 
 		menuPath = "ThreeDViewer>Import>Isosurface")

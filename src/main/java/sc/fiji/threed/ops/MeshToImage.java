@@ -10,8 +10,8 @@ import net.imglib2.type.logic.BitType;
 
 import org.scijava.command.Command;
 
-import sc.fiji.ThreeDViewer;
-import sc.fiji.display.process.MeshConverter;
+import sc.fiji.threed.ThreeDViewer;
+import sc.fiji.threed.process.MeshConverter;
 import scenery.Mesh;
 
 @Plugin(type = Command.class, 

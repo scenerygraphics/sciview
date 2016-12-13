@@ -1,4 +1,4 @@
-package sc.fiji.display.process;
+package sc.fiji.threed.process;
 
 import net.imagej.ops.geom.geom3d.mesh.*;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;

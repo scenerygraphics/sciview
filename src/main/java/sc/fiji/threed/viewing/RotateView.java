@@ -1,9 +1,11 @@
 package sc.fiji.threed.viewing;
 
 import org.scijava.plugin.Plugin;
+
+import sc.fiji.threed.ThreeDViewer;
+
 import org.scijava.command.Command;
 
-import sc.fiji.ThreeDViewer;
 import scenery.Node;
 
 @Plugin(type = Command.class, 
