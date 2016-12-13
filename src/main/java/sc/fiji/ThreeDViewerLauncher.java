@@ -14,7 +14,9 @@ public class ThreeDViewerLauncher implements Command {
 				
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("windows")){
-        	extraPath = ":" + Thread.currentThread().getContextClassLoader().getResource( "jinput-raw.dll" ).getPath().split("!")[0];
+        	//extraPath = ":" + Thread.currentThread().getContextClassLoader().getResource( "jinput-raw.dll" ).getPath().split("!")[0];
+        	extraPath = "";
+        	System.out.println( "jinput is disabled for Windows. You will not be able to use game controllers." );
         }else if (os.contains("linux") || os.contains("freebsd") || os.contains("sunos")){
         	extraPath = ":" + Thread.currentThread().getContextClassLoader().getResource( "libjinput-linux.so" ).getPath().split("!")[0];
         }else if (os.contains("mac os x")){

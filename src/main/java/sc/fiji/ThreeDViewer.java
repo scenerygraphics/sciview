@@ -22,6 +22,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ThreeDViewer extends SceneryDefaultApplication {
 	
+	static ImageJ ij;
+	
 	static ThreeDViewer viewer;
 	static Thread animationThread;
 	static Mesh aMesh = null;
@@ -335,11 +337,16 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 	}
     
 	public static void main(String... args)
-	{	
-		ImageJ ij = new ImageJ();
-		ij.ui().showUI();
+	{	 
+		if( ij == null )
+			ij = new ImageJ();
+		
+		if( !ij.ui().isVisible() )
+			ij.ui().showUI();
 
-		ThreeDViewer viewer = new ThreeDViewer( "ThreeDViewer", 800, 600 );		
+		ThreeDViewer viewer = new ThreeDViewer( "ThreeDViewer", 800, 600 );
+		
         viewer.main();
+        
 	}
 }
