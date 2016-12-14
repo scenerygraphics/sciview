@@ -14,7 +14,7 @@ import scenery.*;
 import scenery.controls.behaviours.ArcballCameraControl;
 import scenery.controls.behaviours.FPSCameraControl;
 import scenery.backends.Renderer;
-import scenery.backends.opengl.DeferredLightingRenderer;
+import scenery.backends.opengl.OpenGLRenderer;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
