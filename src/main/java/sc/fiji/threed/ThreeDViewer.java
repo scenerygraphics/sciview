@@ -85,7 +85,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     }
     
     public static void addBox( GLVector position ) {
-    	addBox( position, new GLVector(0.0f, 0.0f, 0.0f) );    	
+    	addBox( position, new GLVector(10.0f, 10.0f, 10.0f) );    	
     }
     
     
@@ -93,8 +93,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     	addBox( position, size, new GLVector( 0.9f, 0.9f, 0.9f ) ); 
     }
     
-    public static void addBox( GLVector position, GLVector size, GLVector color ) {
-    	System.err.println( "Adding box" );
+    public static void addBox( GLVector position, GLVector size, GLVector color ) {    	
     	
     	Material boxmaterial = new Material();
         boxmaterial.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
