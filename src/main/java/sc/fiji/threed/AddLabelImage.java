@@ -22,7 +22,7 @@ import net.imglib2.view.Views;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import sc.fiji.ThreeDViewer;
+import sc.fiji.threed.ThreeDViewer;
 
 import java.util.ArrayList;
 
