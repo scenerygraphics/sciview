@@ -22,7 +22,7 @@
 	</organization>
 	<licenses>
 		<license>
-			<name>Apache 2.0</name>
+			<name>BSD 2</name>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
