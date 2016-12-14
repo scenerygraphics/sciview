@@ -59,6 +59,15 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
             min = "-1.0", max = "1.0", stepSize = "0.1", callback = "refreshPositionXInSceneNode")
     private double positionX = 1;
 
+    @Parameter(label = "Position Y", style = NumberWidget.SLIDER_STYLE,
+            min = "-1.0", max = "1.0", stepSize = "0.1", callback = "refreshPositionYInSceneNode")
+    private double positionY = 1;
+
+    @Parameter(label = "Position Z", style = NumberWidget.SLIDER_STYLE,
+            min = "-1.0", max = "1.0", stepSize = "0.1", callback = "refreshPositionZInSceneNode")
+    private double positionZ = 1;
+
+    
     @Parameter
     private UIService uiSrv;
 
@@ -174,6 +183,36 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
 
 
         position.set(0, (float)(positionX));
+        currentSceneNode.setPosition(position);
+    }
+    
+    private void refreshPositionYInSceneNode()
+    {
+        if (currentSceneNode == null || initializing)
+        {
+            System.out.println("cancel move");
+            return;
+        }
+        GLVector position = currentSceneNode.getPosition();
+        System.out.println("move to " + positionY);
+
+
+        position.set(1, (float)(positionY));
+        currentSceneNode.setPosition(position);
+    }
+    
+    private void refreshPositionZInSceneNode()
+    {
+        if (currentSceneNode == null || initializing)
+        {
+            System.out.println("cancel move");
+            return;
+        }
+        GLVector position = currentSceneNode.getPosition();
+        System.out.println("move to " + positionZ);
+
+
+        position.set(2, (float)(positionZ));
         currentSceneNode.setPosition(position);
     }
 
