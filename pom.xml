@@ -1,9 +1,83 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>org.scijava</groupId>
+		<artifactId>pom-scijava</artifactId>
+		<version>12.0.0</version>
+	</parent>
+	
 	<groupId>sc.fiji</groupId>
 	<artifactId>ThreeDViewer</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	
+	<name>ThreeDViewer</name>
+	<description>This is a 3D visualization package for ImageJ that uses Scenery (graphics.scenery) as a backend.</description>
+	<url>https://github.com/kephale/ThreeDViewer</url>
+	<inceptionYear>2016</inceptionYear>
+	<organization>
+		<name>Fiji</name>
+		<url>http://fiji.sc/</url>
+	</organization>
+	<licenses>
+		<license>
+			<name>Apache 2.0</name>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	
+	<developers>
+		<developer>
+			<id>kephale</id>
+			<name>Kyle Harrington</name>
+			<url>http://imagej.net/User:Kharrington</url>
+			<roles>
+				<role>founder</role>
+				<role>lead</role>
+				<role>developer</role>
+				<role>debugger</role>
+				<role>reviewer</role>
+				<role>support</role>
+				<role>maintainer</role>
+			</roles>
+		</developer>
+	</developers>
+	<contributors>
+		<contributor>
+			<name>Ulrik Günther</name>
+			<url>https://github.com/skalarproduktraum</url>
+			<properties><id>none</id></properties>
+		</contributor>
+		<contributor>
+			<name>Johannes Schindelin</name>
+			<url>http://imagej.net/User:Haesleinhuepf</url>
+			<properties><id>Haesleinhuepf</id></properties>
+		</contributor>
+	</contributors>
+	
+	<mailingLists>
+		<mailingList>
+			<name>ImageJ Forum</name>
+			<archive>http://forum.imagej.net/</archive>
+		</mailingList>
+	</mailingLists>
+	
+	<scm>
+		<connection>scm:git:git://github.com/kephale/ThreeDViewer</connection>
+		<developerConnection>scm:git:git@github.com:kephale/ThreeDViewer</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/kephale/ThreeDViewer</url>
+	</scm>
+	<issueManagement>
+		<system>GitHub Issues</system>
+		<url>https://github.com/imagej/imagej-common/issues</url>
+	</issueManagement>
+	<ciManagement>
+		<system>Jenkins</system>
+		<url>http://jenkins.imagej.net/job/ImageJ-common/</url>
+	</ciManagement>	
+	
 	<build>
 		<plugins>
 			<plugin>
@@ -40,11 +114,6 @@
 		<enforcer.skip>true</enforcer.skip>
 	</properties>
 	
-	<parent>
-		<groupId>org.scijava</groupId>
-		<artifactId>pom-scijava</artifactId>
-		<version>12.0.0</version>
-	</parent>
 	<repositories>
 		<repository>
 			<id>imagej.public</id>
@@ -137,13 +206,5 @@
 			<artifactId>imagej</artifactId>
 		</dependency>
 	</dependencies>
-
-	<scm>
-		<connection>scm:git:git://github.com/kephale/ThreeDViewer</connection>
-		<developerConnection>scm:git:git@github.com:kephale/ThreeDViewer</developerConnection>
-		<tag>HEAD</tag>
-		<url>https://github.com/kephale/ThreeDViewer</url>
-	</scm>
-
 	
 </project>
