@@ -10,11 +10,11 @@ import sc.fiji.threed.process.MeshConverter;
 
 import org.scijava.ui.behaviour.ClickBehaviour;
 
-import scenery.*;
-import scenery.controls.behaviours.ArcballCameraControl;
-import scenery.controls.behaviours.FPSCameraControl;
-import scenery.backends.Renderer;
-import scenery.backends.opengl.OpenGLRenderer;
+import graphics.scenery.*;
+import graphics.scenery.controls.behaviours.ArcballCameraControl;
+import graphics.scenery.controls.behaviours.FPSCameraControl;
+import graphics.scenery.backends.Renderer;
+import graphics.scenery.backends.opengl.OpenGLRenderer;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -41,7 +41,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     }
 
     public void init() {
-        setRenderer( Renderer.Companion.createRenderer( getApplicationName(), getScene(), 512, 512));
+        setRenderer( Renderer.Factory.createRenderer( getApplicationName(), getScene(), 512, 512));
         getHub().add(SceneryElement.RENDERER, getRenderer());
 
         PointLight[] lights = new PointLight[2];
