@@ -15,9 +15,9 @@ import org.scijava.widget.NumberWidget;
 
 import java.util.ArrayList;
 
-import scenery.Box;
-import scenery.Node;
-import scenery.Sphere;
+import graphics.scenery.Box;
+import graphics.scenery.Node;
+import graphics.scenery.Sphere;
 
 import static org.scijava.widget.ChoiceWidget.LIST_BOX_STYLE;
 

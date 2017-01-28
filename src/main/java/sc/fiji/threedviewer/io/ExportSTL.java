@@ -10,7 +10,7 @@ import sc.fiji.threed.ThreeDViewer;
 
 import org.scijava.command.Command;
 
-import scenery.Mesh;
+import graphics.scenery.Mesh;
 
 @Plugin(type = Command.class, 
 		menuPath = "ThreeDViewer>Export>STL_", label = "Export STL")

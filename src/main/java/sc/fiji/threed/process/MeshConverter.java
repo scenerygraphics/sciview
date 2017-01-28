@@ -2,7 +2,7 @@ package sc.fiji.threed.process;
 
 import net.imagej.ops.geom.geom3d.mesh.*;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
-import scenery.BufferUtils;
+import graphics.scenery.BufferUtils;
 
 import java.nio.FloatBuffer;
 import java.util.List;
@@ -14,12 +14,12 @@ import java.util.List;
  * 		   Kyle Harrington, University of Idaho
  */
 public class MeshConverter {
-	public static scenery.Mesh getSceneryMesh(Mesh mesh)
+	public static graphics.scenery.Mesh getSceneryMesh(Mesh mesh)
 	{
-		scenery.Mesh scMesh;
+		graphics.scenery.Mesh scMesh;
 		if (mesh != null) {
 			int numDimension = 3;
-			scMesh = new scenery.Mesh();
+			scMesh = new graphics.scenery.Mesh();
 
 			List<Facet> facets = mesh.getFacets();
 
@@ -50,7 +50,7 @@ public class MeshConverter {
 		return null;
 	}
 	
-	public static Mesh getOpsMesh( scenery.Mesh scMesh ) {		
+	public static Mesh getOpsMesh( graphics.scenery.Mesh scMesh ) {		
 		
 		if( scMesh != null ) {
 			DefaultMesh mesh = new DefaultMesh();

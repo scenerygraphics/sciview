@@ -11,7 +11,7 @@ import org.scijava.command.Command;
 
 import sc.fiji.threed.ThreeDViewer;
 import sc.fiji.threed.process.MeshConverter;
-import scenery.Mesh;
+import graphics.scenery.Mesh;
 
 @Plugin(type = Command.class, 
 		menuPath = "ThreeDViewer>Mesh>Convex Hull")

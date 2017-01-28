@@ -6,7 +6,7 @@ import sc.fiji.threed.ThreeDViewer;
 
 import org.scijava.command.Command;
 
-import scenery.Node;
+import graphics.scenery.Node;
 
 @Plugin(type = Command.class, 
 		menuPath = "ThreeDViewer>View>Rotate")
