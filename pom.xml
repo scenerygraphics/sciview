@@ -22,7 +22,7 @@
 	</organization>
 	<licenses>
 		<license>
-			<name>Apache 2.0</name>
+			<name>BSD 2</name>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
@@ -50,7 +50,7 @@
 			<properties><id>none</id></properties>
 		</contributor>
 		<contributor>
-			<name>Johannes Schindelin</name>
+			<name>Robert Haase</name>
 			<url>http://imagej.net/User:Haesleinhuepf</url>
 			<properties><id>Haesleinhuepf</id></properties>
 		</contributor>
