@@ -304,8 +304,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     	}
     	
     	ArcballCameraControl targetArcball = new ArcballCameraControl("mouse_control", viewer.getScene().findObserver(), 
-    			viewer.getRenderer().getWindow().getClearglWindow().getWidth(), 
-    			viewer.getRenderer().getWindow().getClearglWindow().getHeight(), target);
+    			viewer.getRenderer().getWindow().getClearglWindow().getWindowWidth(), 
+    			viewer.getRenderer().getWindow().getClearglWindow().getWindowHeight(), target);
     	targetArcball.setMaximumDistance(Float.MAX_VALUE);
     	viewer.getInputHandler().addBehaviour("mouse_control", targetArcball);
     	viewer.getInputHandler().addBehaviour("scroll_arcball", targetArcball);
@@ -314,8 +314,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     
     public static void enableFPSControl() {
     	FPSCameraControl fpsControl = new FPSCameraControl("mouse_control", viewer.getScene().findObserver(), 
-    			viewer.getRenderer().getWindow().getClearglWindow().getWidth(), 
-    			viewer.getRenderer().getWindow().getClearglWindow().getHeight());
+    			viewer.getRenderer().getWindow().getClearglWindow().getWindowWidth(), 
+    			viewer.getRenderer().getWindow().getClearglWindow().getWindowHeight());
     			
     	viewer.getInputHandler().addBehaviour("mouse_control", fpsControl);
     	viewer.getInputHandler().removeBehaviour("scroll_arcball");
