@@ -1,26 +1,39 @@
 package sc.fiji.threed;
 
-import cleargl.GLMatrix;
-import cleargl.GLVector;
-import com.jogamp.opengl.GLAutoDrawable;
-import ij.ImagePlus;
+import java.awt.AWTException;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.image.BufferedImage;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.FloatBuffer;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import net.imagej.ImageJ;
 import net.imglib2.RealLocalizable;
-import sc.fiji.threed.process.MeshConverter;
 
 import org.scijava.ui.behaviour.ClickBehaviour;
 
-import graphics.scenery.*;
+import cleargl.GLMatrix;
+import cleargl.GLVector;
+import graphics.scenery.Box;
+import graphics.scenery.Camera;
+import graphics.scenery.DetachedHeadCamera;
+import graphics.scenery.Material;
+import graphics.scenery.Mesh;
+import graphics.scenery.Node;
+import graphics.scenery.PointLight;
+import graphics.scenery.SceneryDefaultApplication;
+import graphics.scenery.SceneryElement;
+import graphics.scenery.Sphere;
+import graphics.scenery.backends.Renderer;
 import graphics.scenery.controls.behaviours.ArcballCameraControl;
 import graphics.scenery.controls.behaviours.FPSCameraControl;
-import graphics.scenery.backends.Renderer;
-import graphics.scenery.backends.opengl.OpenGLRenderer;
-
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.nio.FloatBuffer;
-import java.util.concurrent.CopyOnWriteArrayList;
+import ij.ImagePlus;
+import sc.fiji.threed.process.MeshConverter;
 
 public class ThreeDViewer extends SceneryDefaultApplication {
 	
@@ -33,15 +46,16 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 	static Boolean defaultArcBall = true;
 	
 	public ThreeDViewer() {
-		super("ThreeDViewer", 800, 600);
+		super("ThreeDViewer", 800, 600, false);
 	}
 	
     public ThreeDViewer(String applicationName, int windowWidth, int windowHeight) {    	
-        super(applicationName, windowWidth, windowHeight);        
+        super(applicationName, windowWidth, windowHeight, false);        
     }
 
+    @Override
     public void init() {
-        setRenderer( Renderer.Factory.createRenderer( getApplicationName(), getScene(), 512, 512));
+        setRenderer( Renderer.Factory.createRenderer( getHub(), getApplicationName(), getScene(), 512, 512));
         getHub().add(SceneryElement.RENDERER, getRenderer());
 
         PointLight[] lights = new PointLight[2];
@@ -64,10 +78,12 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         viewer = this;
     }
 
+    @Override
     public void inputSetup() {
     	//setInputHandler((ClearGLInputHandler) viewer.getHub().get(SceneryElement.INPUT));
     	ClickBehaviour objectSelector = new ClickBehaviour() {
 
+            @Override
             public void click( int x, int y ) {
             	System.out.println( "Clicked at x=" + x + " y=" + y );                
             }
@@ -304,8 +320,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     	}
     	
     	ArcballCameraControl targetArcball = new ArcballCameraControl("mouse_control", viewer.getScene().findObserver(), 
-    			viewer.getRenderer().getWindow().getClearglWindow().getWindowWidth(), 
-    			viewer.getRenderer().getWindow().getClearglWindow().getWindowHeight(), target);
+    			viewer.getRenderer().getWindow().getClearglWindow().getWidth(), 
+    			viewer.getRenderer().getWindow().getClearglWindow().getHeight(), target);
     	targetArcball.setMaximumDistance(Float.MAX_VALUE);
     	viewer.getInputHandler().addBehaviour("mouse_control", targetArcball);
     	viewer.getInputHandler().addBehaviour("scroll_arcball", targetArcball);
@@ -314,8 +330,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     
     public static void enableFPSControl() {
     	FPSCameraControl fpsControl = new FPSCameraControl("mouse_control", viewer.getScene().findObserver(), 
-    			viewer.getRenderer().getWindow().getClearglWindow().getWindowWidth(), 
-    			viewer.getRenderer().getWindow().getClearglWindow().getWindowHeight());
+    			viewer.getRenderer().getWindow().getClearglWindow().getWidth(), 
+    			viewer.getRenderer().getWindow().getClearglWindow().getHeight());
     			
     	viewer.getInputHandler().addBehaviour("mouse_control", fpsControl);
     	viewer.getInputHandler().removeBehaviour("scroll_arcball");
