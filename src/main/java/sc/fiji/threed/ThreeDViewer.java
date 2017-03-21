@@ -53,6 +53,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         super(applicationName, windowWidth, windowHeight);        
     }
 
+    @Override
     public void init() {
         setRenderer( Renderer.Factory.createRenderer( getApplicationName(), getScene(), 512, 512));
         getHub().add(SceneryElement.RENDERER, getRenderer());
@@ -77,10 +78,12 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         viewer = this;
     }
 
+    @Override
     public void inputSetup() {
     	//setInputHandler((ClearGLInputHandler) viewer.getHub().get(SceneryElement.INPUT));
     	ClickBehaviour objectSelector = new ClickBehaviour() {
 
+            @Override
             public void click( int x, int y ) {
             	System.out.println( "Clicked at x=" + x + " y=" + y );                
             }
