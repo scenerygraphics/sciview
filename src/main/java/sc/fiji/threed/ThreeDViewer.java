@@ -1,26 +1,39 @@
 package sc.fiji.threed;
 
-import cleargl.GLMatrix;
-import cleargl.GLVector;
-import com.jogamp.opengl.GLAutoDrawable;
-import ij.ImagePlus;
+import java.awt.AWTException;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.image.BufferedImage;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.FloatBuffer;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import net.imagej.ImageJ;
 import net.imglib2.RealLocalizable;
-import sc.fiji.threed.process.MeshConverter;
 
 import org.scijava.ui.behaviour.ClickBehaviour;
 
-import graphics.scenery.*;
+import cleargl.GLMatrix;
+import cleargl.GLVector;
+import graphics.scenery.Box;
+import graphics.scenery.Camera;
+import graphics.scenery.DetachedHeadCamera;
+import graphics.scenery.Material;
+import graphics.scenery.Mesh;
+import graphics.scenery.Node;
+import graphics.scenery.PointLight;
+import graphics.scenery.SceneryDefaultApplication;
+import graphics.scenery.SceneryElement;
+import graphics.scenery.Sphere;
+import graphics.scenery.backends.Renderer;
 import graphics.scenery.controls.behaviours.ArcballCameraControl;
 import graphics.scenery.controls.behaviours.FPSCameraControl;
-import graphics.scenery.backends.Renderer;
-import graphics.scenery.backends.opengl.OpenGLRenderer;
-
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.nio.FloatBuffer;
-import java.util.concurrent.CopyOnWriteArrayList;
+import ij.ImagePlus;
+import sc.fiji.threed.process.MeshConverter;
 
 public class ThreeDViewer extends SceneryDefaultApplication {
 	
