@@ -69,9 +69,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         }
 
         Camera cam = new DetachedHeadCamera();
-        cam.setPosition( new GLVector(0.0f, 0.0f, -5.0f) );
-        cam.setView( new GLMatrix().setCamera(cam.getPosition(), cam.getPosition().plus(cam.getForward()), cam.getUp()) );
-        cam.setProjection( new GLMatrix().setPerspectiveProjectionMatrix( (float) (70.0f / 180.0f * java.lang.Math.PI), 1024f / 1024f, 0.1f, 2000.0f) );
+        cam.setPosition( new GLVector(0.0f, 0.0f, 5.0f) );
+        cam.perspectiveCamera(50.0f, getWindowWidth(), getWindowHeight(), 1.0f, 500.0f);
         cam.setActive( true );
         getScene().addChild(cam);
         
