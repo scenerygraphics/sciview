@@ -46,13 +46,18 @@
 	<contributors>
 		<contributor>
 			<name>Ulrik Günther</name>
-			<url>https://github.com/skalarproduktraum</url>
-			<properties><id>none</id></properties>
+			<url>https://imagej.net/User:Skalarproduktraum</url>
+			<properties><id>skalarproduktraum</id></properties>
 		</contributor>
 		<contributor>
 			<name>Robert Haase</name>
-			<url>http://imagej.net/User:Haesleinhuepf</url>
-			<properties><id>Haesleinhuepf</id></properties>
+			<url>https://imagej.net/User:Haesleinhuepf</url>
+			<properties><id>haesleinhuepf</id></properties>
+		</contributor>
+		<contributor>
+			<name>Curtis Rueden</name>
+			<url>https://imagej.net/User:Rueden</url>
+			<properties><id>ctrueden</id></properties>
 		</contributor>
 	</contributors>
 	
