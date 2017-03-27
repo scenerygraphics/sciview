@@ -83,27 +83,6 @@
 		<url>http://jenkins.imagej.net/job/ImageJ-common/</url>
 	</ciManagement>	
 	
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.3</version>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-install-plugin</artifactId>
-				<version>2.5.2</version>
-				<executions>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
-
 	<distributionManagement>
 	  <repository>
 	    <id>imagej-releases</id>
