@@ -79,8 +79,8 @@
 		<url>https://github.com/imagej/imagej-common/issues</url>
 	</issueManagement>
 	<ciManagement>
-		<system>Jenkins</system>
-		<url>http://jenkins.imagej.net/job/ImageJ-common/</url>
+		<system>Travis CI</system>
+		<url>https://travis-ci.org/kephale/ThreeDViewer</url>
 	</ciManagement>	
 	
 	<distributionManagement>
