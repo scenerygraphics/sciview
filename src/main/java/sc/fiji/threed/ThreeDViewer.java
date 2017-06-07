@@ -17,6 +17,8 @@ import net.imglib2.RealLocalizable;
 
 import org.scijava.ui.behaviour.ClickBehaviour;
 
+import com.jogamp.opengl.math.Quaternion;
+
 import cleargl.GLMatrix;
 import cleargl.GLVector;
 import graphics.scenery.Box;
@@ -70,11 +72,13 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 
         Camera cam = new DetachedHeadCamera();
         cam.setPosition( new GLVector(0.0f, 0.0f, 5.0f) );
-        cam.perspectiveCamera(50.0f, getWindowWidth(), getWindowHeight(), 1.0f, 500.0f);
+        cam.perspectiveCamera(50.0f, getWindowWidth(), getWindowHeight(), 10.0f, 5000.0f);
+		cam.setRotation( (new Quaternion()).setFromEuler(-1.5f, -0.5f, 0.0f) );
         cam.setActive( true );
         getScene().addChild(cam);
-        
+
         viewer = this;
+
     }
 
     @Override
@@ -91,7 +95,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         viewer.getInputHandler().addBehaviour("object_selection_mode", objectSelector);
 
         enableArcBallControl();
-        
+
+		ThreeDViewer.addBox( new GLVector(0,0,0), new GLVector(100,100,100), new GLVector(1, 0, 0));
     }
 
     public static void addBox() {    	
@@ -360,7 +365,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 			ij.ui().showUI();
 
 		ThreeDViewer viewer = new ThreeDViewer( "ThreeDViewer", 800, 600 );
-		
+
         viewer.main();
         
 	}
