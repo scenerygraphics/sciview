@@ -66,17 +66,17 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 
         for( int i = 0; i < lights.length; i++ ) {
             lights[i] = new PointLight();
-            lights[i].setPosition( new GLVector(2.0f * i, 2.0f * i, 2.0f * i) );
+            lights[i].setPosition( new GLVector(20.0f * i, 20.0f * i, 20.0f * i) );
             lights[i].setEmissionColor( new GLVector(1.0f, 0.0f, 1.0f) );
-            lights[i].setIntensity( 500.2f*(i+1) );
+            lights[i].setIntensity( 5000.2f*(i+1) );
             lights[i].setLinear(0.0f);
-            lights[i].setQuadratic(0.5f);
+            //lights[i].setQuadratic(0.5f);
             getScene().addChild( lights[i] );
         }
 
         Camera cam = new DetachedHeadCamera();
         cam.setPosition( new GLVector(0.0f, 0.0f, 5.0f) );
-        cam.perspectiveCamera(70.0f, getWindowWidth(), getWindowHeight(), 1.0f, 500.0f);
+        cam.perspectiveCamera(50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 10000.0f);
 		cam.setRotation( (new Quaternion()).setFromEuler(-1.5f, -0.5f, 0.0f) );
         cam.setActive( true );
         getScene().addChild(cam);
@@ -105,7 +105,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         enableArcBallControl();
 
         // Hull box
-		ThreeDViewer.addBox( new GLVector(0,0,0), new GLVector(100,100,100), new GLVector(1, 0, 0), true);
+		//ThreeDViewer.addBox( new GLVector(0,0,0), new GLVector(100,100,100), new GLVector(1, 0, 0), true);
     }
 
     public static void addBox() {    	
@@ -375,7 +375,12 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 
 		ThreeDViewer viewer = new ThreeDViewer( "ThreeDViewer", 800, 600 );
 
-        viewer.main();
-        
+		Thread viewerThread = new Thread(){
+		    public void run() {
+                viewer.main();
+            }
+        };
+        viewerThread.start();
+
 	}
 }
