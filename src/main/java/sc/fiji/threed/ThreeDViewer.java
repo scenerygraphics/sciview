@@ -58,7 +58,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     @Override
     public void init() {
         setRenderer( Renderer.Factory.createRenderer( getHub(), getApplicationName(), getScene(), 512, 512));
-        getHub().add(SceneryElement.RENDERER, getRenderer());
+        getHub().add(SceneryElement.Renderer, getRenderer());
 
         PointLight[] lights = new PointLight[2];
 
@@ -66,13 +66,15 @@ public class ThreeDViewer extends SceneryDefaultApplication {
             lights[i] = new PointLight();
             lights[i].setPosition( new GLVector(2.0f * i, 2.0f * i, 2.0f * i) );
             lights[i].setEmissionColor( new GLVector(1.0f, 0.0f, 1.0f) );
-            lights[i].setIntensity( 0.2f*(i+1) );
+            lights[i].setIntensity( 500.2f*(i+1) );
+            lights[i].setLinear(0.0f);
+            lights[i].setQuadratic(0.5f);
             getScene().addChild( lights[i] );
         }
 
         Camera cam = new DetachedHeadCamera();
         cam.setPosition( new GLVector(0.0f, 0.0f, 5.0f) );
-        cam.perspectiveCamera(50.0f, getWindowWidth(), getWindowHeight(), 10.0f, 5000.0f);
+        cam.perspectiveCamera(70.0f, getWindowWidth(), getWindowHeight(), 1.0f, 500.0f);
 		cam.setRotation( (new Quaternion()).setFromEuler(-1.5f, -0.5f, 0.0f) );
         cam.setActive( true );
         getScene().addChild(cam);
@@ -121,7 +123,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         boxmaterial.setDoubleSided(true);
         //boxmaterial.getTextures().put("diffuse", SceneViewer3D.class.getResource("textures/helix.png").getFile() );
 
-        final Box box = new Box( size );
+        final Box box = new Box( size, false );
         box.setMaterial( boxmaterial );
         box.setPosition( position );
         
@@ -238,7 +240,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     	
     	scMesh.generateBoundingBox();
     	
-    	System.out.println( "Read STL: " + scMesh.getBoundingBox() );    	
+    	System.out.println( "Read STL: " + scMesh.getBoundingBoxCoords() );
     	
     	net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );
     	
@@ -324,8 +326,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     	}
     	
     	ArcballCameraControl targetArcball = new ArcballCameraControl("mouse_control", viewer.getScene().findObserver(), 
-    			viewer.getRenderer().getWindow().getClearglWindow().getWidth(), 
-    			viewer.getRenderer().getWindow().getClearglWindow().getHeight(), target);
+    			viewer.getRenderer().getWindow().getClearglWindow().getWindowWidth(),
+    			viewer.getRenderer().getWindow().getClearglWindow().getWindowHeight(), target);
     	targetArcball.setMaximumDistance(Float.MAX_VALUE);
     	viewer.getInputHandler().addBehaviour("mouse_control", targetArcball);
     	viewer.getInputHandler().addBehaviour("scroll_arcball", targetArcball);
@@ -334,8 +336,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     
     public static void enableFPSControl() {
     	FPSCameraControl fpsControl = new FPSCameraControl("mouse_control", viewer.getScene().findObserver(), 
-    			viewer.getRenderer().getWindow().getClearglWindow().getWidth(), 
-    			viewer.getRenderer().getWindow().getClearglWindow().getHeight());
+    			viewer.getRenderer().getWindow().getClearglWindow().getWindowWidth(),
+    			viewer.getRenderer().getWindow().getClearglWindow().getWindowHeight());
     			
     	viewer.getInputHandler().addBehaviour("mouse_control", fpsControl);
     	viewer.getInputHandler().removeBehaviour("scroll_arcball");

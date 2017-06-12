@@ -21,21 +21,21 @@ public class TexturedCubeExample {
 
     private class TexturedCubeJavaApplication extends SceneryDefaultApplication {
         public TexturedCubeJavaApplication(String applicationName, int windowWidth, int windowHeight) {
-            super(applicationName, windowWidth, windowHeight, false);
+            super(applicationName, windowWidth, windowHeight, true);
         }
 
         public void init() {
 
             setRenderer( Renderer.Factory.createRenderer(getHub(), getApplicationName(), getScene(), 512, 512));
-            getHub().add(SceneryElement.RENDERER, getRenderer());
+            getHub().add(SceneryElement.Renderer, getRenderer());
 
             Material boxmaterial = new Material();
             boxmaterial.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
             boxmaterial.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
             boxmaterial.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
-            boxmaterial.getTextures().put("diffuse", TexturedCubeJavaApplication.class.getResource("textures/spiral.png").getFile() );
+            boxmaterial.getTextures().put("diffuse", TexturedCubeJavaApplication.class.getResource("textures/helix.png").getFile() );
 
-            final Box box = new Box(new GLVector(1.0f, 1.0f, 1.0f) );
+            final Box box = new Box(new GLVector(1.0f, 1.0f, 1.0f), false);
             box.setMaterial( boxmaterial );
             box.setPosition( new GLVector(0.0f, 0.0f, 0.0f) );
 
@@ -47,7 +47,9 @@ public class TexturedCubeExample {
                 lights[i] = new PointLight();
                 lights[i].setPosition( new GLVector(2.0f * i, 2.0f * i, 2.0f * i) );
                 lights[i].setEmissionColor( new GLVector(1.0f, 0.0f, 1.0f) );
-                lights[i].setIntensity( 0.2f*(i+1) );
+                lights[i].setIntensity( 100.2f*(i+1) );
+                lights[i].setLinear(0.0f);
+                lights[i].setQuadratic(0.5f);
                 getScene().addChild( lights[i] );
             }
 
@@ -73,9 +75,9 @@ public class TexturedCubeExample {
             };
             rotator.start();
 
-            //setRepl(new REPL(getScene(), getRenderer()));
-            //getRepl().start();
-            //getRepl().showConsoleWindow();
+            setRepl(new REPL(getScene(), getRenderer()));
+            getRepl().start();
+            getRepl().showConsoleWindow();
 
         }
 
