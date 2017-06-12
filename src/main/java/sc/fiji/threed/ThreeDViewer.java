@@ -12,9 +12,11 @@ import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import graphics.scenery.repl.REPL;
 import net.imagej.ImageJ;
 import net.imglib2.RealLocalizable;
 
+import org.scijava.script.ScriptLanguage;
 import org.scijava.ui.behaviour.ClickBehaviour;
 
 import com.jogamp.opengl.math.Quaternion;
@@ -48,11 +50,11 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 	static Boolean defaultArcBall = true;
 	
 	public ThreeDViewer() {
-		super("ThreeDViewer", 800, 600, false);
+		super("ThreeDViewer", 800, 600, true);
 	}
 	
     public ThreeDViewer(String applicationName, int windowWidth, int windowHeight) {    	
-        super(applicationName, windowWidth, windowHeight, false);        
+        super(applicationName, windowWidth, windowHeight, true);
     }
 
     @Override
@@ -81,6 +83,10 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 
         viewer = this;
 
+        setRepl(new REPL(getScene(), getRenderer()));
+        getRepl().start();
+        getRepl().showConsoleWindow();
+
     }
 
     @Override
@@ -98,7 +104,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 
         enableArcBallControl();
 
-		ThreeDViewer.addBox( new GLVector(0,0,0), new GLVector(100,100,100), new GLVector(1, 0, 0));
+        // Hull box
+		ThreeDViewer.addBox( new GLVector(0,0,0), new GLVector(100,100,100), new GLVector(1, 0, 0), true);
     }
 
     public static void addBox() {    	
@@ -106,15 +113,15 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     }
     
     public static void addBox( GLVector position ) {
-    	addBox( position, new GLVector(10.0f, 10.0f, 10.0f) );    	
+    	addBox( position, new GLVector(1.0f, 1.0f, 1.0f) );
     }
     
     
     public static void addBox( GLVector position, GLVector size ) {
-    	addBox( position, size, new GLVector( 0.9f, 0.9f, 0.9f ) ); 
+    	addBox( position, size, new GLVector( 0.9f, 0.9f, 0.9f ), false );
     }
     
-    public static void addBox( GLVector position, GLVector size, GLVector color ) {    	
+    public static void addBox( GLVector position, GLVector size, GLVector color, boolean inside ) {
     	
     	Material boxmaterial = new Material();
         boxmaterial.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
@@ -123,7 +130,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
         boxmaterial.setDoubleSided(true);
         //boxmaterial.getTextures().put("diffuse", SceneViewer3D.class.getResource("textures/helix.png").getFile() );
 
-        final Box box = new Box( size, false );
+        final Box box = new Box( size, inside );
         box.setMaterial( boxmaterial );
         box.setPosition( position );
         

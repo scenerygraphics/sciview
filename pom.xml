@@ -115,6 +115,10 @@
 			<url>http://maven.imagej.net/content/groups/public</url>
 		</repository>
 		<repository>
+			<id>imagej.snapshots</id>
+			<url>http://maven.imagej.net/content/groups/public-snapshots</url>
+		</repository>
+		<repository>
 			<id>clearcontrol</id>
 			<url>http://dl.bintray.com/clearcontrol/ClearControl</url>
 		</repository>
@@ -127,7 +131,7 @@
 		<dependency>
 			<groupId>graphics.scenery</groupId>
 			<artifactId>scenery</artifactId>
-			<version>0.1.1-SNAPSHOT</version>
+			<version>0.1.2-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>net.clearvolume</groupId>
@@ -186,6 +190,7 @@
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>script-editor</artifactId>
+			<version>0.1.5-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>net.java.jinput</groupId>
