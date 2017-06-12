@@ -75,9 +75,9 @@ public class TexturedCubeExample {
             };
             rotator.start();
 
-            setRepl(new REPL(getScene(), getRenderer()));
-            getRepl().start();
-            getRepl().showConsoleWindow();
+            //setRepl(new REPL(getScene(), getRenderer()));
+            //getRepl().start();
+            //getRepl().showConsoleWindow();
 
         }
 

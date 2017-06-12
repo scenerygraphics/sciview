@@ -95,6 +95,17 @@
 	</distributionManagement>
 	
 	<properties>
+		<scijava.jvm.version>1.8</scijava.jvm.version>
+		<kotlin.version>1.1.2-4</kotlin.version>
+		<kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
+		<slf4j.version>1.7.25</slf4j.version>
+		<dokka.version>0.9.14</dokka.version>
+		<lwjgl.version>3.1.1</lwjgl.version>
+		<spirvcrossj.version>0.2.5</spirvcrossj.version>
+		<jvrpn.version>1.0.0</jvrpn.version>
+		<javac.target>1.8</javac.target>
+		<kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+
 		<enforcer.skip>true</enforcer.skip>
 	</properties>
 	
@@ -135,8 +146,14 @@
 		</dependency>
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
-			<artifactId>kotlin-stdlib</artifactId>
-			<version>1.0.6</version>
+			<artifactId>kotlin-stdlib-jre8</artifactId>
+			<version>${kotlin.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-reflect</artifactId>
+			<version>${kotlin.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
