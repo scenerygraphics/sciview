@@ -16,6 +16,8 @@ import graphics.scenery.repl.REPL;
 import net.imagej.ImageJ;
 import net.imglib2.RealLocalizable;
 
+import net.imagej.mesh.stl.BinarySTLFormat;
+
 import org.scijava.script.ScriptLanguage;
 import org.scijava.ui.behaviour.ClickBehaviour;
 
@@ -205,7 +207,10 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 		}
         
     }
-    
+
+    /*
+    Reading STL through Scenery
+     *
     public static void addSTL( String filename ) {    	
     	Mesh scMesh = new Mesh();
     	scMesh.readFromSTL( filename );
@@ -220,6 +225,23 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     	//((DefaultMesh) opsMesh).centerMesh();
 
     	addMesh( opsMesh );
+    }*/
+
+    public static void addSTL( String filename ) {
+
+        Mesh scMesh = new Mesh();
+        scMesh.readFromSTL( filename );
+
+        scMesh.generateBoundingBox();
+
+        System.out.println( "Read STL: " + scMesh.getBoundingBoxCoords() );
+
+        net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );
+
+        System.out.println( "Loaded and converted mesh: " + opsMesh.getVertices().size() );
+        //((DefaultMesh) opsMesh).centerMesh();
+
+        addMesh( opsMesh );
     }
     
     public static void addObj( String filename ) {    	
