@@ -292,7 +292,10 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     }
     
     public static void takeScreenshot() {
-    	
+
+        System.out.println("Screenshot temporarily disabled");
+
+        /*
     	float[] bounds = viewer.getRenderer().getWindow().getClearglWindow().getBounds();
     	// if we're in a jpanel, this isn't the way to get bounds
     	try {
@@ -307,6 +310,7 @@ public class ThreeDViewer extends SceneryDefaultApplication {
 		} catch (AWTException e) {
 			e.printStackTrace();
 		}
+		*/
     }
     
     public static void enableArcBallControl() {
@@ -320,8 +324,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     	}
     	
     	ArcballCameraControl targetArcball = new ArcballCameraControl("mouse_control", viewer.getScene().findObserver(), 
-    			viewer.getRenderer().getWindow().getClearglWindow().getWindowWidth(),
-    			viewer.getRenderer().getWindow().getClearglWindow().getWindowHeight(), target);
+    			viewer.getRenderer().getWindow().getWidth(),
+    			viewer.getRenderer().getWindow().getHeight(), target);
     	targetArcball.setMaximumDistance(Float.MAX_VALUE);
     	viewer.getInputHandler().addBehaviour("mouse_control", targetArcball);
     	viewer.getInputHandler().addBehaviour("scroll_arcball", targetArcball);
@@ -330,8 +334,8 @@ public class ThreeDViewer extends SceneryDefaultApplication {
     
     public static void enableFPSControl() {
     	FPSCameraControl fpsControl = new FPSCameraControl("mouse_control", viewer.getScene().findObserver(), 
-    			viewer.getRenderer().getWindow().getClearglWindow().getWindowWidth(),
-    			viewer.getRenderer().getWindow().getClearglWindow().getWindowHeight());
+    			viewer.getRenderer().getWindow().getWidth(),
+    			viewer.getRenderer().getWindow().getHeight());
     			
     	viewer.getInputHandler().addBehaviour("mouse_control", fpsControl);
     	viewer.getInputHandler().removeBehaviour("scroll_arcball");
