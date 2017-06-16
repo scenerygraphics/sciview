@@ -51,6 +51,12 @@ public class SceneryViewer extends SceneryDefaultApplication {
 
     static Boolean defaultArcBall = true;
 
+    public Camera getCamera() {
+        return camera;
+    }
+
+    Camera camera = null;
+
     public SceneryViewer() {
         super("ThreeDViewer", 800, 600, true);
     }
@@ -81,6 +87,7 @@ public class SceneryViewer extends SceneryDefaultApplication {
         cam.perspectiveCamera(50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 1000.0f);
         cam.setActive( true );
         getScene().addChild(cam);
+        this.camera = cam;
 
         viewer = this;
 
@@ -356,6 +363,18 @@ public class SceneryViewer extends SceneryDefaultApplication {
         viewer.getScene().removeChild( ThreeDViewer.getSelectedMesh() );
     }
 
+    public void dispose() {
+        viewer.getRenderer().setShouldClose(true);
+    }
+
+    public void moveCamera(float[] position) {
+        getCamera().setPosition( new GLVector(position[0], position[1], position[2]));
+    }
+
+    public void moveCamera(double[] position) {
+        getCamera().setPosition( new GLVector((float)position[0], (float)position[1], (float)position[2]));
+    }
+
     public static void main(String... args)
     {
         if( ij == null )
@@ -374,4 +393,6 @@ public class SceneryViewer extends SceneryDefaultApplication {
         viewerThread.start();
 
     }
+
+
 }
