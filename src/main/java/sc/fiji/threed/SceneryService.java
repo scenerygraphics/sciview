@@ -1,6 +1,13 @@
 package sc.fiji.threed;
 
+import net.imagej.Data;
 import net.imagej.ImageJService;
+import net.imagej.Position;
+import net.imagej.display.DataView;
+import org.scijava.display.DisplayService;
+import org.scijava.event.EventService;
+
+import java.util.List;
 
 /**
  * Interface for services that work with Scenery.
