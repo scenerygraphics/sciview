@@ -12,25 +12,28 @@ import graphics.scenery.viewer.process.MeshConverter;
 import org.scijava.command.Command;
 
 @Plugin(type = Command.class, 
-		menuPath = "ThreeDViewer>Add>Sphere")
+		menuPath = "Scenery>Add>Sphere")
 public class AddSphere  implements Command {
 		
 	@Parameter
 	private int radius;
-	
+
+	@Parameter
+	private SceneryService sceneryService;
+
 	@Override
 	public void run() {
 		//GLVector pos = ThreeDViewer.getSelectedMesh().getPosition();
 		RealLocalizable center;
-		if( SceneryViewer.getSelectedMesh() != null ) {
-			Mesh mesh = MeshConverter.getOpsMesh( SceneryViewer.getSelectedMesh() );
+		if( sceneryService.getActiveSceneryViewer().getSelectedMesh() != null ) {
+			Mesh mesh = MeshConverter.getOpsMesh( sceneryService.getActiveSceneryViewer().getSelectedMesh() );
 			center = MeshUtils.getCenter( mesh );
 		} else {
 			center = new RealPoint( 0, 0, 0 );
 		}
 		//RealLocalizable center = ((DefaultMesh) mesh).getCenter();
 		GLVector pos = new GLVector( center.getFloatPosition(0), center.getFloatPosition(1), center.getFloatPosition(2) );
-		SceneryViewer.addSphere( pos, radius );
+		sceneryService.getActiveSceneryViewer().addSphere( pos, radius );
 	}
 
 }

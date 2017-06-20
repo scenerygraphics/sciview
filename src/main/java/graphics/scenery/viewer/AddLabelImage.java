@@ -1,5 +1,6 @@
 package graphics.scenery.viewer;
 
+import javafx.scene.Scene;
 import net.imagej.Dataset;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.Mesh;
@@ -27,15 +28,17 @@ import java.util.ArrayList;
  * Date: July 2016
  */
 @Plugin(type = Command.class,
-        menuPath = "ThreeDViewer>Add>Label image")
+        menuPath = "Scenery>Add>Label image")
 public  class AddLabelImage<T extends RealType<T>> implements Command {
-
 
     @Parameter
     private Dataset currentImage;
 
     @Parameter
     private OpService ops;
+
+    @Parameter
+    private SceneryService sceneryService;
 
     @Override
     public  void run() {
@@ -69,7 +72,7 @@ public  class AddLabelImage<T extends RealType<T>> implements Command {
             LabelRegion<Integer> lr = labelRegions.getLabelRegion((Integer)regionsArr[i]);
 
             Mesh mesh = ops.geom().marchingCubes(lr);
-            SceneryViewer.addMesh(mesh);
+            sceneryService.getActiveSceneryViewer().addMesh(mesh);
         }
     }
 

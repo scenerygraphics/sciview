@@ -177,6 +177,10 @@
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
+			<artifactId>imagej-legacy</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
 			<artifactId>imagej-deprecated</artifactId>
 		</dependency>
 		<dependency>

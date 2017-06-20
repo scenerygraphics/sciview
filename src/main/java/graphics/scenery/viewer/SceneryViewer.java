@@ -8,6 +8,7 @@ import graphics.scenery.controls.behaviours.FPSCameraControl;
 import graphics.scenery.repl.REPL;
 import graphics.scenery.viewer.process.MeshConverter;
 import net.imagej.ImageJ;
+import net.imagej.display.DataView;
 import net.imglib2.RealLocalizable;
 import org.scijava.ui.behaviour.ClickBehaviour;
 
@@ -15,24 +16,19 @@ import java.io.*;
 import java.nio.FloatBuffer;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class SceneryViewer extends SceneryDefaultApplication {
+public class SceneryViewer extends SceneryDefaultApplication  {
 
-    static ImageJ ij;
+    //static ImageJ ij;
 
-    static SceneryViewer viewer;
-    static Thread animationThread;
-    static Mesh aMesh = null;
+    private Thread animationThread;
+    private Mesh aMesh = null;
 
-    static Boolean defaultArcBall = true;
-
-    public Camera getCamera() {
-        return camera;
-    }
+    private Boolean defaultArcBall = true;
 
     Camera camera = null;
 
     public SceneryViewer() {
-        super("Scenery", 800, 600, true);
+        super("SceneryViewer", 800, 600, true);
     }
 
     public SceneryViewer(String applicationName, int windowWidth, int windowHeight) {
@@ -63,13 +59,16 @@ public class SceneryViewer extends SceneryDefaultApplication {
         getScene().addChild(cam);
         this.camera = cam;
 
-        viewer = this;
-
         setRepl(new REPL(getScene(), getRenderer()));
         getRepl().start();
         getRepl().showConsoleWindow();
 
     }
+
+    public Camera getCamera() {
+        return camera;
+    }
+
 
     @Override
     public void inputSetup() {
@@ -81,26 +80,26 @@ public class SceneryViewer extends SceneryDefaultApplication {
                 System.out.println( "Clicked at x=" + x + " y=" + y );
             }
         };
-        viewer.getInputHandler().useDefaultBindings("");
-        viewer.getInputHandler().addBehaviour("object_selection_mode", objectSelector);
+        getInputHandler().useDefaultBindings("");
+        getInputHandler().addBehaviour("object_selection_mode", objectSelector);
 
         enableArcBallControl();
     }
 
-    public static void addBox() {
+    public void addBox() {
         addBox( new GLVector(0.0f, 0.0f, 0.0f) );
     }
 
-    public static void addBox( GLVector position ) {
+    public void addBox( GLVector position ) {
         addBox( position, new GLVector(1.0f, 1.0f, 1.0f) );
     }
 
 
-    public static void addBox( GLVector position, GLVector size ) {
+    public void addBox( GLVector position, GLVector size ) {
         addBox( position, size, new GLVector( 0.9f, 0.9f, 0.9f ), false );
     }
 
-    public static void addBox( GLVector position, GLVector size, GLVector color, boolean inside ) {
+    public void addBox( GLVector position, GLVector size, GLVector color, boolean inside ) {
 
         Material boxmaterial = new Material();
         boxmaterial.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
@@ -115,22 +114,22 @@ public class SceneryViewer extends SceneryDefaultApplication {
 
         //System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
 
-        viewer.getScene().addChild(box);
+        getScene().addChild(box);
 
         if( defaultArcBall ) enableArcBallControl();
 
         //System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
     }
 
-    public static void addSphere() {
+    public void addSphere() {
         addSphere( new GLVector(0.0f, 0.0f, 0.0f), 1 );
     }
 
-    public static void addSphere( GLVector position, float radius ) {
+    public void addSphere( GLVector position, float radius ) {
         addSphere( position, radius, new GLVector( 0.9f, 0.9f, 0.9f ) );
     }
 
-    public static void addSphere( GLVector position, float radius, GLVector color ) {
+    public void addSphere( GLVector position, float radius, GLVector color ) {
         Material material = new Material();
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
         material.setDiffuse( color );
@@ -141,12 +140,12 @@ public class SceneryViewer extends SceneryDefaultApplication {
         sphere.setMaterial( material );
         sphere.setPosition( position );
 
-        viewer.getScene().addChild(sphere);
+        getScene().addChild(sphere);
 
         if( defaultArcBall ) enableArcBallControl();
     }
 
-    public static void addPointLight() {
+    public void addPointLight() {
         Material material = new Material();
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
         material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
@@ -157,10 +156,10 @@ public class SceneryViewer extends SceneryDefaultApplication {
         light.setMaterial( material );
         light.setPosition( new GLVector(0.0f, 0.0f, 0.0f) );
 
-        viewer.getScene().addChild(light);
+        getScene().addChild(light);
     }
 
-    public static void writeSCMesh( String filename, Mesh scMesh ) {
+    public void writeSCMesh( String filename, Mesh scMesh ) {
         File f = new File( filename );
         BufferedOutputStream out;
         try {
@@ -208,24 +207,21 @@ public class SceneryViewer extends SceneryDefaultApplication {
     	addMesh( opsMesh );
     }*/
 
-    public static void addSTL( String filename ) {
+    public void addSTL( String filename ) {
 
         Mesh scMesh = new Mesh();
         scMesh.readFromSTL( filename );
 
         scMesh.generateBoundingBox();
 
-        System.out.println( "Read STL: " + scMesh.getBoundingBoxCoords() );
-
         net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );
 
-        System.out.println( "Loaded and converted mesh: " + opsMesh.getVertices().size() );
         //((DefaultMesh) opsMesh).centerMesh();
 
         addMesh( opsMesh );
     }
 
-    public static void addObj( String filename ) {
+    public void addObj( String filename ) {
         Mesh scMesh = new Mesh();
         scMesh.readFromOBJ( filename, false );// Could check if there is a MTL to use to toggle flag
 
@@ -235,7 +231,7 @@ public class SceneryViewer extends SceneryDefaultApplication {
         addMesh( opsMesh );
     }
 
-    public static void addMesh( net.imagej.ops.geom.geom3d.mesh.Mesh mesh ) {
+    public void addMesh( net.imagej.ops.geom.geom3d.mesh.Mesh mesh ) {
         Mesh scMesh = MeshConverter.getSceneryMesh( mesh );
 
         Material material = new Material();
@@ -249,30 +245,30 @@ public class SceneryViewer extends SceneryDefaultApplication {
 
         aMesh = scMesh;
 
-        viewer.getScene().addChild( scMesh );
+        getScene().addChild( scMesh );
 
         if( defaultArcBall ) enableArcBallControl();
 
 //		System.err.println( "Number of nodes in scene: " + SceneryViewer.getSceneNodes().size() );
     }
 
-    public static void removeMesh( Mesh scMesh ) {
-        viewer.getScene().removeChild( scMesh );
+    public void removeMesh( Mesh scMesh ) {
+        getScene().removeChild( scMesh );
     }
 
-    public static Mesh getSelectedMesh() {
+    public Mesh getSelectedMesh() {
         return aMesh;
     }
 
-    public static Thread getAnimationThread() {
-        return SceneryViewer.animationThread;
+    public Thread getAnimationThread() {
+        return animationThread;
     }
 
-    public static void setAnimationThread( Thread newAnimator ) {
-        SceneryViewer.animationThread = newAnimator;
+    public void setAnimationThread( Thread newAnimator ) {
+        animationThread = newAnimator;
     }
 
-    public static void takeScreenshot() {
+    public void takeScreenshot() {
 
         System.out.println("Screenshot temporarily disabled");
 
@@ -294,7 +290,7 @@ public class SceneryViewer extends SceneryDefaultApplication {
 		*/
     }
 
-    public static void enableArcBallControl() {
+    public void enableArcBallControl() {
         GLVector target;
         if( getSelectedMesh() == null ) {
             target = new GLVector( 0, 0, 0 );
@@ -304,41 +300,37 @@ public class SceneryViewer extends SceneryDefaultApplication {
             target = new GLVector( center.getFloatPosition(0), center.getFloatPosition(1), center.getFloatPosition(2) );
         }
 
-        ArcballCameraControl targetArcball = new ArcballCameraControl("mouse_control", viewer.getScene().findObserver(),
-                viewer.getRenderer().getWindow().getWidth(),
-                viewer.getRenderer().getWindow().getHeight(), target);
+        ArcballCameraControl targetArcball = new ArcballCameraControl("mouse_control", getScene().findObserver(),
+                getRenderer().getWindow().getWidth(),
+                getRenderer().getWindow().getHeight(), target);
         targetArcball.setMaximumDistance(Float.MAX_VALUE);
-        viewer.getInputHandler().addBehaviour("mouse_control", targetArcball);
-        viewer.getInputHandler().addBehaviour("scroll_arcball", targetArcball);
-        viewer.getInputHandler().addKeyBinding("scroll_arcball", "scroll");
+        getInputHandler().addBehaviour("mouse_control", targetArcball);
+        getInputHandler().addBehaviour("scroll_arcball", targetArcball);
+        getInputHandler().addKeyBinding("scroll_arcball", "scroll");
     }
 
-    public static void enableFPSControl() {
-        FPSCameraControl fpsControl = new FPSCameraControl("mouse_control", viewer.getScene().findObserver(),
-                viewer.getRenderer().getWindow().getWidth(),
-                viewer.getRenderer().getWindow().getHeight());
+    public void enableFPSControl() {
+        FPSCameraControl fpsControl = new FPSCameraControl("mouse_control", getScene().findObserver(),
+                getRenderer().getWindow().getWidth(),
+                getRenderer().getWindow().getHeight());
 
-        viewer.getInputHandler().addBehaviour("mouse_control", fpsControl);
-        viewer.getInputHandler().removeBehaviour("scroll_arcball");
+        getInputHandler().addBehaviour("mouse_control", fpsControl);
+        getInputHandler().removeBehaviour("scroll_arcball");
 
     }
 
-    public static SceneryViewer getViewer() {
-        return viewer;
+    public Node[] getSceneNodes() {
+        CopyOnWriteArrayList<Node> children = getScene().getChildren();
+
+        return getScene().getChildren().toArray( new Node[children.size()] );
     }
 
-    public static Node[] getSceneNodes() {
-        CopyOnWriteArrayList<Node> children = viewer.getScene().getChildren();
-
-        return viewer.getScene().getChildren().toArray( new Node[children.size()] );
-    }
-
-    public static void deleteSelectedMesh() {
-        viewer.getScene().removeChild( SceneryViewer.getSelectedMesh() );
+    public void deleteSelectedMesh() {
+        getScene().removeChild( getSelectedMesh() );
     }
 
     public void dispose() {
-        viewer.getRenderer().setShouldClose(true);
+        getRenderer().setShouldClose(true);
     }
 
     public void moveCamera(float[] position) {
@@ -349,15 +341,18 @@ public class SceneryViewer extends SceneryDefaultApplication {
         getCamera().setPosition( new GLVector((float)position[0], (float)position[1], (float)position[2]));
     }
 
+    public String getName() {
+        return getApplicationName();
+    }
+
     public static void main(String... args)
     {
-        if( ij == null )
-            ij = new ImageJ();
+        ImageJ ij = new ImageJ();
 
         if( !ij.ui().isVisible() )
             ij.ui().showUI();
 
-        SceneryViewer viewer = new SceneryViewer( "Scenery", 800, 600 );
+        SceneryViewer viewer = new SceneryViewer( "SceneryViewer", 800, 600 );
 
         Thread viewerThread = new Thread(){
             public void run() {

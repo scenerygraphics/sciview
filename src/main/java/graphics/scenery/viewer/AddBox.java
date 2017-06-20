@@ -1,15 +1,19 @@
 package graphics.scenery.viewer;
 
+import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.command.Command;
 
 @Plugin(type = Command.class, 
-		menuPath = "ThreeDViewer>Add>Box")
+		menuPath = "Scenery>Add>Box")
 public class AddBox  implements Command {
+
+	@Parameter
+	SceneryService scenery;
 		
 	@Override
 	public void run() {
-		SceneryViewer.addBox();
+		scenery.getActiveSceneryViewer().addBox();
 	}
 
 }

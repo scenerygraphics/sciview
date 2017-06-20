@@ -1,6 +1,8 @@
-package graphics.scenery.viewer;
+package graphics.scenery.viewer.edit;
 
 import cleargl.GLVector;
+import graphics.scenery.viewer.SceneryService;
+import graphics.scenery.viewer.SceneryViewer;
 import org.scijava.Context;
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
@@ -28,7 +30,7 @@ import static org.scijava.widget.ChoiceWidget.LIST_BOX_STYLE;
  *
  */
 @Plugin(type = Command.class,
-        menuPath = "ThreeDViewer>Edit>Properties",
+        menuPath = "Scenery>Edit>Properties",
         initializer = "initValues")
 public class SceneNodePropertiesEditor extends InteractiveCommand implements Command
 {
@@ -40,14 +42,11 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
     @Parameter
     private LogService log;
 
-    // ToDo: I don't get this to work. Cheers, Robert
-    //@Parameter(persist = false, initializer = "initThreeDViewer")
-    private SceneryViewer sceneryViewer;
+    @Parameter
+    private SceneryService sceneryService;
 
     @Parameter(required = false, style = LIST_BOX_STYLE, callback = "refreshSceneNodeInDialog")
     String sceneNode;
-
-    Node currentSceneNode;
 
     @Parameter(required = false, callback = "refreshColourInSceneNode")
     ColorRGB colour;
@@ -68,16 +67,11 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
     @Parameter
     private UIService uiSrv;
 
-    ArrayList<String> sceneNodeChoises = new ArrayList<String>();
-    //MutableModuleItem<String> sceneNodeSelector;
+    ArrayList<String> sceneNodeChoices = new ArrayList<String>();
+    private Node currentSceneNode;
 
 
     protected void initValues() {
-        System.out.println("called init values");
-
-        sceneryViewer = SceneryViewer.getViewer();
-
-
         rebuildSceneObjectChoiseList();
         //formerColour = colour;
 
@@ -91,21 +85,18 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
     private void rebuildSceneObjectChoiseList()
     {
         initializing = true;
-        System.out.println("rebuildSceneObjectChoiseList");
-        sceneNodeChoises = new ArrayList<String>();
+        sceneNodeChoices = new ArrayList<String>();
         int count = 0;
-        for (Node sceneNode : SceneryViewer.getSceneNodes()) {
-            sceneNodeChoises.add(makeIdentifier(sceneNode, count));
+        for (Node sceneNode : sceneryService.getActiveSceneryViewer().getSceneNodes()) {
+            sceneNodeChoices.add(makeIdentifier(sceneNode, count));
             count++;
         }
 
-        //sceneNodeSelector.setPersisted(false);
-        //sceneNodeSelector.setLabel("Scene node");
         MutableModuleItem<String> sceneNodeSelector = getInfo().getMutableInput("sceneNode", String.class);
-        sceneNodeSelector.setChoices(sceneNodeChoises);
+        sceneNodeSelector.setChoices(sceneNodeChoices);
 
         //todo: if currentSceneNode is set, put it here as current item
-        sceneNodeSelector.setValue(this, sceneNodeChoises.get(sceneNodeChoises.size() - 1));
+        sceneNodeSelector.setValue(this, sceneNodeChoices.get(sceneNodeChoices.size() - 1));
         refreshSceneNodeInDialog();
 
         initializing = false;
@@ -120,7 +111,7 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
         currentSceneNode = null;
 
         int count = 0;
-        for (Node sceneNode : SceneryViewer.getSceneNodes()) {
+        for (Node sceneNode : sceneryService.getActiveSceneryViewer().getSceneNodes()) {
             if (identifier.equals(makeIdentifier(sceneNode, count)))
             {
                 currentSceneNode = sceneNode;
@@ -133,14 +124,10 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
         // update property fields according to scene node properties
         refreshColourInDialog();
 
-        if (sceneNodeChoises.size() != SceneryViewer.getSceneNodes().length)
+        if (sceneNodeChoices.size() != sceneryService.getActiveSceneryViewer().getSceneNodes().length)
         {
             rebuildSceneObjectChoiseList();
         }
-
-        System.out.println("current node changed");
-
-
     }
 
     private void refreshColourInDialog()
@@ -152,7 +139,6 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
 
         initializing = true;
         GLVector colourVector = currentSceneNode.getMaterial().getDiffuse();
-        System.out.println("change internal colour " + currentSceneNode.getName());
         colour = new ColorRGB((int)(colourVector.get(0) * 255), (int)(colourVector.get(1) * 255),(int)(colourVector.get(2) * 255));
         initializing = false;
     }
@@ -165,7 +151,9 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
         {
             return;
         }
-        currentSceneNode.getMaterial().setDiffuse(new GLVector((float)colour.getRed() / 255, (float)colour.getGreen() / 255, (float)colour.getBlue() / 255 ));
+        currentSceneNode.getMaterial().setDiffuse(new GLVector((float)colour.getRed() / 255,
+                (float)colour.getGreen() / 255,
+                (float)colour.getBlue() / 255 ));
     }
 
     private void refreshPositionXInSceneNode()

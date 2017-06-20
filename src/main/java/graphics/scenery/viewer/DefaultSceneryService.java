@@ -4,6 +4,8 @@ import net.imagej.Data;
 import net.imagej.Position;
 import net.imagej.display.DataView;
 import org.scijava.display.DisplayService;
+import org.scijava.display.event.window.WinClosedEvent;
+import org.scijava.event.EventHandler;
 import org.scijava.event.EventService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -12,6 +14,7 @@ import org.scijava.script.ScriptService;
 import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
 
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -24,99 +27,48 @@ import java.util.List;
 public class DefaultSceneryService extends AbstractService
     implements SceneryService
 {
-    @Parameter
-    private EventService eventService;
 
-    @Parameter
-    private PluginService pluginService;
+    /* Parameters */
+    
 
-    @Parameter
-    private DisplayService displayService;
+    /* Instance variables */
 
-    @Parameter
-    private ScriptService scriptService;
+    private List<SceneryViewer> sceneryViewers =
+            new LinkedList<>();
 
-    @Override
-    public EventService getEventService() {
-        return eventService;
+    /* Methods */
+
+    public SceneryViewer getActiveSceneryViewer() {
+        if ( sceneryViewers.size() > 0 )
+            return sceneryViewers.get(0);
+        return null;
     }
 
-    @Override
-    public DisplayService getDisplayService() {
-        return displayService;
-    }
-
-    @Override
-    public DataView createDataView(Data data) {
-        for (final DataView dataView : getDataViews()) {
-            if (dataView.isCompatible(data)) {
-                dataView.initialize(data);
-                return dataView;
+    public SceneryViewer getSceneryViewer(String name) {
+        for( final SceneryViewer sceneryViewer : sceneryViewers ) {
+            if( name.equalsIgnoreCase(sceneryViewer.getName())) {
+                return sceneryViewer;
             }
         }
-        throw new IllegalArgumentException("No data view found for data: " + data);
-    }
-
-    @Override
-    public List<? extends DataView> getDataViews() {
-        return pluginService.createInstancesOfType(DataView.class);
-    }
-
-    @Override
-    public SceneryDisplay getActiveSceneryDisplay() {
-        return displayService.getActiveDisplay(SceneryDisplay.class);
-    }
-
-    @Override
-    public Scenery getActiveScenery() {
-        return getActiveScenery(getActiveSceneryDisplay());
-    }
-
-    @Override
-    public SceneryView getActiveSceneryView() {
-        return getActiveSceneryView(getActiveSceneryDisplay());
-    }
-
-    @Override
-    public Position getActivePosition() {
-        return getActivePosition(getActiveSceneryDisplay());
-    }
-
-    @Override
-    public Scenery getActiveScenery(SceneryDisplay display) {
-        final SceneryView activeSceneryView = getActiveSceneryView(display);
-        return activeSceneryView == null ? null : activeSceneryView.getScenery();
-    }
-
-    @Override
-    public SceneryView getActiveSceneryView(SceneryDisplay display) {
-        if (display == null) return null;
-        final DataView activeView = display.getActiveView();
-        if (activeView instanceof SceneryView) {
-            return (SceneryView) activeView;
-        }
         return null;
     }
 
-    @Override
-    public List<SceneryDisplay> getSceneryDisplay() {
-        return displayService.getDisplaysOfType(SceneryDisplay.class);
+    public void createSceneryViewer() {
+        SceneryViewer v = new SceneryViewer();
+
+        // Maybe should use thread service instead
+        Thread viewerThread = new Thread(){
+            public void run() {
+                v.main();
+            }
+        };
+        viewerThread.start();
+
+        sceneryViewers.add(v);
     }
 
     @Override
-    public Position getActivePosition(SceneryDisplay display) {
-        if (display == null) return null;
-        final SceneryView activeSceneryView = this.getActiveSceneryView(display);
-        if (activeSceneryView == null) return null;
-        //return activeSceneryView.getCameraPosition();
-        /* TODO */
-        return null;
-    }
-
-    @Override
-    public void initialize() {
-        scriptService.addAlias(SceneryDisplay.class);
-        scriptService.addAlias(SceneryView.class);
-        scriptService.addAlias(DataView.class);
+    public int numSceneryViewers() {
+        return sceneryViewers.size();
     }
 }
