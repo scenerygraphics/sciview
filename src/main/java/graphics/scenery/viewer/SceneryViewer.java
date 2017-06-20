@@ -3,12 +3,8 @@ package graphics.scenery.viewer;
 import cleargl.GLVector;
 import graphics.scenery.*;
 import graphics.scenery.backends.Renderer;
-import graphics.scenery.controls.behaviours.ArcballCameraControl;
-import graphics.scenery.controls.behaviours.FPSCameraControl;
-import graphics.scenery.repl.REPL;
 import graphics.scenery.viewer.process.MeshConverter;
 import net.imagej.ImageJ;
-import net.imagej.display.DataView;
 import net.imglib2.RealLocalizable;
 import org.scijava.ui.behaviour.ClickBehaviour;
 
@@ -16,12 +12,12 @@ import java.io.*;
 import java.nio.FloatBuffer;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class SceneryViewer extends SceneryDefaultApplication  {
+public class SceneryViewer extends SceneryDefaultApplication {
 
     //static ImageJ ij;
 
     private Thread animationThread;
-    private Mesh aMesh = null;
+    private Node activeNode = null;
 
     private Boolean defaultArcBall = true;
 
@@ -45,10 +41,10 @@ public class SceneryViewer extends SceneryDefaultApplication  {
         for( int i = 0; i < lights.length; i++ ) {
             lights[i] = new PointLight();
             lights[i].setPosition( new GLVector(20.0f * i, 20.0f * i, 20.0f * i) );
-            lights[i].setEmissionColor( new GLVector(1.0f, 0.0f, 1.0f) );
+            lights[i].setEmissionColor( new GLVector(1.0f, 1.0f, 1.0f) );
             lights[i].setIntensity( 5000.2f*(i+1) );
             lights[i].setLinear(0.0f);
-            //lights[i].setQuadratic(0.5f);
+            lights[i].setQuadratic(0.5f);
             getScene().addChild( lights[i] );
         }
 
@@ -59,9 +55,16 @@ public class SceneryViewer extends SceneryDefaultApplication  {
         getScene().addChild(cam);
         this.camera = cam;
 
-        setRepl(new REPL(getScene(), getRenderer()));
-        getRepl().start();
-        getRepl().showConsoleWindow();
+        Box shell = new Box(new GLVector(120.0f, 120.0f, 120.0f), true);
+        shell.getMaterial().setDoubleSided( true );
+        shell.getMaterial().setDiffuse( new GLVector(0.2f, 0.2f, 0.2f) );
+        shell.getMaterial().setSpecular( GLVector.getNullVector(3) );
+        shell.getMaterial().setAmbient( GLVector.getNullVector(3) );
+        getScene().addChild(shell);
+
+//        setRepl(new REPL(getScene(), getRenderer()));
+//        getRepl().start();
+//        getRepl().showConsoleWindow();
 
     }
 
@@ -114,6 +117,8 @@ public class SceneryViewer extends SceneryDefaultApplication  {
 
         //System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
 
+        activeNode = box;
+
         getScene().addChild(box);
 
         if( defaultArcBall ) enableArcBallControl();
@@ -139,6 +144,8 @@ public class SceneryViewer extends SceneryDefaultApplication  {
         final Sphere sphere = new Sphere( radius, 20 );
         sphere.setMaterial( material );
         sphere.setPosition( position );
+
+        activeNode = sphere;
 
         getScene().addChild(sphere);
 
@@ -225,10 +232,29 @@ public class SceneryViewer extends SceneryDefaultApplication  {
         Mesh scMesh = new Mesh();
         scMesh.readFromOBJ( filename, false );// Could check if there is a MTL to use to toggle flag
 
-        net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );
+        //net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );
         //((DefaultMesh) opsMesh).centerMesh();
 
-        addMesh( opsMesh );
+        //addMesh( opsMesh );
+
+        addMesh( scMesh );
+    }
+
+    public void addMesh( Mesh scMesh ) {
+        Material material = new Material();
+        material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
+        material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
+        material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
+        material.setDoubleSided(true);
+
+        scMesh.setMaterial( material );
+        scMesh.setPosition( new GLVector(1.0f, 1.0f, 1.0f) );
+
+        activeNode = scMesh;
+
+        getScene().addChild( scMesh );
+
+        if( defaultArcBall ) enableArcBallControl();
     }
 
     public void addMesh( net.imagej.ops.geom.geom3d.mesh.Mesh mesh ) {
@@ -243,7 +269,7 @@ public class SceneryViewer extends SceneryDefaultApplication  {
         scMesh.setMaterial( material );
         scMesh.setPosition( new GLVector(1.0f, 1.0f, 1.0f) );
 
-        aMesh = scMesh;
+        activeNode = scMesh;
 
         getScene().addChild( scMesh );
 
@@ -256,8 +282,8 @@ public class SceneryViewer extends SceneryDefaultApplication  {
         getScene().removeChild( scMesh );
     }
 
-    public Mesh getSelectedMesh() {
-        return aMesh;
+    public Node getActiveNode() {
+        return activeNode;
     }
 
     public Thread getAnimationThread() {
@@ -292,14 +318,20 @@ public class SceneryViewer extends SceneryDefaultApplication  {
 
     public void enableArcBallControl() {
         GLVector target;
-        if( getSelectedMesh() == null ) {
+        if( getActiveNode() == null ) {
             target = new GLVector( 0, 0, 0 );
         } else {
-            net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( getSelectedMesh() );
-            RealLocalizable center = MeshUtils.getCenter(opsMesh);
-            target = new GLVector( center.getFloatPosition(0), center.getFloatPosition(1), center.getFloatPosition(2) );
-        }
+            if( getActiveNode() instanceof Mesh ) {
+                net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( (Mesh)getActiveNode() );
+                RealLocalizable center = MeshUtils.getCenter(opsMesh);
+                target = new GLVector( center.getFloatPosition(0), center.getFloatPosition(1), center.getFloatPosition(2) );
+            }
+            else {
+                target = getActiveNode().getPosition();
+            }
 
+        }
+/*
         ArcballCameraControl targetArcball = new ArcballCameraControl("mouse_control", getScene().findObserver(),
                 getRenderer().getWindow().getWidth(),
                 getRenderer().getWindow().getHeight(), target);
@@ -307,16 +339,18 @@ public class SceneryViewer extends SceneryDefaultApplication  {
         getInputHandler().addBehaviour("mouse_control", targetArcball);
         getInputHandler().addBehaviour("scroll_arcball", targetArcball);
         getInputHandler().addKeyBinding("scroll_arcball", "scroll");
+        */
     }
 
     public void enableFPSControl() {
+        /*
         FPSCameraControl fpsControl = new FPSCameraControl("mouse_control", getScene().findObserver(),
                 getRenderer().getWindow().getWidth(),
                 getRenderer().getWindow().getHeight());
 
         getInputHandler().addBehaviour("mouse_control", fpsControl);
         getInputHandler().removeBehaviour("scroll_arcball");
-
+*/
     }
 
     public Node[] getSceneNodes() {
@@ -326,7 +360,7 @@ public class SceneryViewer extends SceneryDefaultApplication  {
     }
 
     public void deleteSelectedMesh() {
-        getScene().removeChild( getSelectedMesh() );
+        getScene().removeChild( getActiveNode() );
     }
 
     public void dispose() {
@@ -364,4 +398,7 @@ public class SceneryViewer extends SceneryDefaultApplication  {
     }
 
 
+    public void addChild(Node node) {
+        getScene().addChild(node);
+    }
 }
