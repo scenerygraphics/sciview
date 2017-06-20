@@ -260,6 +260,8 @@ public class SceneryViewer extends SceneryDefaultApplication {
     public void addMesh( net.imagej.ops.geom.geom3d.mesh.Mesh mesh ) {
         Mesh scMesh = MeshConverter.getSceneryMesh( mesh );
 
+        System.out.println( "Converting to a scenery mesh");
+
         Material material = new Material();
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
         material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
@@ -275,7 +277,13 @@ public class SceneryViewer extends SceneryDefaultApplication {
 
         if( defaultArcBall ) enableArcBallControl();
 
-//		System.err.println( "Number of nodes in scene: " + SceneryViewer.getSceneNodes().size() );
+		System.out.println( activeNode.getPosition() );
+		System.out.println( activeNode.getBoundingBoxCoords()[0]  );
+        System.out.println( activeNode.getBoundingBoxCoords()[1]  );
+        System.out.println( activeNode.getBoundingBoxCoords()[2]  );
+        System.out.println( activeNode.getBoundingBoxCoords()[3]  );
+        System.out.println( activeNode.getBoundingBoxCoords()[4]  );
+        System.out.println( activeNode.getBoundingBoxCoords()[5]  );
     }
 
     public void removeMesh( Mesh scMesh ) {

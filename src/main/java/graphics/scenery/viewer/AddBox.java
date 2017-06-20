@@ -9,11 +9,12 @@ import org.scijava.command.Command;
 public class AddBox  implements Command {
 
 	@Parameter
-	SceneryService scenery;
+	SceneryService sceneryService;
 		
 	@Override
 	public void run() {
-		scenery.getActiveSceneryViewer().addBox();
+
+		sceneryService.getActiveSceneryViewer().addBox();
 	}
 
 }

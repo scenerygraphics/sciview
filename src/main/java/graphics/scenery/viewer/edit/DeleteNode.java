@@ -4,8 +4,6 @@ import graphics.scenery.viewer.SceneryService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import graphics.scenery.viewer.SceneryViewer;
-
 import org.scijava.command.Command;
 
 @Plugin(type = Command.class, 
@@ -21,7 +19,7 @@ public class DeleteNode implements Command {
 	
 	@Override
 	public void run() {
-		if( sceneryService.getActiveSceneryViewer().getSelectedMesh() != null ) {
+		if( sceneryService.getActiveSceneryViewer().getActiveNode() != null ) {
 			sceneryService.getActiveSceneryViewer().deleteSelectedMesh();
 		}
 	}

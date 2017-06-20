@@ -1,7 +1,6 @@
 package graphics.scenery.viewer.ops;
 
 import graphics.scenery.viewer.SceneryService;
-import net.imagej.Dataset;
 import org.scijava.ItemIO;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -13,7 +12,6 @@ import net.imglib2.type.logic.BitType;
 
 import org.scijava.command.Command;
 
-import graphics.scenery.viewer.SceneryViewer;
 import graphics.scenery.viewer.process.MeshConverter;
 import graphics.scenery.Mesh;
 
@@ -41,11 +39,13 @@ public class MeshToImage implements Command {
 		
 	@Override
 	public void run() {
-		Mesh currentMesh = sceneryService.getActiveSceneryViewer().getSelectedMesh();
-		DefaultMesh opsMesh = (DefaultMesh) MeshConverter.getOpsMesh( currentMesh );		
-				
-		//net.imagej.ops.geom.geom3d.mesh.Mesh img = ops.geom().voxelization( opsMesh, width, height, depth);
-		RandomAccessibleInterval<BitType> img = ops.geom().voxelization( opsMesh, width, height, depth);
+		if( sceneryService.getActiveSceneryViewer().getActiveNode() instanceof Mesh ) {
+			Mesh currentMesh = (Mesh) sceneryService.getActiveSceneryViewer().getActiveNode();
+			DefaultMesh opsMesh = (DefaultMesh) MeshConverter.getOpsMesh(currentMesh);
+
+			//net.imagej.ops.geom.geom3d.mesh.Mesh img = ops.geom().voxelization( opsMesh, width, height, depth);
+			RandomAccessibleInterval<BitType> img = ops.geom().voxelization(opsMesh, width, height, depth);
+		}
 
 	}
 

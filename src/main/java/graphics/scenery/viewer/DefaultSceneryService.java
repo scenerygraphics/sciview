@@ -4,6 +4,7 @@ import net.imagej.Data;
 import net.imagej.Position;
 import net.imagej.display.DataView;
 import org.scijava.display.DisplayService;
+import org.scijava.display.event.window.WinActivatedEvent;
 import org.scijava.display.event.window.WinClosedEvent;
 import org.scijava.event.EventHandler;
 import org.scijava.event.EventService;
@@ -29,7 +30,9 @@ public class DefaultSceneryService extends AbstractService
 {
 
     /* Parameters */
-    
+
+    @Parameter
+    private EventService eventService;
 
     /* Instance variables */
 
@@ -71,4 +74,23 @@ public class DefaultSceneryService extends AbstractService
     public int numSceneryViewers() {
         return sceneryViewers.size();
     }
+
+    /* Event Handlers */
+
+    /** Deletes the display when display window is closed. */
+    @EventHandler
+    protected void onEvent(final WinClosedEvent event) {
+        System.out.println( "Window: " + event.getWindow() );
+        //final Display<?> display = event.getDisplay();
+        //if (display != null) display.close();
+    }
+
+    /** Sets the display to active when its window is activated. */
+    @EventHandler
+    protected void onEvent(final WinActivatedEvent event) {
+        System.out.println("Window activated");
+        //final Display<?> display = event.getDisplay();
+        //if (display != null) setActiveDisplay(display);
+    }
+
 }

@@ -23,15 +23,10 @@ public class AddSphere  implements Command {
 
 	@Override
 	public void run() {
-		//GLVector pos = ThreeDViewer.getSelectedMesh().getPosition();
 		RealLocalizable center;
-		if( sceneryService.getActiveSceneryViewer().getSelectedMesh() != null ) {
-			Mesh mesh = MeshConverter.getOpsMesh( sceneryService.getActiveSceneryViewer().getSelectedMesh() );
-			center = MeshUtils.getCenter( mesh );
-		} else {
-			center = new RealPoint( 0, 0, 0 );
-		}
-		//RealLocalizable center = ((DefaultMesh) mesh).getCenter();
+
+		center = new RealPoint( 0, 0, 0 );
+
 		GLVector pos = new GLVector( center.getFloatPosition(0), center.getFloatPosition(1), center.getFloatPosition(2) );
 		sceneryService.getActiveSceneryViewer().addSphere( pos, radius );
 	}
