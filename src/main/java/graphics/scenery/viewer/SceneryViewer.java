@@ -235,13 +235,15 @@ public class SceneryViewer extends SceneryDefaultApplication {
         Mesh scMesh = new Mesh();
         scMesh.readFromSTL( filename );
 
-        scMesh.generateBoundingBox();
+        //scMesh.generateBoundingBox();
 
-        net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );
+        //net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );
 
         //((DefaultMesh) opsMesh).centerMesh();
 
-        addMesh( opsMesh );
+        //addMesh( opsMesh );
+
+        addMesh( scMesh );
     }
 
     public void addObj( String filename ) {
@@ -261,7 +263,7 @@ public class SceneryViewer extends SceneryDefaultApplication {
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
         material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
         material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
-        material.setDoubleSided(true);
+        material.setDoubleSided(false);
 
         scMesh.setMaterial( material );
         scMesh.setPosition( new GLVector(1.0f, 1.0f, 1.0f) );

@@ -1,5 +1,6 @@
 package graphics.scenery.viewer.process;
 
+import cleargl.GLVector;
 import net.imagej.ops.geom.geom3d.mesh.*;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import graphics.scenery.BufferUtils;
@@ -59,10 +60,9 @@ public class MeshConverter {
 			scMesh.setTexcoords(BufferUtils.BufferUtils.allocateFloat(0));
 			scMesh.setIndices(BufferUtils.BufferUtils.allocateInt(0));
 
-			scMesh.getVertices().flip();
-			scMesh.getNormals().flip();
-
 			scMesh.setBoundingBoxCoords(boundingBox);
+			scMesh.setDirty(true);
+			scMesh.setScale(new GLVector(0.1f, 0.1f, 0.1f));
 
 			return scMesh;
 		}
