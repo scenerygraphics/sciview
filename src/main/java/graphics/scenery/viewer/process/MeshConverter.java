@@ -26,6 +26,9 @@ public class MeshConverter {
 			float[] scVertices = new float[facets.size() * 3 * numDimension];
 			float[] scNormals = new float[facets.size() * 3 * numDimension];
 
+			float[] boundingBox = new float[]{Float.POSITIVE_INFINITY,Float.POSITIVE_INFINITY,Float.POSITIVE_INFINITY,
+					Float.NEGATIVE_INFINITY,Float.NEGATIVE_INFINITY,Float.NEGATIVE_INFINITY};
+
 			int count = 0;
 			List<Vertex> vertices;
 			for( Facet facet : facets ) {
@@ -35,6 +38,13 @@ public class MeshConverter {
 				for( Vertex v : vertices ) {
 					for( int d = 0; d < numDimension; d++ ) {
 						scVertices[count] = (float) v.getDoublePosition(d);
+
+						if( scVertices[count] < boundingBox[d] )// min
+							boundingBox[d] = scVertices[count];
+
+						if( scVertices[count] > boundingBox[d+3] )// min
+							boundingBox[d+3] = scVertices[count];
+
 						if( d == 0 ) scNormals[count] = (float) normal.getX();
 						else if( d == 1 ) scNormals[count] = (float) normal.getY();
 						else if( d == 2 ) scNormals[count] = (float) normal.getZ();
@@ -46,6 +56,14 @@ public class MeshConverter {
 			System.out.println( "Converted " + scVertices.length + " vertices and " + scNormals.length + " normals ");
 			scMesh.setVertices(BufferUtils.BufferUtils.allocateFloatAndPut(scVertices) );
 			scMesh.setNormals( BufferUtils.BufferUtils.allocateFloatAndPut(scNormals) );
+			scMesh.setTexcoords(BufferUtils.BufferUtils.allocateFloat(0));
+			scMesh.setIndices(BufferUtils.BufferUtils.allocateInt(0));
+
+			scMesh.getVertices().flip();
+			scMesh.getNormals().flip();
+
+			scMesh.setBoundingBoxCoords(boundingBox);
+
 			return scMesh;
 		}
 		return null;

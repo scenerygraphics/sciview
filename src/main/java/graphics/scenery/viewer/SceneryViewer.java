@@ -4,6 +4,8 @@ import cleargl.GLVector;
 import coremem.enums.NativeTypeEnum;
 import graphics.scenery.*;
 import graphics.scenery.backends.Renderer;
+import graphics.scenery.controls.behaviours.ArcballCameraControl;
+import graphics.scenery.controls.behaviours.FPSCameraControl;
 import graphics.scenery.viewer.process.MeshConverter;
 import graphics.scenery.volumes.Volume;
 import net.imagej.Dataset;
@@ -21,6 +23,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Supplier;
 
 public class SceneryViewer extends SceneryDefaultApplication {
 
@@ -97,6 +100,9 @@ public class SceneryViewer extends SceneryDefaultApplication {
         getInputHandler().addBehaviour("object_selection_mode", objectSelector);
 
         enableArcBallControl();
+
+        setupCameraModeSwitching("C");
+
     }
 
     public void addBox() {
@@ -349,26 +355,26 @@ public class SceneryViewer extends SceneryDefaultApplication {
             }
 
         }
-/*
-        ArcballCameraControl targetArcball = new ArcballCameraControl("mouse_control", getScene().findObserver(),
+
+        Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
+        ArcballCameraControl targetArcball = new ArcballCameraControl("mouse_control", cameraSupplier,
                 getRenderer().getWindow().getWidth(),
                 getRenderer().getWindow().getHeight(), target);
         targetArcball.setMaximumDistance(Float.MAX_VALUE);
         getInputHandler().addBehaviour("mouse_control", targetArcball);
         getInputHandler().addBehaviour("scroll_arcball", targetArcball);
         getInputHandler().addKeyBinding("scroll_arcball", "scroll");
-        */
+
     }
 
     public void enableFPSControl() {
-        /*
-        FPSCameraControl fpsControl = new FPSCameraControl("mouse_control", getScene().findObserver(),
+        Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
+        FPSCameraControl fpsControl = new FPSCameraControl("mouse_control", cameraSupplier,
                 getRenderer().getWindow().getWidth(),
                 getRenderer().getWindow().getHeight());
 
         getInputHandler().addBehaviour("mouse_control", fpsControl);
         getInputHandler().removeBehaviour("scroll_arcball");
-*/
     }
 
     public Node[] getSceneNodes() {
