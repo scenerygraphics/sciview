@@ -275,6 +275,7 @@ public class SceneryViewer extends SceneryDefaultApplication {
         if( defaultArcBall ) enableArcBallControl();
     }
 
+
     public void addMesh( net.imagej.ops.geom.geom3d.mesh.Mesh mesh ) {
         Mesh scMesh = MeshConverter.getSceneryMesh( mesh );
 
@@ -347,15 +348,15 @@ public class SceneryViewer extends SceneryDefaultApplication {
         if( getActiveNode() == null ) {
             target = new GLVector( 0, 0, 0 );
         } else {
-            if( getActiveNode() instanceof Mesh ) {
+            /*if( getActiveNode() instanceof Mesh ) {
                 net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( (Mesh)getActiveNode() );
                 RealLocalizable center = MeshUtils.getCenter(opsMesh);
                 target = new GLVector( center.getFloatPosition(0), center.getFloatPosition(1), center.getFloatPosition(2) );
             }
             else {
                 target = getActiveNode().getPosition();
-            }
-
+            }*/
+            target = getActiveNode().getPosition();
         }
 
         Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
