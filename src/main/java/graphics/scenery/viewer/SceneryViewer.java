@@ -1,14 +1,24 @@
 package graphics.scenery.viewer;
 
 import cleargl.GLVector;
+import coremem.enums.NativeTypeEnum;
 import graphics.scenery.*;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.viewer.process.MeshConverter;
+import graphics.scenery.volumes.Volume;
+import net.imagej.Dataset;
 import net.imagej.ImageJ;
+import net.imglib2.Cursor;
+import net.imglib2.IterableInterval;
 import net.imglib2.RealLocalizable;
+import net.imglib2.type.Type;
+import net.imglib2.type.numeric.integer.GenericByteType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.scijava.ui.behaviour.ClickBehaviour;
+import org.lwjgl.system.MemoryUtil;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -28,7 +38,7 @@ public class SceneryViewer extends SceneryDefaultApplication {
     }
 
     public SceneryViewer(String applicationName, int windowWidth, int windowHeight) {
-        super(applicationName, windowWidth, windowHeight, true);
+        super(applicationName, windowWidth, windowHeight, false);
     }
 
     @Override
@@ -408,5 +418,46 @@ public class SceneryViewer extends SceneryDefaultApplication {
 
     public void addChild(Node node) {
         getScene().addChild(node);
+    }
+
+    public void addVolume(Dataset image,float[] voxelDimensions) {
+
+        IterableInterval img = image.getImgPlus();
+
+        // Right now let's only accept byte types, but adding other types is easy
+        if(img.firstElement().getClass() == UnsignedByteType.class) {
+            long dimensions[] = new long[3];
+            img.dimensions(dimensions);
+            int bytesPerVoxel = 1;
+
+            byte[] buffer = new byte[1024 * 1024];
+            ByteBuffer byteBuffer = MemoryUtil.memAlloc((int) (bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2]));
+
+            // We might need to use a RAI instead to handle multiple image types
+            //   but we'll be fine for ArrayImg's
+            Cursor<UnsignedByteType> cursor = img.cursor();
+
+            int bytesRead = 1;// to init
+            UnsignedByteType t;
+            while (cursor.hasNext() && (bytesRead > 0)) {
+                bytesRead = 0;
+                while (cursor.hasNext() && bytesRead < buffer.length) {
+                    cursor.fwd();
+                    t = cursor.get();
+                    buffer[bytesRead] = t.getCodedSignedByte(t.get());
+                    bytesRead++;
+                }
+                byteBuffer.put(buffer,0,bytesRead);
+            }
+            byteBuffer.flip();
+
+            Volume v = new Volume();
+            v.readFromBuffer(image.getName(),byteBuffer,dimensions[0],dimensions[1],dimensions[2],
+                    voxelDimensions[0],voxelDimensions[1],voxelDimensions[2],
+                    NativeTypeEnum.Byte,1);
+            v.setColormap("plasma");
+
+            getScene().addChild(v);
+        }
     }
 }
