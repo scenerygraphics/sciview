@@ -5,14 +5,14 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>12.0.0</version>
+		<version>16.1.0</version>
 	</parent>
 	
-	<groupId>sc.fiji</groupId>
-	<artifactId>ThreeDViewer</artifactId>
+	<groupId>sc.ivew</groupId>
+	<artifactId>SciView</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	
-	<name>ThreeDViewer</name>
+	<name>SciView</name>
 	<description>This is a 3D visualization package for ImageJ that uses Scenery (graphics.scenery) as a backend.</description>
 	<url>https://github.com/kephale/ThreeDViewer</url>
 	<inceptionYear>2016</inceptionYear>
@@ -166,6 +166,7 @@
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-common</artifactId>
+			<version>2.64.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
@@ -174,10 +175,6 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-common</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>imagej-legacy</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
