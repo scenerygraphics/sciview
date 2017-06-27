@@ -8,7 +8,7 @@
 		<version>16.1.0</version>
 	</parent>
 	
-	<groupId>sc.ivew</groupId>
+	<groupId>sc.iview</groupId>
 	<artifactId>SciView</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	
@@ -103,9 +103,9 @@
 		<lwjgl.version>3.1.1</lwjgl.version>
 		<spirvcrossj.version>0.2.6</spirvcrossj.version>
 		<jvrpn.version>1.0.1</jvrpn.version>
+		<scijava-common.version>2.64.1-SNAPSHOT</scijava-common.version>
 		<javac.target>1.8</javac.target>
 		<kotlin.compiler.incremental>true</kotlin.compiler.incremental>
-
 		<enforcer.skip>true</enforcer.skip>
 	</properties>
 	
@@ -166,7 +166,6 @@
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-common</artifactId>
-			<version>2.64.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
