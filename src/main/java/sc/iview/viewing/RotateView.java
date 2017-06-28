@@ -9,7 +9,7 @@ import sc.iview.SciView;
 import sc.iview.SciViewService;
 
 @Plugin(type = Command.class, 
-		menuPath = "Scenery>View>Rotate")
+		menuPath = "SciView>View>Rotate")
 public class RotateView  implements Command {
 
 	@Parameter
@@ -17,7 +17,7 @@ public class RotateView  implements Command {
 
 	@Override
 	public void run() {
-		Thread rotator = sceneryService.getActiveSceneryViewer().getAnimationThread();
+		Thread rotator = sceneryService.getActiveSciView().getAnimationThread();
 		if( rotator != null && ( 
 				rotator.getState() == Thread.State.RUNNABLE ||
 				rotator.getState() == Thread.State.WAITING ) ) {
@@ -27,7 +27,7 @@ public class RotateView  implements Command {
 		rotator = new Thread(){
 		    public void run() {
 		        while (true) {
-		        	for( Node node : sceneryService.getActiveSceneryViewer().getSceneNodes() ) {
+		        	for( Node node : sceneryService.getActiveSciView().getSceneNodes() ) {
 			        	
 			            node.getRotation().rotateByAngleY(0.01f);
 			            node.setNeedsUpdate(true);
@@ -44,7 +44,7 @@ public class RotateView  implements Command {
 		};        
 		rotator.start();
 
-		sceneryService.getActiveSceneryViewer().setAnimationThread( rotator );
+		sceneryService.getActiveSciView().setAnimationThread( rotator );
 	}
 
 }

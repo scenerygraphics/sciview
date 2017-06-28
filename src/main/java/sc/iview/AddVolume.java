@@ -9,7 +9,7 @@ import org.scijava.plugin.Plugin;
  * Created by kharrington on 6/21/17.
  */
 @Plugin(type = Command.class,
-        menuPath = "Scenery>Add>Volume")
+        menuPath = "SciView>Add>Volume")
 public class AddVolume implements Command {
 
     @Parameter
@@ -29,7 +29,7 @@ public class AddVolume implements Command {
 
     @Override
     public void run() {
-        sceneryService.getActiveSceneryViewer().addVolume(image,new float[]{voxelWidth,voxelHeight,voxelDepth});
+        sceneryService.getActiveSciView().addVolume(image,new float[]{voxelWidth,voxelHeight,voxelDepth});
     }
 
 }

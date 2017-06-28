@@ -1,13 +1,6 @@
 package sc.iview;
 
-import net.imagej.Data;
 import net.imagej.ImageJService;
-import net.imagej.Position;
-import net.imagej.display.DataView;
-import org.scijava.display.DisplayService;
-import org.scijava.event.EventService;
-
-import java.util.List;
 
 /**
  * Interface for services that work with Scenery.
@@ -16,13 +9,13 @@ import java.util.List;
  */
 public interface SciViewService extends ImageJService {
 
-    public SciView getActiveSceneryViewer();
+    public SciView getActiveSciView();
     
     public SciView getOrCreateActiveSciView();
 
-    public SciView getSceneryViewer(String name);
+    public SciView getSciView(String name);
 
-    public void createSceneryViewer();
+    public void createSciView();
 
-    public int numSceneryViewers();
+    public int numSciView();
 }

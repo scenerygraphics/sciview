@@ -9,7 +9,7 @@ import sc.iview.SciViewService;
 import org.scijava.command.Command;
 
 @Plugin(type = Command.class, 
-		menuPath = "Scenery>View>Stop Animation")
+		menuPath = "SciView>View>Stop Animation")
 public class StopAnimation  implements Command {
 
 	@Parameter
@@ -17,10 +17,10 @@ public class StopAnimation  implements Command {
 
 	@Override
 	public void run() {
-		Thread animator = sceneryService.getActiveSceneryViewer().getAnimationThread();
+		Thread animator = sceneryService.getActiveSciView().getAnimationThread();
 		if( animator != null ) {
 			animator.stop();
-			sceneryService.getActiveSceneryViewer().setAnimationThread( null );
+			sceneryService.getActiveSciView().setAnimationThread( null );
 		}
 
 	}

@@ -11,7 +11,7 @@ import sc.iview.SciViewService;
 import org.scijava.command.Command;
 
 @Plugin(type = Command.class, 
-		menuPath = "Scenery>Import>Obj")
+		menuPath = "SciView>Import>Obj")
 public class ImportObj  implements Command {
 	
 	@Parameter
@@ -26,7 +26,7 @@ public class ImportObj  implements Command {
 		{
 			try
 			{
-				sceneryService.getActiveSceneryViewer().addObj( objFile.getAbsolutePath() );
+				sceneryService.getActiveSciView().addObj( objFile.getAbsolutePath() );
 			}
 			catch ( final Exception e )
 			{

@@ -17,7 +17,7 @@ import sc.iview.SciViewService;
 import org.scijava.command.Command;
 
 @Plugin(type = Command.class, 
-		menuPath = "Scenery>Import>Isosurface")
+		menuPath = "SciView>Import>Isosurface")
 public class ImportIsosurface  implements Command {
 	
 	@Parameter
@@ -42,7 +42,7 @@ public class ImportIsosurface  implements Command {
 		
 		DefaultMesh dm = (DefaultMesh) m;
 
-		sceneryService.getActiveSceneryViewer().addMesh( m );
+		sceneryService.getActiveSciView().addMesh( m );
 		
 	}
 

@@ -14,7 +14,7 @@ import sc.iview.SciViewService;
 import sc.iview.process.MeshConverter;
 
 @Plugin(type = Command.class, 
-		menuPath = "Scenery>Mesh>Mesh To Image")
+		menuPath = "SciView>Mesh>Mesh To Image")
 public class MeshToImage implements Command {
 	
 	@Parameter
@@ -37,8 +37,8 @@ public class MeshToImage implements Command {
 		
 	@Override
 	public void run() {
-		if( sceneryService.getActiveSceneryViewer().getActiveNode() instanceof Mesh ) {
-			Mesh currentMesh = (Mesh) sceneryService.getActiveSceneryViewer().getActiveNode();
+		if( sceneryService.getActiveSciView().getActiveNode() instanceof Mesh ) {
+			Mesh currentMesh = (Mesh) sceneryService.getActiveSciView().getActiveNode();
 			DefaultMesh opsMesh = (DefaultMesh) MeshConverter.getOpsMesh(currentMesh);
 
 			//net.imagej.ops.geom.geom3d.mesh.Mesh img = ops.geom().voxelization( opsMesh, width, height, depth);

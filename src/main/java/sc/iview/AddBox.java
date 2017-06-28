@@ -6,7 +6,7 @@ import org.scijava.command.Command;
 import org.scijava.display.DisplayService;
 
 @Plugin(type = Command.class, 
-		menuPath = "Scenery>Add>Box")
+		menuPath = "SciView>Add>Box")
 public class AddBox  implements Command {
 
 	@Parameter

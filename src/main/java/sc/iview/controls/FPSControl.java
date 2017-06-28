@@ -9,7 +9,7 @@ import sc.iview.SciViewService;
 import org.scijava.command.Command;
 
 @Plugin(type = Command.class, 
-		menuPath = "Scenery>Controls>FPS")
+		menuPath = "SciView>Controls>FPS")
 public class FPSControl  implements Command {
 
 	@Parameter
@@ -17,7 +17,7 @@ public class FPSControl  implements Command {
 
 	@Override
 	public void run() {
-		sceneryService.getActiveSceneryViewer().enableFPSControl();
+		sceneryService.getActiveSciView().enableFPSControl();
 		
 	}
 

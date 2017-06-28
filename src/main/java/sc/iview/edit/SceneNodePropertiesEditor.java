@@ -31,7 +31,7 @@ import static org.scijava.widget.ChoiceWidget.LIST_BOX_STYLE;
  *
  */
 @Plugin(type = Command.class,
-        menuPath = "Scenery>Edit>Properties",
+        menuPath = "SciView>Edit>Properties",
         initializer = "initValues")
 public class SceneNodePropertiesEditor extends InteractiveCommand implements Command
 {
@@ -88,7 +88,7 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
         initializing = true;
         sceneNodeChoices = new ArrayList<String>();
         int count = 0;
-        for (Node sceneNode : sceneryService.getActiveSceneryViewer().getSceneNodes()) {
+        for (Node sceneNode : sceneryService.getActiveSciView().getSceneNodes()) {
             sceneNodeChoices.add(makeIdentifier(sceneNode, count));
             count++;
         }
@@ -112,7 +112,7 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
         currentSceneNode = null;
 
         int count = 0;
-        for (Node sceneNode : sceneryService.getActiveSceneryViewer().getSceneNodes()) {
+        for (Node sceneNode : sceneryService.getActiveSciView().getSceneNodes()) {
             if (identifier.equals(makeIdentifier(sceneNode, count)))
             {
                 currentSceneNode = sceneNode;
@@ -125,7 +125,7 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
         // update property fields according to scene node properties
         refreshColourInDialog();
 
-        if (sceneNodeChoices.size() != sceneryService.getActiveSceneryViewer().getSceneNodes().length)
+        if (sceneNodeChoices.size() != sceneryService.getActiveSciView().getSceneNodes().length)
         {
             rebuildSceneObjectChoiseList();
         }

@@ -11,7 +11,7 @@ import sc.iview.SciViewService;
 import org.scijava.command.Command;
 
 @Plugin(type = Command.class, 
-		menuPath = "Scenery>Import>STL", label = "Import STL")
+		menuPath = "SciView>Import>STL", label = "Import STL")
 public class ImportSTL  implements Command {
 	
 	@Parameter
@@ -26,7 +26,7 @@ public class ImportSTL  implements Command {
 		{
 			try
 			{
-				sceneryService.getActiveSceneryViewer().addSTL( stlFile.getAbsolutePath() );
+				sceneryService.getActiveSciView().addSTL( stlFile.getAbsolutePath() );
 			}
 			catch ( final Exception e )
 			{

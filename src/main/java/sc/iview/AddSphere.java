@@ -12,7 +12,7 @@ import sc.iview.process.MeshConverter;
 import org.scijava.command.Command;
 
 @Plugin(type = Command.class, 
-		menuPath = "Scenery>Add>Sphere")
+		menuPath = "SciView>Add>Sphere")
 public class AddSphere  implements Command {
 		
 	@Parameter

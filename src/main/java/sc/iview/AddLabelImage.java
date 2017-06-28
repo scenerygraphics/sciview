@@ -28,7 +28,7 @@ import java.util.ArrayList;
  * Date: July 2016
  */
 @Plugin(type = Command.class,
-        menuPath = "Scenery>Add>Label image")
+        menuPath = "SciView>Add>Label image")
 public  class AddLabelImage<T extends RealType<T>> implements Command {
 
     @Parameter
@@ -72,7 +72,7 @@ public  class AddLabelImage<T extends RealType<T>> implements Command {
             LabelRegion<Integer> lr = labelRegions.getLabelRegion((Integer)regionsArr[i]);
 
             Mesh mesh = ops.geom().marchingCubes(lr);
-            sceneryService.getActiveSceneryViewer().addMesh(mesh);
+            sceneryService.getActiveSciView().addMesh(mesh);
         }
     }
 

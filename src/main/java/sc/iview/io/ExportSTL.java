@@ -12,7 +12,7 @@ import graphics.scenery.Mesh;
 import sc.iview.SciViewService;
 
 @Plugin(type = Command.class, 
-		menuPath = "Scenery>Export>STL_", label = "Export STL")
+		menuPath = "SciView>Export>STL_", label = "Export STL")
 public class ExportSTL  implements Command {
 	
 	//@Parameter
@@ -26,12 +26,12 @@ public class ExportSTL  implements Command {
 
 	@Override
 	public void run() {
-		if( sceneryService.getActiveSceneryViewer().getActiveNode() instanceof Mesh ) {
-			Mesh mesh = (Mesh)sceneryService.getActiveSceneryViewer().getActiveNode();
+		if( sceneryService.getActiveSciView().getActiveNode() instanceof Mesh ) {
+			Mesh mesh = (Mesh)sceneryService.getActiveSciView().getActiveNode();
 
 			if (mesh != null) {
 				try {
-					sceneryService.getActiveSceneryViewer().writeSCMesh(stlFile.getAbsolutePath(), mesh);
+					sceneryService.getActiveSciView().writeSCMesh(stlFile.getAbsolutePath(), mesh);
 					//ThreeDViewer.writeSCMesh( stlFilename, mesh );
 				} catch (final Exception e) {
 					throw new RuntimeException(e);

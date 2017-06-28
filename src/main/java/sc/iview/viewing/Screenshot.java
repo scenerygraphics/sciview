@@ -9,7 +9,7 @@ import sc.iview.SciViewService;
 import org.scijava.command.Command;
 
 @Plugin(type = Command.class, 
-		menuPath = "Scenery>View>Screenshot")
+		menuPath = "SciView>View>Screenshot")
 public class Screenshot implements Command {
 
 	@Parameter
@@ -17,7 +17,7 @@ public class Screenshot implements Command {
 	
 	@Override
 	public void run() {
-		sceneryService.getActiveSceneryViewer().takeScreenshot();
+		sceneryService.getActiveSciView().takeScreenshot();
 	}
 
 }

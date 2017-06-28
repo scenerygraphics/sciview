@@ -14,7 +14,7 @@ import org.scijava.command.Command;
 import graphics.scenery.Mesh;
 
 @Plugin(type = Command.class, 
-		menuPath = "Scenery>Mesh>Convex Hull")
+		menuPath = "SciView>Mesh>Convex Hull")
 public class ConvexHull implements Command {
 	
 	@Parameter
@@ -25,15 +25,15 @@ public class ConvexHull implements Command {
 		
 	@Override
 	public void run() {
-		if( sceneryService.getActiveSceneryViewer().getActiveNode() instanceof  Mesh ) {
-			Mesh currentMesh = (Mesh)sceneryService.getActiveSceneryViewer().getActiveNode();
+		if( sceneryService.getActiveSciView().getActiveNode() instanceof  Mesh ) {
+			Mesh currentMesh = (Mesh)sceneryService.getActiveSciView().getActiveNode();
 			DefaultMesh opsMesh = (DefaultMesh) MeshConverter.getOpsMesh(currentMesh);
 
 			currentMesh.getMaterial().setDiffuse(new GLVector(1.0f, 0.0f, 0.0f));
 
 			net.imagej.ops.geom.geom3d.mesh.Mesh smoothMesh = ops.geom().convexHull((net.imagej.ops.geom.geom3d.mesh.Mesh) opsMesh);
 
-			sceneryService.getActiveSceneryViewer().addMesh(smoothMesh);
+			sceneryService.getActiveSciView().addMesh(smoothMesh);
 		}
 
 	}

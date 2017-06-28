@@ -9,7 +9,7 @@ import org.scijava.plugin.Plugin;
  * Created by kharrington on 6/20/17.
  */
 @Plugin(type = Command.class,
-        menuPath = "Scenery>Launch")
+        menuPath = "SciView>Launch")
 public class LaunchViewer implements Command {
     
     @Parameter

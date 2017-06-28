@@ -5,7 +5,7 @@ import org.scijava.plugin.Plugin;
 import org.scijava.command.Command;
 
 @Plugin(type = Command.class, 
-		menuPath = "Scenery>Add>Point Light")
+		menuPath = "SciView>Add>Point Light")
 public class AddPointLight implements Command {
 
 	@Parameter
@@ -13,7 +13,7 @@ public class AddPointLight implements Command {
 
 	@Override
 	public void run() {
-		sceneryService.getActiveSceneryViewer().addPointLight();
+		sceneryService.getActiveSciView().addPointLight();
 	}
 
 }

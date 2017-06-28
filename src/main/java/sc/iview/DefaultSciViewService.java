@@ -51,13 +51,13 @@ public class DefaultSciViewService extends AbstractService
 
     /* Methods */
 
-    public SciView getActiveSceneryViewer() {
+    public SciView getActiveSciView() {
         if ( sceneryViewers.size() > 0 )
             return sceneryViewers.get(0);
         return null;
     }
 
-    public SciView getSceneryViewer(String name) {
+    public SciView getSciView(String name) {
         for( final SciView sceneryViewer : sceneryViewers ) {
             if( name.equalsIgnoreCase(sceneryViewer.getName())) {
                 return sceneryViewer;
@@ -66,7 +66,7 @@ public class DefaultSciViewService extends AbstractService
         return null;
     }
 
-    public void createSceneryViewer() {
+    public void createSciView() {
         SciView v = new SciView();
 
         // Maybe should use thread service instead
@@ -81,7 +81,7 @@ public class DefaultSciViewService extends AbstractService
     }
 
     @Override
-    public int numSceneryViewers() {
+    public int numSciView() {
         return sceneryViewers.size();
     }
 
@@ -95,7 +95,7 @@ public class DefaultSciViewService extends AbstractService
 		System.out.println(displayService.getDisplays().size());
 		if( d != null ) {
 			// We also have to check if the Viewer has been initialized
-			//   and we're doing it the bad way. Replace if you want
+			//   and we're doing it the bad way by polling. Replace if you want
 			SciView sv = d.get(0);
 			while( !sv.isInitialized() ) {
 				try {
