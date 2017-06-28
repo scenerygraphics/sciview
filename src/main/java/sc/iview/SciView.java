@@ -98,7 +98,7 @@ public class SciView extends SceneryDefaultApplication {
 //        getRepl().showConsoleWindow();
         
         
-        initialized = true;
+        //initialized = true; // inputSetup is called second, so that needs to toggle initialized
     }
     
     public boolean isInitialized() {
@@ -122,10 +122,13 @@ public class SciView extends SceneryDefaultApplication {
         getInputHandler().useDefaultBindings("");
         getInputHandler().addBehaviour("object_selection_mode", objectSelector);
 
+        
+        
         enableArcBallControl();
 
         setupCameraModeSwitching("C");
 
+        initialized = true;
     }
 
     public void addBox() {
