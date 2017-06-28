@@ -121,8 +121,6 @@ public class SciView extends SceneryDefaultApplication {
         };
         getInputHandler().useDefaultBindings("");
         getInputHandler().addBehaviour("object_selection_mode", objectSelector);
-
-        
         
         enableArcBallControl();
 

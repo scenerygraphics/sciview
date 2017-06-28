@@ -1,6 +1,7 @@
 package sc.iview.swing;
 
 import org.scijava.display.Display;
+import org.scijava.display.event.DisplayActivatedEvent;
 import org.scijava.display.event.DisplayDeletedEvent;
 import org.scijava.display.event.DisplayUpdatedEvent;
 import org.scijava.display.event.DisplayUpdatedEvent.DisplayUpdateLevel;
@@ -68,5 +69,9 @@ public class SciViewDisplayViewer extends AbstractDisplayViewer<SciView>
 	/** Synchronizes the user interface appearance with the display model. */
 	public void onDisplayUpdatedEvent(final DisplayUpdatedEvent e) {
 		
+	}
+	
+	public void onDisplayActivatedEvent(final DisplayActivatedEvent e) {
+		// do nothing because no panel
 	}
 }

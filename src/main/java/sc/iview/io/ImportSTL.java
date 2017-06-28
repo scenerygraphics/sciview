@@ -18,7 +18,8 @@ public class ImportSTL  implements Command {
 	private File stlFile;
 
 	@Parameter
-	private SciViewService sceneryService;
+	SciView sciView;
+	
 
 	@Override
 	public void run() {
@@ -26,7 +27,7 @@ public class ImportSTL  implements Command {
 		{
 			try
 			{
-				sceneryService.getActiveSciView().addSTL( stlFile.getAbsolutePath() );
+				sciView.addSTL( stlFile.getAbsolutePath() );
 			}
 			catch ( final Exception e )
 			{

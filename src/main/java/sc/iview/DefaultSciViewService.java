@@ -5,6 +5,7 @@ import net.imagej.Position;
 import net.imagej.display.DataView;
 import sc.iview.swing.SciViewDisplay;
 
+import org.scijava.display.Display;
 import org.scijava.display.DisplayService;
 import org.scijava.display.event.window.WinActivatedEvent;
 import org.scijava.display.event.window.WinClosedEvent;
@@ -96,6 +97,7 @@ public class DefaultSciViewService extends AbstractService
 		if( d != null ) {
 			// We also have to check if the Viewer has been initialized
 			//   and we're doing it the bad way by polling. Replace if you want
+			System.out.println("Display found");
 			SciView sv = d.get(0);
 			while( !sv.isInitialized() ) {
 				try {
@@ -106,6 +108,7 @@ public class DefaultSciViewService extends AbstractService
 			}
 			return sv;
 		}
+		System.out.println( "Displays:" + displayService.getDisplays());
 			
 		if( !sceneryViewers.isEmpty() )
 			System.out.println("SciViews exist but no SciViewDisplay found");
@@ -128,7 +131,10 @@ public class DefaultSciViewService extends AbstractService
 			}
 		}
 		System.out.println("Viewer started. " + sv);
-		displayService.createDisplay(sv);
+		
+		System.out.println( "Display plugins: " + displayService.getDisplayPlugins() );
+		Display<?> display = displayService.createDisplay(sv);
+		displayService.setActiveDisplay(display);
 		System.out.println("Created display");
 		//sceneryViewers.add(sv);		
 		
