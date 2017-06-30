@@ -6,6 +6,7 @@ import graphics.scenery.*;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.controls.behaviours.ArcballCameraControl;
 import graphics.scenery.controls.behaviours.FPSCameraControl;
+import graphics.scenery.controls.behaviours.SelectCommand;
 import graphics.scenery.volumes.Volume;
 import kotlin.Unit;
 import net.imagej.Dataset;
@@ -20,10 +21,14 @@ import sc.iview.process.MeshConverter;
 
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.lwjgl.system.MemoryUtil;
+import graphics.scenery.controls.behaviours.SelectCommand.SelectResult;
 
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
@@ -109,24 +114,35 @@ public class SciView extends SceneryDefaultApplication {
         return camera;
     }
 
+
+
     @Override
     public void inputSetup() {
         //setInputHandler((ClearGLInputHandler) viewer.getHub().get(SceneryElement.INPUT));
-        ClickBehaviour objectSelector = new ClickBehaviour() {
 
-            @Override
-            public void click( int x, int y ) {
-                System.out.println( "Clicked at x=" + x + " y=" + y );
-            }
-        };
         getInputHandler().useDefaultBindings("");
-        getInputHandler().addBehaviour("object_selection_mode", objectSelector);
+        getInputHandler().addBehaviour("object_selection_mode", new SelectCommand("objectSelector",getRenderer(),getScene(), () -> getScene().findObserver(),false, result -> this.selectNode(result) ));
         
         enableArcBallControl();
 
         setupCameraModeSwitching("C");
 
         initialized = true;
+    }
+
+    private Object selectNode(List<SelectResult> result) {
+        if (!result.isEmpty()) {
+            Collections.sort(result, new Comparator<SelectResult>() {
+                @Override
+                public int compare(SelectResult lhs, SelectResult rhs) {
+                    return lhs.getDistance() > rhs.getDistance() ? -1 : lhs.getDistance() < rhs.getDistance() ? 1 : 0;
+                }
+            });
+            activeNode = result.get(0).getNode();
+            System.out.println( "Selected " + activeNode );
+            return activeNode;
+        }
+        return null;
     }
 
     public void addBox() {
