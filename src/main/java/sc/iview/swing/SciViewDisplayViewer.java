@@ -58,7 +58,7 @@ public class SciViewDisplayViewer extends AbstractDisplayViewer<SciView>
 
   	@EventHandler
   	protected void onEvent(final DataUpdatedEvent event) {
-  		System.out.println("DIsplay updated");
+  		System.out.println("Display updated");
   	}
 
   	@EventHandler

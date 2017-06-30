@@ -92,12 +92,9 @@ public class DefaultSciViewService extends AbstractService
 	@Override
 	public SciView getOrCreateActiveSciView() {
 		SciViewDisplay d = displayService.getActiveDisplay(SciViewDisplay.class);
-		System.out.println("GetOrCreateActiveSceneryViewer " + d + " " + displayService.getActiveDisplay());
-		System.out.println(displayService.getDisplays().size());
 		if( d != null ) {
 			// We also have to check if the Viewer has been initialized
 			//   and we're doing it the bad way by polling. Replace if you want
-			System.out.println("Display found");
 			SciView sv = d.get(0);
 			while( !sv.isInitialized() ) {
 				try {
@@ -108,13 +105,9 @@ public class DefaultSciViewService extends AbstractService
 			}
 			return sv;
 		}
-		System.out.println( "Displays:" + displayService.getDisplays());
 			
-		if( !sceneryViewers.isEmpty() )
-			System.out.println("SciViews exist but no SciViewDisplay found");
 		// Make one
 		SciView sv = new SciView();
-		System.out.println("Starting viewer");
 		
 		threadService.run(new Runnable() {
 			@Override
@@ -130,12 +123,10 @@ public class DefaultSciViewService extends AbstractService
 				e.printStackTrace();
 			}
 		}
-		System.out.println("Viewer started. " + sv);
-		
-		System.out.println( "Display plugins: " + displayService.getDisplayPlugins() );
+
 		Display<?> display = displayService.createDisplay(sv);
 		displayService.setActiveDisplay(display);
-		System.out.println("Created display");
+
 		//sceneryViewers.add(sv);		
 		
 		return sv;

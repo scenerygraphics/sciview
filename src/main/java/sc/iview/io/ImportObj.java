@@ -18,7 +18,7 @@ public class ImportObj  implements Command {
 	private File objFile;
 
 	@Parameter
-	private SciViewService sceneryService;
+	SciView sciView;
 
 	@Override
 	public void run() {
@@ -26,7 +26,7 @@ public class ImportObj  implements Command {
 		{
 			try
 			{
-				sceneryService.getActiveSciView().addObj( objFile.getAbsolutePath() );
+				sciView.addObj( objFile.getAbsolutePath() );
 			}
 			catch ( final Exception e )
 			{

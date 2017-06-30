@@ -20,7 +20,6 @@ public class ImportSTL  implements Command {
 	@Parameter
 	SciView sciView;
 	
-
 	@Override
 	public void run() {
 		if ( stlFile != null )
