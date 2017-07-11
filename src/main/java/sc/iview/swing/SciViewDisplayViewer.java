@@ -39,7 +39,7 @@ public class SciViewDisplayViewer extends AbstractDisplayViewer<SciView>
         return d instanceof SciViewDisplay;
     }
     
-    @Override
+    //@Override
     public DisplayWindow createWindow( Display<?> d ) {
     	Object data = d.get(0);
     	if( !( data instanceof SciView ) )

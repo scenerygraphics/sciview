@@ -1,6 +1,7 @@
 package sc.iview;
 
 import cleargl.GLVector;
+import com.sun.javafx.application.PlatformImpl;
 import coremem.enums.NativeTypeEnum;
 import graphics.scenery.*;
 import graphics.scenery.backends.Renderer;
@@ -8,6 +9,18 @@ import graphics.scenery.controls.behaviours.ArcballCameraControl;
 import graphics.scenery.controls.behaviours.FPSCameraControl;
 import graphics.scenery.controls.behaviours.SelectCommand;
 import graphics.scenery.volumes.Volume;
+import graphics.scenery.utils.SceneryPanel;
+import javafx.application.Platform;
+import javafx.event.Event;
+import javafx.event.EventHandler;
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+import javafx.geometry.VPos;
+import javafx.scene.control.Label;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.TextAlignment;
+import javafx.stage.Stage;
 import kotlin.Unit;
 import net.imagej.Dataset;
 import net.imagej.ImageJ;
@@ -30,8 +43,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
+
+import static java.awt.Color.black;
+import static java.awt.Color.white;
+import static java.awt.SystemColor.text;
+import static javafx.scene.paint.Color.rgb;
 
 public class SciView extends SceneryDefaultApplication {
 
@@ -44,6 +63,9 @@ public class SciView extends SceneryDefaultApplication {
     
     private boolean initialized = false;// i know TODO
 
+    private boolean useJavaFX = false;
+    SceneryPanel imagePanel = null;
+
     public SciView() {
         super("SciView", 800, 600, false);
     }
@@ -54,7 +76,80 @@ public class SciView extends SceneryDefaultApplication {
 
     @Override
     public void init() {
-        setRenderer( Renderer.Factory.createRenderer( getHub(), getApplicationName(), getScene(), 512, 512));
+        if( useJavaFX ) {
+//            CountDownLatch latch = new CountDownLatch(1);
+//
+//
+//            PlatformImpl.startup( new Runnable() { public void run() {} } );
+//
+//            Platform.runLater( new Runnable() {
+//                public void run() {
+//                    Stage stage = new Stage();
+//                    stage.setTitle( getApplicationName() );
+//
+//                    StackPane stackPane = new StackPane();
+//                    stackPane.backgroundProperty().set(new Background(new BackgroundFill(Color.TRANSPARENT, CornerRadii.EMPTY, Insets.EMPTY)));
+//
+//                    GridPane pane = new GridPane();
+//                    Label label = new Label(getApplicationName());
+//
+//                    imagePanel = new SceneryPanel(getWindowWidth(), getWindowHeight());
+//
+//                    GridPane.setHgrow(imagePanel, Priority.ALWAYS);
+//                    GridPane.setVgrow(imagePanel, Priority.ALWAYS);
+//
+//                    GridPane.setFillHeight(imagePanel, true);
+//                    GridPane.setFillWidth(imagePanel, true);
+//
+//                    GridPane.setHgrow(label, Priority.ALWAYS);
+//                    GridPane.setHalignment(label, HPos.CENTER);
+//                    GridPane.setValignment(label, VPos.BOTTOM);
+//
+//                    // Use as status bar
+//                    label.maxWidthProperty().bind(pane.widthProperty());
+//                    label.setTextAlignment( TextAlignment.CENTER );
+//
+//                    pane.add(imagePanel, 1, 1);
+//                    pane.add(label, 1, 2);
+//                    stackPane.getChildren().addAll(pane);
+//
+//
+//
+//                    javafx.scene.Scene scene = new javafx.scene.Scene(stackPane);
+//                    stage.setScene( scene );
+//                    stage.setOnCloseRequest(
+//                            new javafx.event.EventHandler() {
+//                                @Override
+//                                public void handle(Event event) {
+//                                    getRenderer().setShouldClose(true);
+//
+//                                    Platform.runLater(new Runnable() {
+//                                        public void run() {
+//                                            Platform.exit();
+//                                        }
+//                                    });
+//                                }
+//                            });
+//
+//                    stage.show();
+//
+//
+//                    imagePanel.resize(getWindowWidth(),getWindowHeight());
+//
+//                    latch.countDown();
+//                }
+//            });
+//
+//            try {
+//                latch.await();
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//            setRenderer( Renderer.Factory.createRenderer(getHub(), getApplicationName(), getScene(), 512, 512, imagePanel) );
+        } else {
+            setRenderer( Renderer.Factory.createRenderer( getHub(), getApplicationName(), getScene(), 512, 512));
+        }
+
         getHub().add(SceneryElement.Renderer, getRenderer());
 
         PointLight[] lights = new PointLight[2];

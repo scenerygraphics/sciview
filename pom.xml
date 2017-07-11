@@ -104,6 +104,7 @@
 		<spirvcrossj.version>0.2.6</spirvcrossj.version>
 		<jvrpn.version>1.0.1</jvrpn.version>
 		<scijava-common.version>2.64.1-SNAPSHOT</scijava-common.version>
+		<scenery.version>0.1.1-SNAPSHOT</scenery.version>
 		<javac.target>1.8</javac.target>
 		<kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 		<enforcer.skip>true</enforcer.skip>
@@ -226,6 +227,11 @@
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl</artifactId>
 			<version>3.1.2</version>
+		</dependency>
+		<dependency>
+			<groupId>graphics.scenery</groupId>
+			<artifactId>scenery</artifactId>
+			<version>0.1.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	
