@@ -167,6 +167,7 @@
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-ui-swing</artifactId>
+            <version>0.9.3</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
@@ -228,11 +229,6 @@
 			<groupId>graphics.scenery</groupId>
 			<artifactId>scenery</artifactId>
 			<version>0.1.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>imagej-legacy</artifactId>
-            <optional>true</optional>
 		</dependency>
 	</dependencies>
 	
