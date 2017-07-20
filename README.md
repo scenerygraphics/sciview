@@ -1,10 +1,12 @@
-# ThreeDViewer
+# SciView
 
-ThreeDViewer is an ImageJ/FIJI plugin for 3D visualization of images and meshes. It uses the [Scenery](https://github.com/ClearVolume/scenery) and [ClearVolume](http://clearvolume.github.io/) infrastructure. 
+*Note:* The prototype of SciView was briefly named ThreeDViewer. 
 
-[ImageJ wiki](http://wiki.imagej.net/ThreeDViewer) entry.
+SciView is an ImageJ/FIJI plugin for 3D visualization of images and meshes. It uses the [Scenery](https://github.com/ClearVolume/scenery) and [ClearVolume](http://clearvolume.github.io/) infrastructure. 
 
-Alpha release update site: http://sites.imagej.net/ThreeDViewer/
+[ImageJ wiki](http://wiki.imagej.net/SciView) entry.
+
+Update Site: TBA  
 
 ## Current activity
 
