@@ -5,14 +5,14 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>12.0.0</version>
+		<version>16.1.0</version>
 	</parent>
 	
-	<groupId>sc.fiji</groupId>
-	<artifactId>ThreeDViewer</artifactId>
+	<groupId>sc.iview</groupId>
+	<artifactId>SciView</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	
-	<name>ThreeDViewer</name>
+	<name>SciView</name>
 	<description>This is a 3D visualization package for ImageJ that uses Scenery (graphics.scenery) as a backend.</description>
 	<url>https://github.com/kephale/ThreeDViewer</url>
 	<inceptionYear>2016</inceptionYear>
@@ -103,9 +103,10 @@
 		<lwjgl.version>3.1.1</lwjgl.version>
 		<spirvcrossj.version>0.2.6</spirvcrossj.version>
 		<jvrpn.version>1.0.1</jvrpn.version>
+		<scijava-common.version>2.64.1-SNAPSHOT</scijava-common.version>
+		<scenery.version>0.1.1-SNAPSHOT</scenery.version>
 		<javac.target>1.8</javac.target>
 		<kotlin.compiler.incremental>true</kotlin.compiler.incremental>
-
 		<enforcer.skip>true</enforcer.skip>
 	</properties>
 	
@@ -177,10 +178,6 @@
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
-			<artifactId>imagej-legacy</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.imagej</groupId>
 			<artifactId>imagej-deprecated</artifactId>
 		</dependency>
 		<dependency>
@@ -230,6 +227,11 @@
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl</artifactId>
 			<version>3.1.2</version>
+		</dependency>
+		<dependency>
+			<groupId>graphics.scenery</groupId>
+			<artifactId>scenery</artifactId>
+			<version>0.1.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	
