@@ -5,7 +5,7 @@ if [ "$TRAVIS_SECURE_ENV_VARS" = true \
   -a "$TRAVIS_BRANCH" = master \
   -a "$TRAVIS_OS_NAME" == linux ]
 then
-   mvn deploy --settings settings.xml
+   mvn -Pdeploy-to-imagej deploy --settings settings.xml
 # For update site deployment: temporarily disabled
 #   curl -O http://downloads.imagej.net/fiji/latest/fiji-nojre.zip
 #   unzip fiji-nojre.zip
