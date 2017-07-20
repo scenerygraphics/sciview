@@ -9,7 +9,7 @@
 	</parent>
 	
 	<groupId>sc.iview</groupId>
-	<artifactId>SciView</artifactId>
+	<artifactId>sciview</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	
 	<name>SciView</name>
