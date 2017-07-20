@@ -232,6 +232,7 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-legacy</artifactId>
+            <optional>true</optional>
 		</dependency>
 	</dependencies>
 	
