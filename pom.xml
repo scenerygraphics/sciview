@@ -14,7 +14,7 @@
 	
 	<name>SciView</name>
 	<description>This is a 3D visualization package for ImageJ that uses Scenery (graphics.scenery) as a backend.</description>
-	<url>https://github.com/kephale/ThreeDViewer</url>
+	<url>https://github.com/scenerygraphics/SciView</url>
 	<inceptionYear>2016</inceptionYear>
 	<organization>
 		<name>Fiji</name>
@@ -69,18 +69,18 @@
 	</mailingLists>
 	
 	<scm>
-		<connection>scm:git:git://github.com/kephale/ThreeDViewer</connection>
-		<developerConnection>scm:git:git@github.com:kephale/ThreeDViewer</developerConnection>
+		<connection>scm:git:git://github.com/scenerygraphics/SciView</connection>
+		<developerConnection>scm:git:git@github.com:scenerygraphics/SciView</developerConnection>
 		<tag>HEAD</tag>
-		<url>https://github.com/kephale/ThreeDViewer</url>
+		<url>https://github.com/scenerygraphics/SciView</url>
 	</scm>
 	<issueManagement>
 		<system>GitHub Issues</system>
-		<url>https://github.com/imagej/imagej-common/issues</url>
+		<url>https://github.com/scenerygraphics/SciView/issues</url>
 	</issueManagement>
 	<ciManagement>
 		<system>Travis CI</system>
-		<url>https://travis-ci.org/kephale/ThreeDViewer</url>
+		<url>https://travis-ci.org/scenerygraphics/SciView</url>
 	</ciManagement>	
 	
 	<distributionManagement>
@@ -133,11 +133,7 @@
 		</repository>
 	</repositories>
 	<dependencies>
-		<dependency>
-			<groupId>graphics.scenery</groupId>
-			<artifactId>scenery</artifactId>
-			<version>0.1.1-SNAPSHOT</version>
-		</dependency>
+
 		<dependency>
 			<groupId>net.clearvolume</groupId>
 			<artifactId>cleargl</artifactId>
