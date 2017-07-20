@@ -229,6 +229,11 @@
 			<artifactId>scenery</artifactId>
 			<version>0.1.1-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-legacy</artifactId>
+            <optional>true</optional>
+		</dependency>
 	</dependencies>
 	
 </project>

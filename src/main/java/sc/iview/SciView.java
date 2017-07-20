@@ -1,6 +1,7 @@
 package sc.iview;
 
 import cleargl.GLVector;
+import com.ochafik.lang.jnaerator.runtime.This;
 import com.sun.javafx.application.PlatformImpl;
 import coremem.enums.NativeTypeEnum;
 import graphics.scenery.*;
@@ -27,6 +28,7 @@ import net.imagej.ImageJ;
 import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
 import net.imglib2.RealLocalizable;
+import net.imglib2.RealPoint;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.integer.GenericByteType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -38,7 +40,9 @@ import graphics.scenery.controls.behaviours.SelectCommand.SelectResult;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -391,6 +395,78 @@ public class SciView extends SceneryDefaultApplication {
         //addMesh( opsMesh );
 
         addMesh( scMesh );
+    }
+
+    public static ArrayList<RealPoint> readXyz(String filename ) throws IOException {
+        ArrayList<RealPoint> vertices = new ArrayList<RealPoint>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split("\\s*(,|\\s)\\s*");
+                vertices.add( new RealPoint(Double.parseDouble(parts[0]), Double.parseDouble(parts[1]), Double.parseDouble(parts[2])) );
+            }
+        }
+
+        return vertices;
+    }
+
+    public float getDefaultPointSize() {
+        return 0.025f;
+    }
+
+    public float[] makeNormalsFromVertices( ArrayList<RealPoint> verts ) {
+        float[] normals = new float[verts.size()];// div3 * 3coords
+
+        for( int k = 0 ; k < verts.size(); k+=3 ) {
+            GLVector v1 = new GLVector( verts.get(k).getFloatPosition(0 ),
+                                        verts.get(k).getFloatPosition(1 ),
+                                        verts.get(k).getFloatPosition(2 ));
+            GLVector v2 = new GLVector( verts.get(k+1).getFloatPosition(0 ),
+                                        verts.get(k+1).getFloatPosition(1 ),
+                                        verts.get(k+1).getFloatPosition(2 ));
+            GLVector v3 = new GLVector( verts.get(k+2).getFloatPosition(0 ),
+                                        verts.get(k+2).getFloatPosition(1 ),
+                                        verts.get(k+2).getFloatPosition(2 ));
+            GLVector a = v2.minus(v1);
+            GLVector b = v3.minus(v1);
+            GLVector n = a.cross(b).getNormalized();
+            normals[k/3] = n.get(0);
+            normals[k/3+1] = n.get(1);
+            normals[k/3+2] = n.get(2);
+        }
+        return normals;
+    }
+
+    public void addXyz( String filename ) throws IOException {
+        ArrayList<RealPoint> verts = readXyz(filename);
+
+        float[] flatVerts = new float[verts.size()*3];
+        for( int k = 0; k < verts.size(); k++ ) {
+            flatVerts[k*3] = verts.get(k).getFloatPosition(0);
+            flatVerts[k*3+1] = verts.get(k).getFloatPosition(1);
+            flatVerts[k*3+2] = verts.get(k).getFloatPosition(2);
+        }
+
+        PointCloud pointCloud = new PointCloud(getDefaultPointSize(), filename);
+        Material material = new Material();
+        FloatBuffer vBuffer = MemoryUtil.memAlloc(flatVerts.length * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        FloatBuffer nBuffer = MemoryUtil.memAlloc(0).order(ByteOrder.nativeOrder()).asFloatBuffer();
+
+        vBuffer.put( flatVerts );
+        vBuffer.flip();
+
+        pointCloud.setVertices(vBuffer);
+        pointCloud.setNormals(nBuffer);
+        pointCloud.setIndices(MemoryUtil.memAlloc(0).order( ByteOrder.nativeOrder()).asIntBuffer() );
+        pointCloud.setupPointCloud();
+        material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ));
+        material.setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ));
+        material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ));
+        pointCloud.setMaterial( material );
+        pointCloud.setPosition( new GLVector( 0f, 0f, 0f ) );
+        getScene().addChild( pointCloud );
+
     }
 
     public void addMesh( Mesh scMesh ) {
