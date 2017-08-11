@@ -1,5 +1,6 @@
 package sc.iview.io;
 
+import org.scijava.display.DisplayService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
@@ -30,7 +31,11 @@ public class ImportIsosurface  implements Command {
 	private ImgPlus<UnsignedByteType> image;
 
 	@Parameter
-	private SciViewService sceneryService;
+	DisplayService displayService;
+
+	@Parameter
+	SciView sciView;
+
 
 	@Override
 	public void run() {
@@ -42,7 +47,7 @@ public class ImportIsosurface  implements Command {
 		
 		DefaultMesh dm = (DefaultMesh) m;
 
-		sceneryService.getActiveSciView().addMesh( m );
+		sciView.addMesh( m );
 		
 	}
 

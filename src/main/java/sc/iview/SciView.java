@@ -1,42 +1,22 @@
 package sc.iview;
 
 import cleargl.GLVector;
-import com.ochafik.lang.jnaerator.runtime.This;
-import com.sun.javafx.application.PlatformImpl;
 import coremem.enums.NativeTypeEnum;
 import graphics.scenery.*;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.controls.behaviours.ArcballCameraControl;
 import graphics.scenery.controls.behaviours.FPSCameraControl;
 import graphics.scenery.controls.behaviours.SelectCommand;
-import graphics.scenery.volumes.Volume;
+import graphics.scenery.controls.behaviours.SelectCommand.SelectResult;
 import graphics.scenery.utils.SceneryPanel;
-import javafx.application.Platform;
-import javafx.event.Event;
-import javafx.event.EventHandler;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
-import javafx.scene.control.Label;
-import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.text.TextAlignment;
-import javafx.stage.Stage;
-import kotlin.Unit;
+import graphics.scenery.volumes.Volume;
 import net.imagej.Dataset;
-import net.imagej.ImageJ;
 import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
-import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
-import net.imglib2.type.Type;
-import net.imglib2.type.numeric.integer.GenericByteType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
-import sc.iview.process.MeshConverter;
-
-import org.scijava.ui.behaviour.ClickBehaviour;
 import org.lwjgl.system.MemoryUtil;
-import graphics.scenery.controls.behaviours.SelectCommand.SelectResult;
+import sc.iview.process.MeshConverter;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -47,21 +27,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
-import static java.awt.Color.black;
-import static java.awt.Color.white;
-import static java.awt.SystemColor.text;
-import static javafx.scene.paint.Color.rgb;
-
-public class SciView extends SceneryDefaultApplication {
+public class SciView extends SceneryBase {
 
     private Thread animationThread;
     private Node activeNode = null;
 
-    private Boolean defaultArcBall = true;
+    private Boolean defaultArcBall = false;// arcball target broken
 
     Camera camera = null;
     
@@ -151,7 +124,7 @@ public class SciView extends SceneryDefaultApplication {
 //            }
 //            setRenderer( Renderer.Factory.createRenderer(getHub(), getApplicationName(), getScene(), 512, 512, imagePanel) );
         } else {
-            setRenderer( Renderer.Factory.createRenderer( getHub(), getApplicationName(), getScene(), 512, 512));
+            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), 512, 512));
         }
 
         getHub().add(SceneryElement.Renderer, getRenderer());
@@ -164,18 +137,23 @@ public class SciView extends SceneryDefaultApplication {
             lights[i].setEmissionColor( new GLVector(1.0f, 1.0f, 1.0f) );
             lights[i].setIntensity( 5000.2f*(i+1) );
             lights[i].setLinear(0.0f);
+            //lights[i].setQuadratic(0.001f);
             lights[i].setQuadratic(0.5f);
             getScene().addChild( lights[i] );
         }
 
         Camera cam = new DetachedHeadCamera();
-        cam.setPosition( new GLVector(0.0f, 0.0f, 5.0f) );
-        cam.perspectiveCamera(50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 1000.0f);
+        //cam.setPosition( new GLVector(0.0f, 0.0f, 5.0f) );
+        cam.setPosition( new GLVector(20.0f, 10.0f, 35.0f) );
+        cam.perspectiveCamera(50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 750.0f);
         cam.setActive( true );
         getScene().addChild(cam);
         this.camera = cam;
 
+
+
         Box shell = new Box(new GLVector(120.0f, 120.0f, 120.0f), true);
+        //Box shell = new Box(new GLVector(1200.0f, 2200.0f, 4500.0f), true);
         shell.getMaterial().setDoubleSided( true );
         shell.getMaterial().setDiffuse( new GLVector(0.2f, 0.2f, 0.2f) );
         shell.getMaterial().setSpecular( GLVector.getNullVector(3) );
@@ -222,7 +200,8 @@ public class SciView extends SceneryDefaultApplication {
         getInputHandler().useDefaultBindings("");
         getInputHandler().addBehaviour("object_selection_mode", new SelectCommand("objectSelector",getRenderer(),getScene(), () -> getScene().findObserver(),false, result -> this.selectNode(result) ));
         
-        enableArcBallControl();
+        //enableArcBallControl();
+        enableFPSControl();
 
         setupCameraModeSwitching("C");
 
@@ -469,6 +448,10 @@ public class SciView extends SceneryDefaultApplication {
 
     }
 
+    public void addNode( Node n ) {
+        getScene().addChild(n);
+    }
+
     public void addMesh( Mesh scMesh ) {
         Material material = new Material();
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
@@ -624,6 +607,8 @@ public class SciView extends SceneryDefaultApplication {
 
     public void addVolume(Dataset image,float[] voxelDimensions) {
 
+        System.out.println( "Add Volume" );
+
         IterableInterval img = image.getImgPlus();
 
         // Right now let's only accept byte types, but adding other types is easy
@@ -634,6 +619,8 @@ public class SciView extends SceneryDefaultApplication {
 
             byte[] buffer = new byte[1024 * 1024];
             ByteBuffer byteBuffer = MemoryUtil.memAlloc((int) (bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2]));
+
+            System.out.println( "Add Volume: memAlloc" );
 
             // We might need to use a RAI instead to handle multiple image types
             //   but we'll be fine for ArrayImg's
@@ -653,11 +640,15 @@ public class SciView extends SceneryDefaultApplication {
             }
             byteBuffer.flip();
 
+            System.out.println( "Add Volume: buffer written " + byteBuffer );
+
             Volume v = new Volume();
             v.readFromBuffer(image.getName(),byteBuffer,dimensions[0],dimensions[1],dimensions[2],
                     voxelDimensions[0],voxelDimensions[1],voxelDimensions[2],
-                    NativeTypeEnum.Byte,1);
+                    NativeTypeEnum.UnsignedInt,1);
             v.setColormap("plasma");
+
+            System.out.println( "Add Volume: volume created " + v);
 
             getScene().addChild(v);
         }

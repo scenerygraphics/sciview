@@ -54,6 +54,8 @@ public class MeshConverter {
 				}
 			}
 
+			// Recomput normals
+
 			System.out.println( "Converted " + scVertices.length + " vertices and " + scNormals.length + " normals ");
 			scMesh.setVertices(BufferUtils.BufferUtils.allocateFloatAndPut(scVertices) );
 			scMesh.setNormals( BufferUtils.BufferUtils.allocateFloatAndPut(scNormals) );
