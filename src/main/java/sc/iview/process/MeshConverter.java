@@ -54,17 +54,17 @@ public class MeshConverter {
 				}
 			}
 
-			// Recomput normals
-
 			System.out.println( "Converted " + scVertices.length + " vertices and " + scNormals.length + " normals ");
 			scMesh.setVertices(BufferUtils.BufferUtils.allocateFloatAndPut(scVertices) );
 			scMesh.setNormals( BufferUtils.BufferUtils.allocateFloatAndPut(scNormals) );
 			scMesh.setTexcoords(BufferUtils.BufferUtils.allocateFloat(0));
 			scMesh.setIndices(BufferUtils.BufferUtils.allocateInt(0));
 
+			scMesh.recalculateNormals();
+
 			scMesh.setBoundingBoxCoords(boundingBox);
 			scMesh.setDirty(true);
-			scMesh.setScale(new GLVector(0.1f, 0.1f, 0.1f));
+			//scMesh.setScale(new GLVector(1f, 1f, 1f));
 
 			return scMesh;
 		}

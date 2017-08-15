@@ -1,5 +1,7 @@
 package sc.iview;
 
+import cleargl.GLVector;
+import graphics.scenery.Node;
 import net.imagej.Dataset;
 import net.imagej.ImageJ;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
@@ -28,7 +30,9 @@ public class Main {
         SciView sciView = ((SciViewService) ij.getContext().getService( "sc.iview.SciViewService" )).getOrCreateActiveSciView();
         Dataset testImg = (Dataset) ij.io().open( "/Users/kharrington/git/SciView/resources/cored_cube_16bit.tif" );
         System.out.println( testImg.firstElement().getClass() );
-        sciView.displayNodeProperties( sciView.addVolume( testImg, new float[]{1,1,1} ) );
+        Node v = sciView.addVolume( testImg, new float[]{1,1,1} );
+        v.setScale(new GLVector(10f, 10f, 10f));
+        sciView.displayNodeProperties( v );
 
         int isoLevel = 1;
         Img<UnsignedShortType> testImgImg = (Img<UnsignedShortType>) testImg.getImgPlus().getImg();
