@@ -15,6 +15,7 @@ import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import org.lwjgl.system.MemoryUtil;
 import sc.iview.process.MeshConverter;
 
@@ -612,29 +613,35 @@ public class SciView extends SceneryBase {
         IterableInterval img = image.getImgPlus();
 
         // Right now let's only accept byte types, but adding other types is easy
-        if(img.firstElement().getClass() == UnsignedByteType.class) {
+        //if(img.firstElement().getClass() == UnsignedByteType.class) {
+        if(img.firstElement().getClass() == UnsignedShortType.class) {
             long dimensions[] = new long[3];
             img.dimensions(dimensions);
-            int bytesPerVoxel = 1;
+            int bytesPerVoxel = 2;
 
             byte[] buffer = new byte[1024 * 1024];
             ByteBuffer byteBuffer = MemoryUtil.memAlloc((int) (bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2]));
 
-            System.out.println( "Add Volume: memAlloc" );
+            System.out.println( "Add Volume: memAlloc " + (bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2]) );
 
             // We might need to use a RAI instead to handle multiple image types
             //   but we'll be fine for ArrayImg's
-            Cursor<UnsignedByteType> cursor = img.cursor();
+            Cursor<UnsignedShortType> cursor = img.cursor();
 
             int bytesRead = 1;// to init
-            UnsignedByteType t;
+            UnsignedShortType t;
+            short sval;
             while (cursor.hasNext() && (bytesRead > 0)) {
                 bytesRead = 0;
                 while (cursor.hasNext() && bytesRead < buffer.length) {
                     cursor.fwd();
                     t = cursor.get();
-                    buffer[bytesRead] = t.getCodedSignedByte(t.get());
-                    bytesRead++;
+                    sval = t.getCodedSignedShort(t.get());
+                    buffer[bytesRead] = (byte) (sval & 0xff);
+                    buffer[bytesRead+1] = (byte) ((sval >> 8) & 0xff);
+                    //buffer[bytesRead] = t.getCodedSignedByte(t.get());
+                    //bytesRead++;
+                    bytesRead += 2;
                 }
                 byteBuffer.put(buffer,0,bytesRead);
             }
@@ -645,8 +652,13 @@ public class SciView extends SceneryBase {
             Volume v = new Volume();
             v.readFromBuffer(image.getName(),byteBuffer,dimensions[0],dimensions[1],dimensions[2],
                     voxelDimensions[0],voxelDimensions[1],voxelDimensions[2],
-                    NativeTypeEnum.UnsignedInt,1);
-            v.setColormap("plasma");
+                    NativeTypeEnum.UnsignedShort,bytesPerVoxel);
+            //v.getColormaps().put("localplasma", "/Users/kharrington/git/scenery/src/main/resources/graphics/scenery/colormap-plasma.tga");
+            v.getColormaps().put("localplasma", "/Users/kharrington/git/scenery/src/main/resources/graphics/scenery/volumes/colormap-plasma.png");
+            v.setColormap("localplasma");
+            //v.setColormap("plasma");
+
+            System.out.println( v.getColormaps() );
 
             System.out.println( "Add Volume: volume created " + v);
 

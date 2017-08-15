@@ -16,20 +16,20 @@ public class AddVolume implements Command {
     private Dataset image;
 
     @Parameter
-    private SciViewService sceneryService;
-
-    @Parameter
     private float voxelWidth;
 
     @Parameter
     private float voxelHeight;
 
     @Parameter
+
     private float voxelDepth;
+    @Parameter
+    SciView sciView;
 
     @Override
     public void run() {
-        sceneryService.getActiveSciView().addVolume(image,new float[]{voxelWidth,voxelHeight,voxelDepth});
+        sciView.addVolume(image,new float[]{voxelWidth,voxelHeight,voxelDepth});
     }
 
 }

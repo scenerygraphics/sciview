@@ -17,9 +17,11 @@ public class Main {
             ij.ui().showUI();
 
 //        // Volume render test
-//        SciView sciView = ((SciViewService) ij.getContext().getService( "sc.iview.SciViewService" )).getOrCreateActiveSciView();
-//        Dataset testImg = (Dataset) ij.io().open( "/Users/kharrington/git/SciView/resources/cored_cube.tif" );
-//        sciView.addVolume( testImg, new float[]{1,1,1} );
+        SciView sciView = ((SciViewService) ij.getContext().getService( "sc.iview.SciViewService" )).getOrCreateActiveSciView();
+        Dataset testImg = (Dataset) ij.io().open( "/Users/kharrington/git/SciView/resources/cored_cube_16bit.tif" );
+        //testImg = ij.op().convert().uint32(testImg);
+        System.out.println( testImg.firstElement().getClass() );
+        sciView.addVolume( testImg, new float[]{1,1,1} );
 
         //SceneryService sceneryService = ij.getContext().getService(SceneryService.class);
 
