@@ -224,20 +224,20 @@ public class SciView extends SceneryBase {
         return null;
     }
 
-    public void addBox() {
-        addBox( new GLVector(0.0f, 0.0f, 0.0f) );
+    public graphics.scenery.Node addBox() {
+        return addBox( new GLVector(0.0f, 0.0f, 0.0f) );
     }
 
-    public void addBox( GLVector position ) {
-        addBox( position, new GLVector(1.0f, 1.0f, 1.0f) );
+    public graphics.scenery.Node addBox( GLVector position ) {
+        return addBox( position, new GLVector(1.0f, 1.0f, 1.0f) );
     }
 
 
-    public void addBox( GLVector position, GLVector size ) {
-        addBox( position, size, new GLVector( 0.9f, 0.9f, 0.9f ), false );
+    public graphics.scenery.Node addBox( GLVector position, GLVector size ) {
+        return addBox( position, size, new GLVector( 0.9f, 0.9f, 0.9f ), false );
     }
 
-    public void addBox( GLVector position, GLVector size, GLVector color, boolean inside ) {
+    public graphics.scenery.Node addBox( GLVector position, GLVector size, GLVector color, boolean inside ) {
 
         Material boxmaterial = new Material();
         boxmaterial.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
@@ -258,18 +258,20 @@ public class SciView extends SceneryBase {
 
         if( defaultArcBall ) enableArcBallControl();
 
+        return box;
+
         //System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
     }
 
-    public void addSphere() {
-        addSphere( new GLVector(0.0f, 0.0f, 0.0f), 1 );
+    public graphics.scenery.Node addSphere() {
+        return addSphere( new GLVector(0.0f, 0.0f, 0.0f), 1 );
     }
 
-    public void addSphere( GLVector position, float radius ) {
-        addSphere( position, radius, new GLVector( 0.9f, 0.9f, 0.9f ) );
+    public graphics.scenery.Node addSphere( GLVector position, float radius ) {
+        return addSphere( position, radius, new GLVector( 0.9f, 0.9f, 0.9f ) );
     }
 
-    public void addSphere( GLVector position, float radius, GLVector color ) {
+    public graphics.scenery.Node addSphere( GLVector position, float radius, GLVector color ) {
         Material material = new Material();
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
         material.setDiffuse( color );
@@ -285,9 +287,10 @@ public class SciView extends SceneryBase {
         getScene().addChild(sphere);
 
         if( defaultArcBall ) enableArcBallControl();
+        return sphere;
     }
 
-    public void addPointLight() {
+    public graphics.scenery.Node addPointLight() {
         Material material = new Material();
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
         material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
@@ -299,6 +302,7 @@ public class SciView extends SceneryBase {
         light.setPosition( new GLVector(0.0f, 0.0f, 0.0f) );
 
         getScene().addChild(light);
+        return light;
     }
 
     public void writeSCMesh( String filename, Mesh scMesh ) {
@@ -349,7 +353,7 @@ public class SciView extends SceneryBase {
     	addMesh( opsMesh );
     }*/
 
-    public void addSTL( String filename ) {
+    public graphics.scenery.Node addSTL( String filename ) {
 
         Mesh scMesh = new Mesh();
         scMesh.readFromSTL( filename );
@@ -363,9 +367,10 @@ public class SciView extends SceneryBase {
         //addMesh( opsMesh );
 
         addMesh( scMesh );
+        return scMesh;
     }
 
-    public void addObj( String filename ) {
+    public graphics.scenery.Node addObj( String filename ) {
         Mesh scMesh = new Mesh();
         scMesh.readFromOBJ( filename, false );// Could check if there is a MTL to use to toggle flag
 
@@ -375,6 +380,8 @@ public class SciView extends SceneryBase {
         //addMesh( opsMesh );
 
         addMesh( scMesh );
+
+        return scMesh;
     }
 
     public static ArrayList<RealPoint> readXyz(String filename ) throws IOException {
@@ -418,7 +425,7 @@ public class SciView extends SceneryBase {
         return normals;
     }
 
-    public void addXyz( String filename ) throws IOException {
+    public graphics.scenery.Node addXyz( String filename ) throws IOException {
         ArrayList<RealPoint> verts = readXyz(filename);
 
         float[] flatVerts = new float[verts.size()*3];
@@ -446,14 +453,15 @@ public class SciView extends SceneryBase {
         pointCloud.setMaterial( material );
         pointCloud.setPosition( new GLVector( 0f, 0f, 0f ) );
         getScene().addChild( pointCloud );
-
+        return pointCloud;
     }
 
-    public void addNode( Node n ) {
+    public graphics.scenery.Node addNode( Node n ) {
         getScene().addChild(n);
+        return n;
     }
 
-    public void addMesh( Mesh scMesh ) {
+    public graphics.scenery.Node addMesh( Mesh scMesh ) {
         Material material = new Material();
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
         material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
@@ -468,10 +476,12 @@ public class SciView extends SceneryBase {
         getScene().addChild( scMesh );
 
         if( defaultArcBall ) enableArcBallControl();
+
+        return scMesh;
     }
 
 
-    public void addMesh( net.imagej.ops.geom.geom3d.mesh.Mesh mesh ) {
+    public graphics.scenery.Node addMesh( net.imagej.ops.geom.geom3d.mesh.Mesh mesh ) {
         Mesh scMesh = MeshConverter.getSceneryMesh( mesh );
 
         System.out.println( "Converting to a scenery mesh");
@@ -498,6 +508,18 @@ public class SciView extends SceneryBase {
         System.out.println( activeNode.getBoundingBoxCoords()[3]  );
         System.out.println( activeNode.getBoundingBoxCoords()[4]  );
         System.out.println( activeNode.getBoundingBoxCoords()[5]  );
+
+        return scMesh;
+    }
+
+    public void displayNodeProperties( Node n ) {
+        System.out.println( n.getPosition() );
+        System.out.println( n.getBoundingBoxCoords()[0]  );
+        System.out.println( n.getBoundingBoxCoords()[1]  );
+        System.out.println( n.getBoundingBoxCoords()[2]  );
+        System.out.println( n.getBoundingBoxCoords()[3]  );
+        System.out.println( n.getBoundingBoxCoords()[4]  );
+        System.out.println( n.getBoundingBoxCoords()[5]  );
     }
 
     public void removeMesh( Mesh scMesh ) {
@@ -606,7 +628,7 @@ public class SciView extends SceneryBase {
         getScene().addChild(node);
     }
 
-    public void addVolume(Dataset image,float[] voxelDimensions) {
+    public graphics.scenery.Node addVolume(Dataset image,float[] voxelDimensions) {
 
         System.out.println( "Add Volume" );
 
@@ -663,25 +685,11 @@ public class SciView extends SceneryBase {
             System.out.println( "Add Volume: volume created " + v);
 
             getScene().addChild(v);
+
+            return v;
         }
+
+        return null;
     }
-    
-//    public static void main(String... args)
-//    {
-//        ImageJ ij = new ImageJ();
-//
-//        if( !ij.ui().isVisible() )
-//            ij.ui().showUI();
-//
-//        SciView viewer = new SciView( "SciView", 800, 600 );
-//
-//        Thread viewerThread = new Thread(){
-//            public void run() {
-//                viewer.main();
-//            }
-//        };
-//        viewerThread.start();
-//
-//    }
 
 }

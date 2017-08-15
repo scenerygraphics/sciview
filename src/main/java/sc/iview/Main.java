@@ -2,6 +2,14 @@ package sc.iview;
 
 import net.imagej.Dataset;
 import net.imagej.ImageJ;
+import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
+import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
+import net.imagej.ops.geom.geom3d.mesh.Mesh;
+import net.imglib2.img.Img;
+import net.imglib2.type.logic.BitType;
+import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 
 import java.io.IOException;
 
@@ -16,16 +24,22 @@ public class Main {
         if( !ij.ui().isVisible() )
             ij.ui().showUI();
 
-//        // Volume render test
+//      Volume render test
         SciView sciView = ((SciViewService) ij.getContext().getService( "sc.iview.SciViewService" )).getOrCreateActiveSciView();
         Dataset testImg = (Dataset) ij.io().open( "/Users/kharrington/git/SciView/resources/cored_cube_16bit.tif" );
-        //testImg = ij.op().convert().uint32(testImg);
         System.out.println( testImg.firstElement().getClass() );
-        sciView.addVolume( testImg, new float[]{1,1,1} );
+        sciView.displayNodeProperties( sciView.addVolume( testImg, new float[]{1,1,1} ) );
 
-        //SceneryService sceneryService = ij.getContext().getService(SceneryService.class);
+        int isoLevel = 1;
+        Img<UnsignedShortType> testImgImg = (Img<UnsignedShortType>) testImg.getImgPlus().getImg();
+        Img<BitType> bitImg = (Img<BitType>) ij.op().threshold().apply(  testImgImg,
+                new UnsignedShortType( isoLevel ) );
 
-        //sceneryService.createSceneryViewer();
+        Mesh m = ij.op().geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator());
+
+        DefaultMesh dm = (DefaultMesh) m;
+
+        sciView.displayNodeProperties( sciView.addMesh( m ) );
 
     }
 }
