@@ -28,7 +28,7 @@ public class Main {
 
 //      Volume render test
         SciView sciView = ((SciViewService) ij.getContext().getService( "sc.iview.SciViewService" )).getOrCreateActiveSciView();
-        Dataset testImg = (Dataset) ij.io().open( "/Users/kharrington/git/SciView/resources/cored_cube_16bit.tif" );
+        Dataset testImg = (Dataset) ij.io().open(  SciView.class.getResource("/cored_cube_16bit.tif").getFile() );
         System.out.println( testImg.firstElement().getClass() );
         Node v = sciView.addVolume( testImg, new float[]{1,1,1} );
         v.setScale(new GLVector(10f, 10f, 10f));
