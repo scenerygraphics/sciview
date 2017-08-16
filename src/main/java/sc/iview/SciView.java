@@ -1,42 +1,23 @@
 package sc.iview;
 
 import cleargl.GLVector;
-import com.ochafik.lang.jnaerator.runtime.This;
-import com.sun.javafx.application.PlatformImpl;
 import coremem.enums.NativeTypeEnum;
 import graphics.scenery.*;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.controls.behaviours.ArcballCameraControl;
 import graphics.scenery.controls.behaviours.FPSCameraControl;
 import graphics.scenery.controls.behaviours.SelectCommand;
-import graphics.scenery.volumes.Volume;
+import graphics.scenery.controls.behaviours.SelectCommand.SelectResult;
 import graphics.scenery.utils.SceneryPanel;
-import javafx.application.Platform;
-import javafx.event.Event;
-import javafx.event.EventHandler;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
-import javafx.scene.control.Label;
-import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.text.TextAlignment;
-import javafx.stage.Stage;
-import kotlin.Unit;
+import graphics.scenery.volumes.Volume;
 import net.imagej.Dataset;
-import net.imagej.ImageJ;
 import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
-import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
-import net.imglib2.type.Type;
-import net.imglib2.type.numeric.integer.GenericByteType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
-import sc.iview.process.MeshConverter;
-
-import org.scijava.ui.behaviour.ClickBehaviour;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import org.lwjgl.system.MemoryUtil;
-import graphics.scenery.controls.behaviours.SelectCommand.SelectResult;
+import sc.iview.process.MeshConverter;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -47,21 +28,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
-import static java.awt.Color.black;
-import static java.awt.Color.white;
-import static java.awt.SystemColor.text;
-import static javafx.scene.paint.Color.rgb;
-
-public class SciView extends SceneryDefaultApplication {
+public class SciView extends SceneryBase {
 
     private Thread animationThread;
     private Node activeNode = null;
 
-    private Boolean defaultArcBall = true;
+    private Boolean defaultArcBall = false;// arcball target broken
 
     Camera camera = null;
     
@@ -151,7 +125,7 @@ public class SciView extends SceneryDefaultApplication {
 //            }
 //            setRenderer( Renderer.Factory.createRenderer(getHub(), getApplicationName(), getScene(), 512, 512, imagePanel) );
         } else {
-            setRenderer( Renderer.Factory.createRenderer( getHub(), getApplicationName(), getScene(), 512, 512));
+            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), 512, 512));
         }
 
         getHub().add(SceneryElement.Renderer, getRenderer());
@@ -164,18 +138,23 @@ public class SciView extends SceneryDefaultApplication {
             lights[i].setEmissionColor( new GLVector(1.0f, 1.0f, 1.0f) );
             lights[i].setIntensity( 5000.2f*(i+1) );
             lights[i].setLinear(0.0f);
+            //lights[i].setQuadratic(0.001f);
             lights[i].setQuadratic(0.5f);
             getScene().addChild( lights[i] );
         }
 
         Camera cam = new DetachedHeadCamera();
-        cam.setPosition( new GLVector(0.0f, 0.0f, 5.0f) );
-        cam.perspectiveCamera(50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 1000.0f);
+        //cam.setPosition( new GLVector(0.0f, 0.0f, 5.0f) );
+        cam.setPosition( new GLVector(20.0f, 10.0f, 35.0f) );
+        cam.perspectiveCamera(50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 750.0f);
         cam.setActive( true );
         getScene().addChild(cam);
         this.camera = cam;
 
+
+
         Box shell = new Box(new GLVector(120.0f, 120.0f, 120.0f), true);
+        //Box shell = new Box(new GLVector(1200.0f, 2200.0f, 4500.0f), true);
         shell.getMaterial().setDoubleSided( true );
         shell.getMaterial().setDiffuse( new GLVector(0.2f, 0.2f, 0.2f) );
         shell.getMaterial().setSpecular( GLVector.getNullVector(3) );
@@ -222,7 +201,8 @@ public class SciView extends SceneryDefaultApplication {
         getInputHandler().useDefaultBindings("");
         getInputHandler().addBehaviour("object_selection_mode", new SelectCommand("objectSelector",getRenderer(),getScene(), () -> getScene().findObserver(),false, result -> this.selectNode(result) ));
         
-        enableArcBallControl();
+        //enableArcBallControl();
+        enableFPSControl();
 
         setupCameraModeSwitching("C");
 
@@ -244,20 +224,20 @@ public class SciView extends SceneryDefaultApplication {
         return null;
     }
 
-    public void addBox() {
-        addBox( new GLVector(0.0f, 0.0f, 0.0f) );
+    public graphics.scenery.Node addBox() {
+        return addBox( new GLVector(0.0f, 0.0f, 0.0f) );
     }
 
-    public void addBox( GLVector position ) {
-        addBox( position, new GLVector(1.0f, 1.0f, 1.0f) );
+    public graphics.scenery.Node addBox( GLVector position ) {
+        return addBox( position, new GLVector(1.0f, 1.0f, 1.0f) );
     }
 
 
-    public void addBox( GLVector position, GLVector size ) {
-        addBox( position, size, new GLVector( 0.9f, 0.9f, 0.9f ), false );
+    public graphics.scenery.Node addBox( GLVector position, GLVector size ) {
+        return addBox( position, size, new GLVector( 0.9f, 0.9f, 0.9f ), false );
     }
 
-    public void addBox( GLVector position, GLVector size, GLVector color, boolean inside ) {
+    public graphics.scenery.Node addBox( GLVector position, GLVector size, GLVector color, boolean inside ) {
 
         Material boxmaterial = new Material();
         boxmaterial.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
@@ -278,18 +258,20 @@ public class SciView extends SceneryDefaultApplication {
 
         if( defaultArcBall ) enableArcBallControl();
 
+        return box;
+
         //System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
     }
 
-    public void addSphere() {
-        addSphere( new GLVector(0.0f, 0.0f, 0.0f), 1 );
+    public graphics.scenery.Node addSphere() {
+        return addSphere( new GLVector(0.0f, 0.0f, 0.0f), 1 );
     }
 
-    public void addSphere( GLVector position, float radius ) {
-        addSphere( position, radius, new GLVector( 0.9f, 0.9f, 0.9f ) );
+    public graphics.scenery.Node addSphere( GLVector position, float radius ) {
+        return addSphere( position, radius, new GLVector( 0.9f, 0.9f, 0.9f ) );
     }
 
-    public void addSphere( GLVector position, float radius, GLVector color ) {
+    public graphics.scenery.Node addSphere( GLVector position, float radius, GLVector color ) {
         Material material = new Material();
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
         material.setDiffuse( color );
@@ -305,9 +287,10 @@ public class SciView extends SceneryDefaultApplication {
         getScene().addChild(sphere);
 
         if( defaultArcBall ) enableArcBallControl();
+        return sphere;
     }
 
-    public void addPointLight() {
+    public graphics.scenery.Node addPointLight() {
         Material material = new Material();
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
         material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
@@ -319,6 +302,7 @@ public class SciView extends SceneryDefaultApplication {
         light.setPosition( new GLVector(0.0f, 0.0f, 0.0f) );
 
         getScene().addChild(light);
+        return light;
     }
 
     public void writeSCMesh( String filename, Mesh scMesh ) {
@@ -369,7 +353,7 @@ public class SciView extends SceneryDefaultApplication {
     	addMesh( opsMesh );
     }*/
 
-    public void addSTL( String filename ) {
+    public graphics.scenery.Node addSTL( String filename ) {
 
         Mesh scMesh = new Mesh();
         scMesh.readFromSTL( filename );
@@ -383,9 +367,10 @@ public class SciView extends SceneryDefaultApplication {
         //addMesh( opsMesh );
 
         addMesh( scMesh );
+        return scMesh;
     }
 
-    public void addObj( String filename ) {
+    public graphics.scenery.Node addObj( String filename ) {
         Mesh scMesh = new Mesh();
         scMesh.readFromOBJ( filename, false );// Could check if there is a MTL to use to toggle flag
 
@@ -395,6 +380,8 @@ public class SciView extends SceneryDefaultApplication {
         //addMesh( opsMesh );
 
         addMesh( scMesh );
+
+        return scMesh;
     }
 
     public static ArrayList<RealPoint> readXyz(String filename ) throws IOException {
@@ -438,7 +425,7 @@ public class SciView extends SceneryDefaultApplication {
         return normals;
     }
 
-    public void addXyz( String filename ) throws IOException {
+    public graphics.scenery.Node addXyz( String filename ) throws IOException {
         ArrayList<RealPoint> verts = readXyz(filename);
 
         float[] flatVerts = new float[verts.size()*3];
@@ -466,10 +453,15 @@ public class SciView extends SceneryDefaultApplication {
         pointCloud.setMaterial( material );
         pointCloud.setPosition( new GLVector( 0f, 0f, 0f ) );
         getScene().addChild( pointCloud );
-
+        return pointCloud;
     }
 
-    public void addMesh( Mesh scMesh ) {
+    public graphics.scenery.Node addNode( Node n ) {
+        getScene().addChild(n);
+        return n;
+    }
+
+    public graphics.scenery.Node addMesh( Mesh scMesh ) {
         Material material = new Material();
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
         material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
@@ -484,10 +476,12 @@ public class SciView extends SceneryDefaultApplication {
         getScene().addChild( scMesh );
 
         if( defaultArcBall ) enableArcBallControl();
+
+        return scMesh;
     }
 
 
-    public void addMesh( net.imagej.ops.geom.geom3d.mesh.Mesh mesh ) {
+    public graphics.scenery.Node addMesh( net.imagej.ops.geom.geom3d.mesh.Mesh mesh ) {
         Mesh scMesh = MeshConverter.getSceneryMesh( mesh );
 
         System.out.println( "Converting to a scenery mesh");
@@ -514,6 +508,18 @@ public class SciView extends SceneryDefaultApplication {
         System.out.println( activeNode.getBoundingBoxCoords()[3]  );
         System.out.println( activeNode.getBoundingBoxCoords()[4]  );
         System.out.println( activeNode.getBoundingBoxCoords()[5]  );
+
+        return scMesh;
+    }
+
+    public void displayNodeProperties( Node n ) {
+        System.out.println( n.getPosition() );
+        System.out.println( n.getBoundingBoxCoords()[0]  );
+        System.out.println( n.getBoundingBoxCoords()[1]  );
+        System.out.println( n.getBoundingBoxCoords()[2]  );
+        System.out.println( n.getBoundingBoxCoords()[3]  );
+        System.out.println( n.getBoundingBoxCoords()[4]  );
+        System.out.println( n.getBoundingBoxCoords()[5]  );
     }
 
     public void removeMesh( Mesh scMesh ) {
@@ -622,63 +628,68 @@ public class SciView extends SceneryDefaultApplication {
         getScene().addChild(node);
     }
 
-    public void addVolume(Dataset image,float[] voxelDimensions) {
+    public graphics.scenery.Node addVolume(Dataset image,float[] voxelDimensions) {
+
+        System.out.println( "Add Volume" );
 
         IterableInterval img = image.getImgPlus();
 
         // Right now let's only accept byte types, but adding other types is easy
-        if(img.firstElement().getClass() == UnsignedByteType.class) {
+        //if(img.firstElement().getClass() == UnsignedByteType.class) {
+        if(img.firstElement().getClass() == UnsignedShortType.class) {
             long dimensions[] = new long[3];
             img.dimensions(dimensions);
-            int bytesPerVoxel = 1;
+            int bytesPerVoxel = 2;
 
             byte[] buffer = new byte[1024 * 1024];
             ByteBuffer byteBuffer = MemoryUtil.memAlloc((int) (bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2]));
 
+            System.out.println( "Add Volume: memAlloc " + (bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2]) );
+
             // We might need to use a RAI instead to handle multiple image types
             //   but we'll be fine for ArrayImg's
-            Cursor<UnsignedByteType> cursor = img.cursor();
+            Cursor<UnsignedShortType> cursor = img.cursor();
 
             int bytesRead = 1;// to init
-            UnsignedByteType t;
+            UnsignedShortType t;
+            short sval;
             while (cursor.hasNext() && (bytesRead > 0)) {
                 bytesRead = 0;
                 while (cursor.hasNext() && bytesRead < buffer.length) {
                     cursor.fwd();
                     t = cursor.get();
-                    buffer[bytesRead] = t.getCodedSignedByte(t.get());
-                    bytesRead++;
+                    sval = t.getCodedSignedShort(t.get());
+                    buffer[bytesRead] = (byte) (sval & 0xff);
+                    buffer[bytesRead+1] = (byte) ((sval >> 8) & 0xff);
+                    //buffer[bytesRead] = t.getCodedSignedByte(t.get());
+                    //bytesRead++;
+                    bytesRead += 2;
                 }
                 byteBuffer.put(buffer,0,bytesRead);
             }
             byteBuffer.flip();
 
+            System.out.println( "Add Volume: buffer written " + byteBuffer );
+
             Volume v = new Volume();
             v.readFromBuffer(image.getName(),byteBuffer,dimensions[0],dimensions[1],dimensions[2],
                     voxelDimensions[0],voxelDimensions[1],voxelDimensions[2],
-                    NativeTypeEnum.Byte,1);
-            v.setColormap("plasma");
+                    NativeTypeEnum.UnsignedShort,bytesPerVoxel);
+            //v.getColormaps().put("localplasma", "/Users/kharrington/git/scenery/src/main/resources/graphics/scenery/colormap-plasma.tga");
+            v.getColormaps().put("localplasma", "/Users/kharrington/git/scenery/src/main/resources/graphics/scenery/volumes/colormap-plasma.png");
+            v.setColormap("localplasma");
+            //v.setColormap("plasma");
+
+            System.out.println( v.getColormaps() );
+
+            System.out.println( "Add Volume: volume created " + v);
 
             getScene().addChild(v);
+
+            return v;
         }
+
+        return null;
     }
-    
-//    public static void main(String... args)
-//    {
-//        ImageJ ij = new ImageJ();
-//
-//        if( !ij.ui().isVisible() )
-//            ij.ui().showUI();
-//
-//        SciView viewer = new SciView( "SciView", 800, 600 );
-//
-//        Thread viewerThread = new Thread(){
-//            public void run() {
-//                viewer.main();
-//            }
-//        };
-//        viewerThread.start();
-//
-//    }
 
 }

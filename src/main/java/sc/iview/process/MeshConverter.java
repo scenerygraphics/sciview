@@ -60,9 +60,11 @@ public class MeshConverter {
 			scMesh.setTexcoords(BufferUtils.BufferUtils.allocateFloat(0));
 			scMesh.setIndices(BufferUtils.BufferUtils.allocateInt(0));
 
+			scMesh.recalculateNormals();
+
 			scMesh.setBoundingBoxCoords(boundingBox);
 			scMesh.setDirty(true);
-			scMesh.setScale(new GLVector(0.1f, 0.1f, 0.1f));
+			//scMesh.setScale(new GLVector(1f, 1f, 1f));
 
 			return scMesh;
 		}
