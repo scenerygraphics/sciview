@@ -115,26 +115,6 @@
 			<id>imagej.public</id>
 			<url>http://maven.imagej.net/content/groups/public</url>
 		</repository>
-		<repository>
-			<id>imagej.snapshots</id>
-			<url>http://maven.imagej.net/content/groups/public-snapshots</url>
-		</repository>
-		<repository>
-			<id>imagej.other.snapshots</id>
-			<url>http://maven.imagej.net/content/repositories/snapshots</url>
-		</repository>
-		<repository>
-			<id>clearcontrol</id>
-			<url>http://dl.bintray.com/clearcontrol/ClearControl</url>
-		</repository>
-		<repository>
-			<id>nativelibs</id>
-			<url>http://nativelibs4java.sourceforge.net/maven</url>
-		</repository>
-		<repository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-		</repository>
 	</repositories>
 	<dependencies>
 
