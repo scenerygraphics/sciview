@@ -1,107 +1,216 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>sc.fiji</groupId>
-  <artifactId>ThreeDViewer</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <build>
-    <sourceDirectory>src</sourceDirectory>
-    <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.3</version>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-  <parent>
-  	<groupId>net.imagej</groupId>
-  	<artifactId>pom-imagej</artifactId>
-  	<version>15.8.0</version>
-  </parent>
-  <repositories>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>org.scijava</groupId>
+		<artifactId>pom-scijava</artifactId>
+		<version>16.1.0</version>
+		<relativePath />
+	</parent>
+	
+	<groupId>sc.iview</groupId>
+	<artifactId>sciview</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	
+	<name>SciView</name>
+	<description>This is a 3D visualization package for ImageJ that uses Scenery (graphics.scenery) as a backend.</description>
+	<url>https://github.com/scenerygraphics/SciView</url>
+	<inceptionYear>2016</inceptionYear>
+	<organization>
+		<name>Fiji</name>
+		<url>http://fiji.sc/</url>
+	</organization>
+	<licenses>
+		<license>
+			<name>BSD 2</name>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	
+	<developers>
+		<developer>
+			<id>kephale</id>
+			<name>Kyle Harrington</name>
+			<url>http://imagej.net/User:Kharrington</url>
+			<roles>
+				<role>founder</role>
+				<role>lead</role>
+				<role>developer</role>
+				<role>debugger</role>
+				<role>reviewer</role>
+				<role>support</role>
+				<role>maintainer</role>
+			</roles>
+		</developer>
+	</developers>
+	<contributors>
+		<contributor>
+			<name>Ulrik Günther</name>
+			<url>https://imagej.net/User:Skalarproduktraum</url>
+			<properties><id>skalarproduktraum</id></properties>
+		</contributor>
+		<contributor>
+			<name>Robert Haase</name>
+			<url>https://imagej.net/User:Haesleinhuepf</url>
+			<properties><id>haesleinhuepf</id></properties>
+		</contributor>
+		<contributor>
+			<name>Curtis Rueden</name>
+			<url>https://imagej.net/User:Rueden</url>
+			<properties><id>ctrueden</id></properties>
+		</contributor>
+	</contributors>
+	
+	<mailingLists>
+		<mailingList>
+			<name>ImageJ Forum</name>
+			<archive>http://forum.imagej.net/</archive>
+		</mailingList>
+	</mailingLists>
+	
+	<scm>
+		<connection>scm:git:git://github.com/scenerygraphics/SciView</connection>
+		<developerConnection>scm:git:git@github.com:scenerygraphics/SciView</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/scenerygraphics/SciView</url>
+	</scm>
+	<issueManagement>
+		<system>GitHub Issues</system>
+		<url>https://github.com/scenerygraphics/SciView/issues</url>
+	</issueManagement>
+	<ciManagement>
+		<system>Travis CI</system>
+		<url>https://travis-ci.org/scenerygraphics/SciView</url>
+	</ciManagement>	
+	
+	<distributionManagement>
+	  <repository>
+	    <id>imagej.releases</id>
+	    <url>http://maven.imagej.net/content/repositories/releases</url>
+	  </repository>	  
+	  <snapshotRepository>
+	    <id>imagej.snapshots</id>
+	    <url>http://maven.imagej.net/content/repositories/snapshots</url>
+	  </snapshotRepository>
+	</distributionManagement>
+	
+	<properties>
+		<scijava.jvm.version>1.8</scijava.jvm.version>
+		<kotlin.version>1.1.2-4</kotlin.version>
+		<kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
+		<slf4j.version>1.7.25</slf4j.version>
+		<dokka.version>0.9.14</dokka.version>
+		<lwjgl.version>3.1.1</lwjgl.version>
+		<spirvcrossj.version>0.2.6</spirvcrossj.version>
+		<jvrpn.version>1.0.1</jvrpn.version>
+		<scijava-common.version>2.64.1-SNAPSHOT</scijava-common.version>
+		<scenery.version>0.1.1-SNAPSHOT</scenery.version>
+		<javac.target>1.8</javac.target>
+		<kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+		<enforcer.skip>true</enforcer.skip>
+	</properties>
+	
+	<repositories>
 		<repository>
 			<id>imagej.public</id>
 			<url>http://maven.imagej.net/content/groups/public</url>
 		</repository>
-		<repository>
-			<id>clearcontrol</id>
-			<url>http://dl.bintray.com/clearcontrol/ClearControl</url>
-		</repository>
-		<repository>
-			<id>nativelibs</id>
-			<url>http://nativelibs4java.sourceforge.net/maven</url>
-		</repository>
 	</repositories>
-  <dependencies>
-  	<dependency>
-  		<groupId>net.clearvolume</groupId>
-  		<artifactId>scenery</artifactId>
-  		<version>1.0-SNAPSHOT</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>net.clearvolume</groupId>
-  		<artifactId>cleargl</artifactId>
-  		<version>1.0-SNAPSHOT</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>scenery</groupId>
-  		<artifactId>openvr</artifactId>
-  		<version>0.1</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>net.coremem</groupId>
-  		<artifactId>CoreMem</artifactId>
-  		<version>0.1.5</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>org.jetbrains.kotlin</groupId>
-  		<artifactId>kotlin-stdlib</artifactId>
-  		<version>1.0.2</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>org.scijava</groupId>
-  		<artifactId>scijava-common</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>org.scijava</groupId>
-  		<artifactId>scijava-ui-swing</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>net.imagej</groupId>
-  		<artifactId>imagej-common</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>net.imagej</groupId>
-  		<artifactId>imagej-deprecated</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>net.imagej</groupId>
-  		<artifactId>ij</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>net.imagej</groupId>
-  		<artifactId>imagej-ui-swing</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>net.imagej</groupId>
-  		<artifactId>imagej-ops</artifactId>
-  		<version>0.30.1-SNAPSHOT</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>org.scijava</groupId>
-  		<artifactId>script-editor</artifactId>
-  	</dependency>
-  	<dependency>
-    	<groupId>net.java.jinput</groupId>
-	    <artifactId>jinput</artifactId>
-	    <version>2.0.6</version>
-	</dependency>
-  	<dependency>
-  		<groupId>org.scijava</groupId>
-  		<artifactId>native-lib-loader</artifactId>
-  	</dependency>
-  </dependencies>
+	<dependencies>
+
+		<dependency>
+			<groupId>net.clearvolume</groupId>
+			<artifactId>cleargl</artifactId>
+			<version>2.1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>graphics.scenery</groupId>
+			<artifactId>jopenvr</artifactId>
+			<version>1.0.5</version>
+		</dependency>
+		<dependency>
+			<groupId>net.coremem</groupId>
+			<artifactId>CoreMem</artifactId>
+			<version>0.4.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-stdlib-jre8</artifactId>
+			<version>${kotlin.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-reflect</artifactId>
+			<version>${kotlin.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>scijava-common</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>scijava-ui-swing</artifactId>
+            <version>0.9.3</version>
+		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-common</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-deprecated</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>ij</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-ui-swing</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-ops</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>script-editor</artifactId>
+			<version>0.1.5-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>net.java.jinput</groupId>
+			<artifactId>jinput</artifactId>
+			<version>2.0.6</version>
+		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>native-lib-loader</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-ij</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-mesh</artifactId>
+			<version>0.1.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl</artifactId>
+			<version>3.1.2</version>
+		</dependency>
+		<dependency>
+			<groupId>graphics.scenery</groupId>
+			<artifactId>scenery</artifactId>
+			<version>0.1.1-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
+	
 </project>
