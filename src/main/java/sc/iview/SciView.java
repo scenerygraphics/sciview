@@ -675,10 +675,6 @@ public class SciView extends SceneryBase {
             v.readFromBuffer(image.getName(),byteBuffer,dimensions[0],dimensions[1],dimensions[2],
                     voxelDimensions[0],voxelDimensions[1],voxelDimensions[2],
                     NativeTypeEnum.UnsignedShort,bytesPerVoxel);
-            //v.getColormaps().put("localplasma", "/Users/kharrington/git/scenery/src/main/resources/graphics/scenery/colormap-plasma.tga");
-            v.getColormaps().put("localplasma", "/Users/kharrington/git/scenery/src/main/resources/graphics/scenery/volumes/colormap-plasma.png");
-            v.setColormap("localplasma");
-            //v.setColormap("plasma");
 
             System.out.println( v.getColormaps() );
 
