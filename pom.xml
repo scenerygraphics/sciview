@@ -91,7 +91,6 @@
 		<imagej-mesh.version>0.2.0</imagej-mesh.version>
 		<CoreMem.version>0.4.3</CoreMem.version>
 		<script-editor.version>0.1.5</script-editor.version>
-		<jinput.version>2.0.6</jinput.version>
 
 		<scenery.version>0.2.0-SNAPSHOT</scenery.version>
 		<cleargl.version>2.1.1-SNAPSHOT</cleargl.version>
@@ -162,10 +161,6 @@
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
-			<artifactId>ij</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.imagej</groupId>
 			<artifactId>imagej-ui-swing</artifactId>
 		</dependency>
 		<dependency>
@@ -175,19 +170,6 @@
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>script-editor</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.java.jinput</groupId>
-			<artifactId>jinput</artifactId>
-			<version>${jinput.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.scijava</groupId>
-			<artifactId>native-lib-loader</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.imglib2</groupId>
-			<artifactId>imglib2-ij</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
