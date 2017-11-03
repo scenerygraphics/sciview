@@ -23,7 +23,7 @@
 	</organization>
 	<licenses>
 		<license>
-			<name>BSD 2</name>
+			<name>Simplified BSD License</name>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
@@ -85,13 +85,15 @@
 	</ciManagement>
 
 	<properties>
+		<license.licenseName>bsd_2</license.licenseName>
+		<license.copyrightOwners>SciView developers.</license.copyrightOwners>
+
 		<kotlin.version>1.1.51</kotlin.version>
 		<slf4j.version>1.7.25</slf4j.version>
 		<lwjgl.version>3.1.3</lwjgl.version>
 		<imagej-mesh.version>0.2.0</imagej-mesh.version>
 		<CoreMem.version>0.4.3</CoreMem.version>
 		<script-editor.version>0.1.5</script-editor.version>
-
 		<scenery.version>0.2.0</scenery.version>
 		<cleargl.version>2.1.1</cleargl.version>
 		<enforcer.skip>true</enforcer.skip>
