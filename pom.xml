@@ -85,6 +85,8 @@
 	</ciManagement>
 
 	<properties>
+		<main-class>sc.iview.Main</main-class>
+
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>SciView developers.</license.copyrightOwners>
 
