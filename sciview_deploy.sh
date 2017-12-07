@@ -12,10 +12,13 @@ then
    rm target/sciview*sources.jar
    mv target/sciview* Fiji.app/jars/
    # Handle dependencies
+   echo "Fetching dependencies"
    mvn -Dimagej.app.directory=Fiji.app/
+   echo "Dependencies fetched"
    cd Fiji.app
    curl -O https://raw.githubusercontent.com/fiji/fiji/7f13f66968a9d4622e519c8aae04786db6601314/bin/upload-site-simple.sh
    chmod a+x upload-site-simple.sh
+   echo "Transmitting to update site"
    ./upload-site-simple.sh SciView Kharrington
 else
     mvn install
