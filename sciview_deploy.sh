@@ -13,7 +13,7 @@ then
    mv target/sciview* Fiji.app/jars/
    # Handle dependencies
    echo "Fetching dependencies"
-   mvn -Dimagej.app.directory=Fiji.app/
+   mvn -Dimagej.app.directory=Fiji.app/ -DdeleteOtherVersionsProperty=false
    echo "Dependencies fetched"
    cd Fiji.app
    curl -O https://raw.githubusercontent.com/fiji/fiji/7f13f66968a9d4622e519c8aae04786db6601314/bin/upload-site-simple.sh
