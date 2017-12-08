@@ -11,7 +11,7 @@
 
 	<groupId>sc.iview</groupId>
 	<artifactId>sciview</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2-SNAPSHOT</version>
 
 	<name>SciView</name>
 	<description>This is a 3D visualization package for ImageJ that uses Scenery (graphics.scenery) as a backend.</description>
@@ -97,6 +97,7 @@
 		<CoreMem.version>0.4.3</CoreMem.version>
 		<script-editor.version>0.1.5</script-editor.version>
 		<scenery.version>0.2.2</scenery.version>
+		<!-- <scenery.version>0.2.3-SNAPSHOT-Kyle</scenery.version>  -->
 		<cleargl.version>2.1.1</cleargl.version>
 		<enforcer.skip>true</enforcer.skip>
 	</properties>
@@ -215,4 +216,34 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>net.imagej</groupId>
+				<artifactId>imagej-maven-plugin</artifactId>
+				<version>0.6.1-SNAPSHOT</version>
+				<executions>
+					<execution>
+						<id>copy-jars</id>
+						<phase>install</phase>
+						<goals>
+							<goal>copy-jars</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>ij.snapshots</id>
+			<name>ImageJ Snapshot Repository</name>
+			<url>http://maven.imagej.net/content/repositories/snapshots/</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</pluginRepository>
+	</pluginRepositories>
+
 </project>
