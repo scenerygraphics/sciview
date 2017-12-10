@@ -82,7 +82,7 @@ install "org.jogamp.jogl:jogl-all:$joglVersion" Fiji.app/jars
 # [NB] dependency:list emits G:A:P:C:V but dependency:copy needs G:A:V:P:C.
 echo
 echo "--> Extracting list of native dependencies"
-natives=$(mvn dependency:list |
+natives=$(mvn -B dependency:list |
   grep natives |
   sed -e 's/^\[INFO\] *\([^:]*\):\([^:]*\):\([^:]*\):\([^:]*\):\([^:]*\):.*/\1:\2:\5:\3:\4/' |
   grep -v -- '-\(android\|armv6\|solaris\)' |
