@@ -222,7 +222,7 @@
 			<plugin>
 				<groupId>net.imagej</groupId>
 				<artifactId>imagej-maven-plugin</artifactId>
-				<version>0.6.1-SNAPSHOT</version>
+				<version>0.7.0</version>
 				<executions>
 					<execution>
 						<id>copy-jars</id>
