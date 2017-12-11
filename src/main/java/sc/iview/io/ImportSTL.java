@@ -30,7 +30,7 @@ public class ImportSTL  implements Command {
 		{
 			try
 			{
-				sciView.addSTL( stlFile.getAbsolutePath() );
+				sciView.addSTL( stlFile.getAbsolutePath(), logService );
 			}
 			catch ( final Exception e )
 			{

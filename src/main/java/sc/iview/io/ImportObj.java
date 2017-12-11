@@ -30,7 +30,7 @@ public class ImportObj  implements Command {
 		{
 			try
 			{
-				sciView.addObj( objFile.getAbsolutePath() );
+				sciView.addObj( objFile.getAbsolutePath(), logService );
 			}
 			catch ( final Exception e )
 			{

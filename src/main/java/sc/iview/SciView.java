@@ -370,7 +370,7 @@ public class SciView extends SceneryBase {
     	addMesh( opsMesh );
     }*/
 
-    public graphics.scenery.Node addSTL( String filename ) {
+    public graphics.scenery.Node addSTL( String filename, LogService logService ) {
 
         Mesh scMesh = new Mesh();
         scMesh.readFromSTL( filename );
@@ -383,11 +383,11 @@ public class SciView extends SceneryBase {
 
         //addMesh( opsMesh );
 
-        addMesh( scMesh );
+        addMesh( scMesh, logService );
         return scMesh;
     }
 
-    public graphics.scenery.Node addObj( String filename ) {
+    public graphics.scenery.Node addObj( String filename, LogService logService ) {
         Mesh scMesh = new Mesh();
         scMesh.readFromOBJ( filename, false );// Could check if there is a MTL to use to toggle flag
 
@@ -396,7 +396,7 @@ public class SciView extends SceneryBase {
 
         //addMesh( opsMesh );
 
-        addMesh( scMesh );
+        addMesh( scMesh, logService );
 
         return scMesh;
     }
@@ -478,7 +478,7 @@ public class SciView extends SceneryBase {
         return n;
     }
 
-    public graphics.scenery.Node addMesh( Mesh scMesh ) {
+    public graphics.scenery.Node addMesh( Mesh scMesh, LogService logService ) {
         Material material = new Material();
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
         material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
