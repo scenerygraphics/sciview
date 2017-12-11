@@ -1,5 +1,6 @@
 package sc.iview.viewing;
 
+import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.command.Command;
@@ -14,6 +15,9 @@ public class RotateView  implements Command {
 
 	@Parameter
 	private SciViewService sceneryService;
+
+	@Parameter
+	private LogService logService;
 
 	@Override
 	public void run() {
@@ -37,7 +41,7 @@ public class RotateView  implements Command {
 		            try {
 		                Thread.sleep(20);
 		            } catch (InterruptedException e) {
-		                e.printStackTrace();
+		        		logService.trace(e);
 		            }
 		        }
 		    }
