@@ -4,6 +4,7 @@ import cleargl.GLVector;
 import net.imagej.ops.geom.geom3d.mesh.*;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import graphics.scenery.BufferUtils;
+import org.scijava.log.LogService;
 
 import java.nio.FloatBuffer;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.List;
  * 		   Kyle Harrington, University of Idaho
  */
 public class MeshConverter {
-	public static graphics.scenery.Mesh getSceneryMesh(Mesh mesh)
+	public static graphics.scenery.Mesh getSceneryMesh(Mesh mesh, LogService logService)
 	{
 		graphics.scenery.Mesh scMesh;
 		if (mesh != null) {
@@ -54,7 +55,7 @@ public class MeshConverter {
 				}
 			}
 
-			System.out.println( "Converted " + scVertices.length + " vertices and " + scNormals.length + " normals ");
+			logService.warn( "Converted " + scVertices.length + " vertices and " + scNormals.length + " normals ");
 			scMesh.setVertices(BufferUtils.BufferUtils.allocateFloatAndPut(scVertices) );
 			scMesh.setNormals( BufferUtils.BufferUtils.allocateFloatAndPut(scNormals) );
 			scMesh.setTexcoords(BufferUtils.BufferUtils.allocateFloat(0));
@@ -71,7 +72,7 @@ public class MeshConverter {
 		return null;
 	}
 	
-	public static Mesh getOpsMesh( graphics.scenery.Mesh scMesh ) {		
+	public static Mesh getOpsMesh( graphics.scenery.Mesh scMesh, LogService logService ) {
 		
 		if( scMesh != null ) {
 			DefaultMesh mesh = new DefaultMesh();
@@ -80,7 +81,7 @@ public class MeshConverter {
 			
 			FloatBuffer verts = scMesh.getVertices();
 			
-			System.out.println( "Converting mesh a: initial has remaining: " + verts.hasRemaining() );
+			logService.warn( "Converting mesh a: initial has remaining: " + verts.hasRemaining() );
 			
 			// Flip if it looks like we're on the wrong side
 			if( ! verts.hasRemaining() )
