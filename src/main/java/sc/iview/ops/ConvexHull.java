@@ -1,5 +1,6 @@
 package sc.iview.ops;
 
+import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
@@ -22,18 +23,21 @@ public class ConvexHull implements Command {
 
 	@Parameter
 	private SciViewService sceneryService;
+
+	@Parameter
+	private LogService logService;
 		
 	@Override
 	public void run() {
 		if( sceneryService.getActiveSciView().getActiveNode() instanceof  Mesh ) {
 			Mesh currentMesh = (Mesh)sceneryService.getActiveSciView().getActiveNode();
-			DefaultMesh opsMesh = (DefaultMesh) MeshConverter.getOpsMesh(currentMesh);
+			DefaultMesh opsMesh = (DefaultMesh) MeshConverter.getOpsMesh(currentMesh,logService);
 
 			currentMesh.getMaterial().setDiffuse(new GLVector(1.0f, 0.0f, 0.0f));
 
 			net.imagej.ops.geom.geom3d.mesh.Mesh smoothMesh = ops.geom().convexHull((net.imagej.ops.geom.geom3d.mesh.Mesh) opsMesh);
 
-			sceneryService.getActiveSciView().addMesh(smoothMesh);
+			sceneryService.getActiveSciView().addMesh(smoothMesh,logService);
 		}
 
 	}

@@ -1,6 +1,7 @@
 package sc.iview.io;
 
 import org.scijava.command.Command;
+import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
@@ -20,13 +21,16 @@ public class ImportXYZ  implements Command {
     @Parameter
     SciView sciView;
 
+    @Parameter
+    private LogService logService;
+
     @Override
     public void run() {
         if (xyzFile != null) {
             try {
                 sciView.addXyz(xyzFile.getAbsolutePath());
             } catch (final Exception e) {
-                throw new RuntimeException(e);
+                logService.trace(e);
             }
         }
     }
