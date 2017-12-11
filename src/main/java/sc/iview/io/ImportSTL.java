@@ -2,6 +2,7 @@ package sc.iview.io;
 
 import java.io.File;
 
+import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
@@ -19,6 +20,9 @@ public class ImportSTL  implements Command {
 
 	@Parameter
 	SciView sciView;
+
+	@Parameter
+	private LogService logService;
 	
 	@Override
 	public void run() {
@@ -26,11 +30,11 @@ public class ImportSTL  implements Command {
 		{
 			try
 			{
-				sciView.addSTL( stlFile.getAbsolutePath() );
+				sciView.addSTL( stlFile.getAbsolutePath(), logService );
 			}
 			catch ( final Exception e )
 			{
-				throw new RuntimeException( e );
+				logService.trace( e );
 			}
 		}		
 	}

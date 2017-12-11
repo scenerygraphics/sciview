@@ -116,7 +116,7 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
             if (identifier.equals(makeIdentifier(sceneNode, count)))
             {
                 currentSceneNode = sceneNode;
-                System.out.println("current node found");
+                //System.out.println("current node found");
                 break;
             }
             count ++;
@@ -161,11 +161,11 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
     {
         if (currentSceneNode == null || initializing)
         {
-            System.out.println("cancel move");
+            //System.out.println("cancel move");
             return;
         }
         GLVector position = currentSceneNode.getPosition();
-        System.out.println("move to " + positionX);
+        //System.out.println("move to " + positionX);
 
 
         position.set(0, (float)(positionX));
@@ -176,11 +176,11 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
     {
         if (currentSceneNode == null || initializing)
         {
-            System.out.println("cancel move");
+            //System.out.println("cancel move");
             return;
         }
         GLVector position = currentSceneNode.getPosition();
-        System.out.println("move to " + positionY);
+        //System.out.println("move to " + positionY);
 
 
         position.set(1, (float)(positionY));
@@ -191,11 +191,11 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
     {
         if (currentSceneNode == null || initializing)
         {
-            System.out.println("cancel move");
+            //System.out.println("cancel move");
             return;
         }
         GLVector position = currentSceneNode.getPosition();
-        System.out.println("move to " + positionZ);
+        //System.out.println("move to " + positionZ);
 
 
         position.set(2, (float)(positionZ));

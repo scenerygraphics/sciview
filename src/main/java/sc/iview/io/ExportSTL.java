@@ -2,6 +2,7 @@ package sc.iview.io;
 
 import java.io.File;
 
+import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.FileWidget;
@@ -24,6 +25,9 @@ public class ExportSTL  implements Command {
 	@Parameter
 	private SciViewService sceneryService;
 
+	@Parameter
+	private LogService logService;
+
 	@Override
 	public void run() {
 		if( sceneryService.getActiveSciView().getActiveNode() instanceof Mesh ) {
@@ -34,7 +38,7 @@ public class ExportSTL  implements Command {
 					sceneryService.getActiveSciView().writeSCMesh(stlFile.getAbsolutePath(), mesh);
 					//ThreeDViewer.writeSCMesh( stlFilename, mesh );
 				} catch (final Exception e) {
-					throw new RuntimeException(e);
+					logService.trace(e);
 				}
 			}
 		}

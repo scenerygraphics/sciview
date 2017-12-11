@@ -1,6 +1,7 @@
 package sc.iview.io;
 
 import org.scijava.display.DisplayService;
+import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
@@ -36,6 +37,8 @@ public class ImportIsosurface  implements Command {
 	@Parameter
 	SciView sciView;
 
+	@Parameter
+	private LogService logService;
 
 	@Override
 	public void run() {
@@ -47,7 +50,7 @@ public class ImportIsosurface  implements Command {
 		
 		DefaultMesh dm = (DefaultMesh) m;
 
-		sciView.addMesh( m );
+		sciView.addMesh( m, logService );
 		
 	}
 

@@ -18,6 +18,7 @@ import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 import org.scijava.command.Command;
+import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
@@ -39,6 +40,9 @@ public  class AddLabelImage<T extends RealType<T>> implements Command {
 
     @Parameter
     private SciViewService sceneryService;
+
+    @Parameter
+    private LogService logService;
 
     @Override
     public  void run() {
@@ -72,7 +76,7 @@ public  class AddLabelImage<T extends RealType<T>> implements Command {
             LabelRegion<Integer> lr = labelRegions.getLabelRegion((Integer)regionsArr[i]);
 
             Mesh mesh = ops.geom().marchingCubes(lr);
-            sceneryService.getActiveSciView().addMesh(mesh);
+            sceneryService.getActiveSciView().addMesh(mesh, logService);
         }
     }
 

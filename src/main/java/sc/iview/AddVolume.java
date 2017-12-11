@@ -2,6 +2,7 @@ package sc.iview;
 
 import net.imagej.Dataset;
 import org.scijava.command.Command;
+import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
@@ -22,14 +23,17 @@ public class AddVolume implements Command {
     private float voxelHeight;
 
     @Parameter
-
     private float voxelDepth;
+
     @Parameter
     SciView sciView;
 
+    @Parameter
+    private LogService logService;
+
     @Override
     public void run() {
-        sciView.addVolume(image,new float[]{voxelWidth,voxelHeight,voxelDepth});
+        sciView.addVolume(image,new float[]{voxelWidth,voxelHeight,voxelDepth},logService);
     }
 
 }

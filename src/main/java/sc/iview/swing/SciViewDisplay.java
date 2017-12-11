@@ -6,6 +6,7 @@ import org.scijava.display.DisplayService;
 import org.scijava.display.event.DisplayDeletedEvent;
 import org.scijava.event.EventHandler;
 import org.scijava.event.EventService;
+import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.thread.ThreadService;
@@ -26,7 +27,10 @@ public class SciViewDisplay extends AbstractDisplay<SciView> {
 	private ThreadService threadService;
 
 	@Parameter(required = false)
-	private EventService eventService;	
+	private EventService eventService;
+
+	@Parameter
+	private LogService logService;
 	
 	public SciViewDisplay() {
 		super(SciView.class);
@@ -47,7 +51,7 @@ public class SciViewDisplay extends AbstractDisplay<SciView> {
 
 	@EventHandler
 	protected void onEvent(final DataUpdatedEvent event) {
-		System.out.println("DIsplay updated");
+		logService.warn("Display updated! This warning probably shouldn't be here.");
 	}
 
 	@EventHandler

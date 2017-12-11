@@ -1,15 +1,32 @@
 package sc.iview;
 
 import cleargl.GLVector;
+import com.sun.javafx.application.PlatformImpl;
 import coremem.enums.NativeTypeEnum;
 import graphics.scenery.*;
+import graphics.scenery.Camera;
+import graphics.scenery.Node;
+import graphics.scenery.PointLight;
+import graphics.scenery.Scene;
 import graphics.scenery.backends.Renderer;
+import graphics.scenery.controls.InputHandler;
 import graphics.scenery.controls.behaviours.ArcballCameraControl;
 import graphics.scenery.controls.behaviours.FPSCameraControl;
 import graphics.scenery.controls.behaviours.SelectCommand;
 import graphics.scenery.controls.behaviours.SelectCommand.SelectResult;
+import graphics.scenery.repl.REPL;
 import graphics.scenery.utils.SceneryPanel;
 import graphics.scenery.volumes.Volume;
+import javafx.application.Platform;
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+import javafx.geometry.VPos;
+import javafx.scene.*;
+import javafx.scene.control.Label;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.TextAlignment;
+import javafx.stage.Stage;
 import net.imagej.Dataset;
 import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
@@ -17,6 +34,7 @@ import net.imglib2.RealPoint;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import org.lwjgl.system.MemoryUtil;
+import org.scijava.log.LogService;
 import sc.iview.process.MeshConverter;
 
 import java.io.*;
@@ -28,6 +46,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.Supplier;
 
 public class SciView extends SceneryBase {
@@ -52,78 +71,76 @@ public class SciView extends SceneryBase {
         super(applicationName, windowWidth, windowHeight, false);
     }
 
+    public InputHandler publicGetInputHandler() {
+        return getInputHandler();
+    }
+
     @Override
     public void init() {
         if( useJavaFX ) {
-//            CountDownLatch latch = new CountDownLatch(1);
-//
-//
-//            PlatformImpl.startup( new Runnable() { public void run() {} } );
-//
-//            Platform.runLater( new Runnable() {
-//                public void run() {
-//                    Stage stage = new Stage();
-//                    stage.setTitle( getApplicationName() );
-//
-//                    StackPane stackPane = new StackPane();
-//                    stackPane.backgroundProperty().set(new Background(new BackgroundFill(Color.TRANSPARENT, CornerRadii.EMPTY, Insets.EMPTY)));
-//
-//                    GridPane pane = new GridPane();
-//                    Label label = new Label(getApplicationName());
-//
-//                    imagePanel = new SceneryPanel(getWindowWidth(), getWindowHeight());
-//
-//                    GridPane.setHgrow(imagePanel, Priority.ALWAYS);
-//                    GridPane.setVgrow(imagePanel, Priority.ALWAYS);
-//
-//                    GridPane.setFillHeight(imagePanel, true);
-//                    GridPane.setFillWidth(imagePanel, true);
-//
-//                    GridPane.setHgrow(label, Priority.ALWAYS);
-//                    GridPane.setHalignment(label, HPos.CENTER);
-//                    GridPane.setValignment(label, VPos.BOTTOM);
-//
-//                    // Use as status bar
-//                    label.maxWidthProperty().bind(pane.widthProperty());
-//                    label.setTextAlignment( TextAlignment.CENTER );
-//
-//                    pane.add(imagePanel, 1, 1);
-//                    pane.add(label, 1, 2);
-//                    stackPane.getChildren().addAll(pane);
-//
-//
-//
-//                    javafx.scene.Scene scene = new javafx.scene.Scene(stackPane);
-//                    stage.setScene( scene );
-//                    stage.setOnCloseRequest(
-//                            new javafx.event.EventHandler() {
-//                                @Override
-//                                public void handle(Event event) {
-//                                    getRenderer().setShouldClose(true);
-//
-//                                    Platform.runLater(new Runnable() {
-//                                        public void run() {
-//                                            Platform.exit();
-//                                        }
-//                                    });
-//                                }
-//                            });
-//
-//                    stage.show();
-//
-//
-//                    imagePanel.resize(getWindowWidth(),getWindowHeight());
-//
-//                    latch.countDown();
-//                }
-//            });
-//
-//            try {
-//                latch.await();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//            setRenderer( Renderer.Factory.createRenderer(getHub(), getApplicationName(), getScene(), 512, 512, imagePanel) );
+            CountDownLatch latch = new CountDownLatch(1);
+            final SceneryPanel[] imagePanel = {null};
+
+            PlatformImpl.startup(() -> {
+            });
+
+            Platform.runLater(() -> {
+
+                Stage stage = new Stage();
+                stage.setTitle(getApplicationName());
+
+                StackPane stackPane = new StackPane();
+                stackPane.setBackground(
+                        new Background(new BackgroundFill(Color.TRANSPARENT, CornerRadii.EMPTY, Insets.EMPTY)));
+
+                GridPane pane = new GridPane();
+                Label label = new Label(getApplicationName());
+
+                imagePanel[0] = new SceneryPanel(getWindowWidth(), getWindowHeight());
+
+                GridPane.setHgrow(imagePanel[0], Priority.ALWAYS);
+                GridPane.setVgrow(imagePanel[0], Priority.ALWAYS);
+
+                GridPane.setFillHeight(imagePanel[0], true);
+                GridPane.setFillWidth(imagePanel[0], true);
+
+                GridPane.setHgrow(label, Priority.ALWAYS);
+                GridPane.setHalignment(label, HPos.CENTER);
+                GridPane.setValignment(label, VPos.BOTTOM);
+
+                label.maxWidthProperty().bind(pane.widthProperty());
+
+                pane.setStyle("-fx-background-color: rgb(20, 255, 20);" + "-fx-font-family: Consolas;"
+                        + "-fx-font-weight: 400;" + "-fx-font-size: 1.2em;" + "-fx-text-fill: white;"
+                        + "-fx-text-alignment: center;");
+
+                label.setStyle("-fx-padding: 0.2em;" + "-fx-text-fill: black;");
+
+                label.setTextAlignment(TextAlignment.CENTER);
+
+                pane.add(imagePanel[0], 1, 1);
+                pane.add(label, 1, 2);
+                stackPane.getChildren().addAll(pane);
+
+                javafx.scene.Scene scene = new javafx.scene.Scene(stackPane);
+                stage.setScene(scene);
+                stage.setOnCloseRequest(event -> {
+                    getRenderer().setShouldClose(true);
+
+                    Platform.runLater(Platform::exit);
+                });
+                stage.show();
+
+                latch.countDown();
+            });
+
+            try {
+                latch.await();
+            } catch (InterruptedException e1) {
+                e1.printStackTrace();
+            }
+
+            setRenderer(Renderer.createRenderer(getHub(), getApplicationName(), getScene(), getWindowWidth(), getWindowHeight(), imagePanel[0]));
         } else {
             setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), 512, 512));
         }
@@ -218,7 +235,7 @@ public class SciView extends SceneryBase {
                 }
             });
             activeNode = result.get(0).getNode();
-            System.out.println( "Selected " + activeNode );
+            //logService.warn( "Selected " + activeNode );
             return activeNode;
         }
         return null;
@@ -353,7 +370,7 @@ public class SciView extends SceneryBase {
     	addMesh( opsMesh );
     }*/
 
-    public graphics.scenery.Node addSTL( String filename ) {
+    public graphics.scenery.Node addSTL( String filename, LogService logService ) {
 
         Mesh scMesh = new Mesh();
         scMesh.readFromSTL( filename );
@@ -366,11 +383,11 @@ public class SciView extends SceneryBase {
 
         //addMesh( opsMesh );
 
-        addMesh( scMesh );
+        addMesh( scMesh, logService );
         return scMesh;
     }
 
-    public graphics.scenery.Node addObj( String filename ) {
+    public graphics.scenery.Node addObj( String filename, LogService logService ) {
         Mesh scMesh = new Mesh();
         scMesh.readFromOBJ( filename, false );// Could check if there is a MTL to use to toggle flag
 
@@ -379,7 +396,7 @@ public class SciView extends SceneryBase {
 
         //addMesh( opsMesh );
 
-        addMesh( scMesh );
+        addMesh( scMesh, logService );
 
         return scMesh;
     }
@@ -461,7 +478,7 @@ public class SciView extends SceneryBase {
         return n;
     }
 
-    public graphics.scenery.Node addMesh( Mesh scMesh ) {
+    public graphics.scenery.Node addMesh( Mesh scMesh, LogService logService ) {
         Material material = new Material();
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
         material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
@@ -481,10 +498,10 @@ public class SciView extends SceneryBase {
     }
 
 
-    public graphics.scenery.Node addMesh( net.imagej.ops.geom.geom3d.mesh.Mesh mesh ) {
-        Mesh scMesh = MeshConverter.getSceneryMesh( mesh );
+    public graphics.scenery.Node addMesh( net.imagej.ops.geom.geom3d.mesh.Mesh mesh, LogService logService ) {
+        Mesh scMesh = MeshConverter.getSceneryMesh( mesh, logService );
 
-        System.out.println( "Converting to a scenery mesh");
+        logService.warn( "Converting to a scenery mesh");
 
         Material material = new Material();
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
@@ -501,25 +518,19 @@ public class SciView extends SceneryBase {
 
         if( defaultArcBall ) enableArcBallControl();
 
-		System.out.println( activeNode.getPosition() );
-		System.out.println( activeNode.getBoundingBoxCoords()[0]  );
-        System.out.println( activeNode.getBoundingBoxCoords()[1]  );
-        System.out.println( activeNode.getBoundingBoxCoords()[2]  );
-        System.out.println( activeNode.getBoundingBoxCoords()[3]  );
-        System.out.println( activeNode.getBoundingBoxCoords()[4]  );
-        System.out.println( activeNode.getBoundingBoxCoords()[5]  );
+        displayNodeProperties(activeNode, logService);
 
         return scMesh;
     }
 
-    public void displayNodeProperties( Node n ) {
-        System.out.println( n.getPosition() );
-        System.out.println( n.getBoundingBoxCoords()[0]  );
-        System.out.println( n.getBoundingBoxCoords()[1]  );
-        System.out.println( n.getBoundingBoxCoords()[2]  );
-        System.out.println( n.getBoundingBoxCoords()[3]  );
-        System.out.println( n.getBoundingBoxCoords()[4]  );
-        System.out.println( n.getBoundingBoxCoords()[5]  );
+    public void displayNodeProperties( Node n, LogService logService ) {
+        logService.warn( "Position: " + n.getPosition() +
+                " bounding box: [ " + n.getBoundingBoxCoords()[0] + ", " +
+                n.getBoundingBoxCoords()[1] + ", " +
+                n.getBoundingBoxCoords()[2] + ", " +
+                n.getBoundingBoxCoords()[3] + ", " +
+                n.getBoundingBoxCoords()[4] + ", " +
+                n.getBoundingBoxCoords()[5] + " ]" );
     }
 
     public void removeMesh( Mesh scMesh ) {
@@ -538,9 +549,9 @@ public class SciView extends SceneryBase {
         animationThread = newAnimator;
     }
 
-    public void takeScreenshot() {
+    public void takeScreenshot( LogService logService ) {
 
-        System.out.println("Screenshot temporarily disabled");
+        logService.warn("Screenshot temporarily disabled");
 
         /*
     	float[] bounds = viewer.getRenderer().getWindow().getClearglWindow().getBounds();
@@ -628,9 +639,9 @@ public class SciView extends SceneryBase {
         getScene().addChild(node);
     }
 
-    public graphics.scenery.Node addVolume(Dataset image,float[] voxelDimensions) {
+    public graphics.scenery.Node addVolume(Dataset image,float[] voxelDimensions, LogService logService) {
 
-        System.out.println( "Add Volume" );
+        logService.warn( "Add Volume" );
 
         IterableInterval img = image.getImgPlus();
 
@@ -644,7 +655,7 @@ public class SciView extends SceneryBase {
             byte[] buffer = new byte[1024 * 1024];
             ByteBuffer byteBuffer = MemoryUtil.memAlloc((int) (bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2]));
 
-            System.out.println( "Add Volume: memAlloc " + (bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2]) );
+            //System.out.println( "Add Volume: memAlloc " + (bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2]) );
 
             // We might need to use a RAI instead to handle multiple image types
             //   but we'll be fine for ArrayImg's
@@ -669,16 +680,16 @@ public class SciView extends SceneryBase {
             }
             byteBuffer.flip();
 
-            System.out.println( "Add Volume: buffer written " + byteBuffer );
+            //System.out.println( "Add Volume: buffer written " + byteBuffer );
 
             Volume v = new Volume();
             v.readFromBuffer(image.getName(),byteBuffer,dimensions[0],dimensions[1],dimensions[2],
                     voxelDimensions[0],voxelDimensions[1],voxelDimensions[2],
                     NativeTypeEnum.UnsignedShort,bytesPerVoxel);
 
-            System.out.println( v.getColormaps() );
+            //System.out.println( v.getColormaps() );
 
-            System.out.println( "Add Volume: volume created " + v);
+            //System.out.println( "Add Volume: volume created " + v);
 
             getScene().addChild(v);
 

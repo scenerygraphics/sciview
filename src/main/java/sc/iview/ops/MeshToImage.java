@@ -3,6 +3,7 @@ package sc.iview.ops;
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.display.DisplayService;
+import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
@@ -36,6 +37,9 @@ public class MeshToImage implements Command {
 	DisplayService displayService;
 
 	@Parameter
+	LogService logService;
+
+	@Parameter
 	SciView sciView;
 
 	@Parameter(type = ItemIO.OUTPUT)
@@ -48,7 +52,7 @@ public class MeshToImage implements Command {
 	public void run() {
 		if( sciView.getActiveNode() instanceof Mesh ) {
 			Mesh currentMesh = (Mesh) sciView.getActiveNode();
-			DefaultMesh opsMesh = (DefaultMesh) MeshConverter.getOpsMesh(currentMesh);
+			DefaultMesh opsMesh = (DefaultMesh) MeshConverter.getOpsMesh(currentMesh,logService);
 
 			//net.imagej.ops.geom.geom3d.mesh.Mesh img = ops.geom().voxelization( opsMesh, width, height, depth);
 			RandomAccessibleInterval<BitType> img = ops.geom().voxelization(opsMesh, width, height, depth);
@@ -56,7 +60,7 @@ public class MeshToImage implements Command {
 			uiService.show(img);
 
 		} else {
-			System.out.println( "No active node. Add a mesh to the scene and select it.");
+			logService.warn( "No active node. Add a mesh to the scene and select it.");
 		}
 
 	}

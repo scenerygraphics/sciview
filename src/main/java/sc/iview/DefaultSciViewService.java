@@ -3,6 +3,7 @@ package sc.iview;
 import net.imagej.Data;
 import net.imagej.Position;
 import net.imagej.display.DataView;
+import org.scijava.log.LogService;
 import sc.iview.swing.SciViewDisplay;
 
 import org.scijava.display.Display;
@@ -45,6 +46,9 @@ public class DefaultSciViewService extends AbstractService
     @Parameter
     private ThreadService threadService;
 
+    @Parameter
+	private LogService logService;
+
     /* Instance variables */
 
     private List<SciView> sceneryViewers =
@@ -53,9 +57,23 @@ public class DefaultSciViewService extends AbstractService
     /* Methods */
 
     public SciView getActiveSciView() {
-        if ( sceneryViewers.size() > 0 )
-            return sceneryViewers.get(0);
-        return null;
+		SciViewDisplay d = displayService.getActiveDisplay(SciViewDisplay.class);
+		if( d != null ) {
+			// We also have to check if the Viewer has been initialized
+			//   and we're doing it the bad way by polling. Replace if you want
+			SciView sv = d.get(0);
+			while( !sv.isInitialized() ) {
+				try {
+					Thread.sleep(20);
+				} catch (InterruptedException e) {
+					logService.trace(e);
+				}
+			}
+			return sv;
+		} else {
+			logService.error("No SciJava display available. Use getOrCreateActiveSciView() to automatically create a display if one does not exist.");
+			return null;
+		}
     }
 
     public SciView getSciView(String name) {
@@ -64,6 +82,7 @@ public class DefaultSciViewService extends AbstractService
                 return sceneryViewer;
             }
         }
+		logService.error("No SciJava display available. Use getOrCreateActiveSciView() to automatically create a display if one does not exist.");
         return null;
     }
 
@@ -100,7 +119,7 @@ public class DefaultSciViewService extends AbstractService
 				try {
 					Thread.sleep(20);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					logService.trace(e);
 				}
 			}
 			return sv;
@@ -119,8 +138,7 @@ public class DefaultSciViewService extends AbstractService
 			try {
 				Thread.sleep(20);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logService.trace(e);
 			}
 		}
 
