@@ -60,7 +60,7 @@ public class Main {
         }
         bb.flip();
 
-        return new GenericTexture("neverUsed", dims, nChannels, GLTypeEnum.UnsignedByte, bb, true, true);
+        return new GenericTexture("neverUsed", dims, nChannels, GLTypeEnum.UnsignedByte, bb, true, true, false);
     }
 
     public static void meshTextureTest() throws IOException, InterruptedException {
@@ -104,7 +104,7 @@ public class Main {
         }
         bb.flip();
 
-        return new GenericTexture("neverUsed", dims, nChannels, GLTypeEnum.UnsignedByte, bb, true, true);
+        return new GenericTexture("neverUsed", dims, nChannels, GLTypeEnum.UnsignedByte, bb, true, true, false);
     }
 
     public static void meshTest() throws IOException, InterruptedException {
