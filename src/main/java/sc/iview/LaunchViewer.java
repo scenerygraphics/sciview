@@ -15,11 +15,12 @@ public class LaunchViewer implements Command {
     @Parameter
     private DisplayService displayService;
 
+    @Parameter
+    SciView sciView;
+
     @Override
     public void run() {
-    	SciView sv = new SciView();
-		sv.main();
-		displayService.createDisplay(sv);
+
     }
 
 }
