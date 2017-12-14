@@ -28,6 +28,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import net.imagej.Dataset;
+import net.imagej.ops.OpService;
 import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
 import net.imglib2.RealPoint;
@@ -639,7 +640,7 @@ public class SciView extends SceneryBase {
         getScene().addChild(node);
     }
 
-    public graphics.scenery.Node addVolume(Dataset image,float[] voxelDimensions, LogService logService) {
+    public graphics.scenery.Node addVolume(Dataset image, float[] voxelDimensions, LogService logService, OpService ops) {
 
         logService.warn( "Add Volume" );
 
@@ -671,21 +672,21 @@ public class SciView extends SceneryBase {
                     t = cursor.get();
                     sval = t.getCodedSignedShort(t.get());
                     buffer[bytesRead] = (byte) (sval & 0xff);
-                    buffer[bytesRead+1] = (byte) ((sval >> 8) & 0xff);
+                    buffer[bytesRead + 1] = (byte) ((sval >> 8) & 0xff);
                     //buffer[bytesRead] = t.getCodedSignedByte(t.get());
                     //bytesRead++;
                     bytesRead += 2;
                 }
-                byteBuffer.put(buffer,0,bytesRead);
+                byteBuffer.put(buffer, 0, bytesRead);
             }
             byteBuffer.flip();
 
             //System.out.println( "Add Volume: buffer written " + byteBuffer );
 
             Volume v = new Volume();
-            v.readFromBuffer(image.getName(),byteBuffer,dimensions[0],dimensions[1],dimensions[2],
-                    voxelDimensions[0],voxelDimensions[1],voxelDimensions[2],
-                    NativeTypeEnum.UnsignedShort,bytesPerVoxel);
+            v.readFromBuffer(image.getName(), byteBuffer, dimensions[0], dimensions[1], dimensions[2],
+                    voxelDimensions[0], voxelDimensions[1], voxelDimensions[2],
+                    NativeTypeEnum.UnsignedShort, bytesPerVoxel);
 
             //System.out.println( v.getColormaps() );
 
@@ -694,6 +695,58 @@ public class SciView extends SceneryBase {
             getScene().addChild(v);
 
             return v;
+        } else if(img.firstElement().getClass() == UnsignedByteType.class) {
+
+            long dimensions[] = new long[3];
+            img.dimensions(dimensions);
+            int bytesPerVoxel = 2;
+
+            byte[] buffer = new byte[1024 * 1024];
+            ByteBuffer byteBuffer = MemoryUtil.memAlloc((int) (bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2]));
+
+            //System.out.println( "Add Volume: memAlloc " + (bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2]) );
+
+            // We might need to use a RAI instead to handle multiple image types
+            //   but we'll be fine for ArrayImg's
+            Cursor<UnsignedShortType> cursor = img.cursor();
+
+            int bytesRead = 1;// to init
+            UnsignedShortType t;
+            short sval;
+            while (cursor.hasNext() && (bytesRead > 0)) {
+                bytesRead = 0;
+                while (cursor.hasNext() && bytesRead < buffer.length) {
+                    cursor.fwd();
+                    t = ops.convert().uint16(cursor.get());
+                    sval = t.getCodedSignedShort(t.get());
+                    buffer[bytesRead] = (byte) (sval & 0xff);
+                    buffer[bytesRead + 1] = (byte) ((sval >> 8) & 0xff);
+                    //buffer[bytesRead] = t.getCodedSignedByte(t.get());
+                    //bytesRead++;
+                    bytesRead += 2;
+                }
+                byteBuffer.put(buffer, 0, bytesRead);
+            }
+            byteBuffer.flip();
+
+            //System.out.println( "Add Volume: buffer written " + byteBuffer );
+
+            Volume v = new Volume();
+            v.readFromBuffer(image.getName(), byteBuffer, dimensions[0], dimensions[1], dimensions[2],
+                    voxelDimensions[0], voxelDimensions[1], voxelDimensions[2],
+                    NativeTypeEnum.UnsignedShort, bytesPerVoxel);
+
+            //System.out.println( v.getColormaps() );
+
+            //System.out.println( "Add Volume: volume created " + v);
+
+            getScene().addChild(v);
+
+            logService.warn("Volume shown.");
+
+            return v;
+        } else {
+            logService.warn("Image type: " + img.firstElement().getClass() + " can not be shown.");
         }
 
         return null;
