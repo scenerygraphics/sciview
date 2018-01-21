@@ -38,10 +38,34 @@ public class Main {
             ij.ui().showUI();
 
 
+        SciView sciView = ((SciViewService) ij.getContext().getService( "sc.iview.SciViewService" )).getOrCreateActiveSciView();
+        sciView.getCamera().setPosition(new GLVector(-20,0,0));
+        sciView.getCamera().setTargeted(true);
+        sciView.getCamera().setTarget(new GLVector(0,0,0));
+        sciView.getCamera().setDirty(true);
+        sciView.getCamera().setNeedsUpdate(true);
+        //sciView.getCamera().setNeedsUpdateWorld(true);
 
+        lineTest(sciView);
         //meshTest();
         //meshTextureTest();
         //volumeRenderTest();
+    }
+
+    public static void lineTest(SciView sciView) throws IOException, InterruptedException {
+        int numPoints = 25;
+        DVec3[] points = new DVec3[numPoints];
+
+        for( int k = 0; k < numPoints; k++ ) {
+            points[k] = new ClearGLDVec3( (float)( 10.0f * Math.random() - 5.0f), (float)( 10.0f * Math.random() - 5.0f), (float) (10.0f * Math.random() - 5.0f) );
+
+
+        }
+
+        double edgeWidth = 0.1;
+        DVec3 color = new ClearGLDVec3(1f, 0.75f, 0.5f);
+
+        sciView.addLine(points, color, edgeWidth );
     }
 
     public static GenericTexture generateGenericTexture() {

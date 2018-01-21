@@ -96,7 +96,8 @@
 		<imagej-mesh.version>0.2.0</imagej-mesh.version>
 		<CoreMem.version>0.4.3</CoreMem.version>
 		<script-editor.version>0.1.5</script-editor.version>
-		<scenery.version>0.2.3-1</scenery.version>
+		<!--<scenery.version>0.2.3-1</scenery.version>-->
+		<scenery.version>0.2.4-SNAPSHOT</scenery.version>
 		<cleargl.version>2.1.1</cleargl.version>
 		<enforcer.skip>true</enforcer.skip>
 	</properties>
@@ -170,6 +171,11 @@
 			<groupId>graphics.scenery</groupId>
 			<artifactId>scenery</artifactId>
 			<version>${scenery.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.joml</groupId>
+			<artifactId>joml</artifactId>
+			<version>1.9.8-SNAPSHOT</version>
 		</dependency>
 
 		<!-- Runtime scope -->

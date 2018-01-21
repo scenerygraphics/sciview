@@ -256,7 +256,7 @@ public class SciView extends SceneryBase {
     }
 
     public graphics.scenery.Node addBox( GLVector position, GLVector size, GLVector color, boolean inside ) {
-
+        // TODO: use a material from the current pallate by default
         Material boxmaterial = new Material();
         boxmaterial.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
         boxmaterial.setDiffuse( color );
@@ -306,6 +306,85 @@ public class SciView extends SceneryBase {
 
         if( defaultArcBall ) enableArcBallControl();
         return sphere;
+    }
+
+    public graphics.scenery.Node addLine() {
+        return addLine( new ClearGLDVec3(0.0f, 0.0f, 0.0f),  new ClearGLDVec3(0.0f, 0.0f, 0.0f) );
+    }
+
+    public graphics.scenery.Node addLine( DVec3 start, DVec3 stop ) {
+        return addLine( start, stop, new ClearGLDVec3( 0.9f, 0.9f, 0.9f ) );
+    }
+
+    public graphics.scenery.Node addLine( DVec3 start, DVec3 stop, DVec3 color ) {
+
+
+        Material material = new Material();
+        material.setAmbient( new GLVector(1.0f, 1.0f, 1.0f) );
+        //material.setDiffuse( color ); // TODO line color
+        material.setDiffuse( new GLVector(1.0f, 1.0f, 1.0f) );
+        material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
+
+        final Line line = new Line(2);
+
+        // TODO remove line hack
+        line.addPoint(new GLVector(0,0,0));
+        line.addPoint(new GLVector(0,0,0));
+        line.addPoint(DVec3s.convert(start));
+        line.addPoint(DVec3s.convert(stop));
+
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+
+
+        line.setEdgeWidth(0.1f);
+        //line.
+
+        line.setMaterial( material );
+        line.setPosition( DVec3s.convert(start) );
+
+        activeNode = line;
+
+        getScene().addChild(line);
+
+        if( defaultArcBall ) enableArcBallControl();
+        return line;
+    }
+
+    public graphics.scenery.Node addLine( DVec3[] points, DVec3 color, double edgeWidth ) {
+
+
+        Material material = new Material();
+        material.setAmbient( new GLVector(1.0f, 1.0f, 1.0f) );
+        //material.setDiffuse( color ); // TODO line color
+        material.setDiffuse( new GLVector(1.0f, 1.0f, 1.0f) );
+        material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
+
+        final Line line = new Line(2);
+
+        // TODO remove line hack
+        for( DVec3 pt : points ) {
+            line.addPoint(DVec3s.convert(pt).minus(DVec3s.convert(points[0])));
+        }
+
+        line.setEdgeWidth((float) edgeWidth);
+
+        line.setMaterial( material );
+        line.setPosition( DVec3s.convert(points[0]) );
+
+        activeNode = line;
+
+        getScene().addChild(line);
+
+        if( defaultArcBall ) enableArcBallControl();
+        return line;
     }
 
     public graphics.scenery.Node addPointLight() {
