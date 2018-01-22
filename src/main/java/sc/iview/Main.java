@@ -22,6 +22,7 @@ import net.imglib2.type.numeric.integer.UnsignedShortType;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.List;
 
 /**
  * Created by kharrington on 6/20/17.
@@ -46,10 +47,16 @@ public class Main {
         sciView.getCamera().setNeedsUpdate(true);
         //sciView.getCamera().setNeedsUpdateWorld(true);
 
-        lineTest(sciView);
+        assimpTest(sciView);
+        //lineTest(sciView);
         //meshTest();
         //meshTextureTest();
         //volumeRenderTest();
+    }
+
+    public static void assimpTest(SciView sciView) throws IOException {
+        List<Node> mshes = sciView.openAssimp("/Users/kharrington/git/SciView/goat/goat.obj");
+
     }
 
     public static void lineTest(SciView sciView) throws IOException, InterruptedException {

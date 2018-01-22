@@ -5,23 +5,21 @@ import com.sun.javafx.application.PlatformImpl;
 import coremem.enums.NativeTypeEnum;
 import graphics.scenery.*;
 import graphics.scenery.Camera;
+import graphics.scenery.Mesh;
 import graphics.scenery.Node;
 import graphics.scenery.PointLight;
-import graphics.scenery.Scene;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.controls.InputHandler;
 import graphics.scenery.controls.behaviours.ArcballCameraControl;
 import graphics.scenery.controls.behaviours.FPSCameraControl;
 import graphics.scenery.controls.behaviours.SelectCommand;
 import graphics.scenery.controls.behaviours.SelectCommand.SelectResult;
-import graphics.scenery.repl.REPL;
 import graphics.scenery.utils.SceneryPanel;
 import graphics.scenery.volumes.Volume;
 import javafx.application.Platform;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
-import javafx.scene.*;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -36,6 +34,8 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import org.lwjgl.system.MemoryUtil;
 import org.scijava.log.LogService;
+import sc.iview.assimp.AssimpFormat;
+import sc.iview.assimp.DefaultAssimpFormat;
 import sc.iview.process.MeshConverter;
 
 import java.io.*;
@@ -603,6 +603,31 @@ public class SciView extends SceneryBase {
         return scMesh;
     }
 
+    private graphics.scenery.Node addMesh(net.imagej.mesh.Mesh mesh, LogService logService ) {
+        Mesh scMesh = MeshConverter.getSceneryMesh( mesh, logService );
+
+        logService.warn( "Converting to a scenery mesh");
+
+        Material material = new Material();
+        material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
+        material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
+        material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
+        material.setDoubleSided(true);
+
+        scMesh.setMaterial( material );
+        scMesh.setPosition( new GLVector(1.0f, 1.0f, 1.0f) );
+
+        activeNode = scMesh;
+
+        getScene().addChild( scMesh );
+
+        if( defaultArcBall ) enableArcBallControl();
+
+        displayNodeProperties(activeNode, logService);
+
+        return scMesh;
+    }
+
     public void displayNodeProperties( Node n, LogService logService ) {
         logService.warn( "Position: " + n.getPosition() +
                 " bounding box: [ " + n.getBoundingBoxCoords()[0] + ", " +
@@ -830,5 +855,20 @@ public class SciView extends SceneryBase {
 
         return null;
     }
+
+    public List<Node> openAssimp(String s) throws IOException {
+        // TODO
+
+        AssimpFormat fmt = new DefaultAssimpFormat();
+
+        List<net.imagej.mesh.Mesh> mshes = fmt.read(new File(s));
+        List<Node> nodes = new ArrayList<>();
+        for(net.imagej.mesh.Mesh msh : mshes ) {
+            nodes.add(addMesh( msh, null ));
+        }
+        return nodes;
+
+    }
+
 
 }
