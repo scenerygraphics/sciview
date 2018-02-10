@@ -656,7 +656,9 @@ public class SciView extends SceneryBase {
 
     public void takeScreenshot( LogService logService ) {
 
-        logService.warn("Screenshot temporarily disabled");
+        getRenderer().screenshot();
+
+        //logService.warn("Screenshot temporarily disabled");
 
         /*
     	float[] bounds = viewer.getRenderer().getWindow().getClearglWindow().getBounds();

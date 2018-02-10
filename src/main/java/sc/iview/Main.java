@@ -18,11 +18,16 @@ import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
+import org.lwjgl.assimp.AIScene;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
+
+import static org.lwjgl.assimp.Assimp.aiImportFile;
+import static org.lwjgl.assimp.Assimp.aiProcess_JoinIdenticalVertices;
+import static org.lwjgl.assimp.Assimp.aiProcess_Triangulate;
 
 /**
  * Created by kharrington on 6/20/17.
@@ -39,24 +44,18 @@ public class Main {
             ij.ui().showUI();
 
 
-        SciView sciView = ((SciViewService) ij.getContext().getService( "sc.iview.SciViewService" )).getOrCreateActiveSciView();
-        sciView.getCamera().setPosition(new GLVector(-20,0,0));
+        SciView sciView = ((SciViewService) ij.getContext().getService("sc.iview.SciViewService")).getOrCreateActiveSciView();
+        sciView.getCamera().setPosition(new GLVector(-20, 0, 0));
         sciView.getCamera().setTargeted(true);
-        sciView.getCamera().setTarget(new GLVector(0,0,0));
+        sciView.getCamera().setTarget(new GLVector(0, 0, 0));
         sciView.getCamera().setDirty(true);
         sciView.getCamera().setNeedsUpdate(true);
         //sciView.getCamera().setNeedsUpdateWorld(true);
 
-        assimpTest(sciView);
-        //lineTest(sciView);
+        lineTest(sciView);
         //meshTest();
         //meshTextureTest();
         //volumeRenderTest();
-    }
-
-    public static void assimpTest(SciView sciView) throws IOException {
-        List<Node> mshes = sciView.openAssimp("/Users/kharrington/git/SciView/goat/goat.obj");
-
     }
 
     public static void lineTest(SciView sciView) throws IOException, InterruptedException {
