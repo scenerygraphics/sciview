@@ -35,6 +35,9 @@ import net.imglib2.type.numeric.integer.UnsignedShortType;
 import org.lwjgl.system.MemoryUtil;
 import org.scijava.log.LogService;
 import sc.iview.process.MeshConverter;
+import sc.iview.vec3.ClearGLDVec3;
+import sc.iview.vec3.DVec3;
+import sc.iview.vec3.DVec3s;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -313,7 +316,7 @@ public class SciView extends SceneryBase {
         return addLine( new ClearGLDVec3(0.0f, 0.0f, 0.0f),  new ClearGLDVec3(0.0f, 0.0f, 0.0f) );
     }
 
-    public graphics.scenery.Node addLine( DVec3 start, DVec3 stop ) {
+    public graphics.scenery.Node addLine(DVec3 start, DVec3 stop ) {
         return addLine( start, stop, new ClearGLDVec3( 0.9f, 0.9f, 0.9f ) );
     }
 

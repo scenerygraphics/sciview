@@ -1,8 +1,7 @@
-package sc.iview;
+package sc.iview.vec3;
 
 import net.imglib2.Localizable;
 import net.imglib2.RealLocalizable;
-import net.imglib2.RealPositionable;
 import org.joml.Vector3f;
 
 /**

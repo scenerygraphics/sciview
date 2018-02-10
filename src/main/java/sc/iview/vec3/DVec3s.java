@@ -1,4 +1,4 @@
-package sc.iview;
+package sc.iview.vec3;
 
 import cleargl.GLVector;
 

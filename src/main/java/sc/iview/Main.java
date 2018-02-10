@@ -4,9 +4,7 @@ import cleargl.GLTypeEnum;
 import cleargl.GLVector;
 import graphics.scenery.BufferUtils;
 import graphics.scenery.GenericTexture;
-import graphics.scenery.Material;
 import graphics.scenery.Node;
-import io.scif.img.IO;
 import net.imagej.Dataset;
 import net.imagej.ImageJ;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
@@ -15,19 +13,15 @@ import net.imagej.ops.geom.geom3d.mesh.Mesh;
 import net.imglib2.Cursor;
 import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
-import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
-import org.lwjgl.assimp.AIScene;
+import sc.iview.vec3.ClearGLDVec3;
+import sc.iview.vec3.DVec3;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.List;
 
 import static org.lwjgl.assimp.Assimp.aiImportFile;
-import static org.lwjgl.assimp.Assimp.aiProcess_JoinIdenticalVertices;
-import static org.lwjgl.assimp.Assimp.aiProcess_Triangulate;
 
 /**
  * Created by kharrington on 6/20/17.
