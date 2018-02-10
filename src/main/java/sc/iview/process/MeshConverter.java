@@ -1,7 +1,11 @@
 package sc.iview.process;
 
 import cleargl.GLVector;
+import net.imagej.mesh.*;
 import net.imagej.ops.geom.geom3d.mesh.*;
+import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
+import net.imagej.ops.geom.geom3d.mesh.Mesh;
+import net.imglib2.RealLocalizable;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import graphics.scenery.BufferUtils;
 import org.scijava.log.LogService;
@@ -38,6 +42,62 @@ public class MeshConverter {
 				vertices = tri.getVertices();
 				Vector3D normal = tri.getNormal();
 				for( Vertex v : vertices ) {
+					for( int d = 0; d < numDimension; d++ ) {
+						scVertices[count] = (float) v.getDoublePosition(d);
+
+						if( scVertices[count] < boundingBox[d] )// min
+							boundingBox[d] = scVertices[count];
+
+						if( scVertices[count] > boundingBox[d+3] )// min
+							boundingBox[d+3] = scVertices[count];
+
+						if( d == 0 ) scNormals[count] = (float) normal.getX();
+						else if( d == 1 ) scNormals[count] = (float) normal.getY();
+						else if( d == 2 ) scNormals[count] = (float) normal.getZ();
+						count++;
+					}
+				}
+			}
+
+			logService.warn( "Converted " + scVertices.length + " vertices and " + scNormals.length + " normals ");
+			scMesh.setVertices(BufferUtils.BufferUtils.allocateFloatAndPut(scVertices) );
+			scMesh.setNormals( BufferUtils.BufferUtils.allocateFloatAndPut(scNormals) );
+			scMesh.setTexcoords(BufferUtils.BufferUtils.allocateFloat(0));
+			scMesh.setIndices(BufferUtils.BufferUtils.allocateInt(0));
+
+			scMesh.recalculateNormals();
+
+			scMesh.setBoundingBoxCoords(boundingBox);
+			scMesh.setDirty(true);
+			//scMesh.setScale(new GLVector(1f, 1f, 1f));
+
+			return scMesh;
+		}
+		return null;
+	}
+
+	public static graphics.scenery.Mesh getSceneryMesh(net.imagej.mesh.Mesh mesh, LogService logService)
+	{
+		graphics.scenery.Mesh scMesh;
+		if (mesh != null) {
+			int numDimension = 3;
+			scMesh = new graphics.scenery.Mesh();
+
+			List<Triangle> facets = mesh.getTriangles();
+
+			float[] scVertices = new float[facets.size() * 3 * numDimension];
+			float[] scNormals = new float[facets.size() * 3 * numDimension];
+
+			float[] boundingBox = new float[]{Float.POSITIVE_INFINITY,Float.POSITIVE_INFINITY,Float.POSITIVE_INFINITY,
+					Float.NEGATIVE_INFINITY,Float.NEGATIVE_INFINITY,Float.NEGATIVE_INFINITY};
+
+			int count = 0;
+			List<RealLocalizable> vertices;
+			for( Triangle tri : facets ) {
+				//TriangularFacet tri = (TriangularFacet) facet;
+				vertices = tri.getVertices();
+				Vertex3 normal = tri.getNormal();
+				for( RealLocalizable v : vertices ) {
 					for( int d = 0; d < numDimension; d++ ) {
 						scVertices[count] = (float) v.getDoublePosition(d);
 

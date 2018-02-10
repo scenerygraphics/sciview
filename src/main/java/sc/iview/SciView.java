@@ -5,23 +5,21 @@ import com.sun.javafx.application.PlatformImpl;
 import coremem.enums.NativeTypeEnum;
 import graphics.scenery.*;
 import graphics.scenery.Camera;
+import graphics.scenery.Mesh;
 import graphics.scenery.Node;
 import graphics.scenery.PointLight;
-import graphics.scenery.Scene;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.controls.InputHandler;
 import graphics.scenery.controls.behaviours.ArcballCameraControl;
 import graphics.scenery.controls.behaviours.FPSCameraControl;
 import graphics.scenery.controls.behaviours.SelectCommand;
 import graphics.scenery.controls.behaviours.SelectCommand.SelectResult;
-import graphics.scenery.repl.REPL;
 import graphics.scenery.utils.SceneryPanel;
 import graphics.scenery.volumes.Volume;
 import javafx.application.Platform;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
-import javafx.scene.*;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -37,6 +35,9 @@ import net.imglib2.type.numeric.integer.UnsignedShortType;
 import org.lwjgl.system.MemoryUtil;
 import org.scijava.log.LogService;
 import sc.iview.process.MeshConverter;
+import sc.iview.vec3.ClearGLDVec3;
+import sc.iview.vec3.DVec3;
+import sc.iview.vec3.DVec3s;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -163,8 +164,11 @@ public class SciView extends SceneryBase {
 
         Camera cam = new DetachedHeadCamera();
         //cam.setPosition( new GLVector(0.0f, 0.0f, 5.0f) );
-        cam.setPosition( new GLVector(20.0f, 10.0f, 35.0f) );
+        //cam.setPosition( new GLVector(20.0f, 10.0f, 35.0f) );
+        cam.setPosition( new GLVector(-100.0f, 20.0f, -150.0f) );
         cam.perspectiveCamera(50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 750.0f);
+        cam.setTarget( new GLVector(0,0,0) );
+        cam.setTargeted(true);
         cam.setActive( true );
         getScene().addChild(cam);
         this.camera = cam;
@@ -219,8 +223,8 @@ public class SciView extends SceneryBase {
         getInputHandler().useDefaultBindings("");
         getInputHandler().addBehaviour("object_selection_mode", new SelectCommand("objectSelector",getRenderer(),getScene(), () -> getScene().findObserver(),false, result -> this.selectNode(result) ));
         
-        //enableArcBallControl();
-        enableFPSControl();
+        enableArcBallControl();
+        //enableFPSControl();
 
         setupCameraModeSwitching("C");
 
@@ -256,7 +260,7 @@ public class SciView extends SceneryBase {
     }
 
     public graphics.scenery.Node addBox( GLVector position, GLVector size, GLVector color, boolean inside ) {
-
+        // TODO: use a material from the current pallate by default
         Material boxmaterial = new Material();
         boxmaterial.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
         boxmaterial.setDiffuse( color );
@@ -306,6 +310,85 @@ public class SciView extends SceneryBase {
 
         if( defaultArcBall ) enableArcBallControl();
         return sphere;
+    }
+
+    public graphics.scenery.Node addLine() {
+        return addLine( new ClearGLDVec3(0.0f, 0.0f, 0.0f),  new ClearGLDVec3(0.0f, 0.0f, 0.0f) );
+    }
+
+    public graphics.scenery.Node addLine(DVec3 start, DVec3 stop ) {
+        return addLine( start, stop, new ClearGLDVec3( 0.9f, 0.9f, 0.9f ) );
+    }
+
+    public graphics.scenery.Node addLine( DVec3 start, DVec3 stop, DVec3 color ) {
+
+
+        Material material = new Material();
+        material.setAmbient( new GLVector(1.0f, 1.0f, 1.0f) );
+        //material.setDiffuse( color ); // TODO line color
+        material.setDiffuse( new GLVector(1.0f, 1.0f, 1.0f) );
+        material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
+
+        final Line line = new Line(2);
+
+        // TODO remove line hack
+        line.addPoint(new GLVector(0,0,0));
+        line.addPoint(new GLVector(0,0,0));
+        line.addPoint(DVec3s.convert(start));
+        line.addPoint(DVec3s.convert(stop));
+
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
+
+
+        line.setEdgeWidth(0.1f);
+        //line.
+
+        line.setMaterial( material );
+        line.setPosition( DVec3s.convert(start) );
+
+        activeNode = line;
+
+        getScene().addChild(line);
+
+        if( defaultArcBall ) enableArcBallControl();
+        return line;
+    }
+
+    public graphics.scenery.Node addLine( DVec3[] points, DVec3 color, double edgeWidth ) {
+
+
+        Material material = new Material();
+        material.setAmbient( new GLVector(1.0f, 1.0f, 1.0f) );
+        //material.setDiffuse( color ); // TODO line color
+        material.setDiffuse( new GLVector(1.0f, 1.0f, 1.0f) );
+        material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
+
+        final Line line = new Line(2);
+
+        // TODO remove line hack
+        for( DVec3 pt : points ) {
+            line.addPoint(DVec3s.convert(pt).minus(DVec3s.convert(points[0])));
+        }
+
+        line.setEdgeWidth((float) edgeWidth);
+
+        line.setMaterial( material );
+        line.setPosition( DVec3s.convert(points[0]) );
+
+        activeNode = line;
+
+        getScene().addChild(line);
+
+        if( defaultArcBall ) enableArcBallControl();
+        return line;
     }
 
     public graphics.scenery.Node addPointLight() {
@@ -524,6 +607,31 @@ public class SciView extends SceneryBase {
         return scMesh;
     }
 
+    private graphics.scenery.Node addMesh(net.imagej.mesh.Mesh mesh, LogService logService ) {
+        Mesh scMesh = MeshConverter.getSceneryMesh( mesh, logService );
+
+        logService.warn( "Converting to a scenery mesh");
+
+        Material material = new Material();
+        material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
+        material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
+        material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
+        material.setDoubleSided(true);
+
+        scMesh.setMaterial( material );
+        scMesh.setPosition( new GLVector(1.0f, 1.0f, 1.0f) );
+
+        activeNode = scMesh;
+
+        getScene().addChild( scMesh );
+
+        if( defaultArcBall ) enableArcBallControl();
+
+        displayNodeProperties(activeNode, logService);
+
+        return scMesh;
+    }
+
     public void displayNodeProperties( Node n, LogService logService ) {
         logService.warn( "Position: " + n.getPosition() +
                 " bounding box: [ " + n.getBoundingBoxCoords()[0] + ", " +
@@ -552,7 +660,9 @@ public class SciView extends SceneryBase {
 
     public void takeScreenshot( LogService logService ) {
 
-        logService.warn("Screenshot temporarily disabled");
+        getRenderer().screenshot();
+
+        //logService.warn("Screenshot temporarily disabled");
 
         /*
     	float[] bounds = viewer.getRenderer().getWindow().getClearglWindow().getBounds();
@@ -751,5 +861,14 @@ public class SciView extends SceneryBase {
 
         return null;
     }
+
+    public List<Node> openAssimp(String s) throws IOException {
+        // TODO
+
+
+        return null;
+
+    }
+
 
 }

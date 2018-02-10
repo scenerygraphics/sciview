@@ -1,8 +1,9 @@
-package sc.iview;
+package sc.iview.create;
 
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.command.Command;
+import sc.iview.SciViewService;
 
 @Plugin(type = Command.class, 
 		menuPath = "SciView>Add>Point Light")

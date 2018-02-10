@@ -1,9 +1,10 @@
-package sc.iview;
+package sc.iview.create;
 
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.command.Command;
 import org.scijava.display.DisplayService;
+import sc.iview.SciView;
 
 @Plugin(type = Command.class, 
 		menuPath = "SciView>Add>Box")
@@ -13,7 +14,7 @@ public class AddBox  implements Command {
 	DisplayService displayService;
 	
 	@Parameter
-	SciView sciView;
+    SciView sciView;
 	
 	//SceneryService sceneryService;
 		
