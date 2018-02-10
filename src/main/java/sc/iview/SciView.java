@@ -34,8 +34,6 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import org.lwjgl.system.MemoryUtil;
 import org.scijava.log.LogService;
-import sc.iview.assimp.AssimpFormat;
-import sc.iview.assimp.DefaultAssimpFormat;
 import sc.iview.process.MeshConverter;
 
 import java.io.*;
@@ -163,8 +161,11 @@ public class SciView extends SceneryBase {
 
         Camera cam = new DetachedHeadCamera();
         //cam.setPosition( new GLVector(0.0f, 0.0f, 5.0f) );
-        cam.setPosition( new GLVector(20.0f, 10.0f, 35.0f) );
+        //cam.setPosition( new GLVector(20.0f, 10.0f, 35.0f) );
+        cam.setPosition( new GLVector(-100.0f, 20.0f, -150.0f) );
         cam.perspectiveCamera(50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 750.0f);
+        cam.setTarget( new GLVector(0,0,0) );
+        cam.setTargeted(true);
         cam.setActive( true );
         getScene().addChild(cam);
         this.camera = cam;
@@ -219,8 +220,8 @@ public class SciView extends SceneryBase {
         getInputHandler().useDefaultBindings("");
         getInputHandler().addBehaviour("object_selection_mode", new SelectCommand("objectSelector",getRenderer(),getScene(), () -> getScene().findObserver(),false, result -> this.selectNode(result) ));
         
-        //enableArcBallControl();
-        enableFPSControl();
+        enableArcBallControl();
+        //enableFPSControl();
 
         setupCameraModeSwitching("C");
 
@@ -861,14 +862,8 @@ public class SciView extends SceneryBase {
     public List<Node> openAssimp(String s) throws IOException {
         // TODO
 
-        AssimpFormat fmt = new DefaultAssimpFormat();
 
-        List<net.imagej.mesh.Mesh> mshes = fmt.read(new File(s));
-        List<Node> nodes = new ArrayList<>();
-        for(net.imagej.mesh.Mesh msh : mshes ) {
-            nodes.add(addMesh( msh, null ));
-        }
-        return nodes;
+        return null;
 
     }
 
