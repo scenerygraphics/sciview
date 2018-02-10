@@ -21,8 +21,6 @@ import sc.iview.vec3.DVec3;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static org.lwjgl.assimp.Assimp.aiImportFile;
-
 /**
  * Created by kharrington on 6/20/17.
  */
