@@ -175,11 +175,6 @@
 			<artifactId>scenery</artifactId>
 			<version>${scenery.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.joml</groupId>
-			<artifactId>joml</artifactId>
-			<version>1.9.8-SNAPSHOT</version>
-		</dependency>
 
 		<!-- Runtime scope -->
 
