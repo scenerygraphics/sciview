@@ -1,4 +1,4 @@
-package sc.iview;
+package sc.iview.create;
 
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -7,6 +7,8 @@ import cleargl.GLVector;
 import net.imagej.ops.geom.geom3d.mesh.Mesh;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
+import sc.iview.SciView;
+import sc.iview.SciViewService;
 import sc.iview.process.MeshConverter;
 
 import org.scijava.command.Command;

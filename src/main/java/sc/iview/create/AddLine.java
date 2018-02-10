@@ -1,8 +1,10 @@
-package sc.iview;
+package sc.iview.create;
 
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import sc.iview.SciView;
+import sc.iview.SciViewService;
 import sc.iview.vec3.DVec3;
 
 @Plugin(type = Command.class, 

@@ -1,4 +1,4 @@
-package sc.iview;
+package sc.iview.create;
 
 import javafx.scene.Scene;
 import net.imagej.Dataset;
@@ -21,6 +21,7 @@ import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import sc.iview.SciViewService;
 
 import java.util.ArrayList;
 
