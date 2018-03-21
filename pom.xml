@@ -238,11 +238,6 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>imagej-mesh</artifactId>
-			<version>0.2.1-SNAPSHOT</version>
-		</dependency>
 	</dependencies>
 
 	<build>
