@@ -152,13 +152,10 @@ public class SciView extends SceneryBase {
         PointLight[] lights = new PointLight[2];
 
         for( int i = 0; i < lights.length; i++ ) {
-            lights[i] = new PointLight();
-            lights[i].setPosition( new GLVector(20.0f * i, 20.0f * i, 20.0f * i) );
+            lights[i] = new PointLight(150.0f);
+            lights[i].setPosition( new GLVector(20.0f * i - 20.0f, 20.0f * i - 20.0f, 20.0f * i - 20.0f) );
             lights[i].setEmissionColor( new GLVector(1.0f, 1.0f, 1.0f) );
-            lights[i].setIntensity( 5000.2f*(i+1) );
-            lights[i].setLinear(0.0f);
-            //lights[i].setQuadratic(0.001f);
-            lights[i].setQuadratic(0.5f);
+            lights[i].setIntensity( 50.2f*(i+1) );
             getScene().addChild( lights[i] );
         }
 
@@ -398,7 +395,7 @@ public class SciView extends SceneryBase {
         material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
         //boxmaterial.getTextures().put("diffuse", SceneViewer3D.class.getResource("textures/helix.png").getFile() );
 
-        final PointLight light = new PointLight();
+        final PointLight light = new PointLight(5.0f);
         light.setMaterial( material );
         light.setPosition( new GLVector(0.0f, 0.0f, 0.0f) );
 
