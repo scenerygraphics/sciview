@@ -97,7 +97,7 @@
 		<CoreMem.version>0.4.3</CoreMem.version>
 		<script-editor.version>0.1.5</script-editor.version>
 		<scenery.version>0.3.0-SNAPSHOT</scenery.version>
-		<cleargl.version>2.1.3</cleargl.version>
+		<cleargl.version>2.1.5</cleargl.version>
 		<enforcer.skip>true</enforcer.skip>
 
 		<joml.version>1.9.8</joml.version>
