@@ -105,6 +105,10 @@
 
 	<repositories>
 		<repository>
+			<id>sonatype.public</id>
+			<url>https://oss.sonatype.org/content/groups/public</url>
+		</repository>
+		<repository>
 			<id>imagej.public</id>
 			<url>http://maven.imagej.net/content/groups/public</url>
 		</repository>
