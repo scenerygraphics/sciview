@@ -155,7 +155,7 @@ public class SciView extends SceneryBase {
             lights[i] = new PointLight(150.0f);
             lights[i].setPosition( new GLVector(20.0f * i - 20.0f, 20.0f * i - 20.0f, 20.0f * i - 20.0f) );
             lights[i].setEmissionColor( new GLVector(1.0f, 1.0f, 1.0f) );
-            lights[i].setIntensity( 50.2f*(i+1) );
+            lights[i].setIntensity( 5000.2f*(i+1) );
             getScene().addChild( lights[i] );
         }
 
@@ -171,13 +171,13 @@ public class SciView extends SceneryBase {
         this.camera = cam;
 
 
-
-        Box shell = new Box(new GLVector(120.0f, 120.0f, 120.0f), true);
+        Box shell = new Box(new GLVector(100.0f, 100.0f, 100.0f), true);
         //Box shell = new Box(new GLVector(1200.0f, 2200.0f, 4500.0f), true);
         shell.getMaterial().setDoubleSided( true );
         shell.getMaterial().setDiffuse( new GLVector(0.2f, 0.2f, 0.2f) );
         shell.getMaterial().setSpecular( GLVector.getNullVector(3) );
         shell.getMaterial().setAmbient( GLVector.getNullVector(3) );
+        // Could we generate a grid pattern with proper scale/units as a texture right now?
         getScene().addChild(shell);
 
 
@@ -740,8 +740,6 @@ public class SciView extends SceneryBase {
     public String getName() {
         return getApplicationName();
     }
-
-   
 
     public void addChild(Node node) {
         getScene().addChild(node);
