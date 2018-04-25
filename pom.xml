@@ -102,7 +102,6 @@
 		<lwjgl.version>3.1.6</lwjgl.version>
 		<imagej-mesh.version>0.3.0</imagej-mesh.version>
 		<CoreMem.version>0.4.3</CoreMem.version>
-		<script-editor.version>0.1.5</script-editor.version>
 		<scenery.version>0.3.0</scenery.version>
 		<cleargl.version>2.1.5</cleargl.version>
 		<joml.version>1.9.8</joml.version>
