@@ -90,6 +90,13 @@
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>SciView developers.</license.copyrightOwners>
 
+		<!--
+		HACK: The following list of allowed-to-be-duplicated classes
+		facilitates intended combinations of artifacts:
+		* com.google.android.tools:dx + junit:junit
+		-->
+		<allowedDuplicateClasses>junit.*</allowedDuplicateClasses>
+
 		<kotlin.version>1.2.30</kotlin.version>
 		<slf4j.version>1.7.25</slf4j.version>
 		<lwjgl.version>3.1.6</lwjgl.version>
@@ -98,8 +105,6 @@
 		<script-editor.version>0.1.5</script-editor.version>
 		<scenery.version>0.3.0</scenery.version>
 		<cleargl.version>2.1.5</cleargl.version>
-		<enforcer.skip>true</enforcer.skip>
-
 		<joml.version>1.9.8</joml.version>
 	</properties>
 
