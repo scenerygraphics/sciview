@@ -225,21 +225,12 @@
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.mastodon</groupId>
-			<artifactId>mastodon-collection</artifactId>
-			<version>1.0.0-beta-14</version>
-		</dependency>
-
-
-		<dependency>
 			<groupId>org.joml</groupId>
 			<artifactId>joml</artifactId>
 			<version>${joml.version}</version>
 		</dependency>
 
-
 		<!-- Test scope -->
-
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
