@@ -61,7 +61,10 @@ import net.imglib2.RealPoint;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import org.lwjgl.system.MemoryUtil;
+import org.scijava.Context;
 import org.scijava.log.LogService;
+import org.scijava.plugin.Parameter;
+
 import sc.iview.process.MeshConverter;
 import sc.iview.vec3.ClearGLDVec3;
 import sc.iview.vec3.DVec3;
@@ -81,6 +84,12 @@ import java.util.function.Supplier;
 
 public class SciView extends SceneryBase {
 
+    @Parameter
+    private LogService log;
+
+    @Parameter
+    private OpService ops;
+
     private Thread animationThread;
     private Node activeNode = null;
 
@@ -93,8 +102,9 @@ public class SciView extends SceneryBase {
     private boolean useJavaFX = false;
     SceneryPanel imagePanel = null;
 
-    public SciView() {
+    public SciView(Context context) {
         super("SciView", 800, 600, false);
+        context.inject(this);
     }
 
     public SciView(String applicationName, int windowWidth, int windowHeight) {
@@ -265,7 +275,7 @@ public class SciView extends SceneryBase {
                 }
             });
             activeNode = result.get(0).getNode();
-            //logService.warn( "Selected " + activeNode );
+            //log.warn( "Selected " + activeNode );
             return activeNode;
         }
         return null;
@@ -479,7 +489,7 @@ public class SciView extends SceneryBase {
     	addMesh( opsMesh );
     }*/
 
-    public graphics.scenery.Node addSTL( String filename, LogService logService ) {
+    public graphics.scenery.Node addSTL( String filename ) {
 
         Mesh scMesh = new Mesh();
         scMesh.readFromSTL( filename );
@@ -492,11 +502,11 @@ public class SciView extends SceneryBase {
 
         //addMesh( opsMesh );
 
-        addMesh( scMesh, logService );
+        addMesh( scMesh );
         return scMesh;
     }
 
-    public graphics.scenery.Node addObj( String filename, LogService logService ) {
+    public graphics.scenery.Node addObj( String filename ) {
         Mesh scMesh = new Mesh();
         scMesh.readFromOBJ( filename, false );// Could check if there is a MTL to use to toggle flag
 
@@ -505,7 +515,7 @@ public class SciView extends SceneryBase {
 
         //addMesh( opsMesh );
 
-        addMesh( scMesh, logService );
+        addMesh( scMesh );
 
         return scMesh;
     }
@@ -587,7 +597,7 @@ public class SciView extends SceneryBase {
         return n;
     }
 
-    public graphics.scenery.Node addMesh( Mesh scMesh, LogService logService ) {
+    public graphics.scenery.Node addMesh( Mesh scMesh ) {
         Material material = new Material();
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
         material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
@@ -607,35 +617,10 @@ public class SciView extends SceneryBase {
     }
 
 
-    public graphics.scenery.Node addMesh( net.imagej.ops.geom.geom3d.mesh.Mesh mesh, LogService logService ) {
-        Mesh scMesh = MeshConverter.getSceneryMesh( mesh, logService );
+    public graphics.scenery.Node addMesh( net.imagej.ops.geom.geom3d.mesh.Mesh mesh ) {
+        Mesh scMesh = MeshConverter.getSceneryMesh( mesh, log );
 
-        logService.warn( "Converting to a scenery mesh");
-
-        Material material = new Material();
-        material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
-        material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
-        material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
-        material.setDoubleSided(true);
-
-        scMesh.setMaterial( material );
-        scMesh.setPosition( new GLVector(1.0f, 1.0f, 1.0f) );
-
-        activeNode = scMesh;
-
-        getScene().addChild( scMesh );
-
-        if( defaultArcBall ) enableArcBallControl();
-
-        displayNodeProperties(activeNode, logService);
-
-        return scMesh;
-    }
-
-    private graphics.scenery.Node addMesh(net.imagej.mesh.Mesh mesh, LogService logService ) {
-        Mesh scMesh = MeshConverter.getSceneryMesh( mesh, logService );
-
-        logService.warn( "Converting to a scenery mesh");
+        log.warn( "Converting to a scenery mesh");
 
         Material material = new Material();
         material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
@@ -652,13 +637,38 @@ public class SciView extends SceneryBase {
 
         if( defaultArcBall ) enableArcBallControl();
 
-        displayNodeProperties(activeNode, logService);
+        displayNodeProperties(activeNode);
 
         return scMesh;
     }
 
-    public void displayNodeProperties( Node n, LogService logService ) {
-        logService.warn( "Position: " + n.getPosition() +
+    private graphics.scenery.Node addMesh(net.imagej.mesh.Mesh mesh ) {
+        Mesh scMesh = MeshConverter.getSceneryMesh( mesh, log );
+
+        log.warn( "Converting to a scenery mesh");
+
+        Material material = new Material();
+        material.setAmbient( new GLVector(1.0f, 0.0f, 0.0f) );
+        material.setDiffuse( new GLVector(0.0f, 1.0f, 0.0f) );
+        material.setSpecular( new GLVector(1.0f, 1.0f, 1.0f) );
+        material.setDoubleSided(true);
+
+        scMesh.setMaterial( material );
+        scMesh.setPosition( new GLVector(1.0f, 1.0f, 1.0f) );
+
+        activeNode = scMesh;
+
+        getScene().addChild( scMesh );
+
+        if( defaultArcBall ) enableArcBallControl();
+
+        displayNodeProperties(activeNode);
+
+        return scMesh;
+    }
+
+    public void displayNodeProperties( Node n ) {
+        log.warn( "Position: " + n.getPosition() +
                 " bounding box: [ " + n.getBoundingBoxCoords()[0] + ", " +
                 n.getBoundingBoxCoords()[1] + ", " +
                 n.getBoundingBoxCoords()[2] + ", " +
@@ -683,11 +693,11 @@ public class SciView extends SceneryBase {
         animationThread = newAnimator;
     }
 
-    public void takeScreenshot( LogService logService ) {
+    public void takeScreenshot() {
 
         getRenderer().screenshot();
 
-        //logService.warn("Screenshot temporarily disabled");
+        //log.warn("Screenshot temporarily disabled");
 
         /*
     	float[] bounds = viewer.getRenderer().getWindow().getClearglWindow().getBounds();
@@ -773,9 +783,9 @@ public class SciView extends SceneryBase {
         getScene().addChild(node);
     }
 
-    public graphics.scenery.Node addVolume(Dataset image, float[] voxelDimensions, LogService logService, OpService ops) {
+    public graphics.scenery.Node addVolume(Dataset image, float[] voxelDimensions) {
 
-        logService.warn( "Add Volume" );
+        log.warn( "Add Volume" );
 
         IterableInterval img = image.getImgPlus();
 
@@ -875,11 +885,11 @@ public class SciView extends SceneryBase {
 
             getScene().addChild(v);
 
-            logService.warn("Volume shown.");
+            log.warn("Volume shown.");
 
             return v;
         } else {
-            logService.warn("Image type: " + img.firstElement().getClass() + " can not be shown.");
+            log.warn("Image type: " + img.firstElement().getClass() + " can not be shown.");
         }
 
         return null;

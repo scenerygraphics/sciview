@@ -65,7 +65,7 @@ public class ConvexHull implements Command {
 
 			net.imagej.ops.geom.geom3d.mesh.Mesh smoothMesh = ops.geom().convexHull((net.imagej.ops.geom.geom3d.mesh.Mesh) opsMesh);
 
-			sceneryService.getActiveSciView().addMesh(smoothMesh,logService);
+			sceneryService.getActiveSciView().addMesh(smoothMesh);
 		}
 
 	}

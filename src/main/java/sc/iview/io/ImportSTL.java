@@ -58,7 +58,7 @@ public class ImportSTL  implements Command {
 		{
 			try
 			{
-				sciView.addSTL( stlFile.getAbsolutePath(), logService );
+				sciView.addSTL( stlFile.getAbsolutePath() );
 			}
 			catch ( final Exception e )
 			{

@@ -115,7 +115,7 @@ public class DefaultSciViewService extends AbstractService
     }
 
     public void createSciView() {
-        SciView v = new SciView();
+        SciView v = new SciView(getContext());
 
         // Maybe should use thread service instead
         Thread viewerThread = new Thread(){
@@ -154,7 +154,7 @@ public class DefaultSciViewService extends AbstractService
 		}
 			
 		// Make one
-		SciView sv = new SciView();
+		SciView sv = new SciView(getContext());
 		
 		threadService.run(new Runnable() {
 			@Override

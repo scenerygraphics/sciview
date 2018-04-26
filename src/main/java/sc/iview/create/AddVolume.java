@@ -66,7 +66,7 @@ public class AddVolume implements Command {
 
     @Override
     public void run() {
-        sciView.addVolume(image,new float[]{voxelWidth,voxelHeight,voxelDepth},logService,ops);
+        sciView.addVolume(image,new float[]{voxelWidth,voxelHeight,voxelDepth});
     }
 
 }

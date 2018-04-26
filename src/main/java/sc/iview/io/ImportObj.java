@@ -58,7 +58,7 @@ public class ImportObj  implements Command {
 		{
 			try
 			{
-				sciView.addObj( objFile.getAbsolutePath(), logService );
+				sciView.addObj( objFile.getAbsolutePath() );
 			}
 			catch ( final Exception e )
 			{

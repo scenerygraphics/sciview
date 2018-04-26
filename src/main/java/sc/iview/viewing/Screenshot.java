@@ -28,7 +28,6 @@
  */
 package sc.iview.viewing;
 
-import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
@@ -44,12 +43,9 @@ public class Screenshot implements Command {
 	@Parameter
 	private SciViewService sceneryService;
 
-	@Parameter
-	private LogService logService;
-	
 	@Override
 	public void run() {
-		sceneryService.getActiveSciView().takeScreenshot(logService);
+		sceneryService.getActiveSciView().takeScreenshot();
 	}
 
 }
