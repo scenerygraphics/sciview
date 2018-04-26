@@ -244,15 +244,4 @@
 			</plugin>
 		</plugins>
 	</build>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>ij.snapshots</id>
-			<name>ImageJ Snapshot Repository</name>
-			<url>http://maven.imagej.net/content/repositories/snapshots/</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</pluginRepository>
-	</pluginRepositories>
-
 </project>
