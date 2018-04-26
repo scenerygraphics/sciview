@@ -28,9 +28,10 @@
  */
 package sc.iview.create;
 
+import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.command.Command;
+
 import sc.iview.SciViewService;
 
 @Plugin(type = Command.class, 

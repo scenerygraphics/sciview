@@ -28,18 +28,18 @@
  */
 package sc.iview.ops;
 
+import net.imagej.ops.OpService;
+import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
+
+import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import cleargl.GLVector;
-import net.imagej.ops.OpService;
-import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
 import sc.iview.SciViewService;
 import sc.iview.process.MeshConverter;
 
-import org.scijava.command.Command;
-
+import cleargl.GLVector;
 import graphics.scenery.Mesh;
 
 @Plugin(type = Command.class, 

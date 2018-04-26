@@ -28,11 +28,9 @@
  */
 package sc.iview;
 
-import cleargl.GLTypeEnum;
-import cleargl.GLVector;
-import graphics.scenery.BufferUtils;
-import graphics.scenery.GenericTexture;
-import graphics.scenery.Node;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import net.imagej.Dataset;
 import net.imagej.ImageJ;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
@@ -43,11 +41,15 @@ import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
+
 import sc.iview.vec3.ClearGLDVec3;
 import sc.iview.vec3.DVec3;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import cleargl.GLTypeEnum;
+import cleargl.GLVector;
+import graphics.scenery.BufferUtils;
+import graphics.scenery.GenericTexture;
+import graphics.scenery.Node;
 
 /**
  * Created by kharrington on 6/20/17.

@@ -28,12 +28,11 @@
  */
 package sc.iview.edit;
 
+import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import sc.iview.SciViewService;
-
-import org.scijava.command.Command;
 
 @Plugin(type = Command.class, 
 		menuPath = "SciView>Edit>Delete Node")

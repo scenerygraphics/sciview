@@ -28,10 +28,17 @@
  */
 package graphics.scenery.viewer.threed.tests.examples;
 
-import cleargl.GLVector;
-import graphics.scenery.*;
-import graphics.scenery.backends.Renderer;
 import org.junit.Test;
+
+import cleargl.GLVector;
+import graphics.scenery.Box;
+import graphics.scenery.Camera;
+import graphics.scenery.DetachedHeadCamera;
+import graphics.scenery.Material;
+import graphics.scenery.PointLight;
+import graphics.scenery.SceneryBase;
+import graphics.scenery.SceneryElement;
+import graphics.scenery.backends.Renderer;
 
 
 /**

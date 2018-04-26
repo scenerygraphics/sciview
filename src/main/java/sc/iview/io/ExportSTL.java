@@ -30,15 +30,15 @@ package sc.iview.io;
 
 import java.io.File;
 
+import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.FileWidget;
 
-import org.scijava.command.Command;
+import sc.iview.SciViewService;
 
 import graphics.scenery.Mesh;
-import sc.iview.SciViewService;
 
 @Plugin(type = Command.class, 
 		menuPath = "SciView>Export>STL_", label = "Export STL")

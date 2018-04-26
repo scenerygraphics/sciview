@@ -28,7 +28,8 @@
  */
 package sc.iview.create;
 
-import javafx.scene.Scene;
+import java.util.ArrayList;
+
 import net.imagej.Dataset;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.Mesh;
@@ -45,12 +46,12 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
+
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import sc.iview.SciViewService;
 
-import java.util.ArrayList;
+import sc.iview.SciViewService;
 
 /**
  * Author: Robert Haase, Scientific Computing Facility, MPI-CBG Dresden, rhaase@mpi-cbg.de

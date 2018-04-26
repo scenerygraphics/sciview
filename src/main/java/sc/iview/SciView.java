@@ -28,14 +28,58 @@
  */
 package sc.iview;
 
-import cleargl.GLVector;
 import com.sun.javafx.application.PlatformImpl;
+
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.function.Supplier;
+
+import net.imagej.Dataset;
+import net.imagej.ops.OpService;
+import net.imglib2.Cursor;
+import net.imglib2.IterableInterval;
+import net.imglib2.RealPoint;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
+
+import org.lwjgl.system.MemoryUtil;
+import org.scijava.Context;
+import org.scijava.log.LogService;
+import org.scijava.plugin.Parameter;
+
+import sc.iview.process.MeshConverter;
+import sc.iview.vec3.ClearGLDVec3;
+import sc.iview.vec3.DVec3;
+import sc.iview.vec3.DVec3s;
+
+import cleargl.GLVector;
 import coremem.enums.NativeTypeEnum;
-import graphics.scenery.*;
+import graphics.scenery.Box;
 import graphics.scenery.Camera;
+import graphics.scenery.DetachedHeadCamera;
+import graphics.scenery.Line;
+import graphics.scenery.Material;
 import graphics.scenery.Mesh;
 import graphics.scenery.Node;
+import graphics.scenery.PointCloud;
 import graphics.scenery.PointLight;
+import graphics.scenery.SceneryBase;
+import graphics.scenery.SceneryElement;
+import graphics.scenery.Sphere;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.controls.InputHandler;
 import graphics.scenery.controls.behaviours.ArcballCameraControl;
@@ -49,38 +93,15 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
-import net.imagej.Dataset;
-import net.imagej.ops.OpService;
-import net.imglib2.Cursor;
-import net.imglib2.IterableInterval;
-import net.imglib2.RealPoint;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
-import org.lwjgl.system.MemoryUtil;
-import org.scijava.Context;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Parameter;
-
-import sc.iview.process.MeshConverter;
-import sc.iview.vec3.ClearGLDVec3;
-import sc.iview.vec3.DVec3;
-import sc.iview.vec3.DVec3s;
-
-import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.function.Supplier;
 
 public class SciView extends SceneryBase {
 

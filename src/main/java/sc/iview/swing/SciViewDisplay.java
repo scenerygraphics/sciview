@@ -28,9 +28,11 @@
  */
 package sc.iview.swing;
 
+import net.imagej.event.DataRestructuredEvent;
+import net.imagej.event.DataUpdatedEvent;
+
 import org.scijava.display.AbstractDisplay;
 import org.scijava.display.Display;
-import org.scijava.display.DisplayService;
 import org.scijava.display.event.DisplayDeletedEvent;
 import org.scijava.event.EventHandler;
 import org.scijava.event.EventService;
@@ -39,10 +41,6 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.thread.ThreadService;
 
-import net.imagej.display.DataView;
-import net.imagej.display.DefaultImageDisplay;
-import net.imagej.event.DataRestructuredEvent;
-import net.imagej.event.DataUpdatedEvent;
 import sc.iview.SciView;
 
 /**

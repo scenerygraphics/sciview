@@ -28,7 +28,9 @@
  */
 package sc.iview.edit;
 
-import cleargl.GLVector;
+import static org.scijava.widget.ChoiceWidget.LIST_BOX_STYLE;
+
+import java.util.ArrayList;
 
 import org.scijava.Context;
 import org.scijava.command.Command;
@@ -41,13 +43,10 @@ import org.scijava.ui.UIService;
 import org.scijava.util.ColorRGB;
 import org.scijava.widget.NumberWidget;
 
-import java.util.ArrayList;
-
-import graphics.scenery.Node;
-import sc.iview.SciView;
 import sc.iview.SciViewService;
 
-import static org.scijava.widget.ChoiceWidget.LIST_BOX_STYLE;
+import cleargl.GLVector;
+import graphics.scenery.Node;
 
 /**
  * Author: Robert Haase, Scientific Computing Facility, MPI-CBG Dresden, rhaase@mpi-cbg.de

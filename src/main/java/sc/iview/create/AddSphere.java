@@ -28,18 +28,17 @@
  */
 package sc.iview.create;
 
+import net.imglib2.RealLocalizable;
+import net.imglib2.RealPoint;
+
+import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import cleargl.GLVector;
-import net.imagej.ops.geom.geom3d.mesh.Mesh;
-import net.imglib2.RealLocalizable;
-import net.imglib2.RealPoint;
 import sc.iview.SciView;
 import sc.iview.SciViewService;
-import sc.iview.process.MeshConverter;
 
-import org.scijava.command.Command;
+import cleargl.GLVector;
 
 @Plugin(type = Command.class, 
 		menuPath = "SciView>Add>Sphere")

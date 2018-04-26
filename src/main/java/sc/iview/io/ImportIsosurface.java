@@ -28,10 +28,6 @@
  */
 package sc.iview.io;
 
-import org.scijava.display.DisplayService;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-
 import net.imagej.ImgPlus;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
@@ -40,10 +36,13 @@ import net.imagej.ops.geom.geom3d.mesh.Mesh;
 import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
-import sc.iview.SciView;
-import sc.iview.SciViewService;
 
 import org.scijava.command.Command;
+import org.scijava.display.DisplayService;
+import org.scijava.plugin.Parameter;
+import org.scijava.plugin.Plugin;
+
+import sc.iview.SciView;
 
 @Plugin(type = Command.class, 
 		menuPath = "SciView>Import>Isosurface")

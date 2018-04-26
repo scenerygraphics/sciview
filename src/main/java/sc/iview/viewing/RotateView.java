@@ -28,14 +28,14 @@
  */
 package sc.iview.viewing;
 
+import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.command.Command;
+
+import sc.iview.SciViewService;
 
 import graphics.scenery.Node;
-import sc.iview.SciView;
-import sc.iview.SciViewService;
 
 @Plugin(type = Command.class, 
 		menuPath = "SciView>View>Rotate")

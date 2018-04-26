@@ -28,13 +28,14 @@
  */
 package sc.iview.io;
 
+import java.io.File;
+
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import sc.iview.SciView;
 
-import java.io.File;
+import sc.iview.SciView;
 
 /**
  * Created by kharrington on 7/20/17.

@@ -28,9 +28,11 @@
  */
 package sc.iview.vec3;
 
-import cleargl.GLVector;
 import net.imglib2.RealLocalizable;
+
 import org.joml.Vector3f;
+
+import cleargl.GLVector;
 
 /**
  * Created by kharrington on 1/18/18.

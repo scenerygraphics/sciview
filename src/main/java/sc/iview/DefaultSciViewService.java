@@ -28,29 +28,20 @@
  */
 package sc.iview;
 
-import net.imagej.Data;
-import net.imagej.Position;
-import net.imagej.display.DataView;
-import org.scijava.log.LogService;
-import sc.iview.swing.SciViewDisplay;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.scijava.display.Display;
 import org.scijava.display.DisplayService;
-import org.scijava.display.event.window.WinActivatedEvent;
-import org.scijava.display.event.window.WinClosedEvent;
-import org.scijava.event.EventHandler;
 import org.scijava.event.EventService;
-import org.scijava.menu.MenuService;
+import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.plugin.PluginService;
-import org.scijava.script.ScriptService;
 import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
 import org.scijava.thread.ThreadService;
 
-import java.util.LinkedList;
-import java.util.List;
+import sc.iview.swing.SciViewDisplay;
 
 
 /**

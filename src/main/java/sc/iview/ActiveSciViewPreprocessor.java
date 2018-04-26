@@ -28,11 +28,11 @@
  */
 package sc.iview;
 
+import net.imagej.display.process.SingleInputPreprocessor;
+
 import org.scijava.module.process.PreprocessorPlugin;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-
-import net.imagej.display.process.SingleInputPreprocessor;
 
 /**
  * Fills single, unresolved module inputs with the active active

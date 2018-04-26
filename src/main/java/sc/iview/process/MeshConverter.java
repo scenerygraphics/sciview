@@ -28,18 +28,22 @@
  */
 package sc.iview.process;
 
-import cleargl.GLVector;
-import net.imagej.mesh.*;
-import net.imagej.ops.geom.geom3d.mesh.*;
-import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
-import net.imagej.ops.geom.geom3d.mesh.Mesh;
-import net.imglib2.RealLocalizable;
-import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
-import graphics.scenery.BufferUtils;
-import org.scijava.log.LogService;
-
 import java.nio.FloatBuffer;
 import java.util.List;
+
+import net.imagej.mesh.Triangle;
+import net.imagej.mesh.Vertex3;
+import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
+import net.imagej.ops.geom.geom3d.mesh.Facet;
+import net.imagej.ops.geom.geom3d.mesh.Mesh;
+import net.imagej.ops.geom.geom3d.mesh.TriangularFacet;
+import net.imagej.ops.geom.geom3d.mesh.Vertex;
+import net.imglib2.RealLocalizable;
+
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+import org.scijava.log.LogService;
+
+import graphics.scenery.BufferUtils;
 
 /**
  * ImageJ OPs Mesh to Scenery Mesh converter
