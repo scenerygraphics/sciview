@@ -67,17 +67,17 @@ public class Main {
 
 
         SciView sciView = ((SciViewService) ij.getContext().getService("sc.iview.SciViewService")).getOrCreateActiveSciView();
-        sciView.getCamera().setPosition(new GLVector(-20, 0, 0));
+        sciView.getCamera().setPosition(new GLVector(0.0f, 0.0f, 5.0f));
         sciView.getCamera().setTargeted(true);
         sciView.getCamera().setTarget(new GLVector(0, 0, 0));
         sciView.getCamera().setDirty(true);
         sciView.getCamera().setNeedsUpdate(true);
         //sciView.getCamera().setNeedsUpdateWorld(true);
 
-        lineTest(sciView);
+        //lineTest(sciView);
         //meshTest();
         //meshTextureTest();
-        //volumeRenderTest();
+        volumeRenderTest();
     }
 
     public static void lineTest(SciView sciView) throws IOException, InterruptedException {
