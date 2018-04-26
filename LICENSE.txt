@@ -1,4 +1,4 @@
-Copyright (c) 2016, Kyle Harrington.
+Copyright (c) 2016 - 2018, SciView developers.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
