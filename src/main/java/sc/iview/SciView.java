@@ -232,10 +232,11 @@ public class SciView extends SceneryBase {
 
         Box shell = new Box(new GLVector(100.0f, 100.0f, 100.0f), true);
         //Box shell = new Box(new GLVector(1200.0f, 2200.0f, 4500.0f), true);
-        shell.getMaterial().setDoubleSided( true );
         shell.getMaterial().setDiffuse( new GLVector(0.2f, 0.2f, 0.2f) );
         shell.getMaterial().setSpecular( GLVector.getNullVector(3) );
         shell.getMaterial().setAmbient( GLVector.getNullVector(3) );
+        shell.getMaterial().setDoubleSided(true);
+        shell.getMaterial().setCullingMode(Material.CullingMode.Front);
         // Could we generate a grid pattern with proper scale/units as a texture right now?
         getScene().addChild(shell);
 
@@ -848,6 +849,7 @@ public class SciView extends SceneryBase {
             //System.out.println( "Add Volume: buffer written " + byteBuffer );
 
             Volume v = new Volume();
+            v.setColormap("jet");
             v.readFromBuffer(image.getName(), byteBuffer, dimensions[0], dimensions[1], dimensions[2],
                     voxelDimensions[0], voxelDimensions[1], voxelDimensions[2],
                     NativeTypeEnum.UnsignedShort, bytesPerVoxel);
@@ -857,6 +859,11 @@ public class SciView extends SceneryBase {
             //System.out.println( "Add Volume: volume created " + v);
 
             getScene().addChild(v);
+
+            log.info("min=" + v.getTrangemin() + " max=" + v.getTrangemax());
+            v.setTrangemin(0.0f);
+            v.setTrangemax(65536.0f);
+            log.info("min=" + v.getTrangemin() + " max=" + v.getTrangemax());
 
             return v;
         } else if(img.firstElement().getClass() == UnsignedByteType.class) {
@@ -872,22 +879,19 @@ public class SciView extends SceneryBase {
 
             // We might need to use a RAI instead to handle multiple image types
             //   but we'll be fine for ArrayImg's
-            Cursor<UnsignedShortType> cursor = img.cursor();
+            Cursor<UnsignedByteType> cursor = img.cursor();
 
             int bytesRead = 1;// to init
-            UnsignedShortType t;
-            short sval;
+            UnsignedByteType t;
             while (cursor.hasNext() && (bytesRead > 0)) {
                 bytesRead = 0;
                 while (cursor.hasNext() && bytesRead < buffer.length) {
                     cursor.fwd();
-                    t = ops.convert().uint16(cursor.get());
-                    sval = t.getCodedSignedShort(t.get());
-                    buffer[bytesRead] = (byte) (sval & 0xff);
-                    buffer[bytesRead + 1] = (byte) ((sval >> 8) & 0xff);
+                    t = ops.convert().uint8(cursor.get());
+                    buffer[bytesRead] = t.getByte();
                     //buffer[bytesRead] = t.getCodedSignedByte(t.get());
                     //bytesRead++;
-                    bytesRead += 2;
+                    bytesRead += 1;
                 }
                 byteBuffer.put(buffer, 0, bytesRead);
             }
@@ -898,12 +902,16 @@ public class SciView extends SceneryBase {
             Volume v = new Volume();
             v.readFromBuffer(image.getName(), byteBuffer, dimensions[0], dimensions[1], dimensions[2],
                     voxelDimensions[0], voxelDimensions[1], voxelDimensions[2],
-                    NativeTypeEnum.UnsignedShort, bytesPerVoxel);
+                    NativeTypeEnum.UnsignedByte, bytesPerVoxel);
 
             //System.out.println( v.getColormaps() );
 
             //System.out.println( "Add Volume: volume created " + v);
 
+            log.info("min=" + v.getTrangemin() + " max=" + v.getTrangemax());
+            v.setTrangemin(0.0f);
+            v.setTrangemax(255.0f);
+            log.info("min=" + v.getTrangemin() + " max=" + v.getTrangemax());
             getScene().addChild(v);
 
             log.warn("Volume shown.");
