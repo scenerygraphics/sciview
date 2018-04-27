@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>20.3.0</version>
+		<version>20.4.0</version>
 		<relativePath />
 	</parent>
 
@@ -96,15 +96,6 @@
 		* com.google.android.tools:dx + junit:junit
 		-->
 		<allowedDuplicateClasses>junit.*</allowedDuplicateClasses>
-
-		<kotlin.version>1.2.40</kotlin.version>
-		<slf4j.version>1.7.25</slf4j.version>
-		<lwjgl.version>3.1.6</lwjgl.version>
-		<imagej-mesh.version>0.3.0</imagej-mesh.version>
-		<CoreMem.version>0.4.3</CoreMem.version>
-		<scenery.version>0.3.1</scenery.version>
-		<cleargl.version>2.1.5</cleargl.version>
-		<joml.version>1.9.8</joml.version>
 	</properties>
 
 	<repositories>
@@ -146,17 +137,14 @@
 		<dependency>
 			<groupId>net.clearvolume</groupId>
 			<artifactId>cleargl</artifactId>
-			<version>${cleargl.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.coremem</groupId>
 			<artifactId>CoreMem</artifactId>
-			<version>${CoreMem.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
 			<artifactId>kotlin-reflect</artifactId>
-			<version>${kotlin.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
@@ -181,17 +169,14 @@
 		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl</artifactId>
-			<version>${lwjgl.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>graphics.scenery</groupId>
 			<artifactId>scenery</artifactId>
-			<version>${scenery.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-mesh</artifactId>
-			<version>${imagej-mesh.version}</version>
 		</dependency>
 
 		<!-- Runtime scope -->
@@ -199,7 +184,6 @@
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
 			<artifactId>kotlin-stdlib-jdk8</artifactId>
-			<version>${kotlin.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -225,7 +209,6 @@
 		<dependency>
 			<groupId>org.joml</groupId>
 			<artifactId>joml</artifactId>
-			<version>${joml.version}</version>
 		</dependency>
 
 		<!-- Test scope -->
