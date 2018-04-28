@@ -61,7 +61,7 @@ import graphics.scenery.Node;
  *
  */
 @Plugin(type = Command.class, menuPath = "SciView>Edit>Properties", initializer = "initValues")
-public class SceneNodePropertiesEditor extends InteractiveCommand implements Command {
+public class SceneNodePropertiesEditor extends InteractiveCommand {
     boolean initializing = true;
 
     @Parameter
@@ -109,8 +109,8 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
         initializing = true;
         sceneNodeChoices = new ArrayList<>();
         int count = 0;
-        for( Node sceneNode : sceneryService.getActiveSciView().getSceneNodes() ) {
-            sceneNodeChoices.add( makeIdentifier( sceneNode, count ) );
+        for( Node node : sceneryService.getActiveSciView().getSceneNodes() ) {
+            sceneNodeChoices.add( makeIdentifier( node, count ) );
             count++;
         }
 
@@ -132,9 +132,9 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
         currentSceneNode = null;
 
         int count = 0;
-        for( Node sceneNode : sceneryService.getActiveSciView().getSceneNodes() ) {
-            if( identifier.equals( makeIdentifier( sceneNode, count ) ) ) {
-                currentSceneNode = sceneNode;
+        for( Node node : sceneryService.getActiveSciView().getSceneNodes() ) {
+            if( identifier.equals( makeIdentifier( node, count ) ) ) {
+                currentSceneNode = node;
                 //System.out.println("current node found");
                 break;
             }
@@ -210,8 +210,8 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
         currentSceneNode.setPosition( position );
     }
 
-    private String makeIdentifier( Node sceneNode, int count ) {
-        return "" + sceneNode.getName() + "[" + count + "]";
+    private String makeIdentifier( Node node, int count ) {
+        return "" + node.getName() + "[" + count + "]";
     }
 
     /**

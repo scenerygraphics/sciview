@@ -28,8 +28,6 @@
  */
 package sc.iview.create;
 
-import java.util.ArrayList;
-
 import net.imagej.Dataset;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.Mesh;
@@ -41,7 +39,6 @@ import net.imglib2.roi.labeling.ImgLabeling;
 import net.imglib2.roi.labeling.LabelRegion;
 import net.imglib2.roi.labeling.LabelRegions;
 import net.imglib2.roi.labeling.LabelingType;
-import net.imglib2.type.logic.BoolType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.util.Util;
@@ -74,6 +71,7 @@ public class AddLabelImage<T extends RealType<T>> implements Command {
 
         // interpret the current image as a label image and convert it to ImgLabeling
 
+        @SuppressWarnings("unchecked")
         Img<T> labelMap = ( Img<T> ) currentImage.getImgPlus();
 
         final Dimensions dims = labelMap;
@@ -93,7 +91,6 @@ public class AddLabelImage<T extends RealType<T>> implements Command {
         // take the regions, process them to meshes and put it in the viewer
         LabelRegions<Integer> labelRegions = new LabelRegions<>( labeling );
 
-        ArrayList<RandomAccessibleInterval<BoolType>> regions = new ArrayList<>();
         Object[] regionsArr = labelRegions.getExistingLabels().toArray();
         for( int i = 0; i < labelRegions.getExistingLabels().size(); i++ ) {
             LabelRegion<Integer> lr = labelRegions.getLabelRegion( ( Integer ) regionsArr[i] );

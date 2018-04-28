@@ -82,8 +82,7 @@ public class MeshToImage implements Command {
             Mesh currentMesh = ( Mesh ) sciView.getActiveNode();
             DefaultMesh opsMesh = ( DefaultMesh ) MeshConverter.getOpsMesh( currentMesh, logService );
 
-            //net.imagej.ops.geom.geom3d.mesh.Mesh img = ops.geom().voxelization( opsMesh, width, height, depth);
-            RandomAccessibleInterval<BitType> img = ops.geom().voxelization( opsMesh, width, height, depth );
+            img = ops.geom().voxelization( opsMesh, width, height, depth );
 
             uiService.show( img );
 

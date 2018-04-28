@@ -68,7 +68,7 @@ public class Main {
     private static OpService ops;
     private static UIService ui;
 
-    public static void main( String... args ) throws IOException, InterruptedException {
+    public static void main( String... args ) throws IOException {
         context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class );
         sciViewService = context.getService( SciViewService.class );
         io = context.service( DatasetIOService.class );

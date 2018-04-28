@@ -55,6 +55,7 @@ public class RotateView implements Command {
         }
 
         rotator = new Thread() {
+            @Override
             public void run() {
                 while( true ) {
                     for( Node node : sceneryService.getActiveSciView().getSceneNodes() ) {

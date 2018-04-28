@@ -86,10 +86,9 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
                 }
             }
             return sv;
-        } else {
-            logService.error( "No SciJava display available. Use getOrCreateActiveSciView() to automatically create a display if one does not exist." );
-            return null;
         }
+        logService.error( "No SciJava display available. Use getOrCreateActiveSciView() to automatically create a display if one does not exist." );
+        return null;
     }
 
     @Override
@@ -109,6 +108,7 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
 
         // Maybe should use thread service instead
         Thread viewerThread = new Thread() {
+            @Override
             public void run() {
                 v.main();
             }

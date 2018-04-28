@@ -98,6 +98,7 @@ public class TexturedCubeExample {
             getScene().addChild( cam );
 
             Thread rotator = new Thread() {
+                @Override
                 public void run() {
                     while( true ) {
                         box.getRotation().rotateByAngleY( 0.01f );

@@ -140,7 +140,7 @@ public class SciView extends SceneryBase {
     public void init() {
         if( useJavaFX ) {
             CountDownLatch latch = new CountDownLatch( 1 );
-            final SceneryPanel[] imagePanel = { null };
+            final SceneryPanel[] sceneryPanel = { null };
 
             PlatformImpl.startup( () -> {} );
 
@@ -156,13 +156,13 @@ public class SciView extends SceneryBase {
                 GridPane pane = new GridPane();
                 Label label = new Label( getApplicationName() );
 
-                imagePanel[0] = new SceneryPanel( getWindowWidth(), getWindowHeight() );
+                sceneryPanel[0] = new SceneryPanel( getWindowWidth(), getWindowHeight() );
 
-                GridPane.setHgrow( imagePanel[0], Priority.ALWAYS );
-                GridPane.setVgrow( imagePanel[0], Priority.ALWAYS );
+                GridPane.setHgrow( sceneryPanel[0], Priority.ALWAYS );
+                GridPane.setVgrow( sceneryPanel[0], Priority.ALWAYS );
 
-                GridPane.setFillHeight( imagePanel[0], true );
-                GridPane.setFillWidth( imagePanel[0], true );
+                GridPane.setFillHeight( sceneryPanel[0], true );
+                GridPane.setFillWidth( sceneryPanel[0], true );
 
                 GridPane.setHgrow( label, Priority.ALWAYS );
                 GridPane.setHalignment( label, HPos.CENTER );
@@ -178,7 +178,7 @@ public class SciView extends SceneryBase {
 
                 label.setTextAlignment( TextAlignment.CENTER );
 
-                pane.add( imagePanel[0], 1, 1 );
+                pane.add( sceneryPanel[0], 1, 1 );
                 pane.add( label, 1, 2 );
                 stackPane.getChildren().addAll( pane );
 
@@ -201,7 +201,7 @@ public class SciView extends SceneryBase {
             }
 
             setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), getWindowWidth(),
-                                                  getWindowHeight(), imagePanel[0] ) );
+                                                  getWindowHeight(), sceneryPanel[0] ) );
         } else {
             setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), 512, 512 ) );
         }
@@ -831,7 +831,7 @@ public class SciView extends SceneryBase {
                 while( cursor.hasNext() && bytesRead < buffer.length ) {
                     cursor.fwd();
                     t = cursor.get();
-                    sval = t.getCodedSignedShort( t.get() );
+                    sval = UnsignedShortType.getCodedSignedShort( t.get() );
                     buffer[bytesRead] = ( byte ) ( sval & 0xff );
                     buffer[bytesRead + 1] = ( byte ) ( ( sval >> 8 ) & 0xff );
                     //buffer[bytesRead] = t.getCodedSignedByte(t.get());
@@ -921,7 +921,7 @@ public class SciView extends SceneryBase {
         return null;
     }
 
-    public List<Node> openAssimp( String s ) throws IOException {
+    public List<Node> openAssimp( String s ) {
         // TODO
 
         return null;

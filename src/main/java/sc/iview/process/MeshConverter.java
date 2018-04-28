@@ -139,9 +139,9 @@ public class MeshConverter {
                         if( scVertices[count] > boundingBox[d + 3] )// min
                             boundingBox[d + 3] = scVertices[count];
 
-                        if( d == 0 ) scNormals[count] = ( float ) normal.getX();
-                        else if( d == 1 ) scNormals[count] = ( float ) normal.getY();
-                        else if( d == 2 ) scNormals[count] = ( float ) normal.getZ();
+                        if( d == 0 ) scNormals[count] = normal.getX();
+                        else if( d == 1 ) scNormals[count] = normal.getY();
+                        else if( d == 2 ) scNormals[count] = normal.getZ();
                         count++;
                     }
                 }
