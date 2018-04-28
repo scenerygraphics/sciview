@@ -54,9 +54,9 @@ import sc.iview.SciView;
 public class SciViewDisplayViewer extends AbstractDisplayViewer<SciView>
 {
 
-	@Parameter
-	private EventService eventService;
-	
+    @Parameter
+    private EventService eventService;
+    
     @Override
     public boolean isCompatible(UserInterface ui) {
         return ui instanceof SwingUI;
@@ -69,37 +69,37 @@ public class SciViewDisplayViewer extends AbstractDisplayViewer<SciView>
     
     //@Override
     public DisplayWindow createWindow( Display<?> d ) {
-    	Object data = d.get(0);
-    	if( !( data instanceof SciView ) )
-    		throw new IllegalArgumentException("Must be SciView");
-    	return new SciViewDisplayWindow((SciView)data);
+        Object data = d.get(0);
+        if( !( data instanceof SciView ) )
+            throw new IllegalArgumentException("Must be SciView");
+        return new SciViewDisplayWindow((SciView)data);
     }
     
     @EventHandler
-  	protected void onEvent(final DataRestructuredEvent event) {
-  		
-  	}
+      protected void onEvent(final DataRestructuredEvent event) {
+          
+      }
 
-  	// FIXME - displays should not listen for Data events. Views should listen for
-  	// data events, adjust themselves, and generate view events. The display
-  	// classes should listen for view events and refresh themselves as necessary.
+      // FIXME - displays should not listen for Data events. Views should listen for
+      // data events, adjust themselves, and generate view events. The display
+      // classes should listen for view events and refresh themselves as necessary.
 
-  	@EventHandler
-  	protected void onEvent(final DataUpdatedEvent event) {
-  		System.out.println("Display updated");
-  	}
+      @EventHandler
+      protected void onEvent(final DataUpdatedEvent event) {
+          System.out.println("Display updated");
+      }
 
-  	@EventHandler
-  	protected void onEvent(final DisplayDeletedEvent event) {
-  		
-  	}
-  	
-	/** Synchronizes the user interface appearance with the display model. */
-	public void onDisplayUpdatedEvent(final DisplayUpdatedEvent e) {
-		
-	}
-	
-	public void onDisplayActivatedEvent(final DisplayActivatedEvent e) {
-		// do nothing because no panel
-	}
+      @EventHandler
+      protected void onEvent(final DisplayDeletedEvent event) {
+          
+      }
+      
+    /** Synchronizes the user interface appearance with the display model. */
+    public void onDisplayUpdatedEvent(final DisplayUpdatedEvent e) {
+        
+    }
+    
+    public void onDisplayActivatedEvent(final DisplayActivatedEvent e) {
+        // do nothing because no panel
+    }
 }

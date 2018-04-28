@@ -41,35 +41,35 @@ import sc.iview.SciViewService;
 import graphics.scenery.Mesh;
 
 @Plugin(type = Command.class, 
-		menuPath = "SciView>Export>STL_", label = "Export STL")
+        menuPath = "SciView>Export>STL_", label = "Export STL")
 public class ExportSTL  implements Command {
-	
-	//@Parameter
-	//private Mesh scMesh;
-	
-	@Parameter(style=FileWidget.SAVE_STYLE)
-	private File stlFile = new File("");
+    
+    //@Parameter
+    //private Mesh scMesh;
+    
+    @Parameter(style=FileWidget.SAVE_STYLE)
+    private File stlFile = new File("");
 
-	@Parameter
-	private SciViewService sceneryService;
+    @Parameter
+    private SciViewService sceneryService;
 
-	@Parameter
-	private LogService logService;
+    @Parameter
+    private LogService logService;
 
-	@Override
-	public void run() {
-		if( sceneryService.getActiveSciView().getActiveNode() instanceof Mesh ) {
-			Mesh mesh = (Mesh)sceneryService.getActiveSciView().getActiveNode();
+    @Override
+    public void run() {
+        if( sceneryService.getActiveSciView().getActiveNode() instanceof Mesh ) {
+            Mesh mesh = (Mesh)sceneryService.getActiveSciView().getActiveNode();
 
-			if (mesh != null) {
-				try {
-					sceneryService.getActiveSciView().writeSCMesh(stlFile.getAbsolutePath(), mesh);
-					//ThreeDViewer.writeSCMesh( stlFilename, mesh );
-				} catch (final Exception e) {
-					logService.trace(e);
-				}
-			}
-		}
-	}
+            if (mesh != null) {
+                try {
+                    sceneryService.getActiveSciView().writeSCMesh(stlFile.getAbsolutePath(), mesh);
+                    //ThreeDViewer.writeSCMesh( stlFilename, mesh );
+                } catch (final Exception e) {
+                    logService.trace(e);
+                }
+            }
+        }
+    }
 
 }

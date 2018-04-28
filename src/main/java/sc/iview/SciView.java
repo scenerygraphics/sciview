@@ -264,7 +264,7 @@ public class SciView extends SceneryBase {
     }
     
     public boolean isInitialized() {
-    	return initialized;
+        return initialized;
     }
 
     public Camera getCamera() {
@@ -496,19 +496,19 @@ public class SciView extends SceneryBase {
     Reading STL through Scenery
      *
     public static void addSTL( String filename ) {
-    	Mesh scMesh = new Mesh();
-    	scMesh.readFromSTL( filename );
+        Mesh scMesh = new Mesh();
+        scMesh.readFromSTL( filename );
 
-    	scMesh.generateBoundingBox();
+        scMesh.generateBoundingBox();
 
-    	System.out.println( "Read STL: " + scMesh.getBoundingBoxCoords() );
+        System.out.println( "Read STL: " + scMesh.getBoundingBoxCoords() );
 
-    	net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );
+        net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );
 
-    	System.out.println( "Loaded and converted mesh: " + opsMesh.getVertices().size() );
-    	//((DefaultMesh) opsMesh).centerMesh();
+        System.out.println( "Loaded and converted mesh: " + opsMesh.getVertices().size() );
+        //((DefaultMesh) opsMesh).centerMesh();
 
-    	addMesh( opsMesh );
+        addMesh( opsMesh );
     }*/
 
     public graphics.scenery.Node addSTL( String filename ) {
@@ -722,21 +722,21 @@ public class SciView extends SceneryBase {
         //log.warn("Screenshot temporarily disabled");
 
         /*
-    	float[] bounds = viewer.getRenderer().getWindow().getClearglWindow().getBounds();
-    	// if we're in a jpanel, this isn't the way to get bounds
-    	try {
-			Robot robot = new Robot();
+        float[] bounds = viewer.getRenderer().getWindow().getClearglWindow().getBounds();
+        // if we're in a jpanel, this isn't the way to get bounds
+        try {
+            Robot robot = new Robot();
 
-			BufferedImage screenshot = robot.createScreenCapture( new Rectangle( (int)bounds[0], (int)bounds[1], (int)bounds[2], (int)bounds[3] ) );
+            BufferedImage screenshot = robot.createScreenCapture( new Rectangle( (int)bounds[0], (int)bounds[1], (int)bounds[2], (int)bounds[3] ) );
 
-			ImagePlus imp = new ImagePlus( "SceneryViewer_Screenshot", screenshot );
+            ImagePlus imp = new ImagePlus( "SceneryViewer_Screenshot", screenshot );
 
-			imp.show();
+            imp.show();
 
-		} catch (AWTException e) {
-			e.printStackTrace();
-		}
-		*/
+        } catch (AWTException e) {
+            e.printStackTrace();
+        }
+        */
     }
 
     public void enableArcBallControl() {

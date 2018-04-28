@@ -37,26 +37,26 @@ import sc.iview.SciViewService;
 import sc.iview.vec3.DVec3;
 
 @Plugin(type = Command.class, 
-		menuPath = "SciView>Add>Line")
+        menuPath = "SciView>Add>Line")
 public class AddLine implements Command {
 
-	@Parameter
-	private DVec3 start;
+    @Parameter
+    private DVec3 start;
 
-	@Parameter
-	private DVec3 stop;
+    @Parameter
+    private DVec3 stop;
 
-	// Thickness
+    // Thickness
 
-	@Parameter
-	private SciViewService sceneryService;
+    @Parameter
+    private SciViewService sceneryService;
 
-	@Parameter
-	private SciView sciView;
-	
-	@Override
-	public void run() {
-		sciView.addLine( start, stop );
-	}
+    @Parameter
+    private SciView sciView;
+    
+    @Override
+    public void run() {
+        sciView.addLine( start, stop );
+    }
 
 }

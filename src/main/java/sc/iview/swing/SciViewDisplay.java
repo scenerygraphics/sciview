@@ -48,40 +48,40 @@ import sc.iview.SciView;
  */
 @Plugin(type = Display.class,priority=0.0, enabled=true)
 public class SciViewDisplay extends AbstractDisplay<SciView> {
-	
-	@Parameter
-	private ThreadService threadService;
+    
+    @Parameter
+    private ThreadService threadService;
 
-	@Parameter(required = false)
-	private EventService eventService;
+    @Parameter(required = false)
+    private EventService eventService;
 
-	@Parameter
-	private LogService logService;
-	
-	public SciViewDisplay() {
-		super(SciView.class);
-	}
-	
+    @Parameter
+    private LogService logService;
+    
+    public SciViewDisplay() {
+        super(SciView.class);
+    }
+    
     public SciViewDisplay(Class<SciView> type) {
         super(type);
     }
     
     @EventHandler
-	protected void onEvent(final DataRestructuredEvent event) {
-		
-	}
+    protected void onEvent(final DataRestructuredEvent event) {
+        
+    }
 
-	// FIXME - displays should not listen for Data events. Views should listen for
-	// data events, adjust themselves, and generate view events. The display
-	// classes should listen for view events and refresh themselves as necessary.
+    // FIXME - displays should not listen for Data events. Views should listen for
+    // data events, adjust themselves, and generate view events. The display
+    // classes should listen for view events and refresh themselves as necessary.
 
-	@EventHandler
-	protected void onEvent(final DataUpdatedEvent event) {
-		logService.warn("Display updated! This warning probably shouldn't be here.");
-	}
+    @EventHandler
+    protected void onEvent(final DataUpdatedEvent event) {
+        logService.warn("Display updated! This warning probably shouldn't be here.");
+    }
 
-	@EventHandler
-	protected void onEvent(final DisplayDeletedEvent event) {
-		
-	}
+    @EventHandler
+    protected void onEvent(final DisplayDeletedEvent event) {
+        
+    }
 }

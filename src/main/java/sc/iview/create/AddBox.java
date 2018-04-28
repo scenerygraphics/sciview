@@ -36,20 +36,20 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
 @Plugin(type = Command.class, 
-		menuPath = "SciView>Add>Box")
+        menuPath = "SciView>Add>Box")
 public class AddBox  implements Command {
 
-	@Parameter
-	DisplayService displayService;
-	
-	@Parameter
+    @Parameter
+    DisplayService displayService;
+    
+    @Parameter
     SciView sciView;
-	
-	//SceneryService sceneryService;
-		
-	@Override
-	public void run() {
-		sciView.addBox();
-	}
+    
+    //SceneryService sceneryService;
+        
+    @Override
+    public void run() {
+        sciView.addBox();
+    }
 
 }

@@ -35,16 +35,16 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciViewService;
 
 @Plugin(type = Command.class, 
-		menuPath = "SciView>View>Screenshot")
+        menuPath = "SciView>View>Screenshot")
 public class Screenshot implements Command {
 
-	@Parameter
-	private SciViewService sceneryService;
+    @Parameter
+    private SciViewService sceneryService;
 
-	@Override
-	public void run() {
-		sceneryService.getActiveSciView().takeScreenshot();
-	}
+    @Override
+    public void run() {
+        sceneryService.getActiveSciView().takeScreenshot();
+    }
 
 }
 

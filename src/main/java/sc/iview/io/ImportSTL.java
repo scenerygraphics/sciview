@@ -38,31 +38,31 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
 @Plugin(type = Command.class, 
-		menuPath = "SciView>Import>STL", label = "Import STL")
+        menuPath = "SciView>Import>STL", label = "Import STL")
 public class ImportSTL  implements Command {
-	
-	@Parameter
-	private File stlFile;
+    
+    @Parameter
+    private File stlFile;
 
-	@Parameter
-	SciView sciView;
+    @Parameter
+    SciView sciView;
 
-	@Parameter
-	private LogService logService;
-	
-	@Override
-	public void run() {
-		if ( stlFile != null )
-		{
-			try
-			{
-				sciView.addSTL( stlFile.getAbsolutePath() );
-			}
-			catch ( final Exception e )
-			{
-				logService.trace( e );
-			}
-		}		
-	}
+    @Parameter
+    private LogService logService;
+    
+    @Override
+    public void run() {
+        if ( stlFile != null )
+        {
+            try
+            {
+                sciView.addSTL( stlFile.getAbsolutePath() );
+            }
+            catch ( final Exception e )
+            {
+                logService.trace( e );
+            }
+        }        
+    }
 
 }

@@ -47,51 +47,51 @@ import sc.iview.process.MeshConverter;
 import graphics.scenery.Mesh;
 
 @Plugin(type = Command.class, 
-		menuPath = "SciView>Mesh>Mesh To Image")
+        menuPath = "SciView>Mesh>Mesh To Image")
 public class MeshToImage implements Command {
-	
-	@Parameter
-	private int width;
-	
-	@Parameter
-	private int height;
-	
-	@Parameter
-	private int depth;
-	
-	@Parameter
-	private OpService ops;
+    
+    @Parameter
+    private int width;
+    
+    @Parameter
+    private int height;
+    
+    @Parameter
+    private int depth;
+    
+    @Parameter
+    private OpService ops;
 
-	@Parameter
-	DisplayService displayService;
+    @Parameter
+    DisplayService displayService;
 
-	@Parameter
-	LogService logService;
+    @Parameter
+    LogService logService;
 
-	@Parameter
-	SciView sciView;
+    @Parameter
+    SciView sciView;
 
-	@Parameter(type = ItemIO.OUTPUT)
-	private RandomAccessibleInterval<BitType> img;
+    @Parameter(type = ItemIO.OUTPUT)
+    private RandomAccessibleInterval<BitType> img;
 
-	@Parameter
-	UIService uiService;
+    @Parameter
+    UIService uiService;
 
-	@Override
-	public void run() {
-		if( sciView.getActiveNode() instanceof Mesh ) {
-			Mesh currentMesh = (Mesh) sciView.getActiveNode();
-			DefaultMesh opsMesh = (DefaultMesh) MeshConverter.getOpsMesh(currentMesh,logService);
+    @Override
+    public void run() {
+        if( sciView.getActiveNode() instanceof Mesh ) {
+            Mesh currentMesh = (Mesh) sciView.getActiveNode();
+            DefaultMesh opsMesh = (DefaultMesh) MeshConverter.getOpsMesh(currentMesh,logService);
 
-			//net.imagej.ops.geom.geom3d.mesh.Mesh img = ops.geom().voxelization( opsMesh, width, height, depth);
-			RandomAccessibleInterval<BitType> img = ops.geom().voxelization(opsMesh, width, height, depth);
+            //net.imagej.ops.geom.geom3d.mesh.Mesh img = ops.geom().voxelization( opsMesh, width, height, depth);
+            RandomAccessibleInterval<BitType> img = ops.geom().voxelization(opsMesh, width, height, depth);
 
-			uiService.show(img);
+            uiService.show(img);
 
-		} else {
-			logService.warn( "No active node. Add a mesh to the scene and select it.");
-		}
+        } else {
+            logService.warn( "No active node. Add a mesh to the scene and select it.");
+        }
 
-	}
+    }
 
 }

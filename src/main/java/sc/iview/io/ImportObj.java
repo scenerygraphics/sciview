@@ -38,31 +38,31 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
 @Plugin(type = Command.class, 
-		menuPath = "SciView>Import>Obj")
+        menuPath = "SciView>Import>Obj")
 public class ImportObj  implements Command {
-	
-	@Parameter
-	private File objFile;
+    
+    @Parameter
+    private File objFile;
 
-	@Parameter
-	SciView sciView;
+    @Parameter
+    SciView sciView;
 
-	@Parameter
-	private LogService logService;
+    @Parameter
+    private LogService logService;
 
-	@Override
-	public void run() {
-		if ( objFile != null )
-		{
-			try
-			{
-				sciView.addObj( objFile.getAbsolutePath() );
-			}
-			catch ( final Exception e )
-			{
-				logService.trace( e );
-			}
-		}		
-	}
+    @Override
+    public void run() {
+        if ( objFile != null )
+        {
+            try
+            {
+                sciView.addObj( objFile.getAbsolutePath() );
+            }
+            catch ( final Exception e )
+            {
+                logService.trace( e );
+            }
+        }        
+    }
 
 }

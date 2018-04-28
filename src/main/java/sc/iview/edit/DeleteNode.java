@@ -35,22 +35,22 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciViewService;
 
 @Plugin(type = Command.class, 
-		menuPath = "SciView>Edit>Delete Node")
+        menuPath = "SciView>Edit>Delete Node")
 public class DeleteNode implements Command {
 
-	//Consider taking an object as a parameter? Like the way IJ2 menus work for selecting an object
-	//@Parameter
-	//private int objectId;
+    //Consider taking an object as a parameter? Like the way IJ2 menus work for selecting an object
+    //@Parameter
+    //private int objectId;
 
-	@Parameter
-	private SciViewService sceneryService;
-	
-	@Override
-	public void run() {
-		if( sceneryService.getActiveSciView().getActiveNode() != null ) {
-			sceneryService.getActiveSciView().deleteSelectedMesh();
-		}
-	}
+    @Parameter
+    private SciViewService sceneryService;
+    
+    @Override
+    public void run() {
+        if( sceneryService.getActiveSciView().getActiveNode() != null ) {
+            sceneryService.getActiveSciView().deleteSelectedMesh();
+        }
+    }
 
 }
 

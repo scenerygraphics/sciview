@@ -227,7 +227,7 @@ public class Main {
 
         int isoLevel = 1;
         @SuppressWarnings("unchecked")
-				Img<UnsignedShortType> testImgImg = (Img<UnsignedShortType>) testImg.getImgPlus().getImg();
+        Img<UnsignedShortType> testImgImg = (Img<UnsignedShortType>) testImg.getImgPlus().getImg();
         Img<BitType> bitImg = (Img<BitType>) ops.threshold().apply(  testImgImg,
                 new UnsignedShortType( isoLevel ) );
 

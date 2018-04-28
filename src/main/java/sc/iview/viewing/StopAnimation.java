@@ -35,21 +35,21 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciViewService;
 
 @Plugin(type = Command.class, 
-		menuPath = "SciView>View>Stop Animation")
+        menuPath = "SciView>View>Stop Animation")
 public class StopAnimation  implements Command {
 
-	@Parameter
-	private SciViewService sceneryService;
+    @Parameter
+    private SciViewService sceneryService;
 
-	@Override
-	public void run() {
-		Thread animator = sceneryService.getActiveSciView().getAnimationThread();
-		if( animator != null ) {
-			animator.stop();
-			sceneryService.getActiveSciView().setAnimationThread( null );
-		}
+    @Override
+    public void run() {
+        Thread animator = sceneryService.getActiveSciView().getAnimationThread();
+        if( animator != null ) {
+            animator.stop();
+            sceneryService.getActiveSciView().setAnimationThread( null );
+        }
 
-	}
+    }
 
 }
 

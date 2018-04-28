@@ -35,17 +35,17 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciViewService;
 
 @Plugin(type = Command.class, 
-		menuPath = "SciView>Controls>Arc Ball")
+        menuPath = "SciView>Controls>Arc Ball")
 public class ArcBallControl  implements Command {
 
-	@Parameter
-	SciViewService sceneryService;
+    @Parameter
+    SciViewService sceneryService;
 
-	@Override
-	public void run() {
-		sceneryService.getActiveSciView().enableArcBallControl();
-		
-	}
+    @Override
+    public void run() {
+        sceneryService.getActiveSciView().enableArcBallControl();
+        
+    }
 
 }
 

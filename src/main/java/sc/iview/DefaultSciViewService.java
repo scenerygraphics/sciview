@@ -56,9 +56,9 @@ public class DefaultSciViewService extends AbstractService
 
     /* Parameters */
 
-	@Parameter
-	private DisplayService displayService;
-	
+    @Parameter
+    private DisplayService displayService;
+    
     @Parameter
     private EventService eventService;
     
@@ -66,7 +66,7 @@ public class DefaultSciViewService extends AbstractService
     private ThreadService threadService;
 
     @Parameter
-	private LogService logService;
+    private LogService logService;
 
     /* Instance variables */
 
@@ -76,23 +76,23 @@ public class DefaultSciViewService extends AbstractService
     /* Methods */
 
     public SciView getActiveSciView() {
-		SciViewDisplay d = displayService.getActiveDisplay(SciViewDisplay.class);
-		if( d != null ) {
-			// We also have to check if the Viewer has been initialized
-			//   and we're doing it the bad way by polling. Replace if you want
-			SciView sv = d.get(0);
-			while( !sv.isInitialized() ) {
-				try {
-					Thread.sleep(20);
-				} catch (InterruptedException e) {
-					logService.trace(e);
-				}
-			}
-			return sv;
-		} else {
-			logService.error("No SciJava display available. Use getOrCreateActiveSciView() to automatically create a display if one does not exist.");
-			return null;
-		}
+        SciViewDisplay d = displayService.getActiveDisplay(SciViewDisplay.class);
+        if( d != null ) {
+            // We also have to check if the Viewer has been initialized
+            //   and we're doing it the bad way by polling. Replace if you want
+            SciView sv = d.get(0);
+            while( !sv.isInitialized() ) {
+                try {
+                    Thread.sleep(20);
+                } catch (InterruptedException e) {
+                    logService.trace(e);
+                }
+            }
+            return sv;
+        } else {
+            logService.error("No SciJava display available. Use getOrCreateActiveSciView() to automatically create a display if one does not exist.");
+            return null;
+        }
     }
 
     public SciView getSciView(String name) {
@@ -101,7 +101,7 @@ public class DefaultSciViewService extends AbstractService
                 return sceneryViewer;
             }
         }
-		logService.error("No SciJava display available. Use getOrCreateActiveSciView() to automatically create a display if one does not exist.");
+        logService.error("No SciJava display available. Use getOrCreateActiveSciView() to automatically create a display if one does not exist.");
         return null;
     }
 
@@ -127,48 +127,48 @@ public class DefaultSciViewService extends AbstractService
     /* Event Handlers */
 
 
-	@Override
-	public SciView getOrCreateActiveSciView() {
-		SciViewDisplay d = displayService.getActiveDisplay(SciViewDisplay.class);
-		if( d != null ) {
-			// We also have to check if the Viewer has been initialized
-			//   and we're doing it the bad way by polling. Replace if you want
-			SciView sv = d.get(0);
-			while( !sv.isInitialized() ) {
-				try {
-					Thread.sleep(20);
-				} catch (InterruptedException e) {
-					logService.trace(e);
-				}
-			}
-			return sv;
-		}
-			
-		// Make one
-		SciView sv = new SciView(getContext());
-		
-		threadService.run(new Runnable() {
-			@Override
-			public void run() {
-				sv.main();
-			}
-		});
-		while( !sv.isInitialized() ) {
-			try {
-				Thread.sleep(20);
-			} catch (InterruptedException e) {
-				logService.trace(e);
-			}
-		}
+    @Override
+    public SciView getOrCreateActiveSciView() {
+        SciViewDisplay d = displayService.getActiveDisplay(SciViewDisplay.class);
+        if( d != null ) {
+            // We also have to check if the Viewer has been initialized
+            //   and we're doing it the bad way by polling. Replace if you want
+            SciView sv = d.get(0);
+            while( !sv.isInitialized() ) {
+                try {
+                    Thread.sleep(20);
+                } catch (InterruptedException e) {
+                    logService.trace(e);
+                }
+            }
+            return sv;
+        }
+            
+        // Make one
+        SciView sv = new SciView(getContext());
+        
+        threadService.run(new Runnable() {
+            @Override
+            public void run() {
+                sv.main();
+            }
+        });
+        while( !sv.isInitialized() ) {
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException e) {
+                logService.trace(e);
+            }
+        }
 
-		Display<?> display = displayService.createDisplay(sv);
-		displayService.setActiveDisplay(display);
+        Display<?> display = displayService.createDisplay(sv);
+        displayService.setActiveDisplay(display);
 
-		//sceneryViewers.add(sv);		
-		
-		return sv;
-		
-		// Might need to change to return a SciViewDisplay instead, if downstream code needs it
-	}
+        //sceneryViewers.add(sv);        
+        
+        return sv;
+        
+        // Might need to change to return a SciViewDisplay instead, if downstream code needs it
+    }
 
 }
