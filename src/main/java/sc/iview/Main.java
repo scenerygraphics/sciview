@@ -38,7 +38,6 @@ import net.imagej.Dataset;
 import net.imagej.ImageJService;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
-import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
 import net.imagej.ops.geom.geom3d.mesh.Mesh;
 import net.imglib2.Cursor;
 import net.imglib2.img.Img;
@@ -69,8 +68,6 @@ public class Main {
     private static OpService ops;
     private static UIService ui;
 
-    private static GenericTexture gt;// = generateGenericTexture();//convertToGenericTexture(img);
-
     public static void main(String... args) throws IOException, InterruptedException {
         context = new Context(ImageJService.class, SciJavaService.class, SCIFIOService.class);
         sciViewService = context.getService(SciViewService.class);
@@ -96,7 +93,7 @@ public class Main {
         volumeRenderTest();
     }
 
-    public static void lineTest(SciView sciView) throws IOException, InterruptedException {
+    public static void lineTest(SciView sciView) {
         int numPoints = 25;
         DVec3[] points = new DVec3[numPoints];
 
@@ -119,7 +116,7 @@ public class Main {
         GLVector dims = new GLVector(width, height, 1 );
         int nChannels = 1;
 
-        ByteBuffer bb = BufferUtils.BufferUtils.allocateByte((int) (width * height * nChannels));
+        ByteBuffer bb = BufferUtils.BufferUtils.allocateByte(width * height * nChannels);
 
         for( int x = 0; x < width; x++ ) {
             for( int y = 0; y < height; y++ ) {
@@ -131,14 +128,14 @@ public class Main {
         return new GenericTexture("neverUsed", dims, nChannels, GLTypeEnum.UnsignedByte, bb, true, true, false);
     }
 
-    public static void meshTextureTest() throws IOException, InterruptedException {
+    public static void meshTextureTest() {
         SciView sciView = ((SciViewService) context.getService( "sc.iview.SciViewService" )).getOrCreateActiveSciView();
         Node msh = sciView.addBox();
         msh.fitInto( 10.0f );
 
-        GenericTexture gt = generateGenericTexture();
+        GenericTexture texture = generateGenericTexture();
 
-        msh.getMaterial().getTransferTextures().put("diffuse", gt);
+        msh.getMaterial().getTransferTextures().put("diffuse", texture);
         msh.getMaterial().getTextures().put("diffuse", "fromBuffer:diffuse");
         msh.getMaterial().setDoubleSided(true);
         msh.getMaterial().setNeedsTextureReload(true);
@@ -162,7 +159,7 @@ public class Main {
 
         System.out.println("Size:" + width + " " +  height + " " + nChannels);
 
-        Cursor cur = d.cursor();
+        Cursor<?> cur = d.cursor();
         while( cur.hasNext() ) {
             cur.fwd();
             int val = ((UnsignedByteType) cur.get()).get();
@@ -175,7 +172,7 @@ public class Main {
         return new GenericTexture("neverUsed", dims, nChannels, GLTypeEnum.UnsignedByte, bb, true, true, false);
     }
 
-    public static void meshTest() throws IOException, InterruptedException {
+    public static void meshTest() throws IOException {
         SciView sciView = sciViewService.getOrCreateActiveSciView();
 
         //Node msh = sciView.addSTL(SciView.class.getResource("/cored_cube_16bit.stl").getFile());
@@ -229,15 +226,13 @@ public class Main {
         sciView.displayNodeProperties( v );
 
         int isoLevel = 1;
-        Img<UnsignedShortType> testImgImg = (Img<UnsignedShortType>) testImg.getImgPlus().getImg();
+        @SuppressWarnings("unchecked")
+				Img<UnsignedShortType> testImgImg = (Img<UnsignedShortType>) testImg.getImgPlus().getImg();
         Img<BitType> bitImg = (Img<BitType>) ops.threshold().apply(  testImgImg,
                 new UnsignedShortType( isoLevel ) );
 
         Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator());
 
-        DefaultMesh dm = (DefaultMesh) m;
-
         //sciView.displayNodeProperties( sciView.addMesh( m ) );
-
     }
 }
