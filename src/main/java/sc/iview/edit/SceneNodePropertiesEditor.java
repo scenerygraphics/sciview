@@ -49,16 +49,14 @@ import cleargl.GLVector;
 import graphics.scenery.Node;
 
 /**
- * Author: Robert Haase, Scientific Computing Facility, MPI-CBG Dresden,
- * rhaase@mpi-cbg.de Date: July 2016
- *
- * Todo: If the list of sceneNode changes while this dialog is open, it may not
+ * TODO: If the list of sceneNode changes while this dialog is open, it may not
  * be notified and thus, may cause strange behaviours. Furthermore, refreshing
  * the list of choises does not work. :( Todo: Change the order of the property
  * items. Scene node must be on top, as the user selects here which object to
  * manipulate. Todo: As soon as object selection in Scenery itself works, the
  * node pulldown may be removed entirely.
  *
+ * @author Robert Haase, Scientific Computing Facility, MPI-CBG Dresden
  */
 @Plugin(type = Command.class, menuPath = "SciView>Edit>Properties", initializer = "initValues")
 public class SceneNodePropertiesEditor extends InteractiveCommand {

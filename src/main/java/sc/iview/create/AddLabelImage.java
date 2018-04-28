@@ -51,8 +51,9 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciViewService;
 
 /**
- * Author: Robert Haase, Scientific Computing Facility, MPI-CBG Dresden,
- * rhaase@mpi-cbg.de Date: July 2016
+ * Adds a label image to the scene.
+ *
+ * @author Robert Haase, Scientific Computing Facility, MPI-CBG Dresden
  */
 @Plugin(type = Command.class, menuPath = "SciView>Add>Label image")
 public class AddLabelImage<T extends RealType<T>> implements Command {

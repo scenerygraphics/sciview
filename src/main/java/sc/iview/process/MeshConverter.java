@@ -46,10 +46,9 @@ import org.scijava.log.LogService;
 import graphics.scenery.BufferUtils;
 
 /**
- * ImageJ OPs Mesh to Scenery Mesh converter
+ * ImageJ Ops Mesh to Scenery Mesh converter.
  *
- * Author: Robert Haase, Scientific Computing Facility, MPI-CBG Dresden,
- * rhaase@mpi-cbg.de Kyle Harrington, University of Idaho
+ * @author Robert Haase, Scientific Computing Facility, MPI-CBG Dresden
  */
 public class MeshConverter {
     public static graphics.scenery.Mesh getSceneryMesh( Mesh mesh, LogService logService ) {
