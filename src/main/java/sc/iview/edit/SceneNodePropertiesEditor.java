@@ -91,7 +91,7 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
     @Parameter
     private UIService uiSrv;
 
-    ArrayList<String> sceneNodeChoices = new ArrayList<String>();
+    ArrayList<String> sceneNodeChoices = new ArrayList<>();
     private Node currentSceneNode;
 
     protected void initValues() {
@@ -107,7 +107,7 @@ public class SceneNodePropertiesEditor extends InteractiveCommand implements Com
 
     private void rebuildSceneObjectChoiseList() {
         initializing = true;
-        sceneNodeChoices = new ArrayList<String>();
+        sceneNodeChoices = new ArrayList<>();
         int count = 0;
         for( Node sceneNode : sceneryService.getActiveSciView().getSceneNodes() ) {
             sceneNodeChoices.add( makeIdentifier( sceneNode, count ) );

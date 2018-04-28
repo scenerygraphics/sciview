@@ -540,7 +540,7 @@ public class SciView extends SceneryBase {
     }
 
     public static ArrayList<RealPoint> readXyz( String filename ) throws IOException {
-        ArrayList<RealPoint> vertices = new ArrayList<RealPoint>();
+        ArrayList<RealPoint> vertices = new ArrayList<>();
 
         try( BufferedReader br = new BufferedReader( new FileReader( filename ) ) ) {
             String line;

@@ -79,7 +79,7 @@ public class AddLabelImage<T extends RealType<T>> implements Command {
         final Dimensions dims = labelMap;
         final IntType t = new IntType();
         final RandomAccessibleInterval<IntType> img = Util.getArrayOrCellImgFactory( dims, t ).create( dims, t );
-        ImgLabeling<Integer, IntType> labeling = new ImgLabeling<Integer, IntType>( img );
+        ImgLabeling<Integer, IntType> labeling = new ImgLabeling<>( img );
 
         final Cursor<LabelingType<Integer>> labelCursor = Views.flatIterable( labeling ).cursor();
 
@@ -91,9 +91,9 @@ public class AddLabelImage<T extends RealType<T>> implements Command {
         }
 
         // take the regions, process them to meshes and put it in the viewer
-        LabelRegions<Integer> labelRegions = new LabelRegions<Integer>( labeling );
+        LabelRegions<Integer> labelRegions = new LabelRegions<>( labeling );
 
-        ArrayList<RandomAccessibleInterval<BoolType>> regions = new ArrayList<RandomAccessibleInterval<BoolType>>();
+        ArrayList<RandomAccessibleInterval<BoolType>> regions = new ArrayList<>();
         Object[] regionsArr = labelRegions.getExistingLabels().toArray();
         for( int i = 0; i < labelRegions.getExistingLabels().size(); i++ ) {
             LabelRegion<Integer> lr = labelRegions.getLabelRegion( ( Integer ) regionsArr[i] );
