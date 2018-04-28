@@ -29,8 +29,8 @@
 package sc.iview.create;
 
 import net.imagej.Dataset;
+import net.imagej.mesh.Mesh;
 import net.imagej.ops.OpService;
-import net.imagej.ops.geom.geom3d.mesh.Mesh;
 import net.imglib2.Cursor;
 import net.imglib2.Dimensions;
 import net.imglib2.RandomAccessibleInterval;

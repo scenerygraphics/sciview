@@ -29,10 +29,9 @@
 package sc.iview.io;
 
 import net.imagej.ImgPlus;
+import net.imagej.mesh.Mesh;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
-import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
-import net.imagej.ops.geom.geom3d.mesh.Mesh;
 import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;

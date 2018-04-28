@@ -594,33 +594,8 @@ public class SciView extends SceneryBase {
         return scMesh;
     }
 
-    public graphics.scenery.Node addMesh( net.imagej.ops.geom.geom3d.mesh.Mesh mesh ) {
-        Mesh scMesh = MeshConverter.getSceneryMesh( mesh, log );
-
-        log.warn( "Converting to a scenery mesh" );
-
-        Material material = new Material();
-        material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        material.setDiffuse( new GLVector( 0.0f, 1.0f, 0.0f ) );
-        material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        material.setDoubleSided( true );
-
-        scMesh.setMaterial( material );
-        scMesh.setPosition( new GLVector( 1.0f, 1.0f, 1.0f ) );
-
-        activeNode = scMesh;
-
-        getScene().addChild( scMesh );
-
-        if( defaultArcBall ) enableArcBallControl();
-
-        displayNodeProperties( activeNode );
-
-        return scMesh;
-    }
-
-    private graphics.scenery.Node addMesh( net.imagej.mesh.Mesh mesh ) {
-        Mesh scMesh = MeshConverter.getSceneryMesh( mesh, log );
+    public graphics.scenery.Node addMesh( net.imagej.mesh.Mesh mesh ) {
+        Mesh scMesh = MeshConverter.toScenery( mesh );
 
         log.warn( "Converting to a scenery mesh" );
 

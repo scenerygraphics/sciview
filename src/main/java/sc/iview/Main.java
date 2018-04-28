@@ -36,9 +36,9 @@ import java.nio.ByteBuffer;
 
 import net.imagej.Dataset;
 import net.imagej.ImageJService;
+import net.imagej.mesh.Mesh;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
-import net.imagej.ops.geom.geom3d.mesh.Mesh;
 import net.imglib2.Cursor;
 import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;

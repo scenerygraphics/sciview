@@ -26,181 +26,113 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
+
 package sc.iview.process;
 
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-import java.util.List;
+import java.nio.IntBuffer;
 
-import net.imagej.mesh.Triangle;
-import net.imagej.mesh.Vertex3;
-import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
-import net.imagej.ops.geom.geom3d.mesh.Facet;
-import net.imagej.ops.geom.geom3d.mesh.Mesh;
-import net.imagej.ops.geom.geom3d.mesh.TriangularFacet;
-import net.imagej.ops.geom.geom3d.mesh.Vertex;
-import net.imglib2.RealLocalizable;
+import net.imagej.mesh.nio.BufferMesh;
 
-import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
-import org.scijava.log.LogService;
-
-import graphics.scenery.BufferUtils;
+import sc.iview.MeshUtils;
 
 /**
- * ImageJ Ops Mesh to Scenery Mesh converter.
+ * Conversion routines between ImageJ and Scenery {@code Mesh} objects.
  *
- * @author Robert Haase, Scientific Computing Facility, MPI-CBG Dresden
+ * @author Curtis Rueden
+ * @author Kyle Harrington
  */
 public class MeshConverter {
-    public static graphics.scenery.Mesh getSceneryMesh( Mesh mesh, LogService logService ) {
-        graphics.scenery.Mesh scMesh;
-        if( mesh != null ) {
-            int numDimension = 3;
-            scMesh = new graphics.scenery.Mesh();
 
-            List<Facet> facets = mesh.getFacets();
+    public static graphics.scenery.Mesh toScenery( final net.imagej.mesh.Mesh mesh ) {
+        final int vCount = //
+                ( int ) Math.min( Integer.MAX_VALUE, mesh.vertices().size() );
+        final int tCount = //
+                ( int ) Math.min( Integer.MAX_VALUE, mesh.triangles().size() );
 
-            float[] scVertices = new float[facets.size() * 3 * numDimension];
-            float[] scNormals = new float[facets.size() * 3 * numDimension];
-
-            float[] boundingBox = new float[] { Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,
-                                                Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY,
-                                                Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY };
-
-            int count = 0;
-            List<Vertex> vertices;
-            for( Facet facet : facets ) {
-                TriangularFacet tri = ( TriangularFacet ) facet;
-                vertices = tri.getVertices();
-                Vector3D normal = tri.getNormal();
-                for( Vertex v : vertices ) {
-                    for( int d = 0; d < numDimension; d++ ) {
-                        scVertices[count] = ( float ) v.getDoublePosition( d );
-
-                        if( scVertices[count] < boundingBox[d] )// min
-                            boundingBox[d] = scVertices[count];
-
-                        if( scVertices[count] > boundingBox[d + 3] )// min
-                            boundingBox[d + 3] = scVertices[count];
-
-                        if( d == 0 ) scNormals[count] = ( float ) normal.getX();
-                        else if( d == 1 ) scNormals[count] = ( float ) normal.getY();
-                        else if( d == 2 ) scNormals[count] = ( float ) normal.getZ();
-                        count++;
-                    }
-                }
-            }
-
-            logService.warn( "Converted " + scVertices.length + " vertices and " + scNormals.length + " normals " );
-            scMesh.setVertices( BufferUtils.BufferUtils.allocateFloatAndPut( scVertices ) );
-            scMesh.setNormals( BufferUtils.BufferUtils.allocateFloatAndPut( scNormals ) );
-            scMesh.setTexcoords( BufferUtils.BufferUtils.allocateFloat( 0 ) );
-            scMesh.setIndices( BufferUtils.BufferUtils.allocateInt( 0 ) );
-
-            scMesh.recalculateNormals();
-
-            scMesh.setBoundingBoxCoords( boundingBox );
-            scMesh.setDirty( true );
-            //scMesh.setScale(new GLVector(1f, 1f, 1f));
-
-            return scMesh;
-        }
-        return null;
-    }
-
-    public static graphics.scenery.Mesh getSceneryMesh( net.imagej.mesh.Mesh mesh, LogService logService ) {
-        graphics.scenery.Mesh scMesh;
-        if( mesh != null ) {
-            int numDimension = 3;
-            scMesh = new graphics.scenery.Mesh();
-
-            List<Triangle> facets = mesh.getTriangles();
-
-            float[] scVertices = new float[facets.size() * 3 * numDimension];
-            float[] scNormals = new float[facets.size() * 3 * numDimension];
-
-            float[] boundingBox = new float[] { Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,
-                                                Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY,
-                                                Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY };
-
-            int count = 0;
-            List<RealLocalizable> vertices;
-            for( Triangle tri : facets ) {
-                //TriangularFacet tri = (TriangularFacet) facet;
-                vertices = tri.getVertices();
-                Vertex3 normal = tri.getNormal();
-                for( RealLocalizable v : vertices ) {
-                    for( int d = 0; d < numDimension; d++ ) {
-                        scVertices[count] = ( float ) v.getDoublePosition( d );
-
-                        if( scVertices[count] < boundingBox[d] )// min
-                            boundingBox[d] = scVertices[count];
-
-                        if( scVertices[count] > boundingBox[d + 3] )// min
-                            boundingBox[d + 3] = scVertices[count];
-
-                        if( d == 0 ) scNormals[count] = normal.getX();
-                        else if( d == 1 ) scNormals[count] = normal.getY();
-                        else if( d == 2 ) scNormals[count] = normal.getZ();
-                        count++;
-                    }
-                }
-            }
-
-            logService.warn( "Converted " + scVertices.length + " vertices and " + scNormals.length + " normals " );
-            scMesh.setVertices( BufferUtils.BufferUtils.allocateFloatAndPut( scVertices ) );
-            scMesh.setNormals( BufferUtils.BufferUtils.allocateFloatAndPut( scNormals ) );
-            scMesh.setTexcoords( BufferUtils.BufferUtils.allocateFloat( 0 ) );
-            scMesh.setIndices( BufferUtils.BufferUtils.allocateInt( 0 ) );
-
-            scMesh.recalculateNormals();
-
-            scMesh.setBoundingBoxCoords( boundingBox );
-            scMesh.setDirty( true );
-            //scMesh.setScale(new GLVector(1f, 1f, 1f));
-
-            return scMesh;
-        }
-        return null;
-    }
-
-    public static Mesh getOpsMesh( graphics.scenery.Mesh scMesh, LogService logService ) {
-
-        if( scMesh != null ) {
-            DefaultMesh mesh = new DefaultMesh();
-
-            //float[] scVertices = scMesh.getVertices().array();
-
-            FloatBuffer verts = scMesh.getVertices();
-
-            logService.warn( "Converting mesh a: initial has remaining: " + verts.hasRemaining() );
-
-            // Flip if it looks like we're on the wrong side
-            if( !verts.hasRemaining() ) verts.flip();
-
-            //float[] scNormals = scMesh.getNormals().array();
-
-            // rewrite to use scMesh.getVertices().get(index)                                    
-            //for( int facetIdx = 0; facetIdx < scVertices.length/9; facetIdx++ ) {
-
-            //System.out.println( "Converting mesh b: initial has remaining: " + verts.hasRemaining() );
-
-            while( verts.hasRemaining() ) {
-
-                Vertex[] triVerts = new Vertex[3];
-                for( int vIdx = 0; vIdx < 3; vIdx++ )
-                    triVerts[vIdx] = new Vertex( verts.get(), verts.get(), verts.get() );
-                TriangularFacet tri = new TriangularFacet( triVerts[0], triVerts[1], triVerts[2] );
-                //tri.setNormal( new Vector3D( scNormals[offset], scNormals[offset+1], scNormals[offset+2] ) );
-                //tri.getNormal();// Just do this to trigger a computeNormal and hope that it makes the right normal (^.-)                
-                mesh.addFace( tri );
-            }
-
-            verts.flip();
-
-            return mesh;
+        // Convert the mesh to an NIO-backed one.
+        BufferMesh bufferMesh;
+        if( mesh instanceof BufferMesh ) {
+            // TODO: Check that BufferMesh capacities & positions are compatible.
+            // Need to double check what Scenery assumes about the given buffers.
+            bufferMesh = ( BufferMesh ) mesh;
+        } else {
+            // Copy the mesh into a BufferMesh.
+            bufferMesh = new BufferMesh( vCount, tCount );
+            MeshUtils.copy( mesh, bufferMesh );
         }
 
-        return null;
+        // Extract buffers from the BufferMesh.
+        final FloatBuffer verts = bufferMesh.vertices().verts();
+        final FloatBuffer normals = bufferMesh.vertices().normals();
+        final FloatBuffer texCoords = bufferMesh.vertices().texCoords();
+        final IntBuffer indices = bufferMesh.triangles().indices();
+
+        // Prepare the buffers for Scenery to ingest them.
+        // Sets capacity to equal position, then resets position to 0.
+        verts.flip();
+        normals.flip();
+        texCoords.flip();
+        indices.flip();
+
+        // Create and populate the Scenery mesh.
+        graphics.scenery.Mesh scMesh = new graphics.scenery.Mesh();
+        scMesh.setVertices( verts );
+        scMesh.setNormals( normals );
+        scMesh.setTexcoords( texCoords );
+        scMesh.setIndices( indices );
+
+        scMesh.recalculateNormals();
+
+        scMesh.setBoundingBoxCoords( MeshUtils.boundingBox( mesh ) );
+        scMesh.setDirty( true );
+
+        return scMesh;
     }
 
+    public static net.imagej.mesh.Mesh toImageJ( final graphics.scenery.Mesh scMesh ) {
+        // Extract buffers from Scenery mesh.
+        final FloatBuffer verts = scMesh.getVertices();
+        final FloatBuffer vNormals = scMesh.getNormals();
+        final FloatBuffer texCoords = scMesh.getTexcoords();
+        final IntBuffer indices = scMesh.getIndices();
+
+        // Compute the triangle normals.
+        final FloatBuffer tNormals = //
+                ByteBuffer.allocateDirect( indices.capacity() ).asFloatBuffer();
+        for( int i = 0; i < indices.position(); i += 3 ) {
+            final int v0 = indices.get( i );
+            final int v1 = indices.get( i + 1 );
+            final int v2 = indices.get( i + 2 );
+
+            final float v0x = verts.get( v0 );
+            final float v0y = verts.get( v0 + 1 );
+            final float v0z = verts.get( v0 + 2 );
+            final float v1x = verts.get( v1 );
+            final float v1y = verts.get( v1 + 1 );
+            final float v1z = verts.get( v1 + 2 );
+            final float v2x = verts.get( v2 );
+            final float v2y = verts.get( v2 + 1 );
+            final float v2z = verts.get( v2 + 2 );
+
+            final float v10x = v1x - v0x;
+            final float v10y = v1y - v0y;
+            final float v10z = v1z - v0z;
+
+            final float v20x = v2x - v0x;
+            final float v20y = v2y - v0y;
+            final float v20z = v2z - v0z;
+
+            final float nx = v10y * v20z - v10z * v20y;
+            final float ny = v10z * v20x - v10x * v20z;
+            final float nz = v10x * v20y - v10y * v20x;
+
+            tNormals.put( nx );
+            tNormals.put( ny );
+            tNormals.put( nz );
+        }
+
+        return new BufferMesh( verts, vNormals, texCoords, indices, tNormals );
+    }
 }

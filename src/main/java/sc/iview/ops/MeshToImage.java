@@ -29,7 +29,6 @@
 package sc.iview.ops;
 
 import net.imagej.ops.OpService;
-import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.logic.BitType;
 
@@ -80,9 +79,9 @@ public class MeshToImage implements Command {
     public void run() {
         if( sciView.getActiveNode() instanceof Mesh ) {
             Mesh currentMesh = ( Mesh ) sciView.getActiveNode();
-            DefaultMesh opsMesh = ( DefaultMesh ) MeshConverter.getOpsMesh( currentMesh, logService );
+            net.imagej.mesh.Mesh ijMesh = MeshConverter.toImageJ( currentMesh );
 
-            img = ops.geom().voxelization( opsMesh, width, height, depth );
+            img = ops.geom().voxelization( ijMesh, width, height, depth );
 
             uiService.show( img );
 
