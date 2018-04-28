@@ -93,10 +93,12 @@ public class SciViewDisplayViewer extends AbstractDisplayViewer<SciView> {
     }
 
     /** Synchronizes the user interface appearance with the display model. */
+    @Override
     public void onDisplayUpdatedEvent( final DisplayUpdatedEvent e ) {
 
     }
 
+    @Override
     public void onDisplayActivatedEvent( final DisplayActivatedEvent e ) {
         // do nothing because no panel
     }

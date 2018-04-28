@@ -59,6 +59,7 @@ public class TexturedCubeExample {
             super( applicationName, windowWidth, windowHeight, true );
         }
 
+        @Override
         public void init() {
 
             setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), 512, 512 ) );

@@ -71,6 +71,7 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
 
     /* Methods */
 
+    @Override
     public SciView getActiveSciView() {
         SciViewDisplay d = displayService.getActiveDisplay( SciViewDisplay.class );
         if( d != null ) {
@@ -91,6 +92,7 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
         }
     }
 
+    @Override
     public SciView getSciView( String name ) {
         for( final SciView sceneryViewer : sceneryViewers ) {
             if( name.equalsIgnoreCase( sceneryViewer.getName() ) ) {
@@ -101,6 +103,7 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
         return null;
     }
 
+    @Override
     public void createSciView() {
         SciView v = new SciView( getContext() );
 
