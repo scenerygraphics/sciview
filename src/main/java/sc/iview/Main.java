@@ -88,7 +88,7 @@ public class Main {
         lineTest( sciView );
         //meshTest();
         meshTextureTest();
-        volumeRenderTest();
+        volumeRenderTest(false);
     }
 
     public static void lineTest( SciView sciView ) {
@@ -209,23 +209,23 @@ public class Main {
 
     }
 
-    public static void volumeRenderTest() throws IOException {
-
-//      Volume render test
+    public static void volumeRenderTest(boolean iso) throws IOException {
         SciView sciView = sciViewService.getOrCreateActiveSciView();
-        Dataset testImg = io.open( SciView.class.getResource( "/cored_cube_16bit.tif" ).getFile() );
-        System.out.println( testImg.firstElement().getClass() );
-        Node v = sciView.addVolume( testImg, new float[] { 1, 1, 1 } );
+        Dataset cube = io.open( SciView.class.getResource( "/cored_cube_16bit.tif" ).getFile() );
+        System.out.println( cube.firstElement().getClass() );
+        Node v = sciView.addVolume( cube, new float[] { 1, 1, 1 } );
         v.setScale( new GLVector( 10f, 10f, 10f ) );
         sciView.displayNodeProperties( v );
 
-        int isoLevel = 1;
-        @SuppressWarnings("unchecked")
-        Img<UnsignedShortType> testImgImg = ( Img<UnsignedShortType> ) testImg.getImgPlus().getImg();
-        Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( testImgImg, new UnsignedShortType( isoLevel ) );
+        if (iso) {
+            int isoLevel = 1;
+            @SuppressWarnings("unchecked")
+            Img<UnsignedShortType> cubeImg = ( Img<UnsignedShortType> ) cube.getImgPlus().getImg();
+            Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( cubeImg, new UnsignedShortType( isoLevel ) );
 
-        Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
+            Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
 
-        //sciView.displayNodeProperties( sciView.addMesh( m ) );
+            sciView.displayNodeProperties( sciView.addMesh( m ) );
+        }
     }
 }
