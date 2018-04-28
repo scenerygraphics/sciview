@@ -49,22 +49,4 @@ public class MeshUtils {
         return p;
     }
 
-    /**
-     * Translate the mesh such that it's center is at 0,0,0
-     * 
-     * This requires DefaultMesh to change
-     * 
-     */
-//    public static void centerMesh(Mesh m) {
-//        RealPoint center = center(m);
-//        
-//        for( Facet f : m.getFacets() ) {
-//            for( Vertex v : ((TriangularFacet) f).getVertices() ) {
-//                for( int d = 0; d < 3; d++ ) {
-//                    //v.changeDoublePosition(d, v.getDoublePosition(d) - center.getDoublePosition(d) );
-//                    v.setDoublePosition(d, v.getDoublePosition(d) - center.getDoublePosition(d) );
-//                }
-//            }
-//        }        
-//    }
 }
