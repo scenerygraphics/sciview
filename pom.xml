@@ -96,6 +96,9 @@
 		* com.google.android.tools:dx + junit:junit
 		-->
 		<allowedDuplicateClasses>junit.*</allowedDuplicateClasses>
+
+		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
+		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 	</properties>
 
 	<repositories>
