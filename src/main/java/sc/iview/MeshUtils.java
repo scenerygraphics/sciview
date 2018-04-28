@@ -29,6 +29,7 @@
 package sc.iview;
 
 import net.imagej.ops.geom.geom3d.mesh.Mesh;
+import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
 
 public class MeshUtils {
