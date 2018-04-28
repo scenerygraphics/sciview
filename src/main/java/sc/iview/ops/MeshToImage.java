@@ -46,19 +46,18 @@ import sc.iview.process.MeshConverter;
 
 import graphics.scenery.Mesh;
 
-@Plugin(type = Command.class, 
-        menuPath = "SciView>Mesh>Mesh To Image")
+@Plugin(type = Command.class, menuPath = "SciView>Mesh>Mesh To Image")
 public class MeshToImage implements Command {
-    
+
     @Parameter
     private int width;
-    
+
     @Parameter
     private int height;
-    
+
     @Parameter
     private int depth;
-    
+
     @Parameter
     private OpService ops;
 
@@ -80,16 +79,16 @@ public class MeshToImage implements Command {
     @Override
     public void run() {
         if( sciView.getActiveNode() instanceof Mesh ) {
-            Mesh currentMesh = (Mesh) sciView.getActiveNode();
-            DefaultMesh opsMesh = (DefaultMesh) MeshConverter.getOpsMesh(currentMesh,logService);
+            Mesh currentMesh = ( Mesh ) sciView.getActiveNode();
+            DefaultMesh opsMesh = ( DefaultMesh ) MeshConverter.getOpsMesh( currentMesh, logService );
 
             //net.imagej.ops.geom.geom3d.mesh.Mesh img = ops.geom().voxelization( opsMesh, width, height, depth);
-            RandomAccessibleInterval<BitType> img = ops.geom().voxelization(opsMesh, width, height, depth);
+            RandomAccessibleInterval<BitType> img = ops.geom().voxelization( opsMesh, width, height, depth );
 
-            uiService.show(img);
+            uiService.show( img );
 
         } else {
-            logService.warn( "No active node. Add a mesh to the scene and select it.");
+            logService.warn( "No active node. Add a mesh to the scene and select it." );
         }
 
     }

@@ -46,9 +46,9 @@ import sc.iview.SciView;
 /**
  * Created by kharrington on 6/24/17.
  */
-@Plugin(type = Display.class,priority=0.0, enabled=true)
+@Plugin(type = Display.class, priority = 0.0, enabled = true)
 public class SciViewDisplay extends AbstractDisplay<SciView> {
-    
+
     @Parameter
     private ThreadService threadService;
 
@@ -57,18 +57,18 @@ public class SciViewDisplay extends AbstractDisplay<SciView> {
 
     @Parameter
     private LogService logService;
-    
+
     public SciViewDisplay() {
-        super(SciView.class);
+        super( SciView.class );
     }
-    
-    public SciViewDisplay(Class<SciView> type) {
-        super(type);
+
+    public SciViewDisplay( Class<SciView> type ) {
+        super( type );
     }
-    
+
     @EventHandler
-    protected void onEvent(final DataRestructuredEvent event) {
-        
+    protected void onEvent( final DataRestructuredEvent event ) {
+
     }
 
     // FIXME - displays should not listen for Data events. Views should listen for
@@ -76,12 +76,12 @@ public class SciViewDisplay extends AbstractDisplay<SciView> {
     // classes should listen for view events and refresh themselves as necessary.
 
     @EventHandler
-    protected void onEvent(final DataUpdatedEvent event) {
-        logService.warn("Display updated! This warning probably shouldn't be here.");
+    protected void onEvent( final DataUpdatedEvent event ) {
+        logService.warn( "Display updated! This warning probably shouldn't be here." );
     }
 
     @EventHandler
-    protected void onEvent(final DisplayDeletedEvent event) {
-        
+    protected void onEvent( final DisplayDeletedEvent event ) {
+
     }
 }

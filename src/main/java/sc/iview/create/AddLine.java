@@ -36,8 +36,7 @@ import sc.iview.SciView;
 import sc.iview.SciViewService;
 import sc.iview.vec3.DVec3;
 
-@Plugin(type = Command.class, 
-        menuPath = "SciView>Add>Line")
+@Plugin(type = Command.class, menuPath = "SciView>Add>Line")
 public class AddLine implements Command {
 
     @Parameter
@@ -53,7 +52,7 @@ public class AddLine implements Command {
 
     @Parameter
     private SciView sciView;
-    
+
     @Override
     public void run() {
         sciView.addLine( start, stop );

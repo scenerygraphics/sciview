@@ -40,9 +40,8 @@ import sc.iview.SciView;
 /**
  * Created by kharrington on 7/20/17.
  */
-@Plugin(type = Command.class,
-        menuPath = "SciView>Import>Xyz")
-public class ImportXYZ  implements Command {
+@Plugin(type = Command.class, menuPath = "SciView>Import>Xyz")
+public class ImportXYZ implements Command {
 
     @Parameter
     private File xyzFile;
@@ -55,11 +54,11 @@ public class ImportXYZ  implements Command {
 
     @Override
     public void run() {
-        if (xyzFile != null) {
+        if( xyzFile != null ) {
             try {
-                sciView.addXyz(xyzFile.getAbsolutePath());
-            } catch (final Exception e) {
-                logService.trace(e);
+                sciView.addXyz( xyzFile.getAbsolutePath() );
+            } catch( final Exception e ) {
+                logService.trace( e );
             }
         }
     }

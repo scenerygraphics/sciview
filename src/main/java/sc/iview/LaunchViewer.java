@@ -36,10 +36,9 @@ import org.scijava.plugin.Plugin;
 /**
  * Created by kharrington on 6/20/17.
  */
-@Plugin(type = Command.class,
-        menuPath = "SciView>Launch")
+@Plugin(type = Command.class, menuPath = "SciView>Launch")
 public class LaunchViewer implements Command {
-    
+
     @Parameter
     private DisplayService displayService;
 
@@ -52,4 +51,3 @@ public class LaunchViewer implements Command {
     }
 
 }
-

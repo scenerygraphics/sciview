@@ -38,17 +38,17 @@ public class MeshUtils {
      * 
      * @return a RealLocalizable representing the mesh's center
      */
-    public static RealLocalizable getCenter(Mesh m) {
+    public static RealLocalizable getCenter( Mesh m ) {
         RealPoint p = new RealPoint( 0, 0, 0 );
         for( RealLocalizable v : m.getVertices() ) {
             p.move( v );
         }
         for( int d = 0; d < 3; d++ ) {
-            p.setPosition( p.getDoublePosition(d)/m.getVertices().size(), d );
+            p.setPosition( p.getDoublePosition( d ) / m.getVertices().size(), d );
         }
         return p;
     }
-    
+
     /**
      * Translate the mesh such that it's center is at 0,0,0
      * 

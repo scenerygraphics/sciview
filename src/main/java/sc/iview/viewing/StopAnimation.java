@@ -34,9 +34,8 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciViewService;
 
-@Plugin(type = Command.class, 
-        menuPath = "SciView>View>Stop Animation")
-public class StopAnimation  implements Command {
+@Plugin(type = Command.class, menuPath = "SciView>View>Stop Animation")
+public class StopAnimation implements Command {
 
     @Parameter
     private SciViewService sceneryService;
@@ -52,4 +51,3 @@ public class StopAnimation  implements Command {
     }
 
 }
-

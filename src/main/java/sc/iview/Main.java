@@ -68,85 +68,81 @@ public class Main {
     private static OpService ops;
     private static UIService ui;
 
-    public static void main(String... args) throws IOException, InterruptedException {
-        context = new Context(ImageJService.class, SciJavaService.class, SCIFIOService.class);
-        sciViewService = context.getService(SciViewService.class);
-        io = context.service(DatasetIOService.class);
-        ops = context.service(OpService.class);
-        ui = context.service(UIService.class);
+    public static void main( String... args ) throws IOException, InterruptedException {
+        context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class );
+        sciViewService = context.getService( SciViewService.class );
+        io = context.service( DatasetIOService.class );
+        ops = context.service( OpService.class );
+        ui = context.service( UIService.class );
 
-        if (!ui.isVisible())
-            ui.showUI();
-
+        if( !ui.isVisible() ) ui.showUI();
 
         SciView sciView = sciViewService.getOrCreateActiveSciView();
-        sciView.getCamera().setPosition(new GLVector(0.0f, 0.0f, 5.0f));
-        sciView.getCamera().setTargeted(true);
-        sciView.getCamera().setTarget(new GLVector(0, 0, 0));
-        sciView.getCamera().setDirty(true);
-        sciView.getCamera().setNeedsUpdate(true);
+        sciView.getCamera().setPosition( new GLVector( 0.0f, 0.0f, 5.0f ) );
+        sciView.getCamera().setTargeted( true );
+        sciView.getCamera().setTarget( new GLVector( 0, 0, 0 ) );
+        sciView.getCamera().setDirty( true );
+        sciView.getCamera().setNeedsUpdate( true );
         //sciView.getCamera().setNeedsUpdateWorld(true);
 
-        lineTest(sciView);
+        lineTest( sciView );
         //meshTest();
         meshTextureTest();
         volumeRenderTest();
     }
 
-    public static void lineTest(SciView sciView) {
+    public static void lineTest( SciView sciView ) {
         int numPoints = 25;
         DVec3[] points = new DVec3[numPoints];
 
         for( int k = 0; k < numPoints; k++ ) {
-            points[k] = new ClearGLDVec3( (float)( 10.0f * Math.random() - 5.0f), (float)( 10.0f * Math.random() - 5.0f), (float) (10.0f * Math.random() - 5.0f) );
-
+            points[k] = new ClearGLDVec3( ( float ) ( 10.0f * Math.random() - 5.0f ), //
+                                          ( float ) ( 10.0f * Math.random() - 5.0f ), //
+                                          ( float ) ( 10.0f * Math.random() - 5.0f ) );
 
         }
 
         double edgeWidth = 0.1;
-        DVec3 color = new ClearGLDVec3(1f, 0.75f, 0.5f);
+        DVec3 color = new ClearGLDVec3( 1f, 0.75f, 0.5f );
 
-        sciView.addLine(points, color, edgeWidth );
+        sciView.addLine( points, color, edgeWidth );
     }
 
     public static GenericTexture generateGenericTexture() {
         int width = 64;
         int height = 128;
 
-        GLVector dims = new GLVector(width, height, 1 );
+        GLVector dims = new GLVector( width, height, 1 );
         int nChannels = 1;
 
-        ByteBuffer bb = BufferUtils.BufferUtils.allocateByte(width * height * nChannels);
+        ByteBuffer bb = BufferUtils.BufferUtils.allocateByte( width * height * nChannels );
 
         for( int x = 0; x < width; x++ ) {
             for( int y = 0; y < height; y++ ) {
-                bb.put((byte)(Math.random()*255));
+                bb.put( ( byte ) ( Math.random() * 255 ) );
             }
         }
         bb.flip();
 
-        return new GenericTexture("neverUsed", dims, nChannels, GLTypeEnum.UnsignedByte, bb, true, true, false);
+        return new GenericTexture( "neverUsed", dims, nChannels, GLTypeEnum.UnsignedByte, bb, true, true, false );
     }
 
     public static void meshTextureTest() {
-        SciView sciView = ((SciViewService) context.getService( "sc.iview.SciViewService" )).getOrCreateActiveSciView();
+        SciView sciView = ( ( SciViewService ) context.getService( "sc.iview.SciViewService" ) ).getOrCreateActiveSciView();
         Node msh = sciView.addBox();
         msh.fitInto( 10.0f );
 
         GenericTexture texture = generateGenericTexture();
 
-        msh.getMaterial().getTransferTextures().put("diffuse", texture);
-        msh.getMaterial().getTextures().put("diffuse", "fromBuffer:diffuse");
-        msh.getMaterial().setDoubleSided(true);
-        msh.getMaterial().setNeedsTextureReload(true);
+        msh.getMaterial().getTransferTextures().put( "diffuse", texture );
+        msh.getMaterial().getTextures().put( "diffuse", "fromBuffer:diffuse" );
+        msh.getMaterial().setDoubleSided( true );
+        msh.getMaterial().setNeedsTextureReload( true );
 
-
-        msh.setNeedsUpdate(true);
-        msh.setDirty(true);
+        msh.setNeedsUpdate( true );
+        msh.setDirty( true );
 
     }
-
-
 
     public static GenericTexture convertToGenericTexture( Dataset d ) {
         long width = d.getWidth();
@@ -155,21 +151,21 @@ public class Main {
         GLVector dims = new GLVector( width, height, 1 );
         int nChannels = 3;
 
-        ByteBuffer bb = BufferUtils.BufferUtils.allocateByte((int) (width * height * nChannels));
+        ByteBuffer bb = BufferUtils.BufferUtils.allocateByte( ( int ) ( width * height * nChannels ) );
 
-        System.out.println("Size:" + width + " " +  height + " " + nChannels);
+        System.out.println( "Size:" + width + " " + height + " " + nChannels );
 
         Cursor<?> cur = d.cursor();
         while( cur.hasNext() ) {
             cur.fwd();
-            int val = ((UnsignedByteType) cur.get()).get();
+            int val = ( ( UnsignedByteType ) cur.get() ).get();
             //System.out.println( (byte)val );
-            bb.put( (byte) val );
+            bb.put( ( byte ) val );
             //bb.put((byte)(Math.random()*255));
         }
         bb.flip();
 
-        return new GenericTexture("neverUsed", dims, nChannels, GLTypeEnum.UnsignedByte, bb, true, true, false);
+        return new GenericTexture( "neverUsed", dims, nChannels, GLTypeEnum.UnsignedByte, bb, true, true, false );
     }
 
     public static void meshTest() throws IOException {
@@ -194,24 +190,22 @@ public class Main {
         //Dataset img = io.open("/Users/kharrington/git/SciView/clown_uint8.tif");
         //Dataset img = io.open("/Users/kharrington/git/SciView/bigulrik.tif");
 
-        Dataset img = io.open("http://mirror.imagej.net/images/clown.jpg");
+        Dataset img = io.open( "http://mirror.imagej.net/images/clown.jpg" );
 
-        GenericTexture gt = convertToGenericTexture(img);
+        GenericTexture gt = convertToGenericTexture( img );
 
         //Img img = IO.openImgs("/Users/kharrington/git/SciView/clown_uint8_small.tif").get(0).getImg();
 
         //File file = new File( "/Users/kharrington/git/SciView/clown_uint8_small.tif" );
         //final ImagePlus imp = new Opener().openImage( file.getAbsolutePath() );
 
-        msh.getMaterial().getTransferTextures().put("diffuse", gt);
-        msh.getMaterial().getTextures().put("diffuse", "fromBuffer:diffuse");
-        msh.getMaterial().setDoubleSided(true);
-        msh.getMaterial().setNeedsTextureReload(true);
+        msh.getMaterial().getTransferTextures().put( "diffuse", gt );
+        msh.getMaterial().getTextures().put( "diffuse", "fromBuffer:diffuse" );
+        msh.getMaterial().setDoubleSided( true );
+        msh.getMaterial().setNeedsTextureReload( true );
 
-
-
-        msh.setNeedsUpdate(true);
-        msh.setDirty(true);
+        msh.setNeedsUpdate( true );
+        msh.setDirty( true );
 
     }
 
@@ -219,19 +213,18 @@ public class Main {
 
 //      Volume render test
         SciView sciView = sciViewService.getOrCreateActiveSciView();
-        Dataset testImg = io.open(  SciView.class.getResource("/cored_cube_16bit.tif").getFile() );
+        Dataset testImg = io.open( SciView.class.getResource( "/cored_cube_16bit.tif" ).getFile() );
         System.out.println( testImg.firstElement().getClass() );
-        Node v = sciView.addVolume( testImg, new float[]{1,1,1} );
-        v.setScale(new GLVector(10f, 10f, 10f));
+        Node v = sciView.addVolume( testImg, new float[] { 1, 1, 1 } );
+        v.setScale( new GLVector( 10f, 10f, 10f ) );
         sciView.displayNodeProperties( v );
 
         int isoLevel = 1;
         @SuppressWarnings("unchecked")
-        Img<UnsignedShortType> testImgImg = (Img<UnsignedShortType>) testImg.getImgPlus().getImg();
-        Img<BitType> bitImg = (Img<BitType>) ops.threshold().apply(  testImgImg,
-                new UnsignedShortType( isoLevel ) );
+        Img<UnsignedShortType> testImgImg = ( Img<UnsignedShortType> ) testImg.getImgPlus().getImg();
+        Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( testImgImg, new UnsignedShortType( isoLevel ) );
 
-        Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator());
+        Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
 
         //sciView.displayNodeProperties( sciView.addMesh( m ) );
     }

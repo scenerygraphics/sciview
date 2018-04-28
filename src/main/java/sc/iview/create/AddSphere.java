@@ -40,10 +40,9 @@ import sc.iview.SciViewService;
 
 import cleargl.GLVector;
 
-@Plugin(type = Command.class, 
-        menuPath = "SciView>Add>Sphere")
-public class AddSphere  implements Command {
-        
+@Plugin(type = Command.class, menuPath = "SciView>Add>Sphere")
+public class AddSphere implements Command {
+
     @Parameter
     private int radius;
 
@@ -52,14 +51,15 @@ public class AddSphere  implements Command {
 
     @Parameter
     private SciView sciView;
-    
+
     @Override
     public void run() {
         RealLocalizable center;
 
         center = new RealPoint( 0, 0, 0 );
 
-        GLVector pos = new GLVector( center.getFloatPosition(0), center.getFloatPosition(1), center.getFloatPosition(2) );
+        GLVector pos = new GLVector( center.getFloatPosition( 0 ), center.getFloatPosition( 1 ),
+                                     center.getFloatPosition( 2 ) );
         //sceneryService.getActiveSceneryViewer().addSphere( pos, radius );
         sciView.addSphere( pos, radius );
     }

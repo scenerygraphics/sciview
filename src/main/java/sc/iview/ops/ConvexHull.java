@@ -42,10 +42,9 @@ import sc.iview.process.MeshConverter;
 import cleargl.GLVector;
 import graphics.scenery.Mesh;
 
-@Plugin(type = Command.class, 
-        menuPath = "SciView>Mesh>Convex Hull")
+@Plugin(type = Command.class, menuPath = "SciView>Mesh>Convex Hull")
 public class ConvexHull implements Command {
-    
+
     @Parameter
     private OpService ops;
 
@@ -54,18 +53,18 @@ public class ConvexHull implements Command {
 
     @Parameter
     private LogService logService;
-        
+
     @Override
     public void run() {
-        if( sceneryService.getActiveSciView().getActiveNode() instanceof  Mesh ) {
-            Mesh currentMesh = (Mesh)sceneryService.getActiveSciView().getActiveNode();
-            DefaultMesh opsMesh = (DefaultMesh) MeshConverter.getOpsMesh(currentMesh,logService);
+        if( sceneryService.getActiveSciView().getActiveNode() instanceof Mesh ) {
+            Mesh currentMesh = ( Mesh ) sceneryService.getActiveSciView().getActiveNode();
+            DefaultMesh opsMesh = ( DefaultMesh ) MeshConverter.getOpsMesh( currentMesh, logService );
 
-            currentMesh.getMaterial().setDiffuse(new GLVector(1.0f, 0.0f, 0.0f));
+            currentMesh.getMaterial().setDiffuse( new GLVector( 1.0f, 0.0f, 0.0f ) );
 
-            net.imagej.ops.geom.geom3d.mesh.Mesh smoothMesh = ops.geom().convexHull((net.imagej.ops.geom.geom3d.mesh.Mesh) opsMesh);
+            net.imagej.ops.geom.geom3d.mesh.Mesh smoothMesh = ops.geom().convexHull( ( net.imagej.ops.geom.geom3d.mesh.Mesh ) opsMesh );
 
-            sceneryService.getActiveSciView().addMesh(smoothMesh);
+            sceneryService.getActiveSciView().addMesh( smoothMesh );
         }
 
     }

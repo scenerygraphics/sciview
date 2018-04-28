@@ -41,8 +41,7 @@ import sc.iview.SciView;
 /**
  * Created by kharrington on 6/21/17.
  */
-@Plugin(type = Command.class,
-        menuPath = "SciView>Add>Volume")
+@Plugin(type = Command.class, menuPath = "SciView>Add>Volume")
 public class AddVolume implements Command {
 
     @Parameter
@@ -68,7 +67,7 @@ public class AddVolume implements Command {
 
     @Override
     public void run() {
-        sciView.addVolume(image,new float[]{voxelWidth,voxelHeight,voxelDepth});
+        sciView.addVolume( image, new float[] { voxelWidth, voxelHeight, voxelDepth } );
     }
 
 }

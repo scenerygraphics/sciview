@@ -49,21 +49,20 @@ import org.scijava.plugin.Plugin;
  * @author Mark Hiner hinerm at gmail.com
  */
 @Plugin(type = PreprocessorPlugin.class)
-public class ActiveSciViewPreprocessor extends SingleInputPreprocessor<SciView>
-{
+public class ActiveSciViewPreprocessor extends SingleInputPreprocessor<SciView> {
 
     @Parameter(required = false)
     private SciViewService sceneryService;
 
     public ActiveSciViewPreprocessor() {
-        super(SciView.class);
+        super( SciView.class );
     }
 
     // -- SingleInputProcessor methods --
 
     @Override
     public SciView getValue() {
-        if (sceneryService == null) return null;
+        if( sceneryService == null ) return null;
         return sceneryService.getOrCreateActiveSciView();
     }
 

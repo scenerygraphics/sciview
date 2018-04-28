@@ -44,16 +44,15 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
-@Plugin(type = Command.class, 
-        menuPath = "SciView>Import>Isosurface")
-public class ImportIsosurface  implements Command {
-    
+@Plugin(type = Command.class, menuPath = "SciView>Import>Isosurface")
+public class ImportIsosurface implements Command {
+
     @Parameter
     private OpService ops;
-    
+
     @Parameter
     private int isoLevel;
-    
+
     @Parameter
     private ImgPlus<UnsignedByteType> image;
 
@@ -65,16 +64,15 @@ public class ImportIsosurface  implements Command {
 
     @Override
     public void run() {
-        
-        Img<BitType> bitImg = (Img<BitType>) ops.threshold().apply( image,
-                new UnsignedByteType( isoLevel ) );
-        
-        Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator());
-        
-        DefaultMesh dm = (DefaultMesh) m;
+
+        Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( image, new UnsignedByteType( isoLevel ) );
+
+        Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
+
+        DefaultMesh dm = ( DefaultMesh ) m;
 
         sciView.addMesh( m );
-        
+
     }
 
 }

@@ -36,19 +36,19 @@ import sc.iview.SciView;
 public class SciViewDisplayWindow implements DisplayWindow {
 
     private SciView sv;
-    
-    public SciViewDisplayWindow(SciView sv) {
+
+    public SciViewDisplayWindow( SciView sv ) {
         this.sv = sv;
     }
 
     @Override
-    public void setTitle(String s) {
+    public void setTitle( String s ) {
         // TODO Auto-generated method stub
         sv.getName();
     }
 
     @Override
-    public void setContent(DisplayPanel panel) {
+    public void setContent( DisplayPanel panel ) {
         // Can do nothing
     }
 
@@ -58,15 +58,13 @@ public class SciViewDisplayWindow implements DisplayWindow {
     }
 
     @Override
-    public void showDisplay(boolean visible) {
+    public void showDisplay( boolean visible ) {
         // TODO Auto-generated method stub
-        if ( !visible )
-        {
+        if( !visible ) {
             // Probably should have a var inside graphics.scenery.backends.Renderer for visibility
         }
-        if ( visible )
-        {
-        
+        if( visible ) {
+
         }
     }
 

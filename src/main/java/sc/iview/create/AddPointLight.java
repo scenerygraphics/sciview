@@ -34,8 +34,7 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciViewService;
 
-@Plugin(type = Command.class, 
-        menuPath = "SciView>Add>Point Light")
+@Plugin(type = Command.class, menuPath = "SciView>Add>Point Light")
 public class AddPointLight implements Command {
 
     @Parameter

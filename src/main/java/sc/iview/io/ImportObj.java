@@ -37,10 +37,9 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
-@Plugin(type = Command.class, 
-        menuPath = "SciView>Import>Obj")
-public class ImportObj  implements Command {
-    
+@Plugin(type = Command.class, menuPath = "SciView>Import>Obj")
+public class ImportObj implements Command {
+
     @Parameter
     private File objFile;
 
@@ -52,17 +51,13 @@ public class ImportObj  implements Command {
 
     @Override
     public void run() {
-        if ( objFile != null )
-        {
-            try
-            {
+        if( objFile != null ) {
+            try {
                 sciView.addObj( objFile.getAbsolutePath() );
-            }
-            catch ( final Exception e )
-            {
+            } catch( final Exception e ) {
                 logService.trace( e );
             }
-        }        
+        }
     }
 
 }

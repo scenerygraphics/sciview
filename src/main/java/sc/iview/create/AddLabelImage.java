@@ -54,12 +54,11 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciViewService;
 
 /**
- * Author: Robert Haase, Scientific Computing Facility, MPI-CBG Dresden, rhaase@mpi-cbg.de
- * Date: July 2016
+ * Author: Robert Haase, Scientific Computing Facility, MPI-CBG Dresden,
+ * rhaase@mpi-cbg.de Date: July 2016
  */
-@Plugin(type = Command.class,
-        menuPath = "SciView>Add>Label image")
-public  class AddLabelImage<T extends RealType<T>> implements Command {
+@Plugin(type = Command.class, menuPath = "SciView>Add>Label image")
+public class AddLabelImage<T extends RealType<T>> implements Command {
 
     @Parameter
     private Dataset currentImage;
@@ -71,38 +70,36 @@ public  class AddLabelImage<T extends RealType<T>> implements Command {
     private SciViewService sceneryService;
 
     @Override
-    public  void run() {
+    public void run() {
 
         // interpret the current image as a label image and convert it to ImgLabeling
 
-        Img<T> labelMap = (Img<T>) currentImage.getImgPlus();
+        Img<T> labelMap = ( Img<T> ) currentImage.getImgPlus();
 
         final Dimensions dims = labelMap;
         final IntType t = new IntType();
-        final RandomAccessibleInterval<IntType> img = Util.getArrayOrCellImgFactory(dims, t).create(dims, t);
-        ImgLabeling<Integer, IntType> labeling = new ImgLabeling<Integer, IntType>(img);
+        final RandomAccessibleInterval<IntType> img = Util.getArrayOrCellImgFactory( dims, t ).create( dims, t );
+        ImgLabeling<Integer, IntType> labeling = new ImgLabeling<Integer, IntType>( img );
 
-        final Cursor<LabelingType<Integer>> labelCursor = Views.flatIterable(labeling).cursor();
+        final Cursor<LabelingType<Integer>> labelCursor = Views.flatIterable( labeling ).cursor();
 
-        for (final T input : Views.flatIterable(labelMap)) {
+        for( final T input : Views.flatIterable( labelMap ) ) {
             final LabelingType<Integer> element = labelCursor.next();
-            if (input.getRealFloat() != 0)
-            {
-                element.add((int) input.getRealFloat());
+            if( input.getRealFloat() != 0 ) {
+                element.add( ( int ) input.getRealFloat() );
             }
         }
 
         // take the regions, process them to meshes and put it in the viewer
-        LabelRegions<Integer> labelRegions = new LabelRegions<Integer>(labeling);
+        LabelRegions<Integer> labelRegions = new LabelRegions<Integer>( labeling );
 
         ArrayList<RandomAccessibleInterval<BoolType>> regions = new ArrayList<RandomAccessibleInterval<BoolType>>();
         Object[] regionsArr = labelRegions.getExistingLabels().toArray();
-        for (int i = 0; i < labelRegions.getExistingLabels().size(); i++)
-        {
-            LabelRegion<Integer> lr = labelRegions.getLabelRegion((Integer)regionsArr[i]);
+        for( int i = 0; i < labelRegions.getExistingLabels().size(); i++ ) {
+            LabelRegion<Integer> lr = labelRegions.getLabelRegion( ( Integer ) regionsArr[i] );
 
-            Mesh mesh = ops.geom().marchingCubes(lr);
-            sceneryService.getActiveSciView().addMesh(mesh);
+            Mesh mesh = ops.geom().marchingCubes( lr );
+            sceneryService.getActiveSciView().addMesh( mesh );
         }
     }
 
