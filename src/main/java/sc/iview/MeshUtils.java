@@ -29,16 +29,15 @@
 package sc.iview;
 
 import net.imagej.ops.geom.geom3d.mesh.Mesh;
-import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
 
 public class MeshUtils {
     /**
      * Find the center of a mesh using vertices
      * 
-     * @return a RealLocalizable representing the mesh's center
+     * @return a RealPoint representing the mesh's center
      */
-    public static RealLocalizable getCenter( Mesh m ) {
+    public static RealPoint center( Mesh m ) {
         RealPoint p = new RealPoint( 0, 0, 0 );
         for( RealLocalizable v : m.getVertices() ) {
             p.move( v );
@@ -56,7 +55,7 @@ public class MeshUtils {
      * 
      */
 //    public static void centerMesh(Mesh m) {
-//        RealPoint center = (RealPoint) getCenter(m);
+//        RealPoint center = center(m);
 //        
 //        for( Facet f : m.getFacets() ) {
 //            for( Vertex v : ((TriangularFacet) f).getVertices() ) {

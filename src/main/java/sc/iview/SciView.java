@@ -741,7 +741,7 @@ public class SciView extends SceneryBase {
         } else {
             /*if( getActiveNode() instanceof Mesh ) {
                 net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( (Mesh)getActiveNode() );
-                RealLocalizable center = MeshUtils.getCenter(opsMesh);
+                RealPoint center = MeshUtils.center(opsMesh);
                 target = new GLVector( center.getFloatPosition(0), center.getFloatPosition(1), center.getFloatPosition(2) );
             }
             else {
