@@ -746,7 +746,7 @@ public class SciView extends SceneryBase {
             ByteBuffer byteBuffer = MemoryUtil.memAlloc( ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] *
                                                                    dimensions[2] ) );
 
-            //System.out.println( "Add Volume: memAlloc " + (bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2]) );
+            log.debug( "Add Volume: memAlloc " + (bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2]) );
 
             // We might need to use a RAI instead to handle multiple image types
             //   but we'll be fine for ArrayImg's
@@ -771,7 +771,7 @@ public class SciView extends SceneryBase {
             }
             byteBuffer.flip();
 
-            //System.out.println( "Add Volume: buffer written " + byteBuffer );
+            log.debug( "Add Volume: buffer written " + byteBuffer );
 
             Volume v = new Volume();
             v.setColormap( "jet" );
@@ -779,9 +779,9 @@ public class SciView extends SceneryBase {
                               voxelDimensions[0], voxelDimensions[1], voxelDimensions[2], NativeTypeEnum.UnsignedShort,
                               bytesPerVoxel );
 
-            //System.out.println( v.getColormaps() );
+            log.debug( v.getColormaps() );
 
-            //System.out.println( "Add Volume: volume created " + v);
+            log.debug( "Add Volume: volume created " + v);
 
             getScene().addChild( v );
 
@@ -801,7 +801,7 @@ public class SciView extends SceneryBase {
             ByteBuffer byteBuffer = MemoryUtil.memAlloc( ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] *
                                                                    dimensions[2] ) );
 
-            //System.out.println( "Add Volume: memAlloc " + (bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2]) );
+            log.debug( "Add Volume: memAlloc " + (bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2]) );
 
             // We might need to use a RAI instead to handle multiple image types
             //   but we'll be fine for ArrayImg's
@@ -823,16 +823,16 @@ public class SciView extends SceneryBase {
             }
             byteBuffer.flip();
 
-            //System.out.println( "Add Volume: buffer written " + byteBuffer );
+            log.debug( "Add Volume: buffer written " + byteBuffer );
 
             Volume v = new Volume();
             v.readFromBuffer( image.getName(), byteBuffer, dimensions[0], dimensions[1], dimensions[2],
                               voxelDimensions[0], voxelDimensions[1], voxelDimensions[2], NativeTypeEnum.UnsignedByte,
                               bytesPerVoxel );
 
-            //System.out.println( v.getColormaps() );
+            log.debug( v.getColormaps() );
 
-            //System.out.println( "Add Volume: volume created " + v);
+            log.debug( "Add Volume: volume created " + v);
 
             log.info( "min=" + v.getTrangemin() + " max=" + v.getTrangemax() );
             v.setTrangemin( 0.0f );
