@@ -59,7 +59,9 @@ import graphics.scenery.GenericTexture;
 import graphics.scenery.Node;
 
 /**
- * Created by kharrington on 6/20/17.
+ * Entry point for testing SciView functionality.
+ * 
+ * @author Kyle Harrington
  */
 public class Main {
     private static Context context;
