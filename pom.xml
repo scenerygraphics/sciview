@@ -130,10 +130,6 @@
 		<!-- ImageJ dependencies -->
 		<dependency>
 			<groupId>net.imagej</groupId>
-			<artifactId>imagej</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.imagej</groupId>
 			<artifactId>imagej-common</artifactId>
 		</dependency>
 		<dependency>
@@ -188,34 +184,30 @@
 			<artifactId>joml</artifactId>
 		</dependency>
 
-		<!-- Runtime dependencies -->
+		<!-- Optional dependencies - for sc.iview.Main only! -->
+		<dependency>
+			<groupId>io.scif</groupId>
+			<artifactId>scifio</artifactId>
+			<optional>true</optional>
+		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
-			<artifactId>script-editor</artifactId>
+			<artifactId>scijava-plugins-commands</artifactId>
 			<scope>runtime</scope>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
-			<artifactId>imagej-deprecated</artifactId>
+			<artifactId>imagej-plugins-commands</artifactId>
 			<scope>runtime</scope>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-ui-swing</artifactId>
 			<scope>runtime</scope>
+			<optional>true</optional>
 		</dependency>
-		<dependency>
-			<groupId>org.jetbrains.kotlin</groupId>
-			<artifactId>kotlin-reflect</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.jetbrains.kotlin</groupId>
-			<artifactId>kotlin-stdlib-jdk8</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-
-		<!-- Optional runtime scope -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-simple</artifactId>

@@ -28,11 +28,15 @@
  */
 package sc.iview;
 
+import io.scif.SCIFIOService;
+import io.scif.services.DatasetIOService;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import net.imagej.Dataset;
-import net.imagej.ImageJ;
+import net.imagej.ImageJService;
+import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
 import net.imagej.ops.geom.geom3d.mesh.DefaultMesh;
 import net.imagej.ops.geom.geom3d.mesh.Mesh;
@@ -41,6 +45,10 @@ import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
+
+import org.scijava.Context;
+import org.scijava.service.SciJavaService;
+import org.scijava.ui.UIService;
 
 import sc.iview.vec3.ClearGLDVec3;
 import sc.iview.vec3.DVec3;
@@ -55,18 +63,26 @@ import graphics.scenery.Node;
  * Created by kharrington on 6/20/17.
  */
 public class Main {
-    static ImageJ ij = new ImageJ();
-    static GenericTexture gt;// = generateGenericTexture();//convertToGenericTexture(img);
+    private static Context context;
+    private static SciViewService sciViewService;
+    private static DatasetIOService io;
+    private static OpService ops;
+    private static UIService ui;
+
+    private static GenericTexture gt;// = generateGenericTexture();//convertToGenericTexture(img);
 
     public static void main(String... args) throws IOException, InterruptedException {
-        ij = new ImageJ();
+        context = new Context(ImageJService.class, SciJavaService.class, SCIFIOService.class);
+        sciViewService = context.getService(SciViewService.class);
+        io = context.service(DatasetIOService.class);
+        ops = context.service(OpService.class);
+        ui = context.service(UIService.class);
 
-        //ij.launch(args);
-        if (!ij.ui().isVisible())
-            ij.ui().showUI();
+        if (!ui.isVisible())
+            ui.showUI();
 
 
-        SciView sciView = ((SciViewService) ij.getContext().getService("sc.iview.SciViewService")).getOrCreateActiveSciView();
+        SciView sciView = sciViewService.getOrCreateActiveSciView();
         sciView.getCamera().setPosition(new GLVector(0.0f, 0.0f, 5.0f));
         sciView.getCamera().setTargeted(true);
         sciView.getCamera().setTarget(new GLVector(0, 0, 0));
@@ -74,9 +90,9 @@ public class Main {
         sciView.getCamera().setNeedsUpdate(true);
         //sciView.getCamera().setNeedsUpdateWorld(true);
 
-        //lineTest(sciView);
+        lineTest(sciView);
         //meshTest();
-        //meshTextureTest();
+        meshTextureTest();
         volumeRenderTest();
     }
 
@@ -116,7 +132,7 @@ public class Main {
     }
 
     public static void meshTextureTest() throws IOException, InterruptedException {
-        SciView sciView = ((SciViewService) ij.getContext().getService( "sc.iview.SciViewService" )).getOrCreateActiveSciView();
+        SciView sciView = ((SciViewService) context.getService( "sc.iview.SciViewService" )).getOrCreateActiveSciView();
         Node msh = sciView.addBox();
         msh.fitInto( 10.0f );
 
@@ -160,7 +176,7 @@ public class Main {
     }
 
     public static void meshTest() throws IOException, InterruptedException {
-        SciView sciView = ((SciViewService) ij.getContext().getService( "sc.iview.SciViewService" )).getOrCreateActiveSciView();
+        SciView sciView = sciViewService.getOrCreateActiveSciView();
 
         //Node msh = sciView.addSTL(SciView.class.getResource("/cored_cube_16bit.stl").getFile());
         //Node msh = sciView.addObj("/Users/kharrington/git/SciView/sphere.obj");
@@ -171,17 +187,17 @@ public class Main {
 
         msh.fitInto( 15.0f );
 
-        //Dataset img = (Dataset) ij.io().open("/Users/kharrington/git/SciView/clown_uint8_small.tif");
-        //ij.ui().show(img);
+        //Dataset img = io.open("/Users/kharrington/git/SciView/clown_uint8_small.tif");
+        //ui.show(img);
 
-        //Dataset img = ij.scifio().datasetIO().open("/Users/kharrington/git/SciView/clown_uint8_small.tif");
+        //Dataset img = io.open("/Users/kharrington/git/SciView/clown_uint8_small.tif");
 
-        //Dataset img = (Dataset) ij.io().open("/Users/kharrington/git/SciView/clown_uint8_small.tif");
+        //Dataset img = io.open("/Users/kharrington/git/SciView/clown_uint8_small.tif");
 
-        //Dataset img = (Dataset) ij.io().open("/Users/kharrington/git/SciView/clown_uint8.tif");
-        //Dataset img = (Dataset) ij.io().open("/Users/kharrington/git/SciView/bigulrik.tif");
+        //Dataset img = io.open("/Users/kharrington/git/SciView/clown_uint8.tif");
+        //Dataset img = io.open("/Users/kharrington/git/SciView/bigulrik.tif");
 
-        Dataset img = (Dataset) ij.io().open("http://mirror.imagej.net/images/clown.jpg");
+        Dataset img = io.open("http://mirror.imagej.net/images/clown.jpg");
 
         GenericTexture gt = convertToGenericTexture(img);
 
@@ -205,8 +221,8 @@ public class Main {
     public static void volumeRenderTest() throws IOException {
 
 //      Volume render test
-        SciView sciView = ((SciViewService) ij.getContext().getService( "sc.iview.SciViewService" )).getOrCreateActiveSciView();
-        Dataset testImg = (Dataset) ij.io().open(  SciView.class.getResource("/cored_cube_16bit.tif").getFile() );
+        SciView sciView = sciViewService.getOrCreateActiveSciView();
+        Dataset testImg = io.open(  SciView.class.getResource("/cored_cube_16bit.tif").getFile() );
         System.out.println( testImg.firstElement().getClass() );
         Node v = sciView.addVolume( testImg, new float[]{1,1,1} );
         v.setScale(new GLVector(10f, 10f, 10f));
@@ -214,10 +230,10 @@ public class Main {
 
         int isoLevel = 1;
         Img<UnsignedShortType> testImgImg = (Img<UnsignedShortType>) testImg.getImgPlus().getImg();
-        Img<BitType> bitImg = (Img<BitType>) ij.op().threshold().apply(  testImgImg,
+        Img<BitType> bitImg = (Img<BitType>) ops.threshold().apply(  testImgImg,
                 new UnsignedShortType( isoLevel ) );
 
-        Mesh m = ij.op().geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator());
+        Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator());
 
         DefaultMesh dm = (DefaultMesh) m;
 
