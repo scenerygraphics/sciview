@@ -69,8 +69,6 @@ public class ImportIsosurface implements Command {
 
         Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
 
-        DefaultMesh dm = ( DefaultMesh ) m;
-
         sciView.addMesh( m );
 
     }
