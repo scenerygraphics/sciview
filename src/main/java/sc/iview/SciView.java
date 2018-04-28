@@ -391,18 +391,7 @@ public class SciView extends SceneryBase {
         line.addPoint( DVec3s.convert( start ) );
         line.addPoint( DVec3s.convert( stop ) );
 
-//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
-//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
-//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
-//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
-//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
-//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
-//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
-//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
-//        line.addPoint(new GLVector((float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f), (float)(10.0f * Math.random() - 5.0f)));
-
         line.setEdgeWidth( 0.1f );
-        //line.
 
         line.setMaterial( material );
         line.setPosition( DVec3s.convert( start ) );
@@ -489,37 +478,10 @@ public class SciView extends SceneryBase {
 
     }
 
-    /*
-    Reading STL through Scenery
-     *
-    public static void addSTL( String filename ) {
-        Mesh scMesh = new Mesh();
-        scMesh.readFromSTL( filename );
-    
-        scMesh.generateBoundingBox();
-    
-        System.out.println( "Read STL: " + scMesh.getBoundingBoxCoords() );
-    
-        net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );
-    
-        System.out.println( "Loaded and converted mesh: " + opsMesh.getVertices().size() );
-        //((DefaultMesh) opsMesh).centerMesh();
-    
-        addMesh( opsMesh );
-    }*/
-
     public graphics.scenery.Node addSTL( String filename ) {
 
         Mesh scMesh = new Mesh();
         scMesh.readFromSTL( filename );
-
-        //scMesh.generateBoundingBox();
-
-        //net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );
-
-        //((DefaultMesh) opsMesh).centerMesh();
-
-        //addMesh( opsMesh );
 
         addMesh( scMesh );
         return scMesh;
@@ -528,11 +490,6 @@ public class SciView extends SceneryBase {
     public graphics.scenery.Node addObj( String filename ) {
         Mesh scMesh = new Mesh();
         scMesh.readFromOBJ( filename, false );// Could check if there is a MTL to use to toggle flag
-
-        //net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( scMesh );
-        //((DefaultMesh) opsMesh).centerMesh();
-
-        //addMesh( opsMesh );
 
         addMesh( scMesh );
 
@@ -711,27 +668,7 @@ public class SciView extends SceneryBase {
     }
 
     public void takeScreenshot() {
-
         getRenderer().screenshot();
-
-        //log.warn("Screenshot temporarily disabled");
-
-        /*
-        float[] bounds = viewer.getRenderer().getWindow().getClearglWindow().getBounds();
-        // if we're in a jpanel, this isn't the way to get bounds
-        try {
-            Robot robot = new Robot();
-        
-            BufferedImage screenshot = robot.createScreenCapture( new Rectangle( (int)bounds[0], (int)bounds[1], (int)bounds[2], (int)bounds[3] ) );
-        
-            ImagePlus imp = new ImagePlus( "SceneryViewer_Screenshot", screenshot );
-        
-            imp.show();
-        
-        } catch (AWTException e) {
-            e.printStackTrace();
-        }
-        */
     }
 
     public void enableArcBallControl() {
@@ -739,14 +676,6 @@ public class SciView extends SceneryBase {
         if( getActiveNode() == null ) {
             target = new GLVector( 0, 0, 0 );
         } else {
-            /*if( getActiveNode() instanceof Mesh ) {
-                net.imagej.ops.geom.geom3d.mesh.Mesh opsMesh = MeshConverter.getOpsMesh( (Mesh)getActiveNode() );
-                RealPoint center = MeshUtils.center(opsMesh);
-                target = new GLVector( center.getFloatPosition(0), center.getFloatPosition(1), center.getFloatPosition(2) );
-            }
-            else {
-                target = getActiveNode().getPosition();
-            }*/
             target = getActiveNode().getPosition();
         }
 
