@@ -44,7 +44,7 @@ import cleargl.GLVector;
 public class AddSphere implements Command {
 
     @Parameter
-    private int radius = 1.0f
+    private float radius = 1.0f;
 
     @Parameter
     private SciViewService sceneryService;
