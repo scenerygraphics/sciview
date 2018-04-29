@@ -48,13 +48,13 @@ public class AddVolume implements Command {
     private Dataset image;
 
     @Parameter
-    private float voxelWidth;
+    private float voxelWidth = 1.0f;
 
     @Parameter
-    private float voxelHeight;
+    private float voxelHeight = 1.0f;
 
     @Parameter
-    private float voxelDepth;
+    private float voxelDepth = 1.0f;
 
     @Parameter
     SciView sciView;
