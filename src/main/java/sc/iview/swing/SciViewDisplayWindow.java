@@ -33,6 +33,13 @@ import org.scijava.ui.viewer.DisplayWindow;
 
 import sc.iview.SciView;
 
+/**
+ * {@link DisplayWindow} wrapper implementation around a {@link SciView} object.
+ * <p>
+ * Note that {@link SciView} takes care of its own window internally; this class
+ * exists only to adapt that window to the SciJava API.
+ * </p>
+ */
 public class SciViewDisplayWindow implements DisplayWindow {
 
     private SciView sv;

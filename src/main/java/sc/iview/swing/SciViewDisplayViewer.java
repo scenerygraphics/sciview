@@ -28,9 +28,6 @@
  */
 package sc.iview.swing;
 
-import net.imagej.event.DataRestructuredEvent;
-import net.imagej.event.DataUpdatedEvent;
-
 import org.scijava.display.Display;
 import org.scijava.display.event.DisplayActivatedEvent;
 import org.scijava.display.event.DisplayDeletedEvent;
@@ -40,7 +37,6 @@ import org.scijava.event.EventService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UserInterface;
-import org.scijava.ui.swing.SwingUI;
 import org.scijava.ui.viewer.AbstractDisplayViewer;
 import org.scijava.ui.viewer.DisplayViewer;
 import org.scijava.ui.viewer.DisplayWindow;
@@ -58,7 +54,7 @@ public class SciViewDisplayViewer extends AbstractDisplayViewer<SciView> {
 
     @Override
     public boolean isCompatible( UserInterface ui ) {
-        return ui instanceof SwingUI;
+        return true;
     }
 
     @Override
@@ -66,30 +62,17 @@ public class SciViewDisplayViewer extends AbstractDisplayViewer<SciView> {
         return d instanceof SciViewDisplay;
     }
 
-    //@Override
-    public DisplayWindow createWindow( Display<?> d ) {
+    @Override
+    public void view( UserInterface ui, Display<?> d ) {
         Object data = d.get( 0 );
         if( !( data instanceof SciView ) ) throw new IllegalArgumentException( "Must be SciView" );
-        return new SciViewDisplayWindow( ( SciView ) data );
-    }
-
-    @EventHandler
-    protected void onEvent( final DataRestructuredEvent event ) {
-
-    }
-
-    // FIXME - displays should not listen for Data events. Views should listen for
-    // data events, adjust themselves, and generate view events. The display
-    // classes should listen for view events and refresh themselves as necessary.
-
-    @EventHandler
-    protected void onEvent( final DataUpdatedEvent event ) {
-        System.out.println( "Display updated" );
+        final DisplayWindow w = new SciViewDisplayWindow( ( SciView ) data );
+        view( w, d );
     }
 
     @EventHandler
     protected void onEvent( final DisplayDeletedEvent event ) {
-
+        // TODO: Dispose of SciView instance.
     }
 
     /** Synchronizes the user interface appearance with the display model. */
