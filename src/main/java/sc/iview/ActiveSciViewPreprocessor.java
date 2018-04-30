@@ -30,6 +30,7 @@ package sc.iview;
 
 import net.imagej.display.process.SingleInputPreprocessor;
 
+import org.scijava.Priority;
 import org.scijava.display.DisplayService;
 import org.scijava.module.process.PreprocessorPlugin;
 import org.scijava.plugin.Parameter;
@@ -48,7 +49,7 @@ import sc.iview.swing.SciViewDisplay;
  * 
  * @author Curtis Rueden
  */
-@Plugin(type = PreprocessorPlugin.class)
+@Plugin(type = PreprocessorPlugin.class, priority = Priority.VERY_HIGH)
 public class ActiveSciViewPreprocessor extends SingleInputPreprocessor<SciView> {
 
     @Parameter(required = false)
