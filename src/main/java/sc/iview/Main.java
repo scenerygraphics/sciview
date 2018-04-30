@@ -65,20 +65,19 @@ import graphics.scenery.Node;
  */
 public class Main {
     private static Context context;
-    private static SciViewService sciViewService;
     private static DatasetIOService io;
     private static OpService ops;
     private static UIService ui;
 
     public static void main( String... args ) throws IOException {
         context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class );
-        sciViewService = context.getService( SciViewService.class );
         io = context.service( DatasetIOService.class );
         ops = context.service( OpService.class );
         ui = context.service( UIService.class );
 
         if( !ui.isVisible() ) ui.showUI();
 
+        SciViewService sciViewService = context.service( SciViewService.class );
         SciView sciView = sciViewService.getOrCreateActiveSciView();
         sciView.getCamera().setPosition( new GLVector( 0.0f, 0.0f, 5.0f ) );
         sciView.getCamera().setTargeted( true );
@@ -88,9 +87,9 @@ public class Main {
         //sciView.getCamera().setNeedsUpdateWorld(true);
 
         lineTest( sciView );
-        //meshTest();
-        meshTextureTest();
-        volumeRenderTest(false);
+        //meshTest( sciView );
+        meshTextureTest( sciView );
+        volumeRenderTest( sciView, false );
     }
 
     public static void lineTest( SciView sciView ) {
@@ -129,8 +128,7 @@ public class Main {
         return new GenericTexture( "neverUsed", dims, nChannels, GLTypeEnum.UnsignedByte, bb, true, true, false );
     }
 
-    public static void meshTextureTest() {
-        SciView sciView = ( ( SciViewService ) context.getService( "sc.iview.SciViewService" ) ).getOrCreateActiveSciView();
+    public static void meshTextureTest( final SciView sciView ) {
         Node msh = sciView.addBox();
         msh.fitInto( 10.0f );
 
@@ -170,9 +168,7 @@ public class Main {
         return new GenericTexture( "neverUsed", dims, nChannels, GLTypeEnum.UnsignedByte, bb, true, true, false );
     }
 
-    public static void meshTest() throws IOException {
-        SciView sciView = sciViewService.getOrCreateActiveSciView();
-
+    public static void meshTest( SciView sciView ) throws IOException {
         //Node msh = sciView.addSTL(SciView.class.getResource("/cored_cube_16bit.stl").getFile());
         //Node msh = sciView.addObj("/Users/kharrington/git/SciView/sphere.obj");
 
@@ -211,8 +207,7 @@ public class Main {
 
     }
 
-    public static void volumeRenderTest(boolean iso) throws IOException {
-        SciView sciView = sciViewService.getOrCreateActiveSciView();
+    public static void volumeRenderTest( final SciView sciView, boolean iso ) throws IOException {
         Dataset cube = io.open( SciView.class.getResource( "/cored_cube_16bit.tif" ).getFile() );
         System.out.println( cube.firstElement().getClass() );
         Node v = sciView.addVolume( cube, new float[] { 1, 1, 1 } );
