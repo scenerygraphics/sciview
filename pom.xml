@@ -160,7 +160,6 @@
 		<dependency>
 			<groupId>graphics.scenery</groupId>
 			<artifactId>scenery</artifactId>
-			<version>0.3.1</version>
 		</dependency>
 		<dependency>
 			<groupId>net.clearvolume</groupId>
