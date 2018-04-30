@@ -145,12 +145,7 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
         // Make one
         SciView sv = new SciView( getContext() );
 
-        threadService.run( new Runnable() {
-            @Override
-            public void run() {
-                sv.main();
-            }
-        } );
+        threadService.run( () -> sv.main() );
         while( !sv.isInitialized() ) {
             try {
                 Thread.sleep( 20 );
@@ -161,8 +156,6 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
 
         Display<?> display = displayService.createDisplay( sv );
         displayService.setActiveDisplay( display );
-
-        //sceneryViewers.add(sv);        
 
         return sv;
 

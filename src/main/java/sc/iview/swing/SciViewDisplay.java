@@ -46,7 +46,7 @@ import sc.iview.SciView;
 /**
  * Created by kharrington on 6/24/17.
  */
-@Plugin(type = Display.class, priority = 0.0, enabled = true)
+@Plugin(type = Display.class)
 public class SciViewDisplay extends AbstractDisplay<SciView> {
 
     @Parameter
