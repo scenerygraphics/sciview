@@ -30,9 +30,12 @@ package sc.iview;
 
 import net.imagej.display.process.SingleInputPreprocessor;
 
+import org.scijava.display.DisplayService;
 import org.scijava.module.process.PreprocessorPlugin;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+
+import sc.iview.swing.SciViewDisplay;
 
 /**
  * Fills single, unresolved module inputs with the active active
@@ -49,7 +52,7 @@ import org.scijava.plugin.Plugin;
 public class ActiveSciViewPreprocessor extends SingleInputPreprocessor<SciView> {
 
     @Parameter(required = false)
-    private SciViewService sceneryService;
+    private DisplayService displayService;
 
     public ActiveSciViewPreprocessor() {
         super( SciView.class );
@@ -59,8 +62,9 @@ public class ActiveSciViewPreprocessor extends SingleInputPreprocessor<SciView> 
 
     @Override
     public SciView getValue() {
-        if( sceneryService == null ) return null;
-        return sceneryService.getOrCreateActiveSciView();
+        if( displayService == null ) return null;
+        final SciViewDisplay display = displayService.getActiveDisplay( SciViewDisplay.class );
+        return display == null ? null : display.get( 0 );
     }
 
 }
