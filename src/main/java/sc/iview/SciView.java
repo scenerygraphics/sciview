@@ -57,6 +57,7 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.view.Views;
 
 import org.lwjgl.system.MemoryUtil;
 import org.scijava.Context;
@@ -706,17 +707,30 @@ public class SciView extends SceneryBase {
         getScene().addChild( node );
     }
 
-    public graphics.scenery.Node addVolume( Dataset image, float[] voxelDimensions ) {
+    public graphics.scenery.Node addVolume( Dataset image ) {
+        float[] voxelDims = new float[image.numDimensions()];
+        for (int d=0; d<voxelDims.length; d++) {
+            voxelDims[d] = ( float ) image.axis( d ).averageScale( 0, 1 );
+        }
+        return addVolume( image, voxelDims );
+    }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public graphics.scenery.Node addVolume( Dataset image, float[] voxelDimensions ) {
+        return addVolume( ( IterableInterval ) Views.flatIterable( image.getImgPlus() ), image.getName(),
+                          voxelDimensions );
+    }
+
+    public <T extends RealType<T>> graphics.scenery.Node addVolume( IterableInterval<T> image, String name,
+                                                                    float[] voxelDimensions ) {
         log.warn( "Add Volume" );
 
-        IterableInterval img = image.getImgPlus();
-
         long dimensions[] = new long[3];
-        img.dimensions( dimensions );
+        image.dimensions( dimensions );
 
-        Class voxelType = img.firstElement().getClass();
-        int bytesPerVoxel = ( ( RealType ) img.firstElement() ).getBitsPerPixel() / 8;
+        @SuppressWarnings("unchecked")
+        Class<T> voxelType = (Class<T>) image.firstElement().getClass();
+        int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
         float minVal = Float.MIN_VALUE, maxVal = Float.MAX_VALUE;
         NativeTypeEnum nType = null;
 
@@ -741,7 +755,7 @@ public class SciView extends SceneryBase {
         // Make and populate a ByteBuffer with the content of the Dataset
         ByteBuffer byteBuffer = MemoryUtil.memAlloc( ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] *
                                                                dimensions[2] ) );
-        Cursor cursor = img.cursor();
+        Cursor<T> cursor = image.cursor();
 
         while( cursor.hasNext() ) {
             cursor.fwd();
@@ -757,7 +771,7 @@ public class SciView extends SceneryBase {
 
         Volume v = new Volume();
         v.setColormap( "jet" );
-        v.readFromBuffer( image.getName(), byteBuffer, dimensions[0], dimensions[1], dimensions[2], voxelDimensions[0],
+        v.readFromBuffer( name, byteBuffer, dimensions[0], dimensions[1], dimensions[2], voxelDimensions[0],
                           voxelDimensions[1], voxelDimensions[2], nType, bytesPerVoxel );
 
         getScene().addChild( v );
