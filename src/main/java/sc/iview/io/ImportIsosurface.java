@@ -43,7 +43,7 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
-@Plugin(type = Command.class, menuPath = "SciView>Import>Isosurface")
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Import>Isosurface")
 public class ImportIsosurface implements Command {
 
     @Parameter

@@ -35,7 +35,7 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
-@Plugin(type = Command.class, menuPath = "SciView>Add>Box")
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Add>Box")
 public class AddBox implements Command {
 
     @Parameter

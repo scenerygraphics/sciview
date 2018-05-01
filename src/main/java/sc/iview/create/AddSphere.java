@@ -40,7 +40,7 @@ import sc.iview.SciViewService;
 
 import cleargl.GLVector;
 
-@Plugin(type = Command.class, menuPath = "SciView>Add>Sphere")
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Add>Sphere")
 public class AddSphere implements Command {
 
     @Parameter

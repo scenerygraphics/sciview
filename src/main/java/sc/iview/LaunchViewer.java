@@ -39,7 +39,7 @@ import sc.iview.display.SciViewDisplay;
 /**
  * Created by kharrington on 6/20/17.
  */
-@Plugin(type = Command.class, menuPath = "SciView>Launch")
+@Plugin(type = Command.class, menuPath = "Plugins>SciView")
 public class LaunchViewer implements Command {
 
     @Parameter

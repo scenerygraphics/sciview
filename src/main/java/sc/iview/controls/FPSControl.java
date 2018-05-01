@@ -34,7 +34,7 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciViewService;
 
-@Plugin(type = Command.class, menuPath = "SciView>Controls>FPS")
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Controls>FPS")
 public class FPSControl implements Command {
 
     @Parameter

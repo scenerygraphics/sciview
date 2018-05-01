@@ -41,7 +41,7 @@ import sc.iview.SciView;
 /**
  * Created by kharrington on 6/21/17.
  */
-@Plugin(type = Command.class, menuPath = "SciView>Add>Volume")
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Add>Volume")
 public class AddVolume implements Command {
 
     @Parameter

@@ -40,7 +40,7 @@ import sc.iview.SciView;
 /**
  * Created by kharrington on 7/20/17.
  */
-@Plugin(type = Command.class, menuPath = "SciView>Import>Xyz")
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Import>Xyz")
 public class ImportXYZ implements Command {
 
     @Parameter

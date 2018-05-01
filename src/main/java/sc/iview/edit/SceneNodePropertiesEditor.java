@@ -58,7 +58,7 @@ import graphics.scenery.Node;
  *
  * @author Robert Haase, Scientific Computing Facility, MPI-CBG Dresden
  */
-@Plugin(type = Command.class, menuPath = "SciView>Edit>Properties", initializer = "initValues")
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Edit>Properties", initializer = "initValues")
 public class SceneNodePropertiesEditor extends InteractiveCommand {
     boolean initializing = true;
 

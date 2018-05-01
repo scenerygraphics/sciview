@@ -34,7 +34,7 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciViewService;
 
-@Plugin(type = Command.class, menuPath = "SciView>Edit>Delete Node")
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Edit>Delete Node")
 public class DeleteNode implements Command {
 
     //Consider taking an object as a parameter? Like the way IJ2 menus work for selecting an object

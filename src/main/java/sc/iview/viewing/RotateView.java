@@ -37,7 +37,7 @@ import sc.iview.SciViewService;
 
 import graphics.scenery.Node;
 
-@Plugin(type = Command.class, menuPath = "SciView>View>Rotate")
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "View>Rotate")
 public class RotateView implements Command {
 
     @Parameter

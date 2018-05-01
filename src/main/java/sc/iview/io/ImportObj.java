@@ -37,7 +37,7 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
-@Plugin(type = Command.class, menuPath = "SciView>Import>Obj")
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Import>Obj")
 public class ImportObj implements Command {
 
     @Parameter

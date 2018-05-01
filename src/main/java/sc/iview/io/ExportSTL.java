@@ -40,7 +40,7 @@ import sc.iview.SciViewService;
 
 import graphics.scenery.Mesh;
 
-@Plugin(type = Command.class, menuPath = "SciView>Export>STL_", label = "Export STL")
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Export>STL_", label = "Export STL")
 public class ExportSTL implements Command {
 
     //@Parameter

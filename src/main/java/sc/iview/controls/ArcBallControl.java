@@ -34,7 +34,7 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciViewService;
 
-@Plugin(type = Command.class, menuPath = "SciView>Controls>Arc Ball")
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Controls>Arc Ball")
 public class ArcBallControl implements Command {
 
     @Parameter

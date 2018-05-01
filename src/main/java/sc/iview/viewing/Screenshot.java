@@ -34,7 +34,7 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciViewService;
 
-@Plugin(type = Command.class, menuPath = "SciView>View>Screenshot")
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "View>Screenshot")
 public class Screenshot implements Command {
 
     @Parameter

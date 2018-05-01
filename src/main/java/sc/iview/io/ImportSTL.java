@@ -37,7 +37,7 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
-@Plugin(type = Command.class, menuPath = "SciView>Import>STL", label = "Import STL")
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Import>STL", label = "Import STL")
 public class ImportSTL implements Command {
 
     @Parameter

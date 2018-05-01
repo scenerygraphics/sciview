@@ -41,7 +41,7 @@ import sc.iview.process.MeshConverter;
 import cleargl.GLVector;
 import graphics.scenery.Mesh;
 
-@Plugin(type = Command.class, menuPath = "SciView>Mesh>Convex Hull")
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Mesh>Convex Hull")
 public class ConvexHull implements Command {
 
     @Parameter

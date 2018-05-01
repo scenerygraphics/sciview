@@ -45,7 +45,7 @@ import sc.iview.process.MeshConverter;
 
 import graphics.scenery.Mesh;
 
-@Plugin(type = Command.class, menuPath = "SciView>Mesh>Mesh To Image")
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Mesh>Mesh To Image")
 public class MeshToImage implements Command {
 
     @Parameter

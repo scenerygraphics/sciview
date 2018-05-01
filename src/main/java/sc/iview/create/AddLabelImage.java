@@ -55,7 +55,7 @@ import sc.iview.SciViewService;
  *
  * @author Robert Haase, Scientific Computing Facility, MPI-CBG Dresden
  */
-@Plugin(type = Command.class, menuPath = "SciView>Add>Label image")
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Add>Label image")
 public class AddLabelImage<T extends RealType<T>> implements Command {
 
     @Parameter
