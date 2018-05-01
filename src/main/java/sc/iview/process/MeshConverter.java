@@ -33,9 +33,8 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
+import net.imagej.mesh.Meshes;
 import net.imagej.mesh.nio.BufferMesh;
-
-import sc.iview.MeshUtils;
 
 /**
  * Conversion routines between ImageJ and Scenery {@code Mesh} objects.
@@ -60,7 +59,7 @@ public class MeshConverter {
         } else {
             // Copy the mesh into a BufferMesh.
             bufferMesh = new BufferMesh( vCount, tCount );
-            MeshUtils.copy( mesh, bufferMesh );
+            Meshes.copy( mesh, bufferMesh );
         }
 
         // Extract buffers from the BufferMesh.
@@ -85,7 +84,7 @@ public class MeshConverter {
 
         scMesh.recalculateNormals();
 
-        scMesh.setBoundingBoxCoords( MeshUtils.boundingBox( mesh ) );
+        scMesh.setBoundingBoxCoords( Meshes.boundingBox( mesh ) );
         scMesh.setDirty( true );
 
         return scMesh;
