@@ -48,6 +48,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Supplier;
 
+import graphics.scenery.controls.behaviours.MovementCommand;
 import net.imagej.Dataset;
 import net.imagej.ops.OpService;
 import net.imglib2.Cursor;
@@ -65,6 +66,7 @@ import org.scijava.Context;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 
+import org.scijava.ui.behaviour.BehaviourMap;
 import sc.iview.process.MeshConverter;
 import sc.iview.vec3.ClearGLDVec3;
 import sc.iview.vec3.DVec3;
@@ -652,6 +654,13 @@ public class SciView extends SceneryBase {
         getInputHandler().addBehaviour( "mouse_control", targetArcball );
         getInputHandler().addBehaviour( "scroll_arcball", targetArcball );
         getInputHandler().addKeyBinding( "scroll_arcball", "scroll" );
+
+        getInputHandler().addBehaviour("move_forward", new MovementCommand("move_forward", "forward", () -> getScene().findObserver(), 2.0f ) );
+        getInputHandler().addBehaviour("move_back", new MovementCommand("move_back", "back", () -> getScene().findObserver(), 2.0f ) );
+        getInputHandler().addBehaviour("move_left", new MovementCommand("move_left", "left", () -> getScene().findObserver(), 2.0f ) );
+        getInputHandler().addBehaviour("move_right", new MovementCommand("move_right", "right", () -> getScene().findObserver(), 2.0f ) );
+        getInputHandler().addBehaviour("move_up", new MovementCommand("move_up", "up", () -> getScene().findObserver(), 2.0f ) );
+        getInputHandler().addBehaviour("move_down", new MovementCommand("move_down", "down", () -> getScene().findObserver(), 2.0f ) );
     }
 
     public void enableFPSControl() {
