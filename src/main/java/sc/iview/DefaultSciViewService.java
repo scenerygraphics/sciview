@@ -41,7 +41,7 @@ import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
 import org.scijava.thread.ThreadService;
 
-import sc.iview.swing.SciViewDisplay;
+import sc.iview.display.SciViewDisplay;
 
 /**
  * Default service for rendering inside Scenery.

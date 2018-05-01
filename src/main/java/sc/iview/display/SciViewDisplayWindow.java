@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.swing;
+package sc.iview.display;
 
 import org.scijava.ui.viewer.DisplayPanel;
 import org.scijava.ui.viewer.DisplayWindow;
