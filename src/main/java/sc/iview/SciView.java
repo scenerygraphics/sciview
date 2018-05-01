@@ -61,9 +61,11 @@ import net.imglib2.view.Views;
 
 import org.scijava.Context;
 import org.scijava.log.LogService;
+import org.scijava.menu.MenuService;
 import org.scijava.plugin.Parameter;
 import org.scijava.ui.behaviour.ClickBehaviour;
 
+import sc.iview.javafx.JavaFXMenuCreator;
 import sc.iview.process.MeshConverter;
 import sc.iview.vec3.ClearGLDVec3;
 import sc.iview.vec3.DVec3;
@@ -97,6 +99,7 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuBar;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
@@ -113,6 +116,9 @@ public class SciView extends SceneryBase {
     private LogService log;
 
     @Parameter
+    private MenuService menus;
+
+    @Parameter
     private OpService ops;
 
     private Thread animationThread;
@@ -127,7 +133,7 @@ public class SciView extends SceneryBase {
 
     private boolean initialized = false;// i know TODO
 
-    private boolean useJavaFX = false;
+    private boolean useJavaFX = true;
     SceneryPanel imagePanel = null;
 
     public SciView( Context context ) {
@@ -143,6 +149,7 @@ public class SciView extends SceneryBase {
         return getInputHandler();
     }
 
+    @SuppressWarnings("restriction")
     @Override
     public void init() {
         if( useJavaFX ) {
@@ -185,8 +192,10 @@ public class SciView extends SceneryBase {
 
                 label.setTextAlignment( TextAlignment.CENTER );
 
-                pane.add( sceneryPanel[0], 1, 1 );
-                pane.add( label, 1, 2 );
+                MenuBar menuBar = new MenuBar();
+                pane.add( menuBar, 1, 1 );
+                pane.add( sceneryPanel[0], 1, 2 );
+                pane.add( label, 1, 3 );
                 stackPane.getChildren().addAll( pane );
 
                 javafx.scene.Scene scene = new javafx.scene.Scene( stackPane );
@@ -196,6 +205,9 @@ public class SciView extends SceneryBase {
 
                     Platform.runLater( Platform::exit );
                 } );
+
+                new JavaFXMenuCreator().createMenus( menus.getMenu("SciView"), menuBar );
+
                 stage.show();
 
                 latch.countDown();
