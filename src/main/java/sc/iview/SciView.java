@@ -118,7 +118,7 @@ public class SciView extends SceneryBase {
     private Thread animationThread;
     private Node activeNode = null;
 
-    private Boolean defaultArcBall = false;// arcball target broken
+    private Boolean defaultArcBall = true;// arcball target broken
 
     Camera camera = null;
 
@@ -243,24 +243,6 @@ public class SciView extends SceneryBase {
         // Could we generate a grid pattern with proper scale/units as a texture right now?
         getScene().addChild( shell );
 
-        // Heads up display
-//        FontBoard board = new FontBoard();
-//        board.setText("SceneryViewer");
-//        board.setPosition(new GLVector(0.0f, 0.0f, 0.0f));
-//        board.setUpdate(() -> { /*board.setText("Pos("+board.getParent().getPosition().get(0)+","+
-//                                                    board.getParent().getPosition().get(1)+","+
-//                                                    board.getParent().getPosition().get(2)+")");*/
-//                                //board.setText("SceneryViewer");
-//                                board.setPosition(board.getParent().getPosition().times(-1.0f));
-//                                return null; });
-//
-//        //getScene().addChild(board);
-//        cam.addChild(board);
-
-//        setRepl(new REPL(getScene(), getRenderer()));
-//        getRepl().start();
-//        getRepl().showConsoleWindow();
-
         //initialized = true; // inputSetup is called second, so that needs to toggle initialized
     }
 
@@ -285,6 +267,8 @@ public class SciView extends SceneryBase {
 
         enableArcBallControl();
         //enableFPSControl();
+
+
 
         setupCameraModeSwitching( "C" );
 
@@ -663,6 +647,8 @@ public class SciView extends SceneryBase {
                                                                        getRenderer().getWindow().getWidth(),
                                                                        getRenderer().getWindow().getHeight(), target );
         targetArcball.setMaximumDistance( Float.MAX_VALUE );
+        targetArcball.setMouseSpeedMultiplier( 0.25f );
+        targetArcball.setScrollSpeedMultiplier( 0.05f );
         getInputHandler().addBehaviour( "mouse_control", targetArcball );
         getInputHandler().addBehaviour( "scroll_arcball", targetArcball );
         getInputHandler().addKeyBinding( "scroll_arcball", "scroll" );
