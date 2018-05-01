@@ -98,7 +98,7 @@ public class MeshConverter {
 
             scMesh.recalculateNormals();
 
-            scMesh.setBoundingBoxCoords( boundingBox );
+            scMesh.setBoundingBox( scMesh.generateBoundingBox() );
             scMesh.setDirty( true );
             //scMesh.setScale(new GLVector(1f, 1f, 1f));
 
@@ -154,7 +154,7 @@ public class MeshConverter {
 
             scMesh.recalculateNormals();
 
-            scMesh.setBoundingBoxCoords( boundingBox );
+            scMesh.setBoundingBox( scMesh.generateBoundingBox() );
             scMesh.setDirty( true );
             //scMesh.setScale(new GLVector(1f, 1f, 1f));
 

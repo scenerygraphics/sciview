@@ -46,9 +46,11 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 
 import org.scijava.Context;
+import org.scijava.command.CommandService;
 import org.scijava.service.SciJavaService;
 import org.scijava.ui.UIService;
 
+import sc.iview.controls.ControlPanel;
 import sc.iview.vec3.ClearGLDVec3;
 import sc.iview.vec3.DVec3;
 
@@ -79,17 +81,23 @@ public class Main {
 
         SciViewService sciViewService = context.service( SciViewService.class );
         SciView sciView = sciViewService.getOrCreateActiveSciView();
-        sciView.getCamera().setPosition( new GLVector( 0.0f, 0.0f, 5.0f ) );
-        sciView.getCamera().setTargeted( true );
-        sciView.getCamera().setTarget( new GLVector( 0, 0, 0 ) );
+        sciView.getCamera().setPosition( new GLVector( 0.0f, 0.0f, 0.0f ) );
+//        sciView.getCamera().setTargeted( true );
+//        sciView.getCamera().setTarget( new GLVector( 0, 0, 0 ) );
         sciView.getCamera().setDirty( true );
         sciView.getCamera().setNeedsUpdate( true );
         //sciView.getCamera().setNeedsUpdateWorld(true);
 
-        lineTest( sciView );
-        //meshTest( sciView );
-        meshTextureTest( sciView );
-        volumeRenderTest( sciView, false );
+//        sciView.addSTL( "/Users/curtis/data/Cute_Little_Elephant.stl" );
+
+        context.service( CommandService.class ).run( ControlPanel.class, true );
+        sciView.addSphere( new GLVector(40, 40, 40), 1 );
+        sciView.addBox( new GLVector( -40, -40, -40 ), new GLVector( 1, 1, 1 ) );
+        sciView.addBox( new GLVector( 40, -40, 40 ), new GLVector( 0.5f, 2, 0.5f ) );
+//        lineTest( sciView );
+//        meshTest( sciView );
+//        meshTextureTest( sciView );
+//        volumeRenderTest( sciView, false );
     }
 
     public static void lineTest( SciView sciView ) {
@@ -130,7 +138,7 @@ public class Main {
 
     public static void meshTextureTest( final SciView sciView ) {
         Node msh = sciView.addBox();
-        msh.fitInto( 10.0f );
+        msh.fitInto( 10.0f, true );
 
         GenericTexture texture = generateGenericTexture();
 
@@ -176,7 +184,7 @@ public class Main {
         //Node msh = sciView.addObj("/Users/kharrington/git/SciView/bunny.obj");
         //Node msh = sciView.addObj("/Users/kharrington/git/SciView/goat/goat.obj");
 
-        msh.fitInto( 15.0f );
+        msh.fitInto( 15.0f, true );
 
         //Dataset img = io.open("/Users/kharrington/git/SciView/clown_uint8_small.tif");
         //ui.show(img);

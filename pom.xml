@@ -101,6 +101,8 @@
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 
 		<scijava-common.version>2.72.0</scijava-common.version>
+		<scenery.version>0.3.2-SNAPSHOT</scenery.version>
+		<enforcer.skip>true</enforcer.skip>
 	</properties>
 
 	<repositories>
