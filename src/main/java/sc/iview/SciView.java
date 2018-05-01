@@ -53,9 +53,13 @@ import net.imagej.ops.OpService;
 import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
 import net.imglib2.RealPoint;
+import net.imglib2.histogram.Histogram1d;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 
+import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.Pair;
 import org.lwjgl.system.MemoryUtil;
 import org.scijava.Context;
 import org.scijava.log.LogService;
@@ -710,126 +714,60 @@ public class SciView extends SceneryBase {
 
         IterableInterval img = image.getImgPlus();
 
-        // Right now let's only accept byte types, but adding other types is easy
-        //if(img.firstElement().getClass() == UnsignedByteType.class) {
-        if( img.firstElement().getClass() == UnsignedShortType.class ) {
-            long dimensions[] = new long[3];
-            img.dimensions( dimensions );
-            int bytesPerVoxel = 2;
+        long dimensions[] = new long[3];
+        img.dimensions( dimensions );
 
-            byte[] buffer = new byte[1024 * 1024];
-            ByteBuffer byteBuffer = MemoryUtil.memAlloc( ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] *
-                                                                   dimensions[2] ) );
+        Class voxelType = img.firstElement().getClass();
+        int bytesPerVoxel = ( ( RealType ) img.firstElement() ).getBitsPerPixel() / 8;
+        float minVal = Float.MIN_VALUE, maxVal = Float.MAX_VALUE;
+        NativeTypeEnum nType = null;
 
-            log.debug( "Add Volume: memAlloc " + (bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2]) );
-
-            // We might need to use a RAI instead to handle multiple image types
-            //   but we'll be fine for ArrayImg's
-            Cursor<UnsignedShortType> cursor = img.cursor();
-
-            int bytesRead = 1;// to init
-            UnsignedShortType t;
-            short sval;
-            while( cursor.hasNext() && ( bytesRead > 0 ) ) {
-                bytesRead = 0;
-                while( cursor.hasNext() && bytesRead < buffer.length ) {
-                    cursor.fwd();
-                    t = cursor.get();
-                    sval = UnsignedShortType.getCodedSignedShort( t.get() );
-                    buffer[bytesRead] = ( byte ) ( sval & 0xff );
-                    buffer[bytesRead + 1] = ( byte ) ( ( sval >> 8 ) & 0xff );
-                    //buffer[bytesRead] = t.getCodedSignedByte(t.get());
-                    //bytesRead++;
-                    bytesRead += 2;
-                }
-                byteBuffer.put( buffer, 0, bytesRead );
-            }
-            byteBuffer.flip();
-
-            log.debug( "Add Volume: buffer written " + byteBuffer );
-
-            Volume v = new Volume();
-            v.setColormap( "jet" );
-            v.readFromBuffer( image.getName(), byteBuffer, dimensions[0], dimensions[1], dimensions[2],
-                              voxelDimensions[0], voxelDimensions[1], voxelDimensions[2], NativeTypeEnum.UnsignedShort,
-                              bytesPerVoxel );
-
-            log.debug( v.getColormaps() );
-
-            log.debug( "Add Volume: volume created " + v);
-
-            getScene().addChild( v );
-
-            log.info( "min=" + v.getTrangemin() + " max=" + v.getTrangemax() );
-            v.setTrangemin( 0.0f );
-            v.setTrangemax( 65536.0f );
-            log.info( "min=" + v.getTrangemin() + " max=" + v.getTrangemax() );
-
-            return v;
-        } else if( img.firstElement().getClass() == UnsignedByteType.class ) {
-
-            long dimensions[] = new long[3];
-            img.dimensions( dimensions );
-            int bytesPerVoxel = 2;
-
-            byte[] buffer = new byte[1024 * 1024];
-            ByteBuffer byteBuffer = MemoryUtil.memAlloc( ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] *
-                                                                   dimensions[2] ) );
-
-            log.debug( "Add Volume: memAlloc " + (bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2]) );
-
-            // We might need to use a RAI instead to handle multiple image types
-            //   but we'll be fine for ArrayImg's
-            Cursor<UnsignedByteType> cursor = img.cursor();
-
-            int bytesRead = 1;// to init
-            UnsignedByteType t;
-            while( cursor.hasNext() && ( bytesRead > 0 ) ) {
-                bytesRead = 0;
-                while( cursor.hasNext() && bytesRead < buffer.length ) {
-                    cursor.fwd();
-                    t = ops.convert().uint8( cursor.get() );
-                    buffer[bytesRead] = t.getByte();
-                    //buffer[bytesRead] = t.getCodedSignedByte(t.get());
-                    //bytesRead++;
-                    bytesRead += 1;
-                }
-                byteBuffer.put( buffer, 0, bytesRead );
-            }
-            byteBuffer.flip();
-
-            log.debug( "Add Volume: buffer written " + byteBuffer );
-
-            Volume v = new Volume();
-            v.readFromBuffer( image.getName(), byteBuffer, dimensions[0], dimensions[1], dimensions[2],
-                              voxelDimensions[0], voxelDimensions[1], voxelDimensions[2], NativeTypeEnum.UnsignedByte,
-                              bytesPerVoxel );
-
-            log.debug( v.getColormaps() );
-
-            log.debug( "Add Volume: volume created " + v);
-
-            log.info( "min=" + v.getTrangemin() + " max=" + v.getTrangemax() );
-            v.setTrangemin( 0.0f );
-            v.setTrangemax( 255.0f );
-            log.info( "min=" + v.getTrangemin() + " max=" + v.getTrangemax() );
-            getScene().addChild( v );
-
-            log.warn( "Volume shown." );
-
-            return v;
+        if( voxelType == UnsignedByteType.class ) {
+            minVal = 0;
+            maxVal = 255;
+            nType = NativeTypeEnum.UnsignedByte;
+        } else if( voxelType == UnsignedShortType.class ) {
+            minVal = 0;
+            maxVal = 65535;
+            nType = NativeTypeEnum.UnsignedShort;
+        } else if( voxelType == FloatType.class ) {
+            minVal = 0;
+            maxVal = 1;
+            nType = NativeTypeEnum.Float;
         } else {
-            log.warn( "Image type: " + img.firstElement().getClass() + " can not be shown." );
+            log.debug( "Type: " + voxelType +
+                       " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
+            return null;
         }
 
-        return null;
-    }
+        // Make and populate a ByteBuffer with the content of the Dataset
+        ByteBuffer byteBuffer = MemoryUtil.memAlloc( ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] *
+                                                               dimensions[2] ) );
+        Cursor cursor = img.cursor();
 
-    public List<Node> openAssimp( String s ) {
-        // TODO
+        while( cursor.hasNext() ) {
+            cursor.fwd();
+            if( voxelType == UnsignedByteType.class ) {
+                byteBuffer.put( ( byte ) ( ( ( UnsignedByteType ) cursor.get() ).get() & 0xff ) );
+            } else if( voxelType == UnsignedShortType.class ) {
+                byteBuffer.putShort( ( short ) Math.abs( ( ( UnsignedShortType ) cursor.get() ).getShort() ) );
+            } else if( voxelType == FloatType.class ) {
+                byteBuffer.putFloat( ( ( FloatType ) cursor.get() ).get() );
+            }
+        }
+        byteBuffer.flip();
 
-        return null;
+        Volume v = new Volume();
+        v.setColormap( "jet" );
+        v.readFromBuffer( image.getName(), byteBuffer, dimensions[0], dimensions[1], dimensions[2], voxelDimensions[0],
+                          voxelDimensions[1], voxelDimensions[2], nType, bytesPerVoxel );
 
+        getScene().addChild( v );
+
+        v.setTrangemin( minVal );
+        v.setTrangemax( maxVal );
+
+        return v;
     }
 
 }

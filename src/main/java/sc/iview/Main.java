@@ -86,9 +86,9 @@ public class Main {
         sciView.getCamera().setNeedsUpdate( true );
         //sciView.getCamera().setNeedsUpdateWorld(true);
 
-        lineTest( sciView );
+        //lineTest( sciView );
         //meshTest( sciView );
-        meshTextureTest( sciView );
+        //meshTextureTest( sciView );
         volumeRenderTest( sciView, false );
     }
 
@@ -208,10 +208,12 @@ public class Main {
     }
 
     public static void volumeRenderTest( final SciView sciView, boolean iso ) throws IOException {
-        Dataset cube = io.open( SciView.class.getResource( "/cored_cube_16bit.tif" ).getFile() );
+
+        Dataset cube = io.open( SciView.class.getResource( "/cored_cube_var2_8bit.tif" ).getFile() );
+
         System.out.println( cube.firstElement().getClass() );
         Node v = sciView.addVolume( cube, new float[] { 1, 1, 1 } );
-        v.setScale( new GLVector( 10f, 10f, 10f ) );
+        v.setScale( new GLVector( 2f, 2f, 2f ) );
         sciView.displayNodeProperties( v );
 
         if (iso) {
