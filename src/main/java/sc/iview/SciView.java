@@ -53,13 +53,11 @@ import net.imagej.ops.OpService;
 import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
 import net.imglib2.RealPoint;
-import net.imglib2.histogram.Histogram1d;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
-
 import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.util.Pair;
+
 import org.lwjgl.system.MemoryUtil;
 import org.scijava.Context;
 import org.scijava.log.LogService;
