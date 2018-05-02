@@ -28,6 +28,7 @@
  */
 package sc.iview;
 
+import graphics.scenery.Material;
 import io.scif.SCIFIOService;
 import io.scif.services.DatasetIOService;
 
@@ -37,6 +38,7 @@ import java.nio.ByteBuffer;
 import net.imagej.Dataset;
 import net.imagej.ImageJService;
 import net.imagej.mesh.Mesh;
+import net.imagej.mesh.io.stl.STLMeshIO;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
 import net.imglib2.Cursor;
@@ -169,38 +171,20 @@ public class Main {
     }
 
     public static void meshTest( SciView sciView ) throws IOException {
-        //Node msh = sciView.addSTL(SciView.class.getResource("/cored_cube_16bit.stl").getFile());
-        //Node msh = sciView.addObj("/Users/kharrington/git/SciView/sphere.obj");
 
-        Node msh = sciView.addBox();
-        //Node msh = sciView.addObj("/Users/kharrington/git/SciView/bunny.obj");
-        //Node msh = sciView.addObj("/Users/kharrington/git/SciView/goat/goat.obj");
+        Mesh m = ( new STLMeshIO() ).open( SciView.class.getResource("/WieseRobert_simplified_Cip1.stl" ).getFile());
+
+        Node msh = sciView.addMesh( m );
 
         msh.fitInto( 15.0f );
 
-        //Dataset img = io.open("/Users/kharrington/git/SciView/clown_uint8_small.tif");
-        //ui.show(img);
+        Material mat = new Material();
+        mat.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
+        mat.setDiffuse( new GLVector( 0.8f, 0.5f, 0.4f ) );
+        mat.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        mat.setDoubleSided( true );
 
-        //Dataset img = io.open("/Users/kharrington/git/SciView/clown_uint8_small.tif");
-
-        //Dataset img = io.open("/Users/kharrington/git/SciView/clown_uint8_small.tif");
-
-        //Dataset img = io.open("/Users/kharrington/git/SciView/clown_uint8.tif");
-        //Dataset img = io.open("/Users/kharrington/git/SciView/bigulrik.tif");
-
-        Dataset img = io.open( "http://mirror.imagej.net/images/clown.jpg" );
-
-        GenericTexture gt = convertToGenericTexture( img );
-
-        //Img img = IO.openImgs("/Users/kharrington/git/SciView/clown_uint8_small.tif").get(0).getImg();
-
-        //File file = new File( "/Users/kharrington/git/SciView/clown_uint8_small.tif" );
-        //final ImagePlus imp = new Opener().openImage( file.getAbsolutePath() );
-
-        msh.getMaterial().getTransferTextures().put( "diffuse", gt );
-        msh.getMaterial().getTextures().put( "diffuse", "fromBuffer:diffuse" );
-        msh.getMaterial().setDoubleSided( true );
-        msh.getMaterial().setNeedsTextureReload( true );
+        msh.setMaterial( mat );
 
         msh.setNeedsUpdate( true );
         msh.setDirty( true );
