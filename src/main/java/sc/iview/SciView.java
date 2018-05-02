@@ -60,7 +60,6 @@ import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
 
-import org.lwjgl.system.MemoryUtil;
 import org.scijava.Context;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
@@ -615,16 +614,16 @@ public class SciView extends SceneryBase {
 
         PointCloud pointCloud = new PointCloud( getDefaultPointSize(), filename );
         Material material = new Material();
-        FloatBuffer vBuffer = MemoryUtil.memAlloc( flatVerts.length * 4 ).order(
+        FloatBuffer vBuffer = ByteBuffer.allocateDirect( flatVerts.length * 4 ).order(
                                                                                  ByteOrder.nativeOrder() ).asFloatBuffer();
-        FloatBuffer nBuffer = MemoryUtil.memAlloc( 0 ).order( ByteOrder.nativeOrder() ).asFloatBuffer();
+        FloatBuffer nBuffer = ByteBuffer.allocateDirect( 0 ).order( ByteOrder.nativeOrder() ).asFloatBuffer();
 
         vBuffer.put( flatVerts );
         vBuffer.flip();
 
         pointCloud.setVertices( vBuffer );
         pointCloud.setNormals( nBuffer );
-        pointCloud.setIndices( MemoryUtil.memAlloc( 0 ).order( ByteOrder.nativeOrder() ).asIntBuffer() );
+        pointCloud.setIndices( ByteBuffer.allocateDirect( 0 ).order( ByteOrder.nativeOrder() ).asIntBuffer() );
         pointCloud.setupPointCloud();
         material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
         material.setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
@@ -787,7 +786,7 @@ public class SciView extends SceneryBase {
         }
 
         // Make and populate a ByteBuffer with the content of the Dataset
-        ByteBuffer byteBuffer = MemoryUtil.memAlloc( ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] *
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect( ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] *
                                                                dimensions[2] ) );
         Cursor<T> cursor = image.cursor();
 

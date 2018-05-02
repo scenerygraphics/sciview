@@ -176,10 +176,6 @@
 			<artifactId>jogl-all</artifactId>
 			<version>${jogl.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl</artifactId>
-		</dependency>
 
 		<!-- Math dependencies -->
 		<dependency>
