@@ -132,7 +132,7 @@ public class Main {
 
     public static void meshTextureTest( final SciView sciView ) {
         Node msh = sciView.addBox();
-        msh.fitInto( 10.0f );
+        msh.fitInto( 10.0f, true );
 
         GenericTexture texture = generateGenericTexture();
 
@@ -176,7 +176,7 @@ public class Main {
 
         Node msh = sciView.addMesh( m );
 
-        msh.fitInto( 15.0f );
+        msh.fitInto( 15.0f, true );
 
         Material mat = new Material();
         mat.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );

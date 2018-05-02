@@ -104,6 +104,7 @@
 		<imagej-mesh.version>0.7.0</imagej-mesh.version>
 		<imagej-mesh-io.version>0.1.0</imagej-mesh-io.version>
 		<imagej-ops.version>0.41.0</imagej-ops.version>
+		<scenery.version>0.4.0</scenery.version>
 	</properties>
 
 	<repositories>

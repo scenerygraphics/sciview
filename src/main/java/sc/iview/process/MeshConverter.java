@@ -84,7 +84,7 @@ public class MeshConverter {
 
         scMesh.recalculateNormals();
 
-        scMesh.setBoundingBoxCoords( Meshes.boundingBox( mesh ) );
+        scMesh.setBoundingBox( scMesh.generateBoundingBox() );
         scMesh.setDirty( true );
 
         return scMesh;

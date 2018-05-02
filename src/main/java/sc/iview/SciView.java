@@ -141,7 +141,7 @@ public class SciView extends SceneryBase {
     SceneryPanel imagePanel = null;
 
     public SciView( Context context ) {
-        super( "SciView (press U for usage help)", 800, 600, true );
+        super( "SciView (press U for usage help)", 800, 600, true, context );
         context.inject( this );
     }
 
@@ -746,10 +746,7 @@ public class SciView extends SceneryBase {
     }
 
     public void displayNodeProperties( Node n ) {
-        log.warn( "Position: " + n.getPosition() + " bounding box: [ " + n.getBoundingBoxCoords()[0] + ", " +
-                  n.getBoundingBoxCoords()[1] + ", " + n.getBoundingBoxCoords()[2] + ", " +
-                  n.getBoundingBoxCoords()[3] + ", " + n.getBoundingBoxCoords()[4] + ", " +
-                  n.getBoundingBoxCoords()[5] + " ]" );
+        log.warn( "Position: " + n.getPosition() + " bounding box: " + n.getMaximumBoundingBox() );
     }
 
     public void removeMesh( Mesh scMesh ) {
