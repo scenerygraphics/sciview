@@ -67,6 +67,7 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 
 import org.scijava.ui.behaviour.BehaviourMap;
+import org.scijava.ui.behaviour.ClickBehaviour;
 import sc.iview.process.MeshConverter;
 import sc.iview.vec3.ClearGLDVec3;
 import sc.iview.vec3.DVec3;
@@ -119,6 +120,9 @@ public class SciView extends SceneryBase {
 
     private Thread animationThread;
     private Node activeNode = null;
+
+    protected ArcballCameraControl targetArcball;
+    protected FPSCameraControl fpsControl;
 
     private Boolean defaultArcBall = true;// arcball target broken
 
@@ -256,6 +260,25 @@ public class SciView extends SceneryBase {
         return camera;
     }
 
+    class toggleCameraControl implements ClickBehaviour {
+        String currentMode = "arcball";
+
+        @Override
+        public void click(int x, int y) {
+            if (currentMode.startsWith("fps")) {
+                enableArcBallControl();
+
+                currentMode = "arcball";
+            } else {
+                enableFPSControl();
+
+                currentMode = "fps";
+            }
+
+            log.info("Switched to " + currentMode + " control");
+        }
+    }
+
     @Override
     public void inputSetup() {
         //setInputHandler((ClearGLInputHandler) viewer.getHub().get(SceneryElement.INPUT));
@@ -270,11 +293,64 @@ public class SciView extends SceneryBase {
         enableArcBallControl();
         //enableFPSControl();
 
+        getInputHandler().addBehaviour("toggle_control_mode", new toggleCameraControl() );
+        getInputHandler().addKeyBinding("toggle_control_mode", "X" );
 
-
-        setupCameraModeSwitching( "C" );
+        //setupCameraModeSwitching( "X" );
 
         initialized = true;
+    }
+
+    public void enableArcBallControl() {
+        GLVector target;
+        if( getActiveNode() == null ) {
+            target = new GLVector( 0, 0, 0 );
+        } else {
+            target = getActiveNode().getPosition();
+        }
+
+        Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
+        targetArcball = new ArcballCameraControl( "mouse_control", cameraSupplier,
+                getRenderer().getWindow().getWidth(),
+                getRenderer().getWindow().getHeight(), target );
+        targetArcball.setMaximumDistance( Float.MAX_VALUE );
+        targetArcball.setMouseSpeedMultiplier( 0.25f );
+        targetArcball.setScrollSpeedMultiplier( 0.05f );
+        targetArcball.setDistance( getCamera().getPosition().minus(target).magnitude() );
+
+        getInputHandler().addBehaviour( "mouse_control", targetArcball );
+        getInputHandler().addBehaviour( "scroll_arcball", targetArcball );
+        getInputHandler().addKeyBinding( "scroll_arcball", "scroll" );
+
+        getInputHandler().removeBehaviour("move_forward" );
+        getInputHandler().removeBehaviour("move_back" );
+        getInputHandler().removeBehaviour("move_left" );
+        getInputHandler().removeBehaviour("move_right" );
+        getInputHandler().removeBehaviour("move_up" );
+        getInputHandler().removeBehaviour("move_down" );
+    }
+
+    public void enableFPSControl() {
+        Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
+        fpsControl = new FPSCameraControl( "mouse_control", cameraSupplier,
+                getRenderer().getWindow().getWidth(),
+                getRenderer().getWindow().getHeight() );
+
+        getInputHandler().addBehaviour( "mouse_control", fpsControl );
+        getInputHandler().removeKeyBinding( "scroll_arcball" );
+        getInputHandler().removeBehaviour( "scroll_arcball" );
+
+        float defaultSpeed = 3.0f;
+
+        getInputHandler().addBehaviour("move_forward_scroll", new MovementCommand("move_forward", "forward", () -> getScene().findObserver(), defaultSpeed ) );
+        getInputHandler().addBehaviour("move_forward", new MovementCommand("move_forward", "forward", () -> getScene().findObserver(), defaultSpeed ) );
+        getInputHandler().addBehaviour("move_back", new MovementCommand("move_back", "back", () -> getScene().findObserver(), defaultSpeed ) );
+        getInputHandler().addBehaviour("move_left", new MovementCommand("move_left", "left", () -> getScene().findObserver(), defaultSpeed ) );
+        getInputHandler().addBehaviour("move_right", new MovementCommand("move_right", "right", () -> getScene().findObserver(), defaultSpeed ) );
+        getInputHandler().addBehaviour("move_up", new MovementCommand("move_up", "up", () -> getScene().findObserver(), defaultSpeed ) );
+        getInputHandler().addBehaviour("move_down", new MovementCommand("move_down", "down", () -> getScene().findObserver(), defaultSpeed ) );
+
+        getInputHandler().addKeyBinding( "move_forward_scroll", "scroll" );
     }
 
     private Object selectNode( List<SelectResult> result ) {
@@ -634,43 +710,6 @@ public class SciView extends SceneryBase {
 
     public void takeScreenshot() {
         getRenderer().screenshot();
-    }
-
-    public void enableArcBallControl() {
-        GLVector target;
-        if( getActiveNode() == null ) {
-            target = new GLVector( 0, 0, 0 );
-        } else {
-            target = getActiveNode().getPosition();
-        }
-
-        Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
-        ArcballCameraControl targetArcball = new ArcballCameraControl( "mouse_control", cameraSupplier,
-                                                                       getRenderer().getWindow().getWidth(),
-                                                                       getRenderer().getWindow().getHeight(), target );
-        targetArcball.setMaximumDistance( Float.MAX_VALUE );
-        targetArcball.setMouseSpeedMultiplier( 0.25f );
-        targetArcball.setScrollSpeedMultiplier( 0.05f );
-        getInputHandler().addBehaviour( "mouse_control", targetArcball );
-        getInputHandler().addBehaviour( "scroll_arcball", targetArcball );
-        getInputHandler().addKeyBinding( "scroll_arcball", "scroll" );
-
-        getInputHandler().addBehaviour("move_forward", new MovementCommand("move_forward", "forward", () -> getScene().findObserver(), 2.0f ) );
-        getInputHandler().addBehaviour("move_back", new MovementCommand("move_back", "back", () -> getScene().findObserver(), 2.0f ) );
-        getInputHandler().addBehaviour("move_left", new MovementCommand("move_left", "left", () -> getScene().findObserver(), 2.0f ) );
-        getInputHandler().addBehaviour("move_right", new MovementCommand("move_right", "right", () -> getScene().findObserver(), 2.0f ) );
-        getInputHandler().addBehaviour("move_up", new MovementCommand("move_up", "up", () -> getScene().findObserver(), 2.0f ) );
-        getInputHandler().addBehaviour("move_down", new MovementCommand("move_down", "down", () -> getScene().findObserver(), 2.0f ) );
-    }
-
-    public void enableFPSControl() {
-        Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
-        FPSCameraControl fpsControl = new FPSCameraControl( "mouse_control", cameraSupplier,
-                                                            getRenderer().getWindow().getWidth(),
-                                                            getRenderer().getWindow().getHeight() );
-
-        getInputHandler().addBehaviour( "mouse_control", fpsControl );
-        getInputHandler().removeBehaviour( "scroll_arcball" );
     }
 
     public Node[] getSceneNodes() {
