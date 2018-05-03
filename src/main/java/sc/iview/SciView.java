@@ -65,6 +65,8 @@ import org.scijava.Context;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 
+import org.scijava.ui.UIService;
+import org.scijava.ui.behaviour.Behaviour;
 import org.scijava.ui.behaviour.BehaviourMap;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import sc.iview.process.MeshConverter;
@@ -117,6 +119,9 @@ public class SciView extends SceneryBase {
     @Parameter
     private OpService ops;
 
+    @Parameter
+    private UIService uiService;
+
     private Thread animationThread;
     private Node activeNode = null;
 
@@ -133,7 +138,7 @@ public class SciView extends SceneryBase {
     SceneryPanel imagePanel = null;
 
     public SciView( Context context ) {
-        super( "SciView", 800, 600, true );
+        super( "SciView (press H for help)", 800, 600, true );
         context.inject( this );
     }
 
@@ -263,8 +268,8 @@ public class SciView extends SceneryBase {
         String currentMode = "arcball";
 
         @Override
-        public void click(int x, int y) {
-            if (currentMode.startsWith("fps")) {
+        public void click( int x, int y ) {
+            if( currentMode.startsWith( "fps" ) ) {
                 enableArcBallControl();
 
                 currentMode = "arcball";
@@ -274,7 +279,35 @@ public class SciView extends SceneryBase {
                 currentMode = "fps";
             }
 
-            log.info("Switched to " + currentMode + " control");
+            log.info( "Switched to " + currentMode + " control" );
+        }
+    }
+
+    class showHelpDisplay implements ClickBehaviour {
+
+        @Override
+        public void click(int x, int y) {
+            String helpString = "<html>SciView help:<br><br>";
+            // HACK: hard-coded, but no accessor for getAllBindings in scenery
+            helpString += "H - this menu<br>";
+            helpString += "W/S - forward/backward<br>";
+            helpString += "A/D - left/right<br>";
+            helpString += "space/shift + space - up/down<br>";
+            helpString += "X - toggle between FPS and arcball camera control<br>";
+            helpString += "&nbsp;FPS camera control allows free movement in all directions<br>";
+            helpString += "&nbsp;Arcball camera control allows for mouse-only rotation about an object's center<br>";
+            helpString += "Q - debug view<br>";
+            helpString += "P - take a screenshot<br>";
+            helpString += "shift + P - record a video<br>";
+            helpString += "shift + V - toggle virtual reality mode<br>";
+            helpString += "F - toggle fullscreen<br>";
+
+            helpString += "K - increase exposure<br>";
+            helpString += "L - decrease exposure<br>";
+            helpString += "shift + K - increase gamma<br>";
+            helpString += "shift + L - decrease gamma<br>";
+            helpString += "</html>";
+            uiService.showDialog( helpString, "SciView" );
         }
     }
 
@@ -292,10 +325,13 @@ public class SciView extends SceneryBase {
         enableArcBallControl();
         //enableFPSControl();
 
-        getInputHandler().addBehaviour("toggle_control_mode", new toggleCameraControl() );
-        getInputHandler().addKeyBinding("toggle_control_mode", "X" );
+        getInputHandler().addBehaviour( "toggle_control_mode", new toggleCameraControl() );
+        getInputHandler().addKeyBinding( "toggle_control_mode", "X" );
 
         //setupCameraModeSwitching( "X" );
+
+        getInputHandler().addBehaviour( "show_help", new showHelpDisplay() );
+        getInputHandler().addKeyBinding( "show_help", "H" );
 
         initialized = true;
     }
@@ -309,31 +345,29 @@ public class SciView extends SceneryBase {
         }
 
         Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
-        targetArcball = new ArcballCameraControl( "mouse_control", cameraSupplier,
-                getRenderer().getWindow().getWidth(),
-                getRenderer().getWindow().getHeight(), target );
+        targetArcball = new ArcballCameraControl( "mouse_control", cameraSupplier, getRenderer().getWindow().getWidth(),
+                                                  getRenderer().getWindow().getHeight(), target );
         targetArcball.setMaximumDistance( Float.MAX_VALUE );
         targetArcball.setMouseSpeedMultiplier( 0.25f );
         targetArcball.setScrollSpeedMultiplier( 0.05f );
-        targetArcball.setDistance( getCamera().getPosition().minus(target).magnitude() );
+        targetArcball.setDistance( getCamera().getPosition().minus( target ).magnitude() );
 
         getInputHandler().addBehaviour( "mouse_control", targetArcball );
         getInputHandler().addBehaviour( "scroll_arcball", targetArcball );
         getInputHandler().addKeyBinding( "scroll_arcball", "scroll" );
 
-        getInputHandler().removeBehaviour("move_forward" );
-        getInputHandler().removeBehaviour("move_back" );
-        getInputHandler().removeBehaviour("move_left" );
-        getInputHandler().removeBehaviour("move_right" );
-        getInputHandler().removeBehaviour("move_up" );
-        getInputHandler().removeBehaviour("move_down" );
+        getInputHandler().removeBehaviour( "move_forward" );
+        getInputHandler().removeBehaviour( "move_back" );
+        getInputHandler().removeBehaviour( "move_left" );
+        getInputHandler().removeBehaviour( "move_right" );
+        getInputHandler().removeBehaviour( "move_up" );
+        getInputHandler().removeBehaviour( "move_down" );
     }
 
     public void enableFPSControl() {
         Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
-        fpsControl = new FPSCameraControl( "mouse_control", cameraSupplier,
-                getRenderer().getWindow().getWidth(),
-                getRenderer().getWindow().getHeight() );
+        fpsControl = new FPSCameraControl( "mouse_control", cameraSupplier, getRenderer().getWindow().getWidth(),
+                                           getRenderer().getWindow().getHeight() );
 
         getInputHandler().addBehaviour( "mouse_control", fpsControl );
         getInputHandler().removeKeyBinding( "scroll_arcball" );
@@ -341,14 +375,30 @@ public class SciView extends SceneryBase {
 
         float defaultSpeed = 3.0f;
 
-        getInputHandler().addBehaviour("move_forward_scroll", new MovementCommand("move_forward", "forward", () -> getScene().findObserver(), defaultSpeed ) );
-        getInputHandler().addBehaviour("move_forward", new MovementCommand("move_forward", "forward", () -> getScene().findObserver(), defaultSpeed ) );
-        getInputHandler().addBehaviour("move_back", new MovementCommand("move_back", "back", () -> getScene().findObserver(), defaultSpeed ) );
-        getInputHandler().addBehaviour("move_left", new MovementCommand("move_left", "left", () -> getScene().findObserver(), defaultSpeed ) );
-        getInputHandler().addBehaviour("move_right", new MovementCommand("move_right", "right", () -> getScene().findObserver(), defaultSpeed ) );
-        getInputHandler().addBehaviour("move_up", new MovementCommand("move_up", "up", () -> getScene().findObserver(), defaultSpeed ) );
-        getInputHandler().addBehaviour("move_down", new MovementCommand("move_down", "down", () -> getScene().findObserver(), defaultSpeed ) );
+        getInputHandler().addBehaviour( "move_forward_scroll", new MovementCommand( "move_forward", "forward",
+                                                                                    () -> getScene().findObserver(),
+                                                                                    defaultSpeed ) );
+        getInputHandler().addBehaviour( "move_forward", new MovementCommand( "move_forward", "forward",
+                                                                             () -> getScene().findObserver(),
+                                                                             defaultSpeed ) );
+        getInputHandler().addBehaviour( "move_back", new MovementCommand( "move_back", "back",
+                                                                          () -> getScene().findObserver(),
+                                                                          defaultSpeed ) );
+        getInputHandler().addBehaviour( "move_left", new MovementCommand( "move_left", "left",
+                                                                          () -> getScene().findObserver(),
+                                                                          defaultSpeed ) );
+        getInputHandler().addBehaviour( "move_right", new MovementCommand( "move_right", "right",
+                                                                           () -> getScene().findObserver(),
+                                                                           defaultSpeed ) );
+        getInputHandler().addBehaviour( "move_up", new MovementCommand( "move_up", "up",
+                                                                        () -> getScene().findObserver(),
+                                                                        defaultSpeed ) );
+        getInputHandler().addBehaviour( "move_down", new MovementCommand( "move_down", "down",
+                                                                          () -> getScene().findObserver(),
+                                                                          defaultSpeed ) );
 
+//        getInputHandler().addKeyBinding( "move_up", "C" );
+//        getInputHandler().addKeyBinding( "move_down", "Z" );
         getInputHandler().addKeyBinding( "move_forward_scroll", "scroll" );
     }
 
@@ -743,7 +793,7 @@ public class SciView extends SceneryBase {
 
     public graphics.scenery.Node addVolume( Dataset image ) {
         float[] voxelDims = new float[image.numDimensions()];
-        for (int d=0; d<voxelDims.length; d++) {
+        for( int d = 0; d < voxelDims.length; d++ ) {
             voxelDims[d] = ( float ) image.axis( d ).averageScale( 0, 1 );
         }
         return addVolume( image, voxelDims );
@@ -763,7 +813,7 @@ public class SciView extends SceneryBase {
         image.dimensions( dimensions );
 
         @SuppressWarnings("unchecked")
-        Class<T> voxelType = (Class<T>) image.firstElement().getClass();
+        Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
         int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
         float minVal = Float.MIN_VALUE, maxVal = Float.MAX_VALUE;
         NativeTypeEnum nType = null;
@@ -809,6 +859,66 @@ public class SciView extends SceneryBase {
                           voxelDimensions[1], voxelDimensions[2], nType, bytesPerVoxel );
 
         getScene().addChild( v );
+
+        v.setTrangemin( minVal );
+        v.setTrangemax( maxVal );
+
+        return v;
+    }
+
+    public <T extends RealType<T>> graphics.scenery.Node updateVolume( IterableInterval<T> image, String name,
+                                                                       float[] voxelDimensions, Volume v ) {
+        log.warn( "Add Volume" );
+
+        long dimensions[] = new long[3];
+        image.dimensions( dimensions );
+
+        @SuppressWarnings("unchecked")
+        Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
+        int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
+        float minVal = Float.MIN_VALUE, maxVal = Float.MAX_VALUE;
+        NativeTypeEnum nType = null;
+
+        if( voxelType == UnsignedByteType.class ) {
+            minVal = 0;
+            maxVal = 255;
+            nType = NativeTypeEnum.UnsignedByte;
+        } else if( voxelType == UnsignedShortType.class ) {
+            minVal = 0;
+            maxVal = 65535;
+            nType = NativeTypeEnum.UnsignedShort;
+        } else if( voxelType == FloatType.class ) {
+            minVal = 0;
+            maxVal = 1;
+            nType = NativeTypeEnum.Float;
+        } else {
+            log.debug( "Type: " + voxelType +
+                       " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
+            return null;
+        }
+
+        // Make and populate a ByteBuffer with the content of the Dataset
+        ByteBuffer byteBuffer = MemoryUtil.memAlloc( ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] *
+                                                               dimensions[2] ) );
+        Cursor<T> cursor = image.cursor();
+
+        while( cursor.hasNext() ) {
+            cursor.fwd();
+            if( voxelType == UnsignedByteType.class ) {
+                byteBuffer.put( ( byte ) ( ( ( UnsignedByteType ) cursor.get() ).get() & 0xff ) );
+            } else if( voxelType == UnsignedShortType.class ) {
+                byteBuffer.putShort( ( short ) Math.abs( ( ( UnsignedShortType ) cursor.get() ).getShort() ) );
+            } else if( voxelType == FloatType.class ) {
+                byteBuffer.putFloat( ( ( FloatType ) cursor.get() ).get() );
+            }
+        }
+        byteBuffer.flip();
+
+        v.readFromBuffer( name, byteBuffer, dimensions[0], dimensions[1], dimensions[2], voxelDimensions[0],
+                          voxelDimensions[1], voxelDimensions[2], nType, bytesPerVoxel );
+        v.setDirty( true );
+        v.setNeedsUpdate( true );
+        v.setNeedsUpdateWorld( true );
 
         v.setTrangemin( minVal );
         v.setTrangemax( maxVal );
