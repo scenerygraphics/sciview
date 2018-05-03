@@ -633,6 +633,8 @@ public class SciView extends SceneryBase {
         final Object data = io.open( source );
         if( data instanceof net.imagej.mesh.Mesh ) addMesh( ( net.imagej.mesh.Mesh ) data );
         else if( data instanceof graphics.scenery.Mesh ) addMesh( ( graphics.scenery.Mesh ) data );
+        else if (data instanceof Dataset) addVolume( ( Dataset ) data );
+        else if( data instanceof IterableInterval ) addVolume( ( ( IterableInterval ) data ), source);
         else if( data instanceof List ) {
             final List<?> list = ( List<?> ) data;
             if( list.isEmpty() ) {
