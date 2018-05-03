@@ -51,6 +51,15 @@ import sc.iview.SciView;
 public class AddVolume implements Command {
 
     @Parameter
+    private LogService log;
+
+    @Parameter
+    private OpService ops;
+
+    @Parameter
+    private SciView sciView;
+
+    @Parameter
     private Dataset image;
 
     @Parameter
@@ -61,15 +70,6 @@ public class AddVolume implements Command {
 
     @Parameter
     private float voxelDepth = 1.0f;
-
-    @Parameter
-    SciView sciView;
-
-    @Parameter
-    private LogService logService;
-
-    @Parameter
-    private OpService ops;
 
     @Override
     public void run() {

@@ -44,7 +44,7 @@ import org.scijava.ui.UIService;
 import org.scijava.util.ColorRGB;
 import org.scijava.widget.NumberWidget;
 
-import sc.iview.SciViewService;
+import sc.iview.SciView;
 
 import cleargl.GLVector;
 import graphics.scenery.Node;
@@ -63,10 +63,12 @@ import graphics.scenery.Node;
         menu = { @Menu(label = "Edit", weight = EDIT), //
                  @Menu(label = "Properties...", weight = EDIT_PROPERTIES) })
 public class Properties extends InteractiveCommand {
-    boolean initializing = true;
 
     @Parameter
-    private SciViewService sciViewService;
+    private UIService uiSrv;
+
+    @Parameter
+    private SciView sciView;
 
     @Parameter(required = false, style = LIST_BOX_STYLE, callback = "refreshSceneNodeInDialog")
     private String sceneNode;
@@ -83,8 +85,7 @@ public class Properties extends InteractiveCommand {
     @Parameter(label = "Position Z", style = NumberWidget.SLIDER_STYLE, min = "-1.0", max = "1.0", stepSize = "0.1", callback = "refreshPositionZInSceneNode")
     private double positionZ = 1;
 
-    @Parameter
-    private UIService uiSrv;
+    boolean initializing = true;
 
     ArrayList<String> sceneNodeChoices = new ArrayList<>();
     private Node currentSceneNode;
@@ -104,7 +105,7 @@ public class Properties extends InteractiveCommand {
         initializing = true;
         sceneNodeChoices = new ArrayList<>();
         int count = 0;
-        for( Node node : sciViewService.getActiveSciView().getSceneNodes() ) {
+        for( Node node : sciView.getSceneNodes() ) {
             sceneNodeChoices.add( makeIdentifier( node, count ) );
             count++;
         }
@@ -127,7 +128,7 @@ public class Properties extends InteractiveCommand {
         currentSceneNode = null;
 
         int count = 0;
-        for( Node node : sciViewService.getActiveSciView().getSceneNodes() ) {
+        for( Node node : sciView.getSceneNodes() ) {
             if( identifier.equals( makeIdentifier( node, count ) ) ) {
                 currentSceneNode = node;
                 //System.out.println("current node found");
@@ -139,7 +140,7 @@ public class Properties extends InteractiveCommand {
         // update property fields according to scene node properties
         refreshColourInDialog();
 
-        if( sceneNodeChoices.size() != sciViewService.getActiveSciView().getSceneNodes().length ) {
+        if( sceneNodeChoices.size() != sciView.getSceneNodes().length ) {
             rebuildSceneObjectChoiseList();
         }
     }

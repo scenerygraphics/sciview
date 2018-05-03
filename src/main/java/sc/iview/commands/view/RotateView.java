@@ -37,7 +37,7 @@ import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import sc.iview.SciViewService;
+import sc.iview.SciView;
 
 import graphics.scenery.Node;
 
@@ -47,14 +47,14 @@ import graphics.scenery.Node;
 public class RotateView implements Command {
 
     @Parameter
-    private SciViewService sceneryService;
+    private LogService logService;
 
     @Parameter
-    private LogService logService;
+    private SciView sciView;
 
     @Override
     public void run() {
-        Thread rotator = sceneryService.getActiveSciView().getAnimationThread();
+        Thread rotator = sciView.getAnimationThread();
         if( rotator != null && ( rotator.getState() == Thread.State.RUNNABLE ||
                                  rotator.getState() == Thread.State.WAITING ) ) {
             rotator = null;
@@ -64,7 +64,7 @@ public class RotateView implements Command {
             @Override
             public void run() {
                 while( true ) {
-                    for( Node node : sceneryService.getActiveSciView().getSceneNodes() ) {
+                    for( Node node : sciView.getSceneNodes() ) {
 
                         node.getRotation().rotateByAngleY( 0.01f );
                         node.setNeedsUpdate( true );
@@ -81,7 +81,7 @@ public class RotateView implements Command {
         };
         rotator.start();
 
-        sceneryService.getActiveSciView().setAnimationThread( rotator );
+        sciView.setAnimationThread( rotator );
     }
 
 }

@@ -40,7 +40,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.FileWidget;
 
-import sc.iview.SciViewService;
+import sc.iview.SciView;
 
 import graphics.scenery.Mesh;
 
@@ -49,26 +49,23 @@ import graphics.scenery.Mesh;
                  @Menu(label = "Export STL...", weight = FILE_EXPORT_STL) })
 public class ExportSTL implements Command {
 
-    //@Parameter
-    //private Mesh scMesh;
+    @Parameter
+    private LogService logService;
+
+    @Parameter
+    private SciView sciView;
 
     @Parameter(style = FileWidget.SAVE_STYLE)
     private File stlFile = new File( "" );
 
-    @Parameter
-    private SciViewService sceneryService;
-
-    @Parameter
-    private LogService logService;
-
     @Override
     public void run() {
-        if( sceneryService.getActiveSciView().getActiveNode() instanceof Mesh ) {
-            Mesh mesh = ( Mesh ) sceneryService.getActiveSciView().getActiveNode();
+        if( sciView.getActiveNode() instanceof Mesh ) {
+            Mesh mesh = ( Mesh ) sciView.getActiveNode();
 
             if( mesh != null ) {
                 try {
-                    sceneryService.getActiveSciView().writeSCMesh( stlFile.getAbsolutePath(), mesh );
+                    sciView.writeSCMesh( stlFile.getAbsolutePath(), mesh );
                     //ThreeDViewer.writeSCMesh( stlFilename, mesh );
                 } catch( final Exception e ) {
                     logService.trace( e );

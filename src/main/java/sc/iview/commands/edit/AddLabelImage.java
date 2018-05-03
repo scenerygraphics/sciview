@@ -52,7 +52,7 @@ import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import sc.iview.SciViewService;
+import sc.iview.SciView;
 /**
  * Adds a label image to the scene.
  *
@@ -64,13 +64,13 @@ import sc.iview.SciViewService;
 public class AddLabelImage<T extends RealType<T>> implements Command {
 
     @Parameter
-    private Dataset currentImage;
-
-    @Parameter
     private OpService ops;
 
     @Parameter
-    private SciViewService sceneryService;
+    private SciView sciView;
+
+    @Parameter
+    private Dataset currentImage;
 
     @Override
     public void run() {
@@ -102,7 +102,7 @@ public class AddLabelImage<T extends RealType<T>> implements Command {
             LabelRegion<Integer> lr = labelRegions.getLabelRegion( ( Integer ) regionsArr[i] );
 
             Mesh mesh = ops.geom().marchingCubes( lr );
-            sceneryService.getActiveSciView().addMesh( mesh );
+            sciView.addMesh( mesh );
         }
     }
 

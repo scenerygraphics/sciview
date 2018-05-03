@@ -36,7 +36,7 @@ import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import sc.iview.SciViewService;
+import sc.iview.SciView;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "View", weight = VIEW), //
@@ -44,16 +44,14 @@ import sc.iview.SciViewService;
 public class StopAnimation implements Command {
 
     @Parameter
-    private SciViewService sceneryService;
+    private SciView sciView;
 
     @Override
     public void run() {
-        Thread animator = sceneryService.getActiveSciView().getAnimationThread();
+        Thread animator = sciView.getAnimationThread();
         if( animator != null ) {
             animator.stop();
-            sceneryService.getActiveSciView().setAnimationThread( null );
+            sciView.setAnimationThread( null );
         }
-
     }
-
 }

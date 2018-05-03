@@ -55,6 +55,21 @@ import graphics.scenery.Mesh;
 public class MeshToImage implements Command {
 
     @Parameter
+    private OpService ops;
+
+    @Parameter
+    private DisplayService displayService;
+
+    @Parameter
+    private LogService logService;
+
+    @Parameter
+    private UIService uiService;
+
+    @Parameter
+    private SciView sciView;
+
+    @Parameter
     private int width;
 
     @Parameter
@@ -63,23 +78,8 @@ public class MeshToImage implements Command {
     @Parameter
     private int depth;
 
-    @Parameter
-    private OpService ops;
-
-    @Parameter
-    DisplayService displayService;
-
-    @Parameter
-    LogService logService;
-
-    @Parameter
-    SciView sciView;
-
     @Parameter(type = ItemIO.OUTPUT)
     private RandomAccessibleInterval<BitType> img;
-
-    @Parameter
-    UIService uiService;
 
     @Override
     public void run() {

@@ -40,7 +40,6 @@ import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 
 import org.scijava.command.Command;
-import org.scijava.display.DisplayService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -56,16 +55,13 @@ public class Isosurface implements Command {
     private OpService ops;
 
     @Parameter
-    private int isoLevel;
+    private SciView sciView;
 
     @Parameter
     private ImgPlus<UnsignedByteType> image;
 
     @Parameter
-    DisplayService displayService;
-
-    @Parameter
-    SciView sciView;
+    private int isoLevel;
 
     @Override
     public void run() {

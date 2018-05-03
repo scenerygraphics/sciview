@@ -45,12 +45,10 @@ import sc.iview.SciView;
 public class AddBox implements Command {
 
     @Parameter
-    DisplayService displayService;
+    private DisplayService displayService;
 
     @Parameter
-    SciView sciView;
-
-    //SceneryService sceneryService;
+    private SciView sciView;
 
     @Override
     public void run() {

@@ -39,7 +39,7 @@ import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import sc.iview.SciViewService;
+import sc.iview.SciView;
 import sc.iview.process.MeshConverter;
 
 import cleargl.GLVector;
@@ -54,22 +54,22 @@ public class ConvexHull implements Command {
     private OpService ops;
 
     @Parameter
-    private SciViewService sceneryService;
+    private LogService logService;
 
     @Parameter
-    private LogService logService;
+    private SciView sciView;
 
     @Override
     public void run() {
-        if( sceneryService.getActiveSciView().getActiveNode() instanceof Mesh ) {
-            Mesh currentMesh = ( Mesh ) sceneryService.getActiveSciView().getActiveNode();
+        if( sciView.getActiveNode() instanceof Mesh ) {
+            Mesh currentMesh = ( Mesh ) sciView.getActiveNode();
             net.imagej.mesh.Mesh ijMesh = MeshConverter.toImageJ( currentMesh );
 
             currentMesh.getMaterial().setDiffuse( new GLVector( 1.0f, 0.0f, 0.0f ) );
 
             net.imagej.mesh.Mesh smoothMesh = ( net.imagej.mesh.Mesh ) ops.geom().convexHull( ijMesh ).get( 0 );
 
-            sceneryService.getActiveSciView().addMesh( smoothMesh );
+            sciView.addMesh( smoothMesh );
         }
 
     }

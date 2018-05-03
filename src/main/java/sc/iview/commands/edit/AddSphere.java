@@ -40,7 +40,6 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
-import sc.iview.SciViewService;
 
 import cleargl.GLVector;
 
@@ -50,13 +49,10 @@ import cleargl.GLVector;
 public class AddSphere implements Command {
 
     @Parameter
-    private float radius = 1.0f;
-
-    @Parameter
-    private SciViewService sceneryService;
-
-    @Parameter
     private SciView sciView;
+
+    @Parameter
+    private float radius = 1.0f;
 
     @Override
     public void run() {
@@ -64,9 +60,9 @@ public class AddSphere implements Command {
 
         center = new RealPoint( 0, 0, 0 );
 
-        GLVector pos = new GLVector( center.getFloatPosition( 0 ), center.getFloatPosition( 1 ),
+        GLVector pos = new GLVector( center.getFloatPosition( 0 ), //
+                                     center.getFloatPosition( 1 ), //
                                      center.getFloatPosition( 2 ) );
-        //sceneryService.getActiveSceneryViewer().addSphere( pos, radius );
         sciView.addSphere( pos, radius );
     }
 

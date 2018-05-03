@@ -49,7 +49,7 @@ import org.scijava.plugin.Plugin;
 public class ActiveSciViewPreprocessor extends SingleInputPreprocessor<SciView> {
 
     @Parameter(required = false)
-    private SciViewService sceneryService;
+    private SciViewService sciViewService;
 
     public ActiveSciViewPreprocessor() {
         super( SciView.class );
@@ -59,8 +59,8 @@ public class ActiveSciViewPreprocessor extends SingleInputPreprocessor<SciView> 
 
     @Override
     public SciView getValue() {
-        if( sceneryService == null ) return null;
-        return sceneryService.getOrCreateActiveSciView();
+        if( sciViewService == null ) return null;
+        return sciViewService.getOrCreateActiveSciView();
     }
 
 }
