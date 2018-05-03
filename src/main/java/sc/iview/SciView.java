@@ -814,8 +814,16 @@ public class SciView extends SceneryBase {
                           voxelDimensions );
     }
 
+    public <T extends RealType<T>> graphics.scenery.Node addVolume( IterableInterval<T> image ) {
+        return addVolume( image, "Volume" );
+    }
+
+    public <T extends RealType<T>> graphics.scenery.Node addVolume( IterableInterval<T> image, String name ) {
+        return addVolume( image, name, 1, 1, 1 );
+    }
+
     public <T extends RealType<T>> graphics.scenery.Node addVolume( IterableInterval<T> image, String name,
-                                                                    float[] voxelDimensions ) {
+                                                                    float... voxelDimensions ) {
         log.warn( "Add Volume" );
 
         long dimensions[] = new long[3];
