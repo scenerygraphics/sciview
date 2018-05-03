@@ -141,7 +141,7 @@ public class SciView extends SceneryBase {
     SceneryPanel imagePanel = null;
 
     public SciView( Context context ) {
-        super( "SciView (press U for usage help)", 800, 600, true, context );
+        super( "SciView", 800, 600, true, context );
         context.inject( this );
     }
 
@@ -165,14 +165,14 @@ public class SciView extends SceneryBase {
             Platform.runLater( () -> {
 
                 Stage stage = new Stage();
-                stage.setTitle( getApplicationName() );
+                stage.setTitle( "SciView" );
 
                 StackPane stackPane = new StackPane();
                 stackPane.setBackground( new Background( new BackgroundFill( Color.TRANSPARENT, CornerRadii.EMPTY,
                                                                              Insets.EMPTY ) ) );
 
                 GridPane pane = new GridPane();
-                Label label = new Label( getApplicationName() );
+                Label label = new Label( "SciView - press U for usage help" );
 
                 sceneryPanel[0] = new SceneryPanel( getWindowWidth(), getWindowHeight() );
 
@@ -188,11 +188,11 @@ public class SciView extends SceneryBase {
 
                 label.maxWidthProperty().bind( pane.widthProperty() );
 
-                pane.setStyle( "-fx-background-color: rgb(20, 255, 20);" + "-fx-font-family: Consolas;" +
+                pane.setStyle( "-fx-background-color: rgb(20, 55, 20);" + "-fx-font-family: Consolas;" +
                                "-fx-font-weight: 400;" + "-fx-font-size: 1.2em;" + "-fx-text-fill: white;" +
                                "-fx-text-alignment: center;" );
 
-                label.setStyle( "-fx-padding: 0.2em;" + "-fx-text-fill: black;" );
+                label.setStyle( "-fx-padding: 0.2em;" + "-fx-text-fill: white;" );
 
                 label.setTextAlignment( TextAlignment.CENTER );
 
