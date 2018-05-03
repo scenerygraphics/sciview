@@ -32,10 +32,8 @@ import static org.scijava.widget.ChoiceWidget.LIST_BOX_STYLE;
 
 import java.util.ArrayList;
 
-import org.scijava.Context;
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
-import org.scijava.log.LogService;
 import org.scijava.module.MutableModuleItem;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;

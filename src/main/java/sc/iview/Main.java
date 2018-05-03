@@ -28,7 +28,6 @@
  */
 package sc.iview;
 
-import graphics.scenery.Material;
 import io.scif.SCIFIOService;
 import io.scif.services.DatasetIOService;
 
@@ -58,6 +57,7 @@ import cleargl.GLTypeEnum;
 import cleargl.GLVector;
 import graphics.scenery.BufferUtils;
 import graphics.scenery.GenericTexture;
+import graphics.scenery.Material;
 import graphics.scenery.Node;
 
 /**

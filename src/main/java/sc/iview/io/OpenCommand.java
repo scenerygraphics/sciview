@@ -30,9 +30,6 @@ package sc.iview.io;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-
-import net.imglib2.RealLocalizable;
 
 import org.scijava.command.Command;
 import org.scijava.io.IOService;
