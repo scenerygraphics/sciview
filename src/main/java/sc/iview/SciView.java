@@ -48,7 +48,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Supplier;
 
-import graphics.scenery.controls.behaviours.MovementCommand;
 import net.imagej.Dataset;
 import net.imagej.ops.OpService;
 import net.imglib2.Cursor;
@@ -63,9 +62,8 @@ import net.imglib2.view.Views;
 import org.scijava.Context;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
-
-import org.scijava.ui.behaviour.BehaviourMap;
 import org.scijava.ui.behaviour.ClickBehaviour;
+
 import sc.iview.process.MeshConverter;
 import sc.iview.vec3.ClearGLDVec3;
 import sc.iview.vec3.DVec3;
@@ -89,6 +87,7 @@ import graphics.scenery.backends.Renderer;
 import graphics.scenery.controls.InputHandler;
 import graphics.scenery.controls.behaviours.ArcballCameraControl;
 import graphics.scenery.controls.behaviours.FPSCameraControl;
+import graphics.scenery.controls.behaviours.MovementCommand;
 import graphics.scenery.controls.behaviours.SelectCommand;
 import graphics.scenery.controls.behaviours.SelectCommand.SelectResult;
 import graphics.scenery.utils.SceneryPanel;
