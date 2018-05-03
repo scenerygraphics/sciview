@@ -26,24 +26,62 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.controls;
+package sc.iview.commands.view;
+
+import static sc.iview.commands.MenuWeights.VIEW;
+import static sc.iview.commands.MenuWeights.VIEW_ROTATE;
 
 import org.scijava.command.Command;
+import org.scijava.log.LogService;
+import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import sc.iview.SciViewService;
 
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Controls>Arc Ball")
-public class ArcBallControl implements Command {
+import graphics.scenery.Node;
+
+@Plugin(type = Command.class, menuRoot = "SciView", //
+        menu = { @Menu(label = "View", weight = VIEW), //
+                 @Menu(label = "Rotate", weight = VIEW_ROTATE) })
+public class RotateView implements Command {
 
     @Parameter
-    SciViewService sceneryService;
+    private SciViewService sceneryService;
+
+    @Parameter
+    private LogService logService;
 
     @Override
     public void run() {
-        sceneryService.getActiveSciView().enableArcBallControl();
+        Thread rotator = sceneryService.getActiveSciView().getAnimationThread();
+        if( rotator != null && ( rotator.getState() == Thread.State.RUNNABLE ||
+                                 rotator.getState() == Thread.State.WAITING ) ) {
+            rotator = null;
+        }
 
+        rotator = new Thread() {
+            @Override
+            public void run() {
+                while( true ) {
+                    for( Node node : sceneryService.getActiveSciView().getSceneNodes() ) {
+
+                        node.getRotation().rotateByAngleY( 0.01f );
+                        node.setNeedsUpdate( true );
+
+                    }
+
+                    try {
+                        Thread.sleep( 20 );
+                    } catch( InterruptedException e ) {
+                        logService.trace( e );
+                    }
+                }
+            }
+        };
+        rotator.start();
+
+        sceneryService.getActiveSciView().setAnimationThread( rotator );
     }
 
 }

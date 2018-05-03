@@ -26,28 +26,35 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.viewing;
+package sc.iview.commands.edit;
+
+import static sc.iview.commands.MenuWeights.EDIT;
+import static sc.iview.commands.MenuWeights.EDIT_ADD_BOX;
 
 import org.scijava.command.Command;
+import org.scijava.display.DisplayService;
+import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import sc.iview.SciViewService;
+import sc.iview.SciView;
 
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "View>Stop Animation")
-public class StopAnimation implements Command {
+@Plugin(type = Command.class, menuRoot = "SciView", //
+        menu = { @Menu(label = "Scene", weight = EDIT), //
+                 @Menu(label = "Add Box", weight = EDIT_ADD_BOX) })
+public class AddBox implements Command {
 
     @Parameter
-    private SciViewService sceneryService;
+    DisplayService displayService;
+
+    @Parameter
+    SciView sciView;
+
+    //SceneryService sceneryService;
 
     @Override
     public void run() {
-        Thread animator = sceneryService.getActiveSciView().getAnimationThread();
-        if( animator != null ) {
-            animator.stop();
-            sceneryService.getActiveSciView().setAnimationThread( null );
-        }
-
+        sciView.addBox();
     }
 
 }

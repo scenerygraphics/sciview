@@ -26,23 +26,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.controls;
+package sc.iview.commands.view;
+
+import static sc.iview.commands.MenuWeights.VIEW;
+import static sc.iview.commands.MenuWeights.VIEW_ARC_BALL_CONTROL;
 
 import org.scijava.command.Command;
+import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import sc.iview.SciViewService;
 
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Controls>FPS")
-public class FPSControl implements Command {
+@Plugin(type = Command.class, menuRoot = "SciView", //
+        menu = { @Menu(label = "View", weight = VIEW), //
+                 @Menu(label = "Arc Ball Control", weight = VIEW_ARC_BALL_CONTROL) })
+public class ArcBallControl implements Command {
 
     @Parameter
     SciViewService sceneryService;
 
     @Override
     public void run() {
-        sceneryService.getActiveSciView().enableFPSControl();
+        sceneryService.getActiveSciView().enableArcBallControl();
 
     }
 

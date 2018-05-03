@@ -26,49 +26,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.io;
+package sc.iview.commands.view;
 
-import net.imagej.ImgPlus;
-import net.imagej.mesh.Mesh;
-import net.imagej.ops.OpService;
-import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
-import net.imglib2.img.Img;
-import net.imglib2.type.logic.BitType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
+import static sc.iview.commands.MenuWeights.VIEW;
+import static sc.iview.commands.MenuWeights.VIEW_FPS_CONTROL;
 
 import org.scijava.command.Command;
-import org.scijava.display.DisplayService;
+import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import sc.iview.SciView;
+import sc.iview.SciViewService;
 
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Import>Isosurface")
-public class ImportIsosurface implements Command {
-
-    @Parameter
-    private OpService ops;
-
-    @Parameter
-    private int isoLevel;
+@Plugin(type = Command.class, menuRoot = "SciView", //
+        menu = { @Menu(label = "View", weight = VIEW), //
+                 @Menu(label = "FPS Control", weight = VIEW_FPS_CONTROL) })
+public class FPSControl implements Command {
 
     @Parameter
-    private ImgPlus<UnsignedByteType> image;
-
-    @Parameter
-    DisplayService displayService;
-
-    @Parameter
-    SciView sciView;
+    SciViewService sceneryService;
 
     @Override
     public void run() {
-
-        Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( image, new UnsignedByteType( isoLevel ) );
-
-        Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
-
-        sciView.addMesh( m );
+        sceneryService.getActiveSciView().enableFPSControl();
 
     }
 

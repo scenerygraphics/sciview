@@ -26,28 +26,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.io;
+package sc.iview.commands.process;
 
-import java.io.File;
+import static sc.iview.commands.MenuWeights.PROCESS;
+import static sc.iview.commands.MenuWeights.PROCESS_CONVEX_HULL;
+
+import net.imagej.ops.OpService;
 
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
+import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.widget.FileWidget;
 
 import sc.iview.SciViewService;
+import sc.iview.process.MeshConverter;
 
+import cleargl.GLVector;
 import graphics.scenery.Mesh;
 
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Export>STL_", label = "Export STL")
-public class ExportSTL implements Command {
+@Plugin(type = Command.class, menuRoot = "SciView", //
+menu = {@Menu(label = "Process", weight = PROCESS), //
+        @Menu(label = "Convex Hull", weight = PROCESS_CONVEX_HULL)})
+public class ConvexHull implements Command {
 
-    //@Parameter
-    //private Mesh scMesh;
-
-    @Parameter(style = FileWidget.SAVE_STYLE)
-    private File stlFile = new File( "" );
+    @Parameter
+    private OpService ops;
 
     @Parameter
     private SciViewService sceneryService;
@@ -58,17 +62,16 @@ public class ExportSTL implements Command {
     @Override
     public void run() {
         if( sceneryService.getActiveSciView().getActiveNode() instanceof Mesh ) {
-            Mesh mesh = ( Mesh ) sceneryService.getActiveSciView().getActiveNode();
+            Mesh currentMesh = ( Mesh ) sceneryService.getActiveSciView().getActiveNode();
+            net.imagej.mesh.Mesh ijMesh = MeshConverter.toImageJ( currentMesh );
 
-            if( mesh != null ) {
-                try {
-                    sceneryService.getActiveSciView().writeSCMesh( stlFile.getAbsolutePath(), mesh );
-                    //ThreeDViewer.writeSCMesh( stlFilename, mesh );
-                } catch( final Exception e ) {
-                    logService.trace( e );
-                }
-            }
+            currentMesh.getMaterial().setDiffuse( new GLVector( 1.0f, 0.0f, 0.0f ) );
+
+            net.imagej.mesh.Mesh smoothMesh = ( net.imagej.mesh.Mesh ) ops.geom().convexHull( ijMesh ).get( 0 );
+
+            sceneryService.getActiveSciView().addMesh( smoothMesh );
         }
+
     }
 
 }

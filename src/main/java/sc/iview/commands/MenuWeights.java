@@ -26,23 +26,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.viewing;
+package sc.iview.commands;
 
-import org.scijava.command.Command;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-
-import sc.iview.SciViewService;
-
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "View>Screenshot")
-public class Screenshot implements Command {
-
-    @Parameter
-    private SciViewService sceneryService;
-
-    @Override
-    public void run() {
-        sceneryService.getActiveSciView().takeScreenshot();
+/**
+ * Constants for coherent menu ordering.
+ *
+ * @author Curtis Rueden
+ */
+public final class MenuWeights {
+    private MenuWeights() {
+        // NB: Prevent instantiation of utility class.
     }
 
+    public static final double FILE = 0;
+    public static final double EDIT = 1;
+    public static final double PROCESS = 2;
+    public static final double VIEW = 3;
+
+    public static final double FILE_OPEN = 0;
+    public static final double FILE_EXPORT_STL = 100;
+
+    public static final double EDIT_ADD_BOX = 0;
+    public static final double EDIT_ADD_SPHERE = 1;
+    public static final double EDIT_ADD_LINE = 2;
+    public static final double EDIT_ADD_POINT_LIGHT = 3;
+    public static final double EDIT_ADD_LABEL_IMAGE = 4;
+    public static final double EDIT_ADD_VOLUME = 5;
+    public static final double EDIT_DELETE_OBJECT = 100;
+    public static final double EDIT_PROPERTIES = 200;
+
+    public static final double PROCESS_ISOSURFACE = 0;
+    public static final double PROCESS_CONVEX_HULL = 1;
+    public static final double PROCESS_MESH_TO_IMAGE = 2;
+
+    public static final double VIEW_ROTATE = 0;
+    public static final double VIEW_STOP_ANIMATION = 1;
+    public static final double VIEW_SCREENSHOT = 100;
+    public static final double VIEW_ARC_BALL_CONTROL = 200;
+    public static final double VIEW_FPS_CONTROL = 201;
 }

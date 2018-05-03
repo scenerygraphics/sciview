@@ -26,36 +26,35 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.create;
+package sc.iview.commands.edit;
+
+import static sc.iview.commands.MenuWeights.EDIT;
+import static sc.iview.commands.MenuWeights.EDIT_DELETE_OBJECT;
 
 import org.scijava.command.Command;
+import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import sc.iview.SciView;
 import sc.iview.SciViewService;
-import sc.iview.vec3.DVec3;
 
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Add>Line")
-public class AddLine implements Command {
+@Plugin(type = Command.class, menuRoot = "SciView", //
+        menu = { @Menu(label = "Scene", weight = EDIT), //
+                 @Menu(label = "Delete Object", weight = EDIT_DELETE_OBJECT) })
+public class DeleteObject implements Command {
 
-    @Parameter
-    private DVec3 start;
-
-    @Parameter
-    private DVec3 stop;
-
-    // Thickness
+    //Consider taking an object as a parameter? Like the way IJ2 menus work for selecting an object
+    //@Parameter
+    //private int objectId;
 
     @Parameter
     private SciViewService sceneryService;
 
-    @Parameter
-    private SciView sciView;
-
     @Override
     public void run() {
-        sciView.addLine( start, stop );
+        if( sceneryService.getActiveSciView().getActiveNode() != null ) {
+            sceneryService.getActiveSciView().deleteSelectedMesh();
+        }
     }
 
 }

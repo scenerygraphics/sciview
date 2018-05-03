@@ -26,15 +26,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.edit;
+package sc.iview.commands.edit;
 
 import static org.scijava.widget.ChoiceWidget.LIST_BOX_STYLE;
+import static sc.iview.commands.MenuWeights.EDIT;
+import static sc.iview.commands.MenuWeights.EDIT_PROPERTIES;
 
 import java.util.ArrayList;
 
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
 import org.scijava.module.MutableModuleItem;
+import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
@@ -56,8 +59,10 @@ import graphics.scenery.Node;
  *
  * @author Robert Haase, Scientific Computing Facility, MPI-CBG Dresden
  */
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Edit>Properties", initializer = "initValues")
-public class SceneNodePropertiesEditor extends InteractiveCommand {
+@Plugin(type = Command.class, initializer = "initValues", menuRoot = "SciView", //
+        menu = { @Menu(label = "Edit", weight = EDIT), //
+                 @Menu(label = "Properties...", weight = EDIT_PROPERTIES) })
+public class Properties extends InteractiveCommand {
     boolean initializing = true;
 
     @Parameter

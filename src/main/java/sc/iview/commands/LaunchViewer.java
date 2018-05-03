@@ -26,29 +26,39 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.create;
+package sc.iview.commands;
 
 import org.scijava.command.Command;
 import org.scijava.display.DisplayService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.ui.UIService;
 
-import sc.iview.SciView;
+import sc.iview.SciViewService;
+import sc.iview.display.SciViewDisplay;
 
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Add>Box")
-public class AddBox implements Command {
+/**
+ * Created by kharrington on 6/20/17.
+ */
+@Plugin(type = Command.class, menuPath = "Plugins>SciView")
+public class LaunchViewer implements Command {
 
     @Parameter
-    DisplayService displayService;
+    private DisplayService displayService;
 
     @Parameter
-    SciView sciView;
+    private SciViewService sciViewService;
 
-    //SceneryService sceneryService;
+    @Parameter(required = false)
+    private UIService uiService;
 
     @Override
     public void run() {
-        sciView.addBox();
+        final SciViewDisplay display = displayService.getActiveDisplay(SciViewDisplay.class);
+        if (display == null)
+            sciViewService.createSciView();
+        else if (uiService != null)
+            uiService.showDialog( "The SciView window is already open. For now, only one SciView window is supported.", "SciView" );
     }
 
 }

@@ -26,12 +26,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.create;
+package sc.iview.commands.edit;
+
+import static sc.iview.commands.MenuWeights.EDIT;
+import static sc.iview.commands.MenuWeights.EDIT_ADD_SPHERE;
 
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
 
 import org.scijava.command.Command;
+import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
@@ -40,7 +44,9 @@ import sc.iview.SciViewService;
 
 import cleargl.GLVector;
 
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Add>Sphere")
+@Plugin(type = Command.class, menuRoot = "SciView", //
+        menu = { @Menu(label = "Scene", weight = EDIT), //
+                 @Menu(label = "Add Sphere", weight = EDIT_ADD_SPHERE) })
 public class AddSphere implements Command {
 
     @Parameter

@@ -26,56 +26,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.viewing;
+package sc.iview.commands.edit;
+
+import static sc.iview.commands.MenuWeights.EDIT;
+import static sc.iview.commands.MenuWeights.EDIT_ADD_LINE;
 
 import org.scijava.command.Command;
-import org.scijava.log.LogService;
+import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
+import sc.iview.SciView;
 import sc.iview.SciViewService;
+import sc.iview.vec3.DVec3;
 
-import graphics.scenery.Node;
+@Plugin(type = Command.class, menuRoot = "SciView", //
+        menu = { @Menu(label = "Scene", weight = EDIT), //
+                 @Menu(label = "Add Line", weight = EDIT_ADD_LINE) })
+public class AddLine implements Command {
 
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "View>Rotate")
-public class RotateView implements Command {
+    @Parameter
+    private DVec3 start;
+
+    @Parameter
+    private DVec3 stop;
+
+    // Thickness
 
     @Parameter
     private SciViewService sceneryService;
 
     @Parameter
-    private LogService logService;
+    private SciView sciView;
 
     @Override
     public void run() {
-        Thread rotator = sceneryService.getActiveSciView().getAnimationThread();
-        if( rotator != null && ( rotator.getState() == Thread.State.RUNNABLE ||
-                                 rotator.getState() == Thread.State.WAITING ) ) {
-            rotator = null;
-        }
-
-        rotator = new Thread() {
-            @Override
-            public void run() {
-                while( true ) {
-                    for( Node node : sceneryService.getActiveSciView().getSceneNodes() ) {
-
-                        node.getRotation().rotateByAngleY( 0.01f );
-                        node.setNeedsUpdate( true );
-
-                    }
-
-                    try {
-                        Thread.sleep( 20 );
-                    } catch( InterruptedException e ) {
-                        logService.trace( e );
-                    }
-                }
-            }
-        };
-        rotator.start();
-
-        sceneryService.getActiveSciView().setAnimationThread( rotator );
+        sciView.addLine( start, stop );
     }
 
 }

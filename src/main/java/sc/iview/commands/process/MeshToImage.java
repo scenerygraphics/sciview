@@ -26,44 +26,73 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.ops;
+package sc.iview.commands.process;
+
+import static sc.iview.commands.MenuWeights.PROCESS;
+import static sc.iview.commands.MenuWeights.PROCESS_MESH_TO_IMAGE;
 
 import net.imagej.ops.OpService;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.type.logic.BitType;
 
+import org.scijava.ItemIO;
 import org.scijava.command.Command;
+import org.scijava.display.DisplayService;
 import org.scijava.log.LogService;
+import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.ui.UIService;
 
-import sc.iview.SciViewService;
+import sc.iview.SciView;
 import sc.iview.process.MeshConverter;
 
-import cleargl.GLVector;
 import graphics.scenery.Mesh;
 
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Mesh>Convex Hull")
-public class ConvexHull implements Command {
+@Plugin(type = Command.class, menuRoot = "SciView", //
+        menu = { @Menu(label = "Process", weight = PROCESS), //
+                 @Menu(label = "Mesh To Image", weight = PROCESS_MESH_TO_IMAGE) })
+public class MeshToImage implements Command {
+
+    @Parameter
+    private int width;
+
+    @Parameter
+    private int height;
+
+    @Parameter
+    private int depth;
 
     @Parameter
     private OpService ops;
 
     @Parameter
-    private SciViewService sceneryService;
+    DisplayService displayService;
 
     @Parameter
-    private LogService logService;
+    LogService logService;
+
+    @Parameter
+    SciView sciView;
+
+    @Parameter(type = ItemIO.OUTPUT)
+    private RandomAccessibleInterval<BitType> img;
+
+    @Parameter
+    UIService uiService;
 
     @Override
     public void run() {
-        if( sceneryService.getActiveSciView().getActiveNode() instanceof Mesh ) {
-            Mesh currentMesh = ( Mesh ) sceneryService.getActiveSciView().getActiveNode();
+        if( sciView.getActiveNode() instanceof Mesh ) {
+            Mesh currentMesh = ( Mesh ) sciView.getActiveNode();
             net.imagej.mesh.Mesh ijMesh = MeshConverter.toImageJ( currentMesh );
 
-            currentMesh.getMaterial().setDiffuse( new GLVector( 1.0f, 0.0f, 0.0f ) );
+            img = ops.geom().voxelization( ijMesh, width, height, depth );
 
-            net.imagej.mesh.Mesh smoothMesh = ( net.imagej.mesh.Mesh ) ops.geom().convexHull( ijMesh ).get( 0 );
+            uiService.show( img );
 
-            sceneryService.getActiveSciView().addMesh( smoothMesh );
+        } else {
+            logService.warn( "No active node. Add a mesh to the scene and select it." );
         }
 
     }

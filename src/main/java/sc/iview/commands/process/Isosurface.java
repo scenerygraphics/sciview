@@ -26,42 +26,56 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.io;
+package sc.iview.commands.process;
 
-import java.io.File;
-import java.io.IOException;
+import static sc.iview.commands.MenuWeights.PROCESS;
+import static sc.iview.commands.MenuWeights.PROCESS_ISOSURFACE;
+
+import net.imagej.ImgPlus;
+import net.imagej.mesh.Mesh;
+import net.imagej.ops.OpService;
+import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
+import net.imglib2.img.Img;
+import net.imglib2.type.logic.BitType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 
 import org.scijava.command.Command;
-import org.scijava.io.IOService;
-import org.scijava.log.LogService;
+import org.scijava.display.DisplayService;
+import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "File>Open...")
-public class OpenCommand implements Command {
+@Plugin(type = Command.class, menuRoot = "SciView", //
+menu = {@Menu(label = "Process", weight = PROCESS), //
+        @Menu(label = "Isosurface", weight = PROCESS_ISOSURFACE)})
+public class Isosurface implements Command {
 
     @Parameter
-    private IOService io;
+    private OpService ops;
 
     @Parameter
-    private LogService log;
+    private int isoLevel;
 
     @Parameter
-    private SciView sciView;
+    private ImgPlus<UnsignedByteType> image;
 
-    // TODO: Find a more extensible way than hard-coding the extensions.
-    @Parameter(style = "open,extensions:obj/ply/stl/xyz")
-    private File file;
+    @Parameter
+    DisplayService displayService;
+
+    @Parameter
+    SciView sciView;
 
     @Override
     public void run() {
-        try {
-            sciView.open( file.getAbsolutePath() );
-        }
-        catch (final IOException | IllegalArgumentException exc) {
-            log.error( exc );
-        }
+
+        Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( image, new UnsignedByteType( isoLevel ) );
+
+        Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
+
+        sciView.addMesh( m );
+
     }
+
 }

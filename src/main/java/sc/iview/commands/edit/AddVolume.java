@@ -26,13 +26,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.create;
+package sc.iview.commands.edit;
+
+import static sc.iview.commands.MenuWeights.EDIT;
+import static sc.iview.commands.MenuWeights.EDIT_ADD_VOLUME;
 
 import net.imagej.Dataset;
 import net.imagej.ops.OpService;
 
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
+import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
@@ -41,7 +45,9 @@ import sc.iview.SciView;
 /**
  * Created by kharrington on 6/21/17.
  */
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Add>Volume")
+@Plugin(type = Command.class, menuRoot = "SciView", //
+        menu = { @Menu(label = "Scene", weight = EDIT), //
+                 @Menu(label = "Add Volume", weight = EDIT_ADD_VOLUME) })
 public class AddVolume implements Command {
 
     @Parameter

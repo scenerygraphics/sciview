@@ -26,67 +26,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.ops;
+package sc.iview.commands.view;
 
-import net.imagej.ops.OpService;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.logic.BitType;
+import static sc.iview.commands.MenuWeights.VIEW;
+import static sc.iview.commands.MenuWeights.VIEW_STOP_ANIMATION;
 
-import org.scijava.ItemIO;
 import org.scijava.command.Command;
-import org.scijava.display.DisplayService;
-import org.scijava.log.LogService;
+import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.ui.UIService;
 
-import sc.iview.SciView;
-import sc.iview.process.MeshConverter;
+import sc.iview.SciViewService;
 
-import graphics.scenery.Mesh;
-
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Mesh>Mesh To Image")
-public class MeshToImage implements Command {
+@Plugin(type = Command.class, menuRoot = "SciView", //
+        menu = { @Menu(label = "View", weight = VIEW), //
+                 @Menu(label = "Stop Animation", weight = VIEW_STOP_ANIMATION) })
+public class StopAnimation implements Command {
 
     @Parameter
-    private int width;
-
-    @Parameter
-    private int height;
-
-    @Parameter
-    private int depth;
-
-    @Parameter
-    private OpService ops;
-
-    @Parameter
-    DisplayService displayService;
-
-    @Parameter
-    LogService logService;
-
-    @Parameter
-    SciView sciView;
-
-    @Parameter(type = ItemIO.OUTPUT)
-    private RandomAccessibleInterval<BitType> img;
-
-    @Parameter
-    UIService uiService;
+    private SciViewService sceneryService;
 
     @Override
     public void run() {
-        if( sciView.getActiveNode() instanceof Mesh ) {
-            Mesh currentMesh = ( Mesh ) sciView.getActiveNode();
-            net.imagej.mesh.Mesh ijMesh = MeshConverter.toImageJ( currentMesh );
-
-            img = ops.geom().voxelization( ijMesh, width, height, depth );
-
-            uiService.show( img );
-
-        } else {
-            logService.warn( "No active node. Add a mesh to the scene and select it." );
+        Thread animator = sceneryService.getActiveSciView().getAnimationThread();
+        if( animator != null ) {
+            animator.stop();
+            sceneryService.getActiveSciView().setAnimationThread( null );
         }
 
     }

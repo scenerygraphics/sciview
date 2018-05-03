@@ -26,38 +26,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview;
+package sc.iview.commands.view;
+
+import static sc.iview.commands.MenuWeights.VIEW;
+import static sc.iview.commands.MenuWeights.VIEW_SCREENSHOT;
 
 import org.scijava.command.Command;
-import org.scijava.display.DisplayService;
+import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.ui.UIService;
 
-import sc.iview.display.SciViewDisplay;
+import sc.iview.SciViewService;
 
-/**
- * Created by kharrington on 6/20/17.
- */
-@Plugin(type = Command.class, menuPath = "Plugins>SciView")
-public class LaunchViewer implements Command {
+@Plugin(type = Command.class, menuRoot = "SciView", //
+        menu = { @Menu(label = "View", weight = VIEW), //
+                 @Menu(label = "Screenshot", weight = VIEW_SCREENSHOT) })
+public class Screenshot implements Command {
 
     @Parameter
-    private DisplayService displayService;
-
-    @Parameter
-    private SciViewService sciViewService;
-
-    @Parameter(required = false)
-    private UIService uiService;
+    private SciViewService sceneryService;
 
     @Override
     public void run() {
-        final SciViewDisplay display = displayService.getActiveDisplay(SciViewDisplay.class);
-        if (display == null)
-            sciViewService.createSciView();
-        else if (uiService != null)
-            uiService.showDialog( "The SciView window is already open. For now, only one SciView window is supported.", "SciView" );
+        sceneryService.getActiveSciView().takeScreenshot();
     }
 
 }

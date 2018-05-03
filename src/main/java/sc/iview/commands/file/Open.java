@@ -26,29 +26,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.edit;
+package sc.iview.commands.file;
+
+import static sc.iview.commands.MenuWeights.FILE;
+import static sc.iview.commands.MenuWeights.FILE_OPEN;
+
+import java.io.File;
+import java.io.IOException;
 
 import org.scijava.command.Command;
+import org.scijava.io.IOService;
+import org.scijava.log.LogService;
+import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import sc.iview.SciViewService;
+import sc.iview.SciView;
 
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Edit>Delete Node")
-public class DeleteNode implements Command {
-
-    //Consider taking an object as a parameter? Like the way IJ2 menus work for selecting an object
-    //@Parameter
-    //private int objectId;
+@Plugin(type = Command.class, menuRoot = "SciView", //
+        menu = { @Menu(label = "File", weight = FILE), //
+                 @Menu(label = "Open...", weight = FILE_OPEN) })
+public class Open implements Command {
 
     @Parameter
-    private SciViewService sceneryService;
+    private IOService io;
+
+    @Parameter
+    private LogService log;
+
+    @Parameter
+    private SciView sciView;
+
+    // TODO: Find a more extensible way than hard-coding the extensions.
+    @Parameter(style = "open,extensions:obj/ply/stl/xyz")
+    private File file;
 
     @Override
     public void run() {
-        if( sceneryService.getActiveSciView().getActiveNode() != null ) {
-            sceneryService.getActiveSciView().deleteSelectedMesh();
+        try {
+            sciView.open( file.getAbsolutePath() );
+        }
+        catch (final IOException | IllegalArgumentException exc) {
+            log.error( exc );
         }
     }
-
 }
