@@ -1,4 +1,3 @@
-# SciView
 
 *Note:* The prototype of SciView was briefly named ThreeDViewer. 
 
@@ -7,6 +6,8 @@ SciView is an ImageJ/FIJI plugin for 3D visualization of images and meshes. It u
 [ImageJ wiki](http://wiki.imagej.net/SciView) entry.
 
 Update Site: TBA  
+
+[![Join the chat at https://gitter.im/scenerygraphics/SciView](https://badges.gitter.im/scenerygraphics/SciView.svg)](https://gitter.im/scenerygraphics/SciView?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Current activity
 
