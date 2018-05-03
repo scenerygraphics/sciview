@@ -28,36 +28,23 @@
  */
 package sc.iview.io;
 
-import java.io.File;
-
-import org.scijava.command.Command;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Parameter;
+import org.scijava.io.AbstractIOPlugin;
+import org.scijava.io.IOPlugin;
 import org.scijava.plugin.Plugin;
 
-import sc.iview.SciView;
-
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Import>STL", label = "Import STL")
-public class ImportSTL implements Command {
-
-    @Parameter
-    private File stlFile;
-
-    @Parameter
-    SciView sciView;
-
-    @Parameter
-    private LogService logService;
+/** {@link IOPlugin} adapter for Scenery OBJ reader. */
+@Plugin(type = IOPlugin.class)
+public class OBJMeshIO extends AbstractIOPlugin<graphics.scenery.Mesh> {
 
     @Override
-    public void run() {
-        if( stlFile != null ) {
-            try {
-                sciView.addSTL( stlFile.getAbsolutePath() );
-            } catch( final Exception e ) {
-                logService.trace( e );
-            }
-        }
+    public graphics.scenery.Mesh open( final String source ) {
+        final graphics.scenery.Mesh mesh = new graphics.scenery.Mesh();
+        mesh.readFromOBJ( source, false );
+        return mesh;
     }
 
+    @Override
+    public Class<graphics.scenery.Mesh> getDataType() {
+        return graphics.scenery.Mesh.class;
+    }
 }

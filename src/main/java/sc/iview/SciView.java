@@ -31,11 +31,9 @@ package sc.iview;
 import com.sun.javafx.application.PlatformImpl;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -66,10 +64,6 @@ import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.menu.MenuService;
 import org.scijava.plugin.Parameter;
-
-import org.scijava.ui.UIService;
-import org.scijava.ui.behaviour.Behaviour;
-import org.scijava.ui.behaviour.BehaviourMap;
 import org.scijava.ui.behaviour.ClickBehaviour;
 
 import sc.iview.javafx.JavaFXMenuCreator;
@@ -608,24 +602,6 @@ public class SciView extends SceneryBase {
 
     }
 
-    public graphics.scenery.Node addSTL( String filename ) {
-
-        Mesh scMesh = new Mesh();
-        scMesh.readFromSTL( filename );
-
-        addMesh( scMesh );
-        return scMesh;
-    }
-
-    public graphics.scenery.Node addObj( String filename ) {
-        Mesh scMesh = new Mesh();
-        scMesh.readFromOBJ( filename, false );// Could check if there is a MTL to use to toggle flag
-
-        addMesh( scMesh );
-
-        return scMesh;
-    }
-
     public float getDefaultPointSize() {
         return 0.025f;
     }
@@ -653,16 +629,33 @@ public class SciView extends SceneryBase {
         return normals;
     }
 
-    public graphics.scenery.Node addXyz( String filename ) throws IOException {
-        final Object data = io.open( filename );
-        if( !( data instanceof List ) || //
-            ( ( List ) data ).isEmpty() || //
-            !( ( ( List ) data ).get( 0 ) instanceof RealLocalizable ) ) {
-            throw new IllegalArgumentException( "File '" + filename + "' is not a point collection." );
+    public void open( final String source ) throws IOException {
+        final Object data = io.open( source );
+        if( data instanceof net.imagej.mesh.Mesh ) addMesh( ( net.imagej.mesh.Mesh ) data );
+        else if( data instanceof graphics.scenery.Mesh ) addMesh( ( graphics.scenery.Mesh ) data );
+        else if( data instanceof List ) {
+            final List<?> list = ( List<?> ) data;
+            if( list.isEmpty() ) {
+                throw new IllegalArgumentException( "Data source '" + source + "' appears empty." );
+            }
+            final Object element = list.get( 0 );
+            if( element instanceof RealLocalizable ) {
+                // NB: For now, we assume all elements will be RealLocalizable.
+                // Highly likely to be the case, barring antagonistic importers.
+                @SuppressWarnings("unchecked")
+                final List<? extends RealLocalizable> points = ( List<? extends RealLocalizable> ) list;
+                addPointCloud( points, source );
+            }
+            else {
+                final String type = element == null ? "<null>" : element.getClass().getName();
+                throw new IllegalArgumentException( "Data source '" + source + //
+                                                    "' contains elements of unknown type '" + type + "'" );
+            }
+        } else {
+            final String type = data == null ? "<null>" : data.getClass().getName();
+            throw new IllegalArgumentException( "Data source '" + source + //
+                                                "' contains data of unknown type '" + type + "'" );
         }
-        @SuppressWarnings("unchecked")
-        final List<? extends RealLocalizable> points = ( List<? extends RealLocalizable> ) data;
-        return addPointCloud( points, filename );
     }
 
     public graphics.scenery.Node addPointCloud( Collection<? extends RealLocalizable> points ) {

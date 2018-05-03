@@ -29,37 +29,42 @@
 package sc.iview.io;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import net.imglib2.RealLocalizable;
 
 import org.scijava.command.Command;
+import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
-/**
- * Created by kharrington on 7/20/17.
- */
-@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "Import>Xyz")
-public class ImportXYZ implements Command {
+@Plugin(type = Command.class, menuRoot = "SciView", menuPath = "File>Open...")
+public class OpenCommand implements Command {
 
     @Parameter
-    private File xyzFile;
+    private IOService io;
 
     @Parameter
-    SciView sciView;
+    private LogService log;
 
     @Parameter
-    private LogService logService;
+    private SciView sciView;
+
+    // TODO: Find a more extensible way than hard-coding the extensions.
+    @Parameter(style = "open,extensions:obj/ply/stl/xyz")
+    private File file;
 
     @Override
     public void run() {
-        if( xyzFile != null ) {
-            try {
-                sciView.addXyz( xyzFile.getAbsolutePath() );
-            } catch( final Exception e ) {
-                logService.trace( e );
-            }
+        try {
+            sciView.open( file.getAbsolutePath() );
+        }
+        catch (final IOException | IllegalArgumentException exc) {
+            log.error( exc );
         }
     }
 }
