@@ -91,7 +91,8 @@ public class Main {
         //lineTest( sciView );
         //meshTest( sciView );
         //meshTextureTest( sciView );
-        volumeRenderTest( sciView, false );
+//        volumeRenderTest( sciView, false );
+        sciView.addXyz( "/Users/curtis/data/3d/helix_201.xyz" );
     }
 
     public static void lineTest( SciView sciView ) {

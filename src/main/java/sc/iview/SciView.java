@@ -41,6 +41,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -52,6 +53,7 @@ import net.imagej.Dataset;
 import net.imagej.ops.OpService;
 import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
+import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -60,6 +62,7 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
 
 import org.scijava.Context;
+import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.menu.MenuService;
 import org.scijava.plugin.Parameter;
@@ -117,6 +120,9 @@ public class SciView extends SceneryBase {
 
     @Parameter
     private MenuService menus;
+
+    @Parameter
+    private IOService io;
 
     @Parameter
     private OpService ops;
@@ -571,21 +577,6 @@ public class SciView extends SceneryBase {
         return scMesh;
     }
 
-    public static ArrayList<RealPoint> readXyz( String filename ) throws IOException {
-        ArrayList<RealPoint> vertices = new ArrayList<>();
-
-        try( BufferedReader br = new BufferedReader( new FileReader( filename ) ) ) {
-            String line;
-            while( ( line = br.readLine() ) != null ) {
-                String[] parts = line.split( "\\s*(,|\\s)\\s*" );
-                vertices.add( new RealPoint( Double.parseDouble( parts[0] ), Double.parseDouble( parts[1] ),
-                                             Double.parseDouble( parts[2] ) ) );
-            }
-        }
-
-        return vertices;
-    }
-
     public float getDefaultPointSize() {
         return 0.025f;
     }
@@ -614,16 +605,32 @@ public class SciView extends SceneryBase {
     }
 
     public graphics.scenery.Node addXyz( String filename ) throws IOException {
-        ArrayList<RealPoint> verts = readXyz( filename );
+        final Object data = io.open( filename );
+        if( !( data instanceof List ) || //
+            ( ( List ) data ).isEmpty() || //
+            !( ( ( List ) data ).get( 0 ) instanceof RealLocalizable ) ) {
+            throw new IllegalArgumentException( "File '" + filename + "' is not a point collection." );
+        }
+        @SuppressWarnings("unchecked")
+        final List<? extends RealLocalizable> points = ( List<? extends RealLocalizable> ) data;
+        return addPointCloud( points, filename );
+    }
 
-        float[] flatVerts = new float[verts.size() * 3];
-        for( int k = 0; k < verts.size(); k++ ) {
-            flatVerts[k * 3] = verts.get( k ).getFloatPosition( 0 );
-            flatVerts[k * 3 + 1] = verts.get( k ).getFloatPosition( 1 );
-            flatVerts[k * 3 + 2] = verts.get( k ).getFloatPosition( 2 );
+    public graphics.scenery.Node addPointCloud( Collection<? extends RealLocalizable> points ) {
+        return addPointCloud( points, "PointCloud" );
+    }
+
+    public graphics.scenery.Node addPointCloud( Collection<? extends RealLocalizable> points, String name ) {
+        float[] flatVerts = new float[points.size() * 3];
+        int k = 0;
+        for( RealLocalizable point : points ) {
+            flatVerts[k * 3] = point.getFloatPosition( 0 );
+            flatVerts[k * 3 + 1] = point.getFloatPosition( 1 );
+            flatVerts[k * 3 + 2] = point.getFloatPosition( 2 );
+            k++;
         }
 
-        PointCloud pointCloud = new PointCloud( getDefaultPointSize(), filename );
+        PointCloud pointCloud = new PointCloud( getDefaultPointSize(), name );
         Material material = new Material();
         FloatBuffer vBuffer = ByteBuffer.allocateDirect( flatVerts.length * 4 ).order(
                                                                                  ByteOrder.nativeOrder() ).asFloatBuffer();

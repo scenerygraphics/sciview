@@ -101,7 +101,8 @@
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 
 		<scijava-common.version>2.72.0</scijava-common.version>
-		<imagej-mesh.version>0.6.0</imagej-mesh.version>
+		<imagej-mesh.version>0.7.0</imagej-mesh.version>
+		<imagej-mesh-io.version>0.1.0</imagej-mesh-io.version>
 		<imagej-ops.version>0.41.0</imagej-ops.version>
 	</properties>
 
@@ -142,6 +143,11 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-mesh</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-mesh-io</artifactId>
+			<version>${imagej-mesh-io.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
