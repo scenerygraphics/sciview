@@ -63,19 +63,13 @@ public class SceneNodePropertiesEditor extends InteractiveCommand {
     boolean initializing = true;
 
     @Parameter
-    Context context;
-
-    @Parameter
-    private LogService log;
-
-    @Parameter
-    private SciViewService sceneryService;
+    private SciViewService sciViewService;
 
     @Parameter(required = false, style = LIST_BOX_STYLE, callback = "refreshSceneNodeInDialog")
-    String sceneNode;
+    private String sceneNode;
 
     @Parameter(required = false, callback = "refreshColourInSceneNode")
-    ColorRGB colour;
+    private ColorRGB colour;
 
     @Parameter(label = "Position X", style = NumberWidget.SLIDER_STYLE, min = "-1.0", max = "1.0", stepSize = "0.1", callback = "refreshPositionXInSceneNode")
     private double positionX = 1;
@@ -107,7 +101,7 @@ public class SceneNodePropertiesEditor extends InteractiveCommand {
         initializing = true;
         sceneNodeChoices = new ArrayList<>();
         int count = 0;
-        for( Node node : sceneryService.getActiveSciView().getSceneNodes() ) {
+        for( Node node : sciViewService.getActiveSciView().getSceneNodes() ) {
             sceneNodeChoices.add( makeIdentifier( node, count ) );
             count++;
         }
@@ -130,7 +124,7 @@ public class SceneNodePropertiesEditor extends InteractiveCommand {
         currentSceneNode = null;
 
         int count = 0;
-        for( Node node : sceneryService.getActiveSciView().getSceneNodes() ) {
+        for( Node node : sciViewService.getActiveSciView().getSceneNodes() ) {
             if( identifier.equals( makeIdentifier( node, count ) ) ) {
                 currentSceneNode = node;
                 //System.out.println("current node found");
@@ -142,7 +136,7 @@ public class SceneNodePropertiesEditor extends InteractiveCommand {
         // update property fields according to scene node properties
         refreshColourInDialog();
 
-        if( sceneNodeChoices.size() != sceneryService.getActiveSciView().getSceneNodes().length ) {
+        if( sceneNodeChoices.size() != sciViewService.getActiveSciView().getSceneNodes().length ) {
             rebuildSceneObjectChoiseList();
         }
     }
