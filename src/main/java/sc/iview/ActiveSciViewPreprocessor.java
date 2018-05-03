@@ -36,12 +36,11 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 /**
- * Fills single, unresolved module inputs with the active active
- * {@link SciView}. Hence, rather than a dialog prompting the user to manually
- * select an input, the active {@link SciView} is used automatically.
+ * Fills single, unresolved module inputs with the active {@link SciView},
+ * <em>or a newly created one if none</em>.
  * <p>
- * In the case of more than one compatible parameter, the active {@link SciView}
- * is not used and instead the user must select.
+ * This behavior differs from other {@link SingleInputPreprocessor}s so that all
+ * SciView operations can be used to create a SciView window on demand.
  * </p>
  * 
  * @author Curtis Rueden
