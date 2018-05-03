@@ -32,6 +32,9 @@ import org.scijava.command.Command;
 import org.scijava.display.DisplayService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.ui.UIService;
+
+import sc.iview.display.SciViewDisplay;
 
 /**
  * Created by kharrington on 6/20/17.
@@ -43,11 +46,18 @@ public class LaunchViewer implements Command {
     private DisplayService displayService;
 
     @Parameter
-    SciView sciView;
+    private SciViewService sciViewService;
+
+    @Parameter(required = false)
+    private UIService uiService;
 
     @Override
     public void run() {
-
+        final SciViewDisplay display = displayService.getActiveDisplay(SciViewDisplay.class);
+        if (display == null)
+            sciViewService.createSciView();
+        else if (uiService != null)
+            uiService.showDialog( "The SciView window is already open. For now, only one SciView window is supported.", "SciView" );
     }
 
 }
