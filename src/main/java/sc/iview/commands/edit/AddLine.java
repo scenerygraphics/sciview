@@ -35,26 +35,35 @@ import org.scijava.command.Command;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.util.ColorRGB;
 
 import sc.iview.SciView;
+import sc.iview.vector.ClearGLVector3;
 import sc.iview.vector.Vector3;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Scene", weight = EDIT), //
-                 @Menu(label = "Add Line", weight = EDIT_ADD_LINE) })
+                 @Menu(label = "Add Line...", weight = EDIT_ADD_LINE) })
 public class AddLine implements Command {
 
     @Parameter
     private SciView sciView;
 
-    @Parameter
-    private Vector3 start;
+    @Parameter(label = "First endpoint")
+    private String start = "0; 0; 0";
+
+    @Parameter(label = "Second endpoint")
+    private String stop = "1; 1; 1";
 
     @Parameter
-    private Vector3 stop;
+    private ColorRGB color = SciView.DEFAULT_COLOR;
+
+    @Parameter(label = "Edge width", min = "0")
+    private double edgeWidth = 1;
 
     @Override
     public void run() {
-        sciView.addLine( start, stop );
+        Vector3[] endpoints = { ClearGLVector3.parse( start ), ClearGLVector3.parse( stop ) };
+        sciView.addLine( endpoints, color, edgeWidth );
     }
 }

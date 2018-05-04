@@ -37,7 +37,6 @@ import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.util.ColorRGB;
-import org.scijava.util.Colors;
 
 import sc.iview.SciView;
 import sc.iview.vector.ClearGLVector3;
@@ -55,17 +54,20 @@ public class AddBox implements Command {
     private SciView sciView;
 
     @Parameter
+    private String position = "0; 0; 0";
+
+    @Parameter
     private float size = 1.0f;
 
     @Parameter
-    private ColorRGB color = Colors.BLUE;
+    private ColorRGB color = SciView.DEFAULT_COLOR;
 
     @Parameter
     private boolean inside;
 
     @Override
     public void run() {
-        final Vector3 pos = new ClearGLVector3( 0, 0, 0 );
+        final Vector3 pos = ClearGLVector3.parse( position );
         final Vector3 vSize = new ClearGLVector3( size, size, size );
         sciView.addBox( pos, vSize, color, inside );
     }

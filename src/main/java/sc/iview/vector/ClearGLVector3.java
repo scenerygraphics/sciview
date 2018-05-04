@@ -66,4 +66,16 @@ public class ClearGLVector3 implements Vector3 {
         if( v instanceof ClearGLVector3 ) return ( ( ClearGLVector3 ) v ).source();
         return new GLVector( v.xf(), v.yf(), v.zf() );
     }
+
+    public static ClearGLVector3 parse( final String coords ) {
+        String[] tokens = coords.split( ";" );
+        if( tokens.length != 3 ) throw new IllegalArgumentException( "Three semicolon-separated numbers required." );
+        try {
+            return new ClearGLVector3( Float.parseFloat( tokens[0].trim() ), //
+                                       Float.parseFloat( tokens[1].trim() ), //
+                                       Float.parseFloat( tokens[2].trim() ) );
+        } catch( NumberFormatException exc ) {
+            throw new IllegalArgumentException( "Three comma-separated numbers required", exc );
+        }
+    }
 }

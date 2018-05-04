@@ -115,7 +115,7 @@ import javafx.stage.Stage;
 
 public class SciView extends SceneryBase {
 
-    private static final ColorRGB DEFAULT_COLOR = Colors.LIGHTGRAY;
+    public static final ColorRGB DEFAULT_COLOR = Colors.LIGHTGRAY;
 
     @Parameter
     private LogService log;
