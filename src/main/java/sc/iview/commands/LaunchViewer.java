@@ -29,36 +29,25 @@
 package sc.iview.commands;
 
 import org.scijava.command.Command;
-import org.scijava.display.DisplayService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.ui.UIService;
 
 import sc.iview.SciViewService;
-import sc.iview.display.SciViewDisplay;
 
 /**
- * Created by kharrington on 6/20/17.
+ * Command to create and display a new SciView window.
+ * 
+ * @author Kyle Harrington
+ * @author Curtis Rueden
  */
 @Plugin(type = Command.class, menuPath = "Plugins>SciView")
 public class LaunchViewer implements Command {
 
     @Parameter
-    private DisplayService displayService;
-
-    @Parameter
     private SciViewService sciViewService;
-
-    @Parameter(required = false)
-    private UIService uiService;
 
     @Override
     public void run() {
-        final SciViewDisplay display = displayService.getActiveDisplay(SciViewDisplay.class);
-        if (display == null)
-            sciViewService.createSciView();
-        else if (uiService != null)
-            uiService.showDialog( "The SciView window is already open. For now, only one SciView window is supported.", "SciView" );
+        sciViewService.createSciView();
     }
-
 }
