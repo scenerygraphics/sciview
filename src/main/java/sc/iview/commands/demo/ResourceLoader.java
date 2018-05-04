@@ -26,48 +26,53 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands;
+package sc.iview.commands.demo;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+
+import org.scijava.io.ByteArrayByteBank;
+import org.scijava.io.ByteBank;
+import org.scijava.util.FileUtils;
 
 /**
- * Constants for coherent menu ordering.
+ * A helper class to facilitate loading resources from JARs.
+ * <p>
+ * This class is temporary until the SciJava I/O API evolves to support
+ * locations inside of JAR files.
+ * </p>
  *
  * @author Curtis Rueden
  */
-public final class MenuWeights {
-    private MenuWeights() {
+public final class ResourceLoader {
+
+    private ResourceLoader() {
         // NB: Prevent instantiation of utility class.
     }
 
-    public static final double FILE = 0;
-    public static final double EDIT = 1;
-    public static final double PROCESS = 2;
-    public static final double VIEW = 3;
-    public static final double DEMO = 4;
+    /** Creates a temporary file on disk with the contents of the given resource. */
+    public static File createFile( Class<?> c, String resourcePath ) throws IOException {
+        final byte[] bytes;
+        try (InputStream in = c.getResourceAsStream( resourcePath )) {
+            bytes = readStreamFully( in );
+        }
 
-    public static final double FILE_OPEN = 0;
-    public static final double FILE_EXPORT_STL = 100;
+        String extension = "." + FileUtils.getExtension( resourcePath );
+        File configFile = File.createTempFile( "SciView", extension );
+        FileUtils.writeFile( configFile, bytes );
+        configFile.deleteOnExit();
+        return configFile;
+    }
 
-    public static final double EDIT_ADD_BOX = 0;
-    public static final double EDIT_ADD_SPHERE = 1;
-    public static final double EDIT_ADD_LINE = 2;
-    public static final double EDIT_ADD_POINT_LIGHT = 3;
-    public static final double EDIT_ADD_LABEL_IMAGE = 4;
-    public static final double EDIT_ADD_VOLUME = 5;
-    public static final double EDIT_DELETE_OBJECT = 100;
-    public static final double EDIT_PROPERTIES = 200;
-
-    public static final double PROCESS_ISOSURFACE = 0;
-    public static final double PROCESS_CONVEX_HULL = 1;
-    public static final double PROCESS_MESH_TO_IMAGE = 2;
-
-    public static final double VIEW_ROTATE = 0;
-    public static final double VIEW_STOP_ANIMATION = 1;
-    public static final double VIEW_SCREENSHOT = 100;
-    public static final double VIEW_ARC_BALL_CONTROL = 200;
-    public static final double VIEW_FPS_CONTROL = 201;
-
-    public static final double DEMO_LINES = 0;
-    public static final double DEMO_MESH = 1;
-    public static final double DEMO_MESH_TEXTURE = 2;
-    public static final double DEMO_VOLUME_RENDER = 3;
+    private static byte[] readStreamFully( final InputStream in ) throws IOException {
+        final ByteBank bank = new ByteArrayByteBank();
+        byte[] buf = new byte[256 * 1024];
+        while( true ) {
+            final int r = in.read( buf );
+            if( r <= 0 ) break;
+            bank.appendBytes( buf, r );
+        }
+        return bank.toByteArray();
+    }
 }

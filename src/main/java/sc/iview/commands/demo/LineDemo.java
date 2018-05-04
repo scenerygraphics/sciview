@@ -26,37 +26,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview;
+package sc.iview.commands.demo;
 
-import io.scif.SCIFIOService;
+import static sc.iview.commands.MenuWeights.DEMO;
+import static sc.iview.commands.MenuWeights.DEMO_LINES;
 
-import net.imagej.ImageJService;
+import org.scijava.command.Command;
+import org.scijava.plugin.Menu;
+import org.scijava.plugin.Parameter;
+import org.scijava.plugin.Plugin;
+import org.scijava.util.Colors;
 
-import org.scijava.Context;
-import org.scijava.service.SciJavaService;
-import org.scijava.ui.UIService;
-
-import cleargl.GLVector;
+import sc.iview.SciView;
+import sc.iview.vector.ClearGLVector3;
+import sc.iview.vector.Vector3;
 
 /**
- * Entry point for testing SciView functionality.
- * 
+ * A demo of lines.
+ *
  * @author Kyle Harrington
+ * @author Curtis Rueden
  */
-public class Main {
-    public static void main( String... args ) {
-        Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class );
+@Plugin(type = Command.class, label = "Lines Demo", menuRoot = "SciView", //
+        menu = { @Menu(label = "Demo", weight = DEMO), //
+                 @Menu(label = "Lines", weight = DEMO_LINES) })
+public class LineDemo implements Command {
 
-        UIService ui = context.service( UIService.class );
-        if( !ui.isVisible() ) ui.showUI();
+    @Parameter
+    private SciView sciView;
 
-        SciViewService sciViewService = context.service( SciViewService.class );
-        SciView sciView = sciViewService.getOrCreateActiveSciView();
-        sciView.getCamera().setPosition( new GLVector( 0.0f, 0.0f, 5.0f ) );
-        sciView.getCamera().setTargeted( true );
-        sciView.getCamera().setTarget( new GLVector( 0, 0, 0 ) );
-        sciView.getCamera().setDirty( true );
-        sciView.getCamera().setNeedsUpdate( true );
-        //sciView.getCamera().setNeedsUpdateWorld(true);
+    @Override
+    public void run() {
+        int numPoints = 25;
+        Vector3[] points = new Vector3[numPoints];
+
+        for( int k = 0; k < numPoints; k++ ) {
+            points[k] = new ClearGLVector3( ( float ) ( 10.0f * Math.random() - 5.0f ), //
+                                            ( float ) ( 10.0f * Math.random() - 5.0f ), //
+                                            ( float ) ( 10.0f * Math.random() - 5.0f ) );
+        }
+
+        double edgeWidth = 0.1;
+
+        sciView.addLine( points, Colors.LIGHTSALMON, edgeWidth );
     }
 }
