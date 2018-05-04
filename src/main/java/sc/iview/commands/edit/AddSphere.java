@@ -31,13 +31,12 @@ package sc.iview.commands.edit;
 import static sc.iview.commands.MenuWeights.EDIT;
 import static sc.iview.commands.MenuWeights.EDIT_ADD_SPHERE;
 
-import net.imglib2.RealLocalizable;
-import net.imglib2.RealPoint;
-
 import org.scijava.command.Command;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.util.ColorRGB;
+import org.scijava.util.Colors;
 
 import sc.iview.SciView;
 
@@ -45,7 +44,7 @@ import cleargl.GLVector;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Scene", weight = EDIT), //
-                 @Menu(label = "Add Sphere", weight = EDIT_ADD_SPHERE) })
+                 @Menu(label = "Add Sphere...", weight = EDIT_ADD_SPHERE) })
 public class AddSphere implements Command {
 
     @Parameter
@@ -54,16 +53,14 @@ public class AddSphere implements Command {
     @Parameter
     private float radius = 1.0f;
 
+    @Parameter
+    private ColorRGB color = Colors.BLUE;
+
     @Override
     public void run() {
-        RealLocalizable center;
-
-        center = new RealPoint( 0, 0, 0 );
-
-        GLVector pos = new GLVector( center.getFloatPosition( 0 ), //
-                                     center.getFloatPosition( 1 ), //
-                                     center.getFloatPosition( 2 ) );
-        sciView.addSphere( pos, radius );
+        final GLVector pos = new GLVector( 0, 0, 0 );
+        final GLVector glColor = new GLVector( color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f );
+        sciView.addSphere( pos, radius, glColor );
     }
 
 }

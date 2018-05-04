@@ -36,12 +36,16 @@ import org.scijava.display.DisplayService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.util.ColorRGB;
+import org.scijava.util.Colors;
 
 import sc.iview.SciView;
 
+import cleargl.GLVector;
+
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Scene", weight = EDIT), //
-                 @Menu(label = "Add Box", weight = EDIT_ADD_BOX) })
+                 @Menu(label = "Add Box...", weight = EDIT_ADD_BOX) })
 public class AddBox implements Command {
 
     @Parameter
@@ -50,9 +54,21 @@ public class AddBox implements Command {
     @Parameter
     private SciView sciView;
 
+    @Parameter
+    private float size = 1.0f;
+
+    @Parameter
+    private ColorRGB color = Colors.BLUE;
+
+    @Parameter
+    private boolean inside;
+
     @Override
     public void run() {
-        sciView.addBox();
+        final GLVector pos = new GLVector( 0, 0, 0 );
+        final GLVector glSize = new GLVector( size, size, size );
+        final GLVector glColor = new GLVector( color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f );
+        sciView.addBox( pos, glSize, glColor, inside );
     }
 
 }
