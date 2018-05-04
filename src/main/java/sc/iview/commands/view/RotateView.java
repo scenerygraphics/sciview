@@ -32,7 +32,6 @@ import static sc.iview.commands.MenuWeights.VIEW;
 import static sc.iview.commands.MenuWeights.VIEW_ROTATE;
 
 import org.scijava.command.Command;
-import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -47,41 +46,16 @@ import graphics.scenery.Node;
 public class RotateView implements Command {
 
     @Parameter
-    private LogService logService;
-
-    @Parameter
     private SciView sciView;
 
     @Override
     public void run() {
-        Thread rotator = sciView.getAnimationThread();
-        if( rotator != null && ( rotator.getState() == Thread.State.RUNNABLE ||
-                                 rotator.getState() == Thread.State.WAITING ) ) {
-            rotator = null;
-        }
-
-        rotator = new Thread() {
-            @Override
-            public void run() {
-                while( true ) {
-                    for( Node node : sciView.getSceneNodes() ) {
-
-                        node.getRotation().rotateByAngleY( 0.01f );
-                        node.setNeedsUpdate( true );
-
-                    }
-
-                    try {
-                        Thread.sleep( 20 );
-                    } catch( InterruptedException e ) {
-                        logService.trace( e );
-                    }
-                }
+        sciView.animate( 30, () -> {
+            for( Node node : sciView.getSceneNodes() ) {
+                node.getRotation().rotateByAngleY( 0.01f );
+                node.setNeedsUpdate( true );
             }
-        };
-        rotator.start();
-
-        sciView.setAnimationThread( rotator );
+        } );
     }
 
 }

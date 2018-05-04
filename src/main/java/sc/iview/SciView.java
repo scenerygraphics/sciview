@@ -130,6 +130,8 @@ public class SciView extends SceneryBase {
     private OpService ops;
 
     private Thread animationThread;
+    private boolean animating;
+
     private Node activeNode = null;
 
     protected ArcballCameraControl targetArcball;
@@ -744,12 +746,33 @@ public class SciView extends SceneryBase {
         return activeNode;
     }
 
-    public Thread getAnimationThread() {
-        return animationThread;
+    public synchronized void animate( int fps, Runnable action ) {
+        if (animationThread != null) stopAnimation();
+        // TODO: Make animation speed less laggy and more accurate.
+        final int delay = 1000 / fps;
+        animationThread = new Thread(() -> {
+            while (animating) {
+                action.run();
+                try {
+                    Thread.sleep( delay );
+                } catch( InterruptedException e ) {
+                    log.error( e );
+                }
+            }
+        }, "SciView-Animation");
+        animating = true;
+        animationThread.start();
     }
 
-    public void setAnimationThread( Thread newAnimator ) {
-        animationThread = newAnimator;
+    public synchronized void stopAnimation() {
+        if (animationThread == null) return;
+        animating = false;
+        try {
+            animationThread.join();
+        } catch( InterruptedException exc ) {
+            log.error( exc );
+        }
+        animationThread = null;
     }
 
     public void takeScreenshot() {

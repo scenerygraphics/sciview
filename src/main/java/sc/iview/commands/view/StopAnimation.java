@@ -48,10 +48,6 @@ public class StopAnimation implements Command {
 
     @Override
     public void run() {
-        Thread animator = sciView.getAnimationThread();
-        if( animator != null ) {
-            animator.stop();
-            sciView.setAnimationThread( null );
-        }
+        sciView.stopAnimation();
     }
 }
