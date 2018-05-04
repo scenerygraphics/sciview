@@ -56,7 +56,7 @@ public class LaunchViewer implements Command {
     public void run() {
         final SciViewDisplay display = displayService.getActiveDisplay(SciViewDisplay.class);
         if (display == null)
-            sciViewService.createSciView();
+            sciViewService.getOrCreateActiveSciView();
         else if (uiService != null)
             uiService.showDialog( "The SciView window is already open. For now, only one SciView window is supported.", "SciView" );
     }
