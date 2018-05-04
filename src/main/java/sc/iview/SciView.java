@@ -504,15 +504,11 @@ public class SciView extends SceneryBase {
 
         Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        //material.setDiffuse( vector(color) ); // TODO line color
-        material.setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        material.setDiffuse( vector(color) );
         material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
 
         final Line line = new Line( 2 );
 
-        // TODO remove line hack
-        line.addPoint( new GLVector( 0, 0, 0 ) );
-        line.addPoint( new GLVector( 0, 0, 0 ) );
         line.addPoint( ClearGLVector3.convert( start ) );
         line.addPoint( ClearGLVector3.convert( stop ) );
 
@@ -530,18 +526,14 @@ public class SciView extends SceneryBase {
     }
 
     public graphics.scenery.Node addLine( Vector3[] points, ColorRGB color, double edgeWidth ) {
-
         Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        //material.setDiffuse( vector(color) ); // TODO line color
-        material.setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        material.setDiffuse( vector(color) );
         material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
 
-        final Line line = new Line( 2 );
-
-        // TODO remove line hack
+        final Line line = new Line( points.length );
         for( Vector3 pt : points ) {
-            line.addPoint( ClearGLVector3.convert( pt ).minus( ClearGLVector3.convert( points[0] ) ) );
+            line.addPoint( ClearGLVector3.convert( pt ) );
         }
 
         line.setEdgeWidth( ( float ) edgeWidth );
