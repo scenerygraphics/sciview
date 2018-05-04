@@ -50,4 +50,9 @@ public class FloatVector3 implements Vector3 {
     @Override public void setX( float position ) { x = position; }
     @Override public void setY( float position ) { y = position; }
     @Override public void setZ( float position ) { z = position; }
+
+    @Override
+    public String toString() {
+        return "[" + xf() + "; " + yf() + "; " + zf() + "]";
+    }
 }

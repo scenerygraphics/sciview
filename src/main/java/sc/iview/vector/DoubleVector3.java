@@ -58,4 +58,9 @@ public class DoubleVector3 implements Vector3 {
     @Override public void setX( double position ) { x = position; }
     @Override public void setY( double position ) { y = position; }
     @Override public void setZ( double position ) { z = position; }
+
+    @Override
+    public String toString() {
+        return "[" + xd() + "; " + yd() + "; " + zd() + "]";
+    }
 }

@@ -57,6 +57,11 @@ public class ClearGLVector3 implements Vector3 {
     @Override public void setY( float position ) { source.set( 1, position ); }
     @Override public void setZ( float position ) { source.set( 2, position ); }
 
+    @Override
+    public String toString() {
+        return "[" + xf() + "; " + yf() + "; " + zf() + "]";
+    }
+
     public static GLVector convert( Vector3 v ) {
         if( v instanceof ClearGLVector3 ) return ( ( ClearGLVector3 ) v ).source();
         return new GLVector( v.xf(), v.yf(), v.zf() );
