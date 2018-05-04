@@ -11,7 +11,7 @@
 
 	<groupId>sc.iview</groupId>
 	<artifactId>sciview</artifactId>
-	<version>0.1.0-SNAPSHOT</version>
+	<version>0.1.0</version>
 
 	<name>SciView</name>
 	<description>Scenery-backed 3D visualization package for ImageJ.</description>
@@ -72,7 +72,7 @@
 	<scm>
 		<connection>scm:git:git://github.com/scenerygraphics/SciView</connection>
 		<developerConnection>scm:git:git@github.com:scenerygraphics/SciView</developerConnection>
-		<tag>HEAD</tag>
+		<tag>sciview-0.1.0</tag>
 		<url>https://github.com/scenerygraphics/SciView</url>
 	</scm>
 	<issueManagement>
