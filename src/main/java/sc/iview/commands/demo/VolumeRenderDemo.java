@@ -96,7 +96,6 @@ public class VolumeRenderDemo implements Command {
         System.out.println( cube.firstElement().getClass() );
         Node v = sciView.addVolume( cube, new float[] { 1, 1, 1 } );
         v.setScale( new GLVector( 2f, 2f, 2f ) );
-        sciView.displayNodeProperties( v );
 
         if (iso) {
             int isoLevel = 1;
@@ -106,7 +105,7 @@ public class VolumeRenderDemo implements Command {
 
             Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
 
-            sciView.displayNodeProperties( sciView.addMesh( m ) );
+            sciView.addMesh( m );
         }
     }
 }

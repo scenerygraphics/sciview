@@ -733,13 +733,7 @@ public class SciView extends SceneryBase {
 
         if( defaultArcBall ) enableArcBallControl();
 
-        displayNodeProperties( activeNode );
-
         return scMesh;
-    }
-
-    public void displayNodeProperties( Node n ) {
-        log.warn( "Position: " + n.getPosition() + " bounding box: " + n.getMaximumBoundingBox() );
     }
 
     public void removeMesh( Mesh scMesh ) {
