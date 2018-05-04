@@ -50,8 +50,8 @@ import org.scijava.Context;
 import org.scijava.service.SciJavaService;
 import org.scijava.ui.UIService;
 
-import sc.iview.vec3.ClearGLDVec3;
-import sc.iview.vec3.DVec3;
+import sc.iview.vector.ClearGLVector3;
+import sc.iview.vector.Vector3;
 
 import cleargl.GLTypeEnum;
 import cleargl.GLVector;
@@ -96,17 +96,17 @@ public class Main {
 
     public static void lineTest( SciView sciView ) {
         int numPoints = 25;
-        DVec3[] points = new DVec3[numPoints];
+        Vector3[] points = new Vector3[numPoints];
 
         for( int k = 0; k < numPoints; k++ ) {
-            points[k] = new ClearGLDVec3( ( float ) ( 10.0f * Math.random() - 5.0f ), //
-                                          ( float ) ( 10.0f * Math.random() - 5.0f ), //
-                                          ( float ) ( 10.0f * Math.random() - 5.0f ) );
+            points[k] = new ClearGLVector3( ( float ) ( 10.0f * Math.random() - 5.0f ), //
+                                            ( float ) ( 10.0f * Math.random() - 5.0f ), //
+                                            ( float ) ( 10.0f * Math.random() - 5.0f ) );
 
         }
 
         double edgeWidth = 0.1;
-        DVec3 color = new ClearGLDVec3( 1f, 0.75f, 0.5f );
+        Vector3 color = new ClearGLVector3( 1f, 0.75f, 0.5f );
 
         sciView.addLine( points, color, edgeWidth );
     }

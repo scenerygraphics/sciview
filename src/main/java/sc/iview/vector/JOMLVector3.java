@@ -26,63 +26,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.vec3;
-
-import net.imglib2.RealLocalizable;
+package sc.iview.vector;
 
 import org.joml.Vector3f;
 
-import cleargl.GLVector;
-
 /**
- * Created by kharrington on 1/18/18.
+ * {@link Vector3} backed by a JOML {@link Vector3f}.
+ * 
+ * @author Kyle Harrington
+ * @author Curtis Rueden
  */
-public class ClearGLDVec3 implements DVec3 {
+public class JOMLVector3 implements Vector3 {
 
-    private GLVector glVector;
+    private Vector3f source;
 
-    public ClearGLDVec3 set( GLVector v ) {
-        glVector = v;
-        return this;
+    public JOMLVector3( float x, float y, float z ) {
+        this( new Vector3f( x, y, z ) );
     }
 
-    public GLVector get() {
-        return glVector;
+    public JOMLVector3( Vector3f source ) {
+        this.source = source;
     }
 
-    public ClearGLDVec3( final float x, final float y, final float z ) {
-        glVector = new GLVector( x, y, z );
-    }
+    public Vector3f source() { return source; }
 
-    public ClearGLDVec3( Vector3f source ) {
-        glVector = new GLVector( source.get( 0 ), source.get( 1 ), source.get( 2 ) );
-    }
+    @Override public float xf() { return source.x(); }
+    @Override public float yf() { return source.y(); }
+    @Override public float zf() { return source.z(); }
 
-    @Override
-    public float getFloatPosition( int d ) {
-        return glVector.get( d );
-    }
+    @Override public void setX( float position ) { source.set( position, yf(), zf() ); }
+    @Override public void setY( float position ) { source.set( xf(), position, zf() ); }
+    @Override public void setZ( float position ) { source.set( xf(), yf(), position ); }
 
-    @Override
-    public double getDoublePosition( int d ) {
-        return glVector.get( d );
-    }
-
-    @Override
-    public void move( RealLocalizable localizable ) {
-        glVector = glVector.plus( new GLVector( localizable.getFloatPosition( 0 ), localizable.getFloatPosition( 1 ),
-                                                localizable.getFloatPosition( 2 ) ) );
-    }
-
-    @Override
-    public void setPosition( float position, int d ) {
-        float x, y, z;
-        x = glVector.get( 0 );
-        y = glVector.get( 1 );
-        z = glVector.get( 2 );
-        if( d == 0 ) x = position;
-        else if( d == 1 ) y = position;
-        else if( d == 2 ) z = position;
-        glVector = new GLVector( x, y, z );
+    public static Vector3f convert( Vector3 v ) {
+        if( v instanceof JOMLVector3 ) return (( JOMLVector3 ) v).source();
+        return new Vector3f( v.xf(), v.yf(), v.zf() );
     }
 }

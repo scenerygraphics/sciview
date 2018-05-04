@@ -26,19 +26,39 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.vec3;
+package sc.iview.vector;
 
 import cleargl.GLVector;
 
 /**
- * Created by kharrington on 1/19/18.
+ * {@link Vector3} backed by a ClearGL {@link GLVector}.
+ * @author Kyle Harrington
+ * @author Curtis Rueden
  */
-public class DVec3s {
+public class ClearGLVector3 implements Vector3 {
 
-    public static GLVector convert( DVec3 v ) {
-        if( v.getClass() == ClearGLDVec3.class ) {
-            return ( ( ClearGLDVec3 ) v ).get();
-        }
-        return new GLVector( v.getFloatPosition( 0 ), v.getFloatPosition( 1 ), v.getFloatPosition( 2 ) );
+    private GLVector source;
+
+    public ClearGLVector3( float x, float y, float z ) {
+        this( new GLVector( x, y, z ) );
+    }
+
+    public ClearGLVector3( GLVector source ) {
+        this.source = source;
+    }
+
+    public GLVector source() { return source; }
+
+    @Override public float xf() { return source.get( 0 ); }
+    @Override public float yf() { return source.get( 1 ); }
+    @Override public float zf() { return source.get( 2 ); }
+
+    @Override public void setX( float position ) { source.set( 0, position ); }
+    @Override public void setY( float position ) { source.set( 1, position ); }
+    @Override public void setZ( float position ) { source.set( 2, position ); }
+
+    public static GLVector convert( Vector3 v ) {
+        if( v instanceof ClearGLVector3 ) return (( ClearGLVector3 ) v).source();
+        return new GLVector( v.xf(), v.yf(), v.zf() );
     }
 }

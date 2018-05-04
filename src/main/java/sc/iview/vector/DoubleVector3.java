@@ -26,35 +26,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit;
+package sc.iview.vector;
 
-import static sc.iview.commands.MenuWeights.EDIT;
-import static sc.iview.commands.MenuWeights.EDIT_ADD_LINE;
+/**
+ * {@link Vector3} backed by three {@code double}s.
+ * 
+ * @author Curtis Rueden
+ */
+public class DoubleVector3 implements Vector3 {
 
-import org.scijava.command.Command;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
+    private double x, y, z;
 
-import sc.iview.SciView;
-import sc.iview.vector.Vector3;
-
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Scene", weight = EDIT), //
-                 @Menu(label = "Add Line", weight = EDIT_ADD_LINE) })
-public class AddLine implements Command {
-
-    @Parameter
-    private SciView sciView;
-
-    @Parameter
-    private Vector3 start;
-
-    @Parameter
-    private Vector3 stop;
-
-    @Override
-    public void run() {
-        sciView.addLine( start, stop );
+    public DoubleVector3( double x, double y, double z ) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
     }
+
+    @Override public float xf() { return (float) x; }
+    @Override public float yf() { return (float) y; }
+    @Override public float zf() { return (float) z; }
+
+    @Override public void setX( float position ) { x = position; }
+    @Override public void setY( float position ) { y = position; }
+    @Override public void setZ( float position ) { z = position; }
+
+    @Override public double xd() { return x; }
+    @Override public double yd() { return y; }
+    @Override public double zd() { return z; }
+
+    @Override public void setX( double position ) { x = position; }
+    @Override public void setY( double position ) { y = position; }
+    @Override public void setZ( double position ) { z = position; }
 }

@@ -68,9 +68,8 @@ import org.scijava.ui.behaviour.ClickBehaviour;
 
 import sc.iview.javafx.JavaFXMenuCreator;
 import sc.iview.process.MeshConverter;
-import sc.iview.vec3.ClearGLDVec3;
-import sc.iview.vec3.DVec3;
-import sc.iview.vec3.DVec3s;
+import sc.iview.vector.ClearGLVector3;
+import sc.iview.vector.Vector3;
 
 import cleargl.GLVector;
 import coremem.enums.NativeTypeEnum;
@@ -492,14 +491,14 @@ public class SciView extends SceneryBase {
     }
 
     public graphics.scenery.Node addLine() {
-        return addLine( new ClearGLDVec3( 0.0f, 0.0f, 0.0f ), new ClearGLDVec3( 0.0f, 0.0f, 0.0f ) );
+        return addLine( new ClearGLVector3( 0.0f, 0.0f, 0.0f ), new ClearGLVector3( 0.0f, 0.0f, 0.0f ) );
     }
 
-    public graphics.scenery.Node addLine( DVec3 start, DVec3 stop ) {
-        return addLine( start, stop, new ClearGLDVec3( 0.9f, 0.9f, 0.9f ) );
+    public graphics.scenery.Node addLine( Vector3 start, Vector3 stop ) {
+        return addLine( start, stop, new ClearGLVector3( 0.9f, 0.9f, 0.9f ) );
     }
 
-    public graphics.scenery.Node addLine( DVec3 start, DVec3 stop, DVec3 color ) {
+    public graphics.scenery.Node addLine( Vector3 start, Vector3 stop, Vector3 color ) {
 
         Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
@@ -512,13 +511,13 @@ public class SciView extends SceneryBase {
         // TODO remove line hack
         line.addPoint( new GLVector( 0, 0, 0 ) );
         line.addPoint( new GLVector( 0, 0, 0 ) );
-        line.addPoint( DVec3s.convert( start ) );
-        line.addPoint( DVec3s.convert( stop ) );
+        line.addPoint( ClearGLVector3.convert( start ) );
+        line.addPoint( ClearGLVector3.convert( stop ) );
 
         line.setEdgeWidth( 0.1f );
 
         line.setMaterial( material );
-        line.setPosition( DVec3s.convert( start ) );
+        line.setPosition( ClearGLVector3.convert( start ) );
 
         activeNode = line;
 
@@ -528,7 +527,7 @@ public class SciView extends SceneryBase {
         return line;
     }
 
-    public graphics.scenery.Node addLine( DVec3[] points, DVec3 color, double edgeWidth ) {
+    public graphics.scenery.Node addLine( Vector3[] points, Vector3 color, double edgeWidth ) {
 
         Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
@@ -539,14 +538,14 @@ public class SciView extends SceneryBase {
         final Line line = new Line( 2 );
 
         // TODO remove line hack
-        for( DVec3 pt : points ) {
-            line.addPoint( DVec3s.convert( pt ).minus( DVec3s.convert( points[0] ) ) );
+        for( Vector3 pt : points ) {
+            line.addPoint( ClearGLVector3.convert( pt ).minus( ClearGLVector3.convert( points[0] ) ) );
         }
 
         line.setEdgeWidth( ( float ) edgeWidth );
 
         line.setMaterial( material );
-        line.setPosition( DVec3s.convert( points[0] ) );
+        line.setPosition( ClearGLVector3.convert( points[0] ) );
 
         activeNode = line;
 
