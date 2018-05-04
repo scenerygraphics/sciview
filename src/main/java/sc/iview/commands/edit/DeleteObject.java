@@ -39,7 +39,7 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Scene", weight = EDIT), //
+        menu = { @Menu(label = "Edit", weight = EDIT), //
                  @Menu(label = "Delete Object", weight = EDIT_DELETE_OBJECT) })
 public class DeleteObject implements Command {
 

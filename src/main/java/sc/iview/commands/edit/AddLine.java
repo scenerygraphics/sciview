@@ -42,7 +42,7 @@ import sc.iview.vector.ClearGLVector3;
 import sc.iview.vector.Vector3;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Scene", weight = EDIT), //
+        menu = { @Menu(label = "Edit", weight = EDIT), //
                  @Menu(label = "Add Line...", weight = EDIT_ADD_LINE) })
 public class AddLine implements Command {
 

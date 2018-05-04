@@ -46,7 +46,7 @@ import sc.iview.SciView;
  * Created by kharrington on 6/21/17.
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Scene", weight = EDIT), //
+        menu = { @Menu(label = "Edit", weight = EDIT), //
                  @Menu(label = "Add Volume", weight = EDIT_ADD_VOLUME) })
 public class AddVolume implements Command {
 

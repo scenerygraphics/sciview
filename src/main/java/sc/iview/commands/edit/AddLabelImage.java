@@ -59,7 +59,7 @@ import sc.iview.SciView;
  * @author Robert Haase, Scientific Computing Facility, MPI-CBG Dresden
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Scene", weight = EDIT), //
+        menu = { @Menu(label = "Edit", weight = EDIT), //
                  @Menu(label = "Add Label Image", weight = EDIT_ADD_LABEL_IMAGE) })
 public class AddLabelImage<T extends RealType<T>> implements Command {
 

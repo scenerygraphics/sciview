@@ -43,7 +43,7 @@ import sc.iview.vector.ClearGLVector3;
 import sc.iview.vector.Vector3;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Scene", weight = EDIT), //
+        menu = { @Menu(label = "Edit", weight = EDIT), //
                  @Menu(label = "Add Box...", weight = EDIT_ADD_BOX) })
 public class AddBox implements Command {
 

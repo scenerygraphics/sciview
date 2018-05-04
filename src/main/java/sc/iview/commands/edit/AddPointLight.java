@@ -39,7 +39,7 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Scene", weight = EDIT), //
+        menu = { @Menu(label = "Edit", weight = EDIT), //
                  @Menu(label = "Add Point Light", weight = EDIT_ADD_POINT_LIGHT) })
 public class AddPointLight implements Command {
 
