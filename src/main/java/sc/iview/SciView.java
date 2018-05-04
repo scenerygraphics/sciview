@@ -147,7 +147,7 @@ public class SciView extends SceneryBase {
     SceneryPanel imagePanel = null;
 
     public SciView( Context context ) {
-        super( "SciView", 800, 600, true, context );
+        super( "SciView", 800, 600, false, context );
         context.inject( this );
     }
 
