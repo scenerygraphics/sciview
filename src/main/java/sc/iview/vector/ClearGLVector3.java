@@ -58,7 +58,7 @@ public class ClearGLVector3 implements Vector3 {
     @Override public void setZ( float position ) { source.set( 2, position ); }
 
     public static GLVector convert( Vector3 v ) {
-        if( v instanceof ClearGLVector3 ) return (( ClearGLVector3 ) v).source();
+        if( v instanceof ClearGLVector3 ) return ( ( ClearGLVector3 ) v ).source();
         return new GLVector( v.xf(), v.yf(), v.zf() );
     }
 }

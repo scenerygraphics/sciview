@@ -65,6 +65,9 @@ import org.scijava.log.LogService;
 import org.scijava.menu.MenuService;
 import org.scijava.plugin.Parameter;
 import org.scijava.ui.behaviour.ClickBehaviour;
+import org.scijava.util.ColorRGB;
+import org.scijava.util.ColorRGBA;
+import org.scijava.util.Colors;
 
 import sc.iview.javafx.JavaFXMenuCreator;
 import sc.iview.process.MeshConverter;
@@ -111,6 +114,8 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 public class SciView extends SceneryBase {
+
+    private static final ColorRGB DEFAULT_COLOR = Colors.LIGHTGRAY;
 
     @Parameter
     private LogService log;
@@ -241,8 +246,6 @@ public class SciView extends SceneryBase {
         }
 
         Camera cam = new DetachedHeadCamera();
-        //cam.setPosition( new GLVector(0.0f, 0.0f, 5.0f) );
-        //cam.setPosition( new GLVector(20.0f, 10.0f, 35.0f) );
         cam.setPosition( new GLVector( 0.0f, 0.0f, 5.0f ) );
         cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 750.0f );
         cam.setTarget( new GLVector( 0, 0, 0 ) );
@@ -252,7 +255,6 @@ public class SciView extends SceneryBase {
         this.camera = cam;
 
         Box shell = new Box( new GLVector( 100.0f, 100.0f, 100.0f ), true );
-        //Box shell = new Box(new GLVector(1200.0f, 2200.0f, 4500.0f), true);
         shell.getMaterial().setDiffuse( new GLVector( 0.2f, 0.2f, 0.2f ) );
         shell.getMaterial().setSpecular( GLVector.getNullVector( 3 ) );
         shell.getMaterial().setAmbient( GLVector.getNullVector( 3 ) );
@@ -426,29 +428,29 @@ public class SciView extends SceneryBase {
     }
 
     public graphics.scenery.Node addBox() {
-        return addBox( new GLVector( 0.0f, 0.0f, 0.0f ) );
+        return addBox( new ClearGLVector3( 0.0f, 0.0f, 0.0f ) );
     }
 
-    public graphics.scenery.Node addBox( GLVector position ) {
-        return addBox( position, new GLVector( 1.0f, 1.0f, 1.0f ) );
+    public graphics.scenery.Node addBox( Vector3 position ) {
+        return addBox( position, new ClearGLVector3( 1.0f, 1.0f, 1.0f ) );
     }
 
-    public graphics.scenery.Node addBox( GLVector position, GLVector size ) {
-        return addBox( position, size, new GLVector( 0.9f, 0.9f, 0.9f ), false );
+    public graphics.scenery.Node addBox( Vector3 position, Vector3 size ) {
+        return addBox( position, size, DEFAULT_COLOR, false );
     }
 
-    public graphics.scenery.Node addBox( GLVector position, GLVector size, GLVector color, boolean inside ) {
+    public graphics.scenery.Node addBox( Vector3 position, Vector3 size, ColorRGB color, boolean inside ) {
         // TODO: use a material from the current pallate by default
         Material boxmaterial = new Material();
         boxmaterial.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        boxmaterial.setDiffuse( color );
+        boxmaterial.setDiffuse( vector( color ) );
         boxmaterial.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
         boxmaterial.setDoubleSided( true );
         //boxmaterial.getTextures().put("diffuse", SceneViewer3D.class.getResource("textures/helix.png").getFile() );
 
-        final Box box = new Box( size, inside );
+        final Box box = new Box( ClearGLVector3.convert( size ), inside );
         box.setMaterial( boxmaterial );
-        box.setPosition( position );
+        box.setPosition( ClearGLVector3.convert( position ) );
 
         //System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
 
@@ -464,23 +466,23 @@ public class SciView extends SceneryBase {
     }
 
     public graphics.scenery.Node addSphere() {
-        return addSphere( new GLVector( 0.0f, 0.0f, 0.0f ), 1 );
+        return addSphere( new ClearGLVector3( 0.0f, 0.0f, 0.0f ), 1 );
     }
 
-    public graphics.scenery.Node addSphere( GLVector position, float radius ) {
-        return addSphere( position, radius, new GLVector( 0.9f, 0.9f, 0.9f ) );
+    public graphics.scenery.Node addSphere( Vector3 position, float radius ) {
+        return addSphere( position, radius, DEFAULT_COLOR );
     }
 
-    public graphics.scenery.Node addSphere( GLVector position, float radius, GLVector color ) {
+    public graphics.scenery.Node addSphere( Vector3 position, float radius, ColorRGB color ) {
         Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        material.setDiffuse( color );
+        material.setDiffuse( vector( color ) );
         material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
         //boxmaterial.getTextures().put("diffuse", SceneViewer3D.class.getResource("textures/helix.png").getFile() );
 
         final Sphere sphere = new Sphere( radius, 20 );
         sphere.setMaterial( material );
-        sphere.setPosition( position );
+        sphere.setPosition( ClearGLVector3.convert( position ) );
 
         activeNode = sphere;
 
@@ -495,14 +497,14 @@ public class SciView extends SceneryBase {
     }
 
     public graphics.scenery.Node addLine( Vector3 start, Vector3 stop ) {
-        return addLine( start, stop, new ClearGLVector3( 0.9f, 0.9f, 0.9f ) );
+        return addLine( start, stop, DEFAULT_COLOR );
     }
 
-    public graphics.scenery.Node addLine( Vector3 start, Vector3 stop, Vector3 color ) {
+    public graphics.scenery.Node addLine( Vector3 start, Vector3 stop, ColorRGB color ) {
 
         Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        //material.setDiffuse( color ); // TODO line color
+        //material.setDiffuse( vector(color) ); // TODO line color
         material.setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
         material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
 
@@ -527,11 +529,11 @@ public class SciView extends SceneryBase {
         return line;
     }
 
-    public graphics.scenery.Node addLine( Vector3[] points, Vector3 color, double edgeWidth ) {
+    public graphics.scenery.Node addLine( Vector3[] points, ColorRGB color, double edgeWidth ) {
 
         Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        //material.setDiffuse( color ); // TODO line color
+        //material.setDiffuse( vector(color) ); // TODO line color
         material.setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
         material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
 
@@ -941,4 +943,15 @@ public class SciView extends SceneryBase {
         return v;
     }
 
+    private static GLVector vector( ColorRGB color ) {
+        if( color instanceof ColorRGBA ) {
+            return new GLVector( color.getRed() / 255f, //
+                                 color.getGreen() / 255f, //
+                                 color.getBlue() / 255f, //
+                                 color.getAlpha() / 255f );
+        }
+        return new GLVector( color.getRed() / 255f, //
+                             color.getGreen() / 255f, //
+                             color.getBlue() / 255f );
+    }
 }

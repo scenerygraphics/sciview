@@ -49,6 +49,7 @@ import net.imglib2.type.numeric.integer.UnsignedShortType;
 import org.scijava.Context;
 import org.scijava.service.SciJavaService;
 import org.scijava.ui.UIService;
+import org.scijava.util.Colors;
 
 import sc.iview.vector.ClearGLVector3;
 import sc.iview.vector.Vector3;
@@ -106,9 +107,8 @@ public class Main {
         }
 
         double edgeWidth = 0.1;
-        Vector3 color = new ClearGLVector3( 1f, 0.75f, 0.5f );
 
-        sciView.addLine( points, color, edgeWidth );
+        sciView.addLine( points, Colors.LIGHTSALMON, edgeWidth );
     }
 
     public static GenericTexture generateGenericTexture() {

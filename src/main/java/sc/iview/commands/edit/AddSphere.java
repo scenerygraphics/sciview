@@ -39,8 +39,8 @@ import org.scijava.util.ColorRGB;
 import org.scijava.util.Colors;
 
 import sc.iview.SciView;
-
-import cleargl.GLVector;
+import sc.iview.vector.ClearGLVector3;
+import sc.iview.vector.Vector3;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Scene", weight = EDIT), //
@@ -58,9 +58,7 @@ public class AddSphere implements Command {
 
     @Override
     public void run() {
-        final GLVector pos = new GLVector( 0, 0, 0 );
-        final GLVector glColor = new GLVector( color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f );
-        sciView.addSphere( pos, radius, glColor );
+        final Vector3 pos = new ClearGLVector3( 0, 0, 0 );
+        sciView.addSphere( pos, radius, color );
     }
-
 }
