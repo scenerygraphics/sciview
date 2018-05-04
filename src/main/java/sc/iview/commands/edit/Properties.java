@@ -76,13 +76,13 @@ public class Properties extends InteractiveCommand {
     @Parameter(required = false, callback = "refreshColourInSceneNode")
     private ColorRGB colour;
 
-    @Parameter(label = "Position X", style = NumberWidget.SLIDER_STYLE, min = "-1.0", max = "1.0", stepSize = "0.1", callback = "refreshPositionXInSceneNode")
+    @Parameter(label = "Position X", style = NumberWidget.SCROLL_BAR_STYLE, min = "-50.0", max = "50.0", callback = "refreshPositionXInSceneNode")
     private double positionX = 1;
 
-    @Parameter(label = "Position Y", style = NumberWidget.SLIDER_STYLE, min = "-1.0", max = "1.0", stepSize = "0.1", callback = "refreshPositionYInSceneNode")
+    @Parameter(label = "Position Y", style = NumberWidget.SCROLL_BAR_STYLE, min = "-50.0", max = "50.0", callback = "refreshPositionYInSceneNode")
     private double positionY = 1;
 
-    @Parameter(label = "Position Z", style = NumberWidget.SLIDER_STYLE, min = "-1.0", max = "1.0", stepSize = "0.1", callback = "refreshPositionZInSceneNode")
+    @Parameter(label = "Position Z", style = NumberWidget.SCROLL_BAR_STYLE, min = "-50.0", max = "50.0", callback = "refreshPositionZInSceneNode")
     private double positionZ = 1;
 
     boolean initializing = true;
