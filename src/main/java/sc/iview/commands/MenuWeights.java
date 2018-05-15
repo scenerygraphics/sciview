@@ -70,4 +70,5 @@ public final class MenuWeights {
     public static final double DEMO_MESH = 1;
     public static final double DEMO_MESH_TEXTURE = 2;
     public static final double DEMO_VOLUME_RENDER = 3;
+    public static final double DEMO_GAME_OF_LIFE = 4;
 }
