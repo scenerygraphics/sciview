@@ -96,7 +96,14 @@ public class VolumeRenderDemo implements Command {
 
         System.out.println( cube.firstElement().getClass() );
         Node v = sciView.addVolume( cube, new float[] { 1, 1, 1 } );
-        v.setScale( new GLVector( 2f, 2f, 2f ) );
+
+        float rescale = 0.5f;
+
+        GLVector scaleVec = new GLVector(rescale * (float) cube.getWidth(), rescale * (float) cube.getHeight(), rescale * (float) cube.getDepth());
+
+        Node.OrientedBoundingBox volBB = v.generateBoundingBox();
+
+        v.setScale( scaleVec );
 
         if (iso) {
             int isoLevel = 1;
@@ -109,8 +116,11 @@ public class VolumeRenderDemo implements Command {
             Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
 
             Node scMesh = sciView.addMesh( m );
-            //scMesh.setPosition()
 
+            Node.OrientedBoundingBox meshBB = scMesh.generateBoundingBox();
+
+            scMesh.setPosition( new GLVector( -0.5f*cube.getWidth()+0.5f, -0.5f*cube.getHeight()+0.5f, -0.5f*cube.getDepth()+0.5f ) );
         }
+
     }
 }

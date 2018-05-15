@@ -704,7 +704,7 @@ public class SciView extends SceneryBase {
         material.setDoubleSided( false );
 
         scMesh.setMaterial( material );
-        scMesh.setPosition( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        scMesh.setPosition( new GLVector( 0.0f, 0.0f, 0.0f ) );
 
         activeNode = scMesh;
 
