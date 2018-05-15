@@ -42,6 +42,7 @@ import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
 import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 
 import org.scijava.command.Command;
@@ -99,13 +100,17 @@ public class VolumeRenderDemo implements Command {
 
         if (iso) {
             int isoLevel = 1;
+
             @SuppressWarnings("unchecked")
-            Img<UnsignedShortType> cubeImg = ( Img<UnsignedShortType> ) cube.getImgPlus().getImg();
-            Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( cubeImg, new UnsignedShortType( isoLevel ) );
+            Img<UnsignedByteType> cubeImg = ( Img<UnsignedByteType> ) cube.getImgPlus().getImg();
+
+            Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( cubeImg, new UnsignedByteType( isoLevel ) );
 
             Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
 
-            sciView.addMesh( m );
+            Node scMesh = sciView.addMesh( m );
+            //scMesh.setPosition()
+
         }
     }
 }
