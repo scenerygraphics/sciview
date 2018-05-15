@@ -42,6 +42,7 @@ import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
 import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 
 import org.scijava.command.Command;
@@ -95,17 +96,31 @@ public class VolumeRenderDemo implements Command {
 
         System.out.println( cube.firstElement().getClass() );
         Node v = sciView.addVolume( cube, new float[] { 1, 1, 1 } );
-        v.setScale( new GLVector( 2f, 2f, 2f ) );
+
+        float rescale = 0.5f;
+
+        GLVector scaleVec = new GLVector(rescale * (float) cube.getWidth(), rescale * (float) cube.getHeight(), rescale * (float) cube.getDepth());
+
+        Node.OrientedBoundingBox volBB = v.generateBoundingBox();
+
+        v.setScale( scaleVec );
 
         if (iso) {
             int isoLevel = 1;
+
             @SuppressWarnings("unchecked")
-            Img<UnsignedShortType> cubeImg = ( Img<UnsignedShortType> ) cube.getImgPlus().getImg();
-            Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( cubeImg, new UnsignedShortType( isoLevel ) );
+            Img<UnsignedByteType> cubeImg = ( Img<UnsignedByteType> ) cube.getImgPlus().getImg();
+
+            Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( cubeImg, new UnsignedByteType( isoLevel ) );
 
             Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
 
-            sciView.addMesh( m );
+            Node scMesh = sciView.addMesh( m );
+
+            Node.OrientedBoundingBox meshBB = scMesh.generateBoundingBox();
+
+            scMesh.setPosition( new GLVector( -0.5f*cube.getWidth()+0.5f, -0.5f*cube.getHeight()+0.5f, -0.5f*cube.getDepth()+0.5f ) );
         }
+
     }
 }

@@ -704,7 +704,7 @@ public class SciView extends SceneryBase {
         material.setDoubleSided( false );
 
         scMesh.setMaterial( material );
-        scMesh.setPosition( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        scMesh.setPosition( new GLVector( 0.0f, 0.0f, 0.0f ) );
 
         activeNode = scMesh;
 
@@ -718,24 +718,7 @@ public class SciView extends SceneryBase {
     public graphics.scenery.Node addMesh( net.imagej.mesh.Mesh mesh ) {
         Mesh scMesh = MeshConverter.toScenery( mesh );
 
-        log.warn( "Converting to a scenery mesh" );
-
-        Material material = new Material();
-        material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        material.setDiffuse( new GLVector( 0.0f, 1.0f, 0.0f ) );
-        material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        material.setDoubleSided( true );
-
-        scMesh.setMaterial( material );
-        scMesh.setPosition( new GLVector( 1.0f, 1.0f, 1.0f ) );
-
-        activeNode = scMesh;
-
-        getScene().addChild( scMesh );
-
-        if( defaultArcBall ) enableArcBallControl();
-
-        return scMesh;
+        return addMesh( scMesh );
     }
 
     public void removeMesh( Mesh scMesh ) {
