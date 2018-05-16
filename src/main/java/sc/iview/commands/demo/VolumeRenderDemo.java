@@ -86,7 +86,9 @@ public class VolumeRenderDemo implements Command {
     public void run() {
         final Dataset cube;
         try {
-            File cubeFile = ResourceLoader.createFile( getClass(), "/cored_cube_var2_8bit.tif" );
+            //File cubeFile = ResourceLoader.createFile( getClass(), "/cored_cube_var2_8bit.tif" );
+
+            File cubeFile = ResourceLoader.createFile( getClass(), "/161122_angle001_t0188_segmentation_8bit_cube.tif" );
             cube = datasetIO.open( cubeFile.getAbsolutePath() );
         }
         catch (IOException exc) {
@@ -97,29 +99,18 @@ public class VolumeRenderDemo implements Command {
         System.out.println( cube.firstElement().getClass() );
         Node v = sciView.addVolume( cube, new float[] { 1, 1, 1 } );
 
-        float rescale = 0.5f;
-
-        GLVector scaleVec = new GLVector(rescale * (float) cube.getWidth(), rescale * (float) cube.getHeight(), rescale * (float) cube.getDepth());
-
-        Node.OrientedBoundingBox volBB = v.generateBoundingBox();
-
-        v.setScale( scaleVec );
-
         if (iso) {
             int isoLevel = 1;
 
             @SuppressWarnings("unchecked")
             Img<UnsignedByteType> cubeImg = ( Img<UnsignedByteType> ) cube.getImgPlus().getImg();
 
-            Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( cubeImg, new UnsignedByteType( isoLevel ) );
+            //Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( cubeImg, new UnsignedByteType( isoLevel ) );
+            Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().maxEntropy( cubeImg );
 
             Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
 
-            Node scMesh = sciView.addMesh( m );
-
-            Node.OrientedBoundingBox meshBB = scMesh.generateBoundingBox();
-
-            scMesh.setPosition( new GLVector( -0.5f*cube.getWidth()+0.5f, -0.5f*cube.getHeight()+0.5f, -0.5f*cube.getDepth()+0.5f ) );
+            sciView.addMesh( m );
         }
 
     }
