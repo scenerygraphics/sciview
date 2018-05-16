@@ -86,9 +86,8 @@ public class VolumeRenderDemo implements Command {
     public void run() {
         final Dataset cube;
         try {
-            //File cubeFile = ResourceLoader.createFile( getClass(), "/cored_cube_var2_8bit.tif" );
+            File cubeFile = ResourceLoader.createFile( getClass(), "/cored_cube_var2_8bit.tif" );
 
-            File cubeFile = ResourceLoader.createFile( getClass(), "/161122_angle001_t0188_segmentation_8bit_cube.tif" );
             cube = datasetIO.open( cubeFile.getAbsolutePath() );
         }
         catch (IOException exc) {
@@ -105,8 +104,8 @@ public class VolumeRenderDemo implements Command {
             @SuppressWarnings("unchecked")
             Img<UnsignedByteType> cubeImg = ( Img<UnsignedByteType> ) cube.getImgPlus().getImg();
 
-            //Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( cubeImg, new UnsignedByteType( isoLevel ) );
-            Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().maxEntropy( cubeImg );
+            Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( cubeImg, new UnsignedByteType( isoLevel ) );
+            //Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().maxEntropy( cubeImg );
 
             Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
 
