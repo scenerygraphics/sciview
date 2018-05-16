@@ -868,6 +868,13 @@ public class SciView extends SceneryBase {
                           voxelDimensions[1], voxelDimensions[2], nType, bytesPerVoxel );
 
         getScene().addChild( v );
+        GLVector scaleVec = new GLVector(0.5f*(float) dimensions[0], 0.5f*(float) dimensions[1], 0.5f*(float) dimensions[2] );
+
+        v.setScale( scaleVec );
+
+        // TODO: This translation should probably be accounted for in scenery; volumes use a corner-origin and
+        //        meshes use center-origin coordinate systems.
+        v.setPosition( v.getPosition().plus( new GLVector( 0.5f*dimensions[0]-0.5f, 0.5f*dimensions[1]-0.5f, 0.5f*dimensions[2]-0.5f) ) );
 
         v.setTrangemin( minVal );
         v.setTrangemax( maxVal );
