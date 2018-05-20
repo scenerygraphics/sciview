@@ -853,7 +853,7 @@ public class SciView extends SceneryBase {
         while( cursor.hasNext() ) {
             cursor.fwd();
             if( voxelType == UnsignedByteType.class ) {
-                byteBuffer.put( ( byte ) ( ( ( UnsignedByteType ) cursor.get() ).get() & 0xff ) );
+                byteBuffer.put( ( byte ) ( ( ( UnsignedByteType ) cursor.get() ).get() ) );
             } else if( voxelType == UnsignedShortType.class ) {
                 byteBuffer.putShort( ( short ) Math.abs( ( ( UnsignedShortType ) cursor.get() ).getShort() ) );
             } else if( voxelType == FloatType.class ) {
@@ -921,7 +921,7 @@ public class SciView extends SceneryBase {
         while( cursor.hasNext() ) {
             cursor.fwd();
             if( voxelType == UnsignedByteType.class ) {
-                byteBuffer.put( ( byte ) ( ( ( UnsignedByteType ) cursor.get() ).get() & 0xff ) );
+                byteBuffer.put( ( byte ) ( ( ( UnsignedByteType ) cursor.get() ).get() ) );
             } else if( voxelType == UnsignedShortType.class ) {
                 byteBuffer.putShort( ( short ) Math.abs( ( ( UnsignedShortType ) cursor.get() ).getShort() ) );
             } else if( voxelType == FloatType.class ) {
