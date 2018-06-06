@@ -29,16 +29,13 @@
 
 package sc.iview.commands.demo;
 
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_GAME_OF_LIFE;
-
+import graphics.scenery.volumes.Volume;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
 import net.imglib2.Sampler;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
-
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
 import org.scijava.plugin.Menu;
@@ -46,10 +43,10 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.Button;
 import org.scijava.widget.NumberWidget;
-
 import sc.iview.SciView;
 
-import graphics.scenery.volumes.Volume;
+import static sc.iview.commands.MenuWeights.DEMO;
+import static sc.iview.commands.MenuWeights.DEMO_GAME_OF_LIFE;
 
 /**
  * Conway's Game of Life&mdash;in 3D!
@@ -100,6 +97,16 @@ public class GameOfLife3D extends InteractiveCommand {
 
     /** Temporary buffer for use while recomputing the image. */
     private boolean[] bits = new boolean[w * h * d];
+
+    /** Retuns the Img depicting the current state */
+    public Img<UnsignedByteType> getImg() {
+        return field;
+    }
+
+    /** Returns the scenery Volume node */
+    public Volume getVolume() {
+        return volume;
+    }
 
     /** Randomizes a new bit field. */
     public void randomize() {
