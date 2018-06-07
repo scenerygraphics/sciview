@@ -146,6 +146,10 @@ public class SciView extends SceneryBase {
     private boolean useJavaFX = true;
     SceneryPanel imagePanel = null;
 
+    private float fpsScrollSpeed = 3.0f;
+
+    private float mouseSpeedMult = 0.25f;
+
     public SciView( Context context ) {
         super( "SciView", 800, 600, false, context );
         context.inject( this );
@@ -294,7 +298,106 @@ public class SciView extends SceneryBase {
             log.info( "Switched to " + currentMode + " control" );
         }
     }
+    public void setFPSSpeed(float newspeed) {
+        fpsScrollSpeed = ((newspeed>=0.30f&&newspeed<30.0f)?newspeed:3.0f);
+        String helpString = "SciView help:\n\n";
+        helpString += fpsScrollSpeed + "\n";
+        log.warn(helpString);
+    }
 
+    public float getFPSSpeed() {
+        return fpsScrollSpeed;
+    }
+    public void setMouseSpeed(float newspeed) {
+        mouseSpeedMult = ((newspeed>=0.03f&&newspeed<3.0f)?newspeed:0.25f);
+        String helpString = "SciView help:\n\n";
+        helpString += mouseSpeedMult + "\n";
+        log.warn(helpString);
+    }
+
+    public float getMouseSpeed() {
+        return mouseSpeedMult;
+    }
+
+    class enableIncrease implements ClickBehaviour {
+
+        @Override
+        public void click(int x, int y) {
+            float temp = 0.0f;
+            temp = getFPSSpeed();
+            setFPSSpeed(temp + 0.5f);
+            temp = getMouseSpeed();
+            setMouseSpeed(temp + 0.05f);
+            String helpString = "SciView help:\n\n";
+            helpString += "Increasing FPS scroll Speed\n";
+            log.warn(helpString);
+            float defaultSpeed = 3.0f;
+            defaultSpeed = getFPSSpeed();
+
+            getInputHandler().addBehaviour( "move_forward_scroll", new MovementCommand( "move_forward", "forward",
+                    () -> getScene().findObserver(),
+                    defaultSpeed ) );
+            getInputHandler().addBehaviour( "move_forward", new MovementCommand( "move_forward", "forward",
+                    () -> getScene().findObserver(),
+                    defaultSpeed ) );
+            getInputHandler().addBehaviour( "move_back", new MovementCommand( "move_back", "back",
+                    () -> getScene().findObserver(),
+                    defaultSpeed ) );
+            getInputHandler().addBehaviour( "move_left", new MovementCommand( "move_left", "left",
+                    () -> getScene().findObserver(),
+                    defaultSpeed ) );
+            getInputHandler().addBehaviour( "move_right", new MovementCommand( "move_right", "right",
+                    () -> getScene().findObserver(),
+                    defaultSpeed ) );
+            getInputHandler().addBehaviour( "move_up", new MovementCommand( "move_up", "up",
+                    () -> getScene().findObserver(),
+                    defaultSpeed ) );
+            getInputHandler().addBehaviour( "move_down", new MovementCommand( "move_down", "down",
+                    () -> getScene().findObserver(),
+                    defaultSpeed ) );
+        }
+    }
+
+    class enableDecrease implements ClickBehaviour {
+
+        @Override
+        public void click(int x, int y) {
+            float temp = 0.0f;
+            temp = getFPSSpeed();
+            setFPSSpeed(temp - 0.1f);
+            temp = getMouseSpeed();
+            setMouseSpeed(temp - 0.05f);
+            String helpString = "SciView help:\n\n";
+            helpString += "Decreasing FPS scroll Speed\n";
+            log.warn(helpString);
+
+            float defaultSpeed = 3.0f;
+            defaultSpeed = getFPSSpeed();
+
+            getInputHandler().addBehaviour( "move_forward_scroll", new MovementCommand( "move_forward", "forward",
+                    () -> getScene().findObserver(),
+                    defaultSpeed ) );
+            getInputHandler().addBehaviour( "move_forward", new MovementCommand( "move_forward", "forward",
+                    () -> getScene().findObserver(),
+                    defaultSpeed ) );
+            getInputHandler().addBehaviour( "move_back", new MovementCommand( "move_back", "back",
+                    () -> getScene().findObserver(),
+                    defaultSpeed ) );
+            getInputHandler().addBehaviour( "move_left", new MovementCommand( "move_left", "left",
+                    () -> getScene().findObserver(),
+                    defaultSpeed ) );
+            getInputHandler().addBehaviour( "move_right", new MovementCommand( "move_right", "right",
+                    () -> getScene().findObserver(),
+                    defaultSpeed ) );
+            getInputHandler().addBehaviour( "move_up", new MovementCommand( "move_up", "up",
+                    () -> getScene().findObserver(),
+                    defaultSpeed ) );
+            getInputHandler().addBehaviour( "move_down", new MovementCommand( "move_down", "down",
+                    () -> getScene().findObserver(),
+                    defaultSpeed ) );
+
+        }
+    }
     class showHelpDisplay implements ClickBehaviour {
 
         @Override
@@ -317,6 +420,8 @@ public class SciView extends SceneryBase {
             helpString += "L - decrease exposure\n";
             helpString += "shift + K - increase gamma\n";
             helpString += "shift + L - decrease gamma\n";
+            helpString += "N - Increase Speed of FPS in FPS mode and mouse movement in arcball mode\n";
+            helpString += "M - Decrease Speed of FPS in FPS mode and mouse movement in arcball mode\n";
             // HACK: Make the console pop via stderr.
             // Later, we will use a nicer dialog box or some such.
             log.warn( helpString );
@@ -345,6 +450,12 @@ public class SciView extends SceneryBase {
         getInputHandler().addBehaviour( "show_help", new showHelpDisplay() );
         getInputHandler().addKeyBinding( "show_help", "U" );
 
+        getInputHandler().addBehaviour("enable_decrease", new enableDecrease());
+        getInputHandler().addKeyBinding("enable_decrease", "M");
+
+        getInputHandler().addBehaviour("enable_increase", new enableIncrease());
+        getInputHandler().addKeyBinding("enable_increase", "N");
+
         initialized = true;
     }
 
@@ -356,11 +467,19 @@ public class SciView extends SceneryBase {
             target = getActiveNode().getPosition();
         }
 
+        float mouseSpeed = 0.25f;
+        mouseSpeed = getMouseSpeed();
+
+        String helpString = "SciView help:\n\n";
+        // HACK: hard-coded, but no accessor for getAllBindings in scenery
+        helpString += mouseSpeed + "\n";
+        log.warn(helpString);
+
         Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
         targetArcball = new ArcballCameraControl( "mouse_control", cameraSupplier, getRenderer().getWindow().getWidth(),
                                                   getRenderer().getWindow().getHeight(), target );
         targetArcball.setMaximumDistance( Float.MAX_VALUE );
-        targetArcball.setMouseSpeedMultiplier( 0.25f );
+        targetArcball.setMouseSpeedMultiplier( mouseSpeed );
         targetArcball.setScrollSpeedMultiplier( 0.05f );
         targetArcball.setDistance( getCamera().getPosition().minus( target ).magnitude() );
 
@@ -386,6 +505,11 @@ public class SciView extends SceneryBase {
         getInputHandler().removeBehaviour( "scroll_arcball" );
 
         float defaultSpeed = 3.0f;
+        defaultSpeed = getFPSSpeed();
+        String helpString = "SciView help:\n\n";
+        // HACK: hard-coded, but no accessor for getAllBindings in scenery
+        helpString += defaultSpeed + "\n";
+        log.warn(helpString);
 
         getInputHandler().addBehaviour( "move_forward_scroll", new MovementCommand( "move_forward", "forward",
                                                                                     () -> getScene().findObserver(),
