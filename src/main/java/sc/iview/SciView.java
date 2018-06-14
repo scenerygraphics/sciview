@@ -215,9 +215,7 @@ public class SciView extends SceneryBase {
                 javafx.scene.Scene scene = new javafx.scene.Scene( stackPane );
                 stage.setScene( scene );
                 stage.setOnCloseRequest( event -> {
-                    getRenderer().setShouldClose( true );
-
-                    Platform.runLater( Platform::exit );
+                    this.close();
                 } );
 
                 new JavaFXMenuCreator().createMenus( menus.getMenu("SciView"), menuBar );
@@ -264,7 +262,7 @@ public class SciView extends SceneryBase {
         shell.getMaterial().setDiffuse( new GLVector( 0.2f, 0.2f, 0.2f ) );
         shell.getMaterial().setSpecular( GLVector.getNullVector( 3 ) );
         shell.getMaterial().setAmbient( GLVector.getNullVector( 3 ) );
-        shell.getMaterial().setDoubleSided( true );
+        //shell.getMaterial().setDoubleSided( true );
         shell.getMaterial().setCullingMode( Material.CullingMode.Front );
         // Could we generate a grid pattern with proper scale/units as a texture right now?
         getScene().addChild( shell );
@@ -571,7 +569,7 @@ public class SciView extends SceneryBase {
         boxmaterial.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
         boxmaterial.setDiffuse( vector( color ) );
         boxmaterial.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        boxmaterial.setDoubleSided( true );
+        //boxmaterial.setDoubleSided( true );
         //boxmaterial.getTextures().put("diffuse", SceneViewer3D.class.getResource("textures/helix.png").getFile() );
 
         final Box box = new Box( ClearGLVector3.convert( size ), inside );
@@ -825,7 +823,7 @@ public class SciView extends SceneryBase {
         material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
         material.setDiffuse( new GLVector( 0.0f, 1.0f, 0.0f ) );
         material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        material.setDoubleSided( false );
+        //material.setDoubleSided( false );
 
         scMesh.setMaterial( material );
         scMesh.setPosition( new GLVector( 0.0f, 0.0f, 0.0f ) );
@@ -897,7 +895,7 @@ public class SciView extends SceneryBase {
     }
 
     public void dispose() {
-        getRenderer().setShouldClose( true );
+        this.close();
     }
 
     public void moveCamera( float[] position ) {
