@@ -28,66 +28,10 @@
  */
 package sc.iview;
 
-import com.sun.javafx.application.PlatformImpl;
-
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.function.Supplier;
-
-import net.imagej.Dataset;
-import net.imagej.ops.OpService;
-import net.imglib2.Cursor;
-import net.imglib2.IterableInterval;
-import net.imglib2.RealLocalizable;
-import net.imglib2.RealPoint;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.view.Views;
-
-import org.scijava.Context;
-import org.scijava.io.IOService;
-import org.scijava.log.LogService;
-import org.scijava.menu.MenuService;
-import org.scijava.plugin.Parameter;
-import org.scijava.ui.behaviour.ClickBehaviour;
-import org.scijava.util.ColorRGB;
-import org.scijava.util.ColorRGBA;
-import org.scijava.util.Colors;
-
-import sc.iview.javafx.JavaFXMenuCreator;
-import sc.iview.process.MeshConverter;
-import sc.iview.vector.ClearGLVector3;
-import sc.iview.vector.Vector3;
-
 import cleargl.GLVector;
+import com.sun.javafx.application.PlatformImpl;
 import coremem.enums.NativeTypeEnum;
-import graphics.scenery.Box;
-import graphics.scenery.Camera;
-import graphics.scenery.DetachedHeadCamera;
-import graphics.scenery.Line;
-import graphics.scenery.Material;
-import graphics.scenery.Mesh;
-import graphics.scenery.Node;
-import graphics.scenery.PointCloud;
-import graphics.scenery.PointLight;
-import graphics.scenery.SceneryBase;
-import graphics.scenery.SceneryElement;
-import graphics.scenery.Sphere;
+import graphics.scenery.*;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.controls.InputHandler;
 import graphics.scenery.controls.behaviours.ArcballCameraControl;
@@ -103,15 +47,45 @@ import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
+import net.imagej.Dataset;
+import net.imagej.ops.OpService;
+import net.imglib2.Cursor;
+import net.imglib2.IterableInterval;
+import net.imglib2.RealLocalizable;
+import net.imglib2.RealPoint;
+import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.view.Views;
+import org.scijava.Context;
+import org.scijava.display.Display;
+import org.scijava.display.DisplayService;
+import org.scijava.io.IOService;
+import org.scijava.log.LogService;
+import org.scijava.menu.MenuService;
+import org.scijava.plugin.Parameter;
+import org.scijava.ui.behaviour.ClickBehaviour;
+import org.scijava.util.ColorRGB;
+import org.scijava.util.ColorRGBA;
+import org.scijava.util.Colors;
+import sc.iview.javafx.JavaFXMenuCreator;
+import sc.iview.process.MeshConverter;
+import sc.iview.vector.ClearGLVector3;
+import sc.iview.vector.Vector3;
+
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.function.Supplier;
 
 public class SciView extends SceneryBase {
 
@@ -128,6 +102,9 @@ public class SciView extends SceneryBase {
 
     @Parameter
     private OpService ops;
+
+    @Parameter
+    private DisplayService displayService;
 
     private Thread animationThread;
     private boolean animating;
@@ -149,6 +126,7 @@ public class SciView extends SceneryBase {
     private float fpsScrollSpeed = 3.0f;
 
     private float mouseSpeedMult = 0.25f;
+    private Display<?> scijavaDisplay;
 
     public SciView( Context context ) {
         super( "SciView", 800, 600, false, context );
@@ -217,6 +195,10 @@ public class SciView extends SceneryBase {
                 stage.setOnCloseRequest( event -> {
                     this.close();
                 } );
+                stage.focusedProperty().addListener((ov, t, t1) -> {
+                    if( t1 )// If you just gained focus
+                        displayService.setActiveDisplay( getDisplay() );
+                });
 
                 new JavaFXMenuCreator().createMenus( menus.getMenu("SciView"), menuBar );
 
@@ -276,6 +258,14 @@ public class SciView extends SceneryBase {
 
     public Camera getCamera() {
         return camera;
+    }
+
+    public void setDisplay(Display<?> display) {
+        scijavaDisplay = display;
+    }
+
+    public Display<?> getDisplay() {
+        return scijavaDisplay;
     }
 
     class toggleCameraControl implements ClickBehaviour {

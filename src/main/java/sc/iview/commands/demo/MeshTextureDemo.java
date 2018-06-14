@@ -69,7 +69,7 @@ public class MeshTextureDemo implements Command {
 
         msh.getMaterial().getTransferTextures().put( "diffuse", texture );
         msh.getMaterial().getTextures().put( "diffuse", "fromBuffer:diffuse" );
-        msh.getMaterial().setDoubleSided( true );
+        //msh.getMaterial().setDoubleSided( true );
         msh.getMaterial().setNeedsTextureReload( true );
 
         msh.setNeedsUpdate( true );
