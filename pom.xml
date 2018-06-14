@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>20.4.0</version>
+		<version>22.3.0</version>
 		<relativePath />
 	</parent>
 
@@ -100,11 +100,8 @@
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 
-		<scijava-common.version>2.72.0</scijava-common.version>
-		<imagej-mesh.version>0.7.0</imagej-mesh.version>
 		<imagej-mesh-io.version>0.1.0</imagej-mesh-io.version>
-		<imagej-ops.version>0.41.0</imagej-ops.version>
-		<scenery.version>0.4.1</scenery.version>
+		
 	</properties>
 
 	<repositories>
