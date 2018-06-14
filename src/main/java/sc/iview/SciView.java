@@ -193,6 +193,7 @@ public class SciView extends SceneryBase {
                 javafx.scene.Scene scene = new javafx.scene.Scene( stackPane );
                 stage.setScene( scene );
                 stage.setOnCloseRequest( event -> {
+                    getDisplay().close();
                     this.close();
                 } );
                 stage.focusedProperty().addListener((ov, t, t1) -> {
