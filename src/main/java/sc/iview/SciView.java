@@ -934,6 +934,11 @@ public class SciView extends SceneryBase {
         long dimensions[] = new long[3];
         image.dimensions( dimensions );
 
+        Volume v = new Volume();
+
+        v.setColormap( "jet" );// TODO dont do this here
+        getScene().addChild( v );
+
         @SuppressWarnings("unchecked")
         Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
         int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
@@ -943,48 +948,23 @@ public class SciView extends SceneryBase {
         if( voxelType == UnsignedByteType.class ) {
             minVal = 0;
             maxVal = 255;
-            nType = NativeTypeEnum.UnsignedByte;
         } else if( voxelType == UnsignedShortType.class ) {
             minVal = 0;
             maxVal = 65535;
-            nType = NativeTypeEnum.UnsignedShort;
         } else if( voxelType == FloatType.class ) {
             minVal = 0;
             maxVal = 1;
-            nType = NativeTypeEnum.Float;
         } else {
             log.debug( "Type: " + voxelType +
-                       " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
+                    " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
             return null;
         }
 
-        // Make and populate a ByteBuffer with the content of the Dataset
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect( ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] *
-                                                               dimensions[2] ) );
-        Cursor<T> cursor = image.cursor();
+        updateVolume( image, name, voxelDimensions, v );
 
-        while( cursor.hasNext() ) {
-            cursor.fwd();
-            if( voxelType == UnsignedByteType.class ) {
-                byteBuffer.put( ( byte ) ( ( ( UnsignedByteType ) cursor.get() ).get() ) );
-            } else if( voxelType == UnsignedShortType.class ) {
-                byteBuffer.putShort( ( short ) Math.abs( ( ( UnsignedShortType ) cursor.get() ).getShort() ) );
-            } else if( voxelType == FloatType.class ) {
-                byteBuffer.putFloat( ( ( FloatType ) cursor.get() ).get() );
-            }
-        }
-        byteBuffer.flip();
-
-        Volume v = new Volume();
-        v.setColormap( "jet" );
-        v.readFromBuffer( name, byteBuffer, dimensions[0], dimensions[1], dimensions[2], voxelDimensions[0],
-                          voxelDimensions[1], voxelDimensions[2], nType, bytesPerVoxel );
-
-        getScene().addChild( v );
         GLVector scaleVec = new GLVector(0.5f*(float) dimensions[0], 0.5f*(float) dimensions[1], 0.5f*(float) dimensions[2] );
 
-        v.setScale( scaleVec );
-
+        v.setScale( scaleVec );// TODO maybe dont do this
         // TODO: This translation should probably be accounted for in scenery; volumes use a corner-origin and
         //        meshes use center-origin coordinate systems.
         v.setPosition( v.getPosition().plus( new GLVector( 0.5f*dimensions[0]-0.5f, 0.5f*dimensions[1]-0.5f, 0.5f*dimensions[2]-0.5f) ) );
@@ -997,7 +977,7 @@ public class SciView extends SceneryBase {
 
     public <T extends RealType<T>> graphics.scenery.Node updateVolume( IterableInterval<T> image, String name,
                                                                        float[] voxelDimensions, Volume v ) {
-        log.warn( "Add Volume" );
+        //log.warn( "Add Volume" );
 
         long dimensions[] = new long[3];
         image.dimensions( dimensions );
@@ -1009,20 +989,14 @@ public class SciView extends SceneryBase {
         NativeTypeEnum nType = null;
 
         if( voxelType == UnsignedByteType.class ) {
-            minVal = 0;
-            maxVal = 255;
             nType = NativeTypeEnum.UnsignedByte;
         } else if( voxelType == UnsignedShortType.class ) {
-            minVal = 0;
-            maxVal = 65535;
             nType = NativeTypeEnum.UnsignedShort;
         } else if( voxelType == FloatType.class ) {
-            minVal = 0;
-            maxVal = 1;
             nType = NativeTypeEnum.Float;
         } else {
             log.debug( "Type: " + voxelType +
-                       " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
+                    " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
             return null;
         }
 
@@ -1045,12 +1019,10 @@ public class SciView extends SceneryBase {
 
         v.readFromBuffer( name, byteBuffer, dimensions[0], dimensions[1], dimensions[2], voxelDimensions[0],
                           voxelDimensions[1], voxelDimensions[2], nType, bytesPerVoxel );
+
         v.setDirty( true );
         v.setNeedsUpdate( true );
         v.setNeedsUpdateWorld( true );
-
-        v.setTrangemin( minVal );
-        v.setTrangemax( maxVal );
 
         return v;
     }
