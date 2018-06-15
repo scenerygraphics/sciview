@@ -28,6 +28,7 @@
  */
 package sc.iview;
 
+import cleargl.GLTypeEnum;
 import cleargl.GLVector;
 import com.sun.javafx.application.PlatformImpl;
 import coremem.enums.NativeTypeEnum;
@@ -52,11 +53,14 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import net.imagej.Dataset;
+import net.imagej.lut.LUTService;
 import net.imagej.ops.OpService;
 import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
+import net.imglib2.display.AbstractArrayColorTable;
+import net.imglib2.display.ColorTable;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
@@ -105,6 +109,9 @@ public class SciView extends SceneryBase {
 
     @Parameter
     private DisplayService displayService;
+
+    @Parameter
+    private LUTService lutService;
 
     private Thread animationThread;
     private boolean animating;
@@ -927,6 +934,29 @@ public class SciView extends SceneryBase {
         return addVolume( image, name, 1, 1, 1 );
     }
 
+    public void setColormap( Node n, AbstractArrayColorTable colorTable ) {
+        n.getMaterial().getTextures().put("normal", "fromBuffer:diffuse" );
+        n.getMaterial().setNeedsTextureReload( true );
+
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect( ( int ) ( 4 * colorTable.getComponentCount() * colorTable.getLength() ) );
+        for( int k = 0; k < colorTable.getLength(); k++ ) {
+            for( int c = 0; c < colorTable.getComponentCount(); c++ ) {
+                //byteBuffer.putInt(colorTable.argb(k));
+                byteBuffer.putInt( colorTable.get( colorTable.getComponentCount() - c - 1, k ) );
+            }
+        }
+        byteBuffer.flip();
+
+        n.getMaterial().getTransferTextures().put("diffuse",
+                new GenericTexture(
+                        "colorTable",
+                        new GLVector( colorTable.getLength(), 1.0f, 1.0f),
+                        colorTable.getComponentCount(), GLTypeEnum.UnsignedByte, byteBuffer ));
+        n.getMaterial().getTextures().put("diffuse", "fromBuffer:diffuse");
+        n.getMaterial().setNeedsTextureReload( true );
+
+    }
+
     public <T extends RealType<T>> graphics.scenery.Node addVolume( IterableInterval<T> image, String name,
                                                                     float... voxelDimensions ) {
         log.warn( "Add Volume" );
@@ -972,6 +1002,14 @@ public class SciView extends SceneryBase {
         v.setTrangemin( minVal );
         v.setTrangemax( maxVal );
 
+        System.out.println( lutService.findLUTs().keySet() );
+
+        try {
+            setColormap( v, (AbstractArrayColorTable) lutService.loadLUT( lutService.findLUTs().get("WCIF/Cyan Hot.lut") ));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         return v;
     }
 
@@ -1002,7 +1040,7 @@ public class SciView extends SceneryBase {
 
         // Make and populate a ByteBuffer with the content of the Dataset
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect( ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] *
-                                                               dimensions[2] ) );
+                dimensions[2] ) );
         Cursor<T> cursor = image.cursor();
 
         while( cursor.hasNext() ) {
