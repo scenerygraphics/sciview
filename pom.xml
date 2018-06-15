@@ -101,7 +101,9 @@
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 
 		<imagej-mesh-io.version>0.1.0</imagej-mesh-io.version>
-		
+		<scenery.version>0.4.2-SNAPSHOT</scenery.version>
+
+
 	</properties>
 
 	<repositories>
