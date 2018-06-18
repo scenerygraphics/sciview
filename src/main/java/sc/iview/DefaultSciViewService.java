@@ -102,18 +102,28 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
         return null;
     }
 
+    public SciView makeSciView() {
+        SciView sv = new SciView( getContext() );
+
+        threadService.run( () -> sv.main() );
+        while( !sv.isInitialized() ) {
+            try {
+                Thread.sleep( 20 );
+            } catch( InterruptedException e ) {
+                logService.trace( e );
+            }
+        }
+
+        Display<?> display = displayService.createDisplay( sv );
+        displayService.setActiveDisplay( display );
+        sv.setDisplay( display );
+
+        return sv;
+    }
+
     @Override
     public void createSciView() {
-        SciView v = new SciView( getContext() );
-
-        // Maybe should use thread service instead
-        Thread viewerThread = new Thread() {
-            @Override
-            public void run() {
-                v.main();
-            }
-        };
-        viewerThread.start();
+        SciView v = makeSciView();
 
         sceneryViewers.add( v );
     }
@@ -143,19 +153,7 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
         }
 
         // Make one
-        SciView sv = new SciView( getContext() );
-
-        threadService.run( () -> sv.main() );
-        while( !sv.isInitialized() ) {
-            try {
-                Thread.sleep( 20 );
-            } catch( InterruptedException e ) {
-                logService.trace( e );
-            }
-        }
-
-        Display<?> display = displayService.createDisplay( sv );
-        displayService.setActiveDisplay( display );
+        SciView sv = makeSciView();
 
         return sv;
 

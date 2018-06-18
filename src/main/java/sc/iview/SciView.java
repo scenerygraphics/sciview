@@ -28,66 +28,11 @@
  */
 package sc.iview;
 
-import com.sun.javafx.application.PlatformImpl;
-
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.function.Supplier;
-
-import net.imagej.Dataset;
-import net.imagej.ops.OpService;
-import net.imglib2.Cursor;
-import net.imglib2.IterableInterval;
-import net.imglib2.RealLocalizable;
-import net.imglib2.RealPoint;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.view.Views;
-
-import org.scijava.Context;
-import org.scijava.io.IOService;
-import org.scijava.log.LogService;
-import org.scijava.menu.MenuService;
-import org.scijava.plugin.Parameter;
-import org.scijava.ui.behaviour.ClickBehaviour;
-import org.scijava.util.ColorRGB;
-import org.scijava.util.ColorRGBA;
-import org.scijava.util.Colors;
-
-import sc.iview.javafx.JavaFXMenuCreator;
-import sc.iview.process.MeshConverter;
-import sc.iview.vector.ClearGLVector3;
-import sc.iview.vector.Vector3;
-
+import cleargl.GLTypeEnum;
 import cleargl.GLVector;
+import com.sun.javafx.application.PlatformImpl;
 import coremem.enums.NativeTypeEnum;
-import graphics.scenery.Box;
-import graphics.scenery.Camera;
-import graphics.scenery.DetachedHeadCamera;
-import graphics.scenery.Line;
-import graphics.scenery.Material;
-import graphics.scenery.Mesh;
-import graphics.scenery.Node;
-import graphics.scenery.PointCloud;
-import graphics.scenery.PointLight;
-import graphics.scenery.SceneryBase;
-import graphics.scenery.SceneryElement;
-import graphics.scenery.Sphere;
+import graphics.scenery.*;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.controls.InputHandler;
 import graphics.scenery.controls.behaviours.ArcballCameraControl;
@@ -103,15 +48,48 @@ import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
+import net.imagej.Dataset;
+import net.imagej.lut.LUTService;
+import net.imagej.ops.OpService;
+import net.imglib2.Cursor;
+import net.imglib2.IterableInterval;
+import net.imglib2.RealLocalizable;
+import net.imglib2.RealPoint;
+import net.imglib2.display.AbstractArrayColorTable;
+import net.imglib2.display.ColorTable;
+import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.view.Views;
+import org.scijava.Context;
+import org.scijava.display.Display;
+import org.scijava.display.DisplayService;
+import org.scijava.io.IOService;
+import org.scijava.log.LogService;
+import org.scijava.menu.MenuService;
+import org.scijava.plugin.Parameter;
+import org.scijava.ui.behaviour.ClickBehaviour;
+import org.scijava.util.ColorRGB;
+import org.scijava.util.ColorRGBA;
+import org.scijava.util.Colors;
+import sc.iview.javafx.JavaFXMenuCreator;
+import sc.iview.process.MeshConverter;
+import sc.iview.vector.ClearGLVector3;
+import sc.iview.vector.Vector3;
+
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.function.Supplier;
 
 public class SciView extends SceneryBase {
 
@@ -128,6 +106,12 @@ public class SciView extends SceneryBase {
 
     @Parameter
     private OpService ops;
+
+    @Parameter
+    private DisplayService displayService;
+
+    @Parameter
+    private LUTService lutService;
 
     private Thread animationThread;
     private boolean animating;
@@ -149,6 +133,7 @@ public class SciView extends SceneryBase {
     private float fpsScrollSpeed = 3.0f;
 
     private float mouseSpeedMult = 0.25f;
+    private Display<?> scijavaDisplay;
 
     public SciView( Context context ) {
         super( "SciView", 800, 600, false, context );
@@ -215,10 +200,13 @@ public class SciView extends SceneryBase {
                 javafx.scene.Scene scene = new javafx.scene.Scene( stackPane );
                 stage.setScene( scene );
                 stage.setOnCloseRequest( event -> {
-                    getRenderer().setShouldClose( true );
-
-                    Platform.runLater( Platform::exit );
+                    getDisplay().close();
+                    this.close();
                 } );
+                stage.focusedProperty().addListener((ov, t, t1) -> {
+                    if( t1 )// If you just gained focus
+                        displayService.setActiveDisplay( getDisplay() );
+                });
 
                 new JavaFXMenuCreator().createMenus( menus.getMenu("SciView"), menuBar );
 
@@ -253,7 +241,7 @@ public class SciView extends SceneryBase {
 
         Camera cam = new DetachedHeadCamera();
         cam.setPosition( new GLVector( 0.0f, 0.0f, 5.0f ) );
-        cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 750.0f );
+        cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.001f, 750.0f );
         cam.setTarget( new GLVector( 0, 0, 0 ) );
         cam.setTargeted( true );
         cam.setActive( true );
@@ -264,7 +252,7 @@ public class SciView extends SceneryBase {
         shell.getMaterial().setDiffuse( new GLVector( 0.2f, 0.2f, 0.2f ) );
         shell.getMaterial().setSpecular( GLVector.getNullVector( 3 ) );
         shell.getMaterial().setAmbient( GLVector.getNullVector( 3 ) );
-        shell.getMaterial().setDoubleSided( true );
+        //shell.getMaterial().setDoubleSided( true );
         shell.getMaterial().setCullingMode( Material.CullingMode.Front );
         // Could we generate a grid pattern with proper scale/units as a texture right now?
         getScene().addChild( shell );
@@ -278,6 +266,14 @@ public class SciView extends SceneryBase {
 
     public Camera getCamera() {
         return camera;
+    }
+
+    public void setDisplay(Display<?> display) {
+        scijavaDisplay = display;
+    }
+
+    public Display<?> getDisplay() {
+        return scijavaDisplay;
     }
 
     class toggleCameraControl implements ClickBehaviour {
@@ -571,7 +567,7 @@ public class SciView extends SceneryBase {
         boxmaterial.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
         boxmaterial.setDiffuse( vector( color ) );
         boxmaterial.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        boxmaterial.setDoubleSided( true );
+        //boxmaterial.setDoubleSided( true );
         //boxmaterial.getTextures().put("diffuse", SceneViewer3D.class.getResource("textures/helix.png").getFile() );
 
         final Box box = new Box( ClearGLVector3.convert( size ), inside );
@@ -812,6 +808,8 @@ public class SciView extends SceneryBase {
         pointCloud.setMaterial( material );
         pointCloud.setPosition( new GLVector( 0f, 0f, 0f ) );
         getScene().addChild( pointCloud );
+
+
         return pointCloud;
     }
 
@@ -825,12 +823,12 @@ public class SciView extends SceneryBase {
         material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
         material.setDiffuse( new GLVector( 0.0f, 1.0f, 0.0f ) );
         material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        material.setDoubleSided( false );
+        //material.setDoubleSided( false );
 
         scMesh.setMaterial( material );
         scMesh.setPosition( new GLVector( 0.0f, 0.0f, 0.0f ) );
 
-        activeNode = scMesh;
+        setActiveNode( scMesh );
 
         getScene().addChild( scMesh );
 
@@ -850,6 +848,11 @@ public class SciView extends SceneryBase {
     }
 
     public Node getActiveNode() {
+        return activeNode;
+    }
+
+    public Node setActiveNode( Node n ) {
+        activeNode = n;
         return activeNode;
     }
 
@@ -897,7 +900,7 @@ public class SciView extends SceneryBase {
     }
 
     public void dispose() {
-        getRenderer().setShouldClose( true );
+        this.close();
     }
 
     public void moveCamera( float[] position ) {
@@ -938,6 +941,30 @@ public class SciView extends SceneryBase {
         return addVolume( image, name, 1, 1, 1 );
     }
 
+    public void setColormap( Node n, AbstractArrayColorTable colorTable ) {
+        n.getMaterial().getTextures().put("normal", "fromBuffer:diffuse" );
+        n.getMaterial().setNeedsTextureReload( true );
+
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect( ( int ) ( 4 * 4 * colorTable.getLength() ) );// Num bytes * num components * color map length
+        for( int k = 0; k < colorTable.getLength(); k++ ) {
+            for( int c = 0; c < colorTable.getComponentCount(); c++ ) {
+                byteBuffer.put( (byte) colorTable.get( c, k ));// TODO this assumes numBits is 8, could by 16
+            }
+            if( colorTable.getComponentCount() == 3 )
+                byteBuffer.put((byte) 255);
+        }
+        byteBuffer.flip();
+
+        n.getMaterial().getTransferTextures().put("diffuse",
+                new GenericTexture(
+                        "colorTable",
+                        new GLVector( colorTable.getLength(), 1.0f, 1.0f),
+                        4, GLTypeEnum.UnsignedByte, byteBuffer ));
+        n.getMaterial().getTextures().put("diffuse", "fromBuffer:diffuse");
+        n.getMaterial().setNeedsTextureReload( true );
+
+    }
+
     public <T extends RealType<T>> graphics.scenery.Node addVolume( IterableInterval<T> image, String name,
                                                                     float... voxelDimensions ) {
         log.warn( "Add Volume" );
@@ -945,6 +972,11 @@ public class SciView extends SceneryBase {
         long dimensions[] = new long[3];
         image.dimensions( dimensions );
 
+        Volume v = new Volume();
+
+        v.setColormap( "jet" );// TODO dont do this here
+        getScene().addChild( v );
+
         @SuppressWarnings("unchecked")
         Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
         int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
@@ -954,48 +986,23 @@ public class SciView extends SceneryBase {
         if( voxelType == UnsignedByteType.class ) {
             minVal = 0;
             maxVal = 255;
-            nType = NativeTypeEnum.UnsignedByte;
         } else if( voxelType == UnsignedShortType.class ) {
             minVal = 0;
             maxVal = 65535;
-            nType = NativeTypeEnum.UnsignedShort;
         } else if( voxelType == FloatType.class ) {
             minVal = 0;
             maxVal = 1;
-            nType = NativeTypeEnum.Float;
         } else {
             log.debug( "Type: " + voxelType +
-                       " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
+                    " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
             return null;
         }
 
-        // Make and populate a ByteBuffer with the content of the Dataset
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect( ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] *
-                                                               dimensions[2] ) );
-        Cursor<T> cursor = image.cursor();
+        updateVolume( image, name, voxelDimensions, v );
 
-        while( cursor.hasNext() ) {
-            cursor.fwd();
-            if( voxelType == UnsignedByteType.class ) {
-                byteBuffer.put( ( byte ) ( ( ( UnsignedByteType ) cursor.get() ).get() ) );
-            } else if( voxelType == UnsignedShortType.class ) {
-                byteBuffer.putShort( ( short ) Math.abs( ( ( UnsignedShortType ) cursor.get() ).getShort() ) );
-            } else if( voxelType == FloatType.class ) {
-                byteBuffer.putFloat( ( ( FloatType ) cursor.get() ).get() );
-            }
-        }
-        byteBuffer.flip();
-
-        Volume v = new Volume();
-        v.setColormap( "jet" );
-        v.readFromBuffer( name, byteBuffer, dimensions[0], dimensions[1], dimensions[2], voxelDimensions[0],
-                          voxelDimensions[1], voxelDimensions[2], nType, bytesPerVoxel );
-
-        getScene().addChild( v );
         GLVector scaleVec = new GLVector(0.5f*(float) dimensions[0], 0.5f*(float) dimensions[1], 0.5f*(float) dimensions[2] );
 
-        v.setScale( scaleVec );
-
+        v.setScale( scaleVec );// TODO maybe dont do this
         // TODO: This translation should probably be accounted for in scenery; volumes use a corner-origin and
         //        meshes use center-origin coordinate systems.
         v.setPosition( v.getPosition().plus( new GLVector( 0.5f*dimensions[0]-0.5f, 0.5f*dimensions[1]-0.5f, 0.5f*dimensions[2]-0.5f) ) );
@@ -1003,12 +1010,20 @@ public class SciView extends SceneryBase {
         v.setTrangemin( minVal );
         v.setTrangemax( maxVal );
 
+        try {
+            setColormap( v, (AbstractArrayColorTable) lutService.loadLUT( lutService.findLUTs().get("WCIF/ICA.lut") ));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        setActiveNode( v );
+
         return v;
     }
 
     public <T extends RealType<T>> graphics.scenery.Node updateVolume( IterableInterval<T> image, String name,
                                                                        float[] voxelDimensions, Volume v ) {
-        log.warn( "Add Volume" );
+        //log.warn( "Add Volume" );
 
         long dimensions[] = new long[3];
         image.dimensions( dimensions );
@@ -1020,26 +1035,20 @@ public class SciView extends SceneryBase {
         NativeTypeEnum nType = null;
 
         if( voxelType == UnsignedByteType.class ) {
-            minVal = 0;
-            maxVal = 255;
             nType = NativeTypeEnum.UnsignedByte;
         } else if( voxelType == UnsignedShortType.class ) {
-            minVal = 0;
-            maxVal = 65535;
             nType = NativeTypeEnum.UnsignedShort;
         } else if( voxelType == FloatType.class ) {
-            minVal = 0;
-            maxVal = 1;
             nType = NativeTypeEnum.Float;
         } else {
             log.debug( "Type: " + voxelType +
-                       " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
+                    " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
             return null;
         }
 
         // Make and populate a ByteBuffer with the content of the Dataset
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect( ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] *
-                                                               dimensions[2] ) );
+                dimensions[2] ) );
         Cursor<T> cursor = image.cursor();
 
         while( cursor.hasNext() ) {
@@ -1056,12 +1065,10 @@ public class SciView extends SceneryBase {
 
         v.readFromBuffer( name, byteBuffer, dimensions[0], dimensions[1], dimensions[2], voxelDimensions[0],
                           voxelDimensions[1], voxelDimensions[2], nType, bytesPerVoxel );
+
         v.setDirty( true );
         v.setNeedsUpdate( true );
         v.setNeedsUpdateWorld( true );
-
-        v.setTrangemin( minVal );
-        v.setTrangemax( maxVal );
 
         return v;
     }
