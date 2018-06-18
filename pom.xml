@@ -101,8 +101,7 @@
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 
 		<imagej-mesh-io.version>0.1.0</imagej-mesh-io.version>
-		<scenery.version>0.4.2-SNAPSHOT</scenery.version>
-
+		<scenery.version>0.4.2</scenery.version>
 
 	</properties>
 
@@ -133,6 +132,10 @@
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-ui-swing</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>ui-behaviour</artifactId>
 		</dependency>
 
 		<!-- ImageJ dependencies -->
