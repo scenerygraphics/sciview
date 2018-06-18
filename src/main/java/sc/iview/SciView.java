@@ -938,12 +938,13 @@ public class SciView extends SceneryBase {
         n.getMaterial().getTextures().put("normal", "fromBuffer:diffuse" );
         n.getMaterial().setNeedsTextureReload( true );
 
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect( ( int ) ( 4 * colorTable.getComponentCount() * colorTable.getLength() ) );
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect( ( int ) ( 4 * 4 * colorTable.getLength() ) );// Num bytes * num components * color map length
         for( int k = 0; k < colorTable.getLength(); k++ ) {
             for( int c = 0; c < colorTable.getComponentCount(); c++ ) {
-                //byteBuffer.putInt(colorTable.argb(k));
-                byteBuffer.putInt( colorTable.get( colorTable.getComponentCount() - c - 1, k ) );
+                byteBuffer.put( (byte) colorTable.get( c, k ));// TODO this assumes numBits is 8, could by 16
             }
+            if( colorTable.getComponentCount() == 3 )
+                byteBuffer.put((byte) 255);
         }
         byteBuffer.flip();
 
@@ -951,7 +952,7 @@ public class SciView extends SceneryBase {
                 new GenericTexture(
                         "colorTable",
                         new GLVector( colorTable.getLength(), 1.0f, 1.0f),
-                        colorTable.getComponentCount(), GLTypeEnum.UnsignedByte, byteBuffer ));
+                        4, GLTypeEnum.UnsignedByte, byteBuffer ));
         n.getMaterial().getTextures().put("diffuse", "fromBuffer:diffuse");
         n.getMaterial().setNeedsTextureReload( true );
 
@@ -1002,10 +1003,8 @@ public class SciView extends SceneryBase {
         v.setTrangemin( minVal );
         v.setTrangemax( maxVal );
 
-        System.out.println( lutService.findLUTs().keySet() );
-
         try {
-            setColormap( v, (AbstractArrayColorTable) lutService.loadLUT( lutService.findLUTs().get("WCIF/Cyan Hot.lut") ));
+            setColormap( v, (AbstractArrayColorTable) lutService.loadLUT( lutService.findLUTs().get("WCIF/ICA.lut") ));
         } catch (IOException e) {
             e.printStackTrace();
         }
