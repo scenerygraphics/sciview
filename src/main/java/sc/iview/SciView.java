@@ -808,6 +808,8 @@ public class SciView extends SceneryBase {
         pointCloud.setMaterial( material );
         pointCloud.setPosition( new GLVector( 0f, 0f, 0f ) );
         getScene().addChild( pointCloud );
+
+
         return pointCloud;
     }
 
@@ -826,7 +828,7 @@ public class SciView extends SceneryBase {
         scMesh.setMaterial( material );
         scMesh.setPosition( new GLVector( 0.0f, 0.0f, 0.0f ) );
 
-        activeNode = scMesh;
+        setActiveNode( scMesh );
 
         getScene().addChild( scMesh );
 
@@ -846,6 +848,11 @@ public class SciView extends SceneryBase {
     }
 
     public Node getActiveNode() {
+        return activeNode;
+    }
+
+    public Node setActiveNode( Node n ) {
+        activeNode = n;
         return activeNode;
     }
 
@@ -1008,6 +1015,8 @@ public class SciView extends SceneryBase {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        setActiveNode( v );
 
         return v;
     }

@@ -63,6 +63,7 @@ public final class MenuWeights {
     public static final double VIEW_ROTATE = 0;
     public static final double VIEW_STOP_ANIMATION = 1;
     public static final double VIEW_SCREENSHOT = 100;
+    public static final double VIEW_SET_LUT = 101;
     public static final double VIEW_ARC_BALL_CONTROL = 200;
     public static final double VIEW_FPS_CONTROL = 201;
 
