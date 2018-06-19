@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ "$TRAVIS_SECURE_ENV_VARS" = true \
   -a "$TRAVIS_PULL_REQUEST" = false \
