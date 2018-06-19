@@ -11,7 +11,7 @@ if [ "$TRAVIS_SECURE_ENV_VARS" = true \
   -a "$TRAVIS_PULL_REQUEST" = false \
   -a "$TRAVIS_BRANCH" = master \
   -a "$TRAVIS_OS_NAME" == linux \
-  -a "$TRAVIS_COMMIT_MESSAGE" == *"Trigger update site upload"* ]
+  -a "$TRAVIS_COMMIT_MESSAGE" = *"Trigger update site upload"* ]
 then
   # We'll use the standard scijava script for maven deployment
   #mvn -Pdeploy-to-imagej deploy --settings settings.xml
