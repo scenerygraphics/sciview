@@ -7,11 +7,13 @@ echo "  TRAVIS_BRANCH $TRAVIS_BRANCH"
 echo "  TRAVIS_OS_NAME $TRAVIS_OS_NAME"
 echo "  TRAVIS_COMMIT_MESSAGE $TRAVIS_COMMIT_MESSAGE"
 
+required_message="Trigger update site upload"
+
 if [ "$TRAVIS_SECURE_ENV_VARS" = true \
   -a "$TRAVIS_PULL_REQUEST" = false \
   -a "$TRAVIS_BRANCH" = master \
   -a "$TRAVIS_OS_NAME" == linux \
-  -a "$TRAVIS_COMMIT_MESSAGE" = *"Trigger update site upload"* ]
+  -z "${TRAVIS_COMMIT_MESSAGE##*$required_message*}" ]
 then
   # We'll use the standard scijava script for maven deployment
   #mvn -Pdeploy-to-imagej deploy --settings settings.xml
