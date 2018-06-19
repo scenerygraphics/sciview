@@ -58,13 +58,7 @@ public class MeshToImage implements Command {
     private OpService ops;
 
     @Parameter
-    private DisplayService displayService;
-
-    @Parameter
     private LogService logService;
-
-    @Parameter
-    private UIService uiService;
 
     @Parameter
     private SciView sciView;
@@ -88,8 +82,6 @@ public class MeshToImage implements Command {
             net.imagej.mesh.Mesh ijMesh = MeshConverter.toImageJ( currentMesh );
 
             img = ops.geom().voxelization( ijMesh, width, height, depth );
-
-            uiService.show( img );
 
         } else {
             logService.warn( "No active node. Add a mesh to the scene and select it." );
