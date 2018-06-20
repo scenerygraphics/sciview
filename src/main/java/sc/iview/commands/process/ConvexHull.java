@@ -65,8 +65,6 @@ public class ConvexHull implements Command {
             Mesh currentMesh = ( Mesh ) sciView.getActiveNode();
             net.imagej.mesh.Mesh ijMesh = MeshConverter.toImageJ( currentMesh );
 
-            currentMesh.getMaterial().setDiffuse( new GLVector( 1.0f, 0.0f, 0.0f ) );
-
             net.imagej.mesh.Mesh smoothMesh = ( net.imagej.mesh.Mesh ) ops.geom().convexHull( ijMesh ).get( 0 );
 
             sciView.addMesh( smoothMesh );
