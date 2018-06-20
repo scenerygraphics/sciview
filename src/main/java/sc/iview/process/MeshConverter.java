@@ -51,38 +51,40 @@ public class MeshConverter {
                 ( int ) Math.min( Integer.MAX_VALUE, mesh.triangles().size() );
 
         // Convert the mesh to an NIO-backed one.
-        BufferMesh bufferMesh;
-        if( mesh instanceof BufferMesh ) {
-            // TODO: Check that BufferMesh capacities & positions are compatible.
-            // Need to double check what Scenery assumes about the given buffers.
-            bufferMesh = ( BufferMesh ) mesh;
-        } else {
-            // Copy the mesh into a BufferMesh.
-            bufferMesh = new BufferMesh( vCount, tCount );
-            Meshes.copy( mesh, bufferMesh );
-        }
+        BufferMesh bufferMesh = new BufferMesh( vCount, tCount );
+
+        Meshes.calculateNormals( mesh, bufferMesh );// Force recalculation of normals because not all meshes are safe
+
+//        if( mesh instanceof BufferMesh ) {
+//            // TODO: Check that BufferMesh capacities & positions are compatible.
+//            // Need to double check what Scenery assumes about the given buffers.
+//            bufferMesh = ( BufferMesh ) mesh;
+//        } else {
+//            // Copy the mesh into a BufferMesh.
+//            bufferMesh = new BufferMesh( vCount, tCount );
+//            Meshes.copy( mesh, bufferMesh );
+//        }
 
         // Extract buffers from the BufferMesh.
         final FloatBuffer verts = bufferMesh.vertices().verts();
-        final FloatBuffer normals = bufferMesh.vertices().normals();
+        final FloatBuffer vNormals = bufferMesh.vertices().normals();
         final FloatBuffer texCoords = bufferMesh.vertices().texCoords();
         final IntBuffer indices = bufferMesh.triangles().indices();
 
         // Prepare the buffers for Scenery to ingest them.
         // Sets capacity to equal position, then resets position to 0.
         verts.flip();
-        normals.flip();
+        vNormals.flip();
         texCoords.flip();
         indices.flip();
 
         // Create and populate the Scenery mesh.
         graphics.scenery.Mesh scMesh = new graphics.scenery.Mesh();
         scMesh.setVertices( verts );
-        scMesh.setNormals( normals );
+        scMesh.setNormals( vNormals );
         scMesh.setTexcoords( texCoords );
         scMesh.setIndices( indices );
 
-        scMesh.recalculateNormals();
 
         scMesh.setBoundingBox( scMesh.generateBoundingBox() );
         scMesh.setDirty( true );
