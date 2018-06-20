@@ -60,7 +60,6 @@ import net.imglib2.IterableInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
 import net.imglib2.display.AbstractArrayColorTable;
-import net.imglib2.display.ColorTable;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;

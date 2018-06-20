@@ -102,7 +102,7 @@
 
 		<imagej-mesh-io.version>0.1.0</imagej-mesh-io.version>
 		<scenery.version>0.4.2</scenery.version>
-		<imagej-mesh.version>0.7.1-SNAPSHOT</imagej-mesh.version>
+		<imagej-mesh.version>0.7.1</imagej-mesh.version>
 	</properties>
 
 	<repositories>
@@ -146,11 +146,12 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-mesh</artifactId>
+            <version>${imagej-mesh.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-mesh-io</artifactId>
-			<version>${imagej-mesh-io.version}</version>
+            <version>${imagej-mesh-io.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
