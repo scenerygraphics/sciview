@@ -182,7 +182,7 @@ public class SciView extends SceneryBase {
 
                 label.maxWidthProperty().bind( pane.widthProperty() );
 
-                pane.setStyle( "-fx-background-color: rgb(20, 55, 20);" + "-fx-font-family: Consolas;" +
+                pane.setStyle( "-fx-background-color: rgb(50,48,47);" + "-fx-font-family: Helvetica Neue, Helvetica, Segoe, Proxima Nova, Arial, sans-serif;" +
                                "-fx-font-weight: 400;" + "-fx-font-size: 1.2em;" + "-fx-text-fill: white;" +
                                "-fx-text-alignment: center;" );
 
