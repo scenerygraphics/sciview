@@ -85,7 +85,7 @@ public class MeshTextureDemo implements Command {
 
         // TODO: Use BufferUtils, or ByteBuffer.allocateDirect?
         // Whatever we do, should we do the same everywhere?
-        ByteBuffer bb = BufferUtils.BufferUtils.allocateByte( width * height * nChannels );
+        ByteBuffer bb = BufferUtils.Companion.allocateByte( width * height * nChannels );
 
         for( int x = 0; x < width; x++ ) {
             for( int y = 0; y < height; y++ ) {

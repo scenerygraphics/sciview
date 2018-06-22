@@ -65,6 +65,7 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
+import org.apache.commons.lang3.SystemUtils;
 import org.scijava.Context;
 import org.scijava.display.Display;
 import org.scijava.display.DisplayService;
@@ -150,6 +151,12 @@ public class SciView extends SceneryBase {
     @SuppressWarnings("restriction")
     @Override
     public void init() {
+
+        // TODO: there is a Linux issue with the Vulkan renderer and X that leads to a known "RenderBadPicture" error
+        if( SystemUtils.IS_OS_LINUX && !System.getProperties().containsKey("scenery.Renderer") ) {
+            System.setProperty("scenery.Renderer","OpenGLRenderer");
+        }
+
         if( useJavaFX ) {
             CountDownLatch latch = new CountDownLatch( 1 );
             final SceneryPanel[] sceneryPanel = { null };
@@ -225,6 +232,9 @@ public class SciView extends SceneryBase {
         } else {
             setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), 512, 512 ) );
         }
+
+        // Enable push rendering by default
+        getRenderer().setPushMode( true );
 
         getHub().add( SceneryElement.Renderer, getRenderer() );
 
