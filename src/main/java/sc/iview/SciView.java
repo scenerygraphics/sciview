@@ -135,6 +135,8 @@ public class SciView extends SceneryBase {
     private float mouseSpeedMult = 0.25f;
     private Display<?> scijavaDisplay;
 
+    protected Node floor;
+
     public SciView( Context context ) {
         super( "SciView", 800, 600, false, context );
         context.inject( this );
@@ -249,25 +251,36 @@ public class SciView extends SceneryBase {
         }
 
         Camera cam = new DetachedHeadCamera();
-        cam.setPosition( new GLVector( 0.0f, 0.0f, 5.0f ) );
+        cam.setPosition( new GLVector( 0.0f, 5.0f, 5.0f ) );
         cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.001f, 750.0f );
-        cam.setTarget( new GLVector( 0, 0, 0 ) );
-        cam.setTargeted( true );
+        //cam.setTarget( new GLVector( 0, 0, 0 ) );
+        //cam.setTargeted( true );
         cam.setActive( true );
         getScene().addChild( cam );
         this.camera = cam;
 
-        Box shell = new Box( new GLVector( 100.0f, 100.0f, 100.0f ), true );
-        shell.getMaterial().setDiffuse( new GLVector( 0.2f, 0.2f, 0.2f ) );
-        shell.getMaterial().setSpecular( GLVector.getNullVector( 3 ) );
-        shell.getMaterial().setAmbient( GLVector.getNullVector( 3 ) );
-        //shell.getMaterial().setDoubleSided( true );
-        shell.getMaterial().setCullingMode( Material.CullingMode.Front );
-        // Could we generate a grid pattern with proper scale/units as a texture right now?
-        getScene().addChild( shell );
+        floor = new Box( new GLVector( 500f, 0.2f, 500f ) );
+        floor.setPosition( new GLVector(0f,-1f,0f) );
+        floor.getMaterial().setDiffuse( new GLVector(1.0f, 1.0f, 1.0f) );
+        getScene().addChild(floor);
+
+        // Try to surround the scene with a box
+//        Box shell = new Box( new GLVector( 100.0f, 100.0f, 100.0f ), true );
+//        shell.getMaterial().setDiffuse( new GLVector( 0.2f, 0.2f, 0.2f ) );
+//        shell.getMaterial().setSpecular( GLVector.getNullVector( 3 ) );
+//        shell.getMaterial().setAmbient( GLVector.getNullVector( 3 ) );
+//        //shell.getMaterial().setDoubleSided( true );
+//        shell.getMaterial().setCullingMode( Material.CullingMode.Front );
+//        // Could we generate a grid pattern with proper scale/units as a texture right now?
+//        shell.setPosition( new GLVector(0,0,0) );
+//        getCamera().addChild( shell );
 
         //initialized = true; // inputSetup is called second, so that needs to toggle initialized
     }
+
+    public void setFloor(Node n) { floor = n; }
+
+    public Node getFloor() { return floor; }
 
     public boolean isInitialized() {
         return initialized;
@@ -444,8 +457,8 @@ public class SciView extends SceneryBase {
                                                                                     false, result -> this.selectNode(
                                                                                                                       result ) ) );
 
-        enableArcBallControl();
-        //enableFPSControl();
+        //enableArcBallControl();
+        enableFPSControl();
 
         getInputHandler().addBehaviour( "toggle_control_mode", new toggleCameraControl() );
         getInputHandler().addKeyBinding( "toggle_control_mode", "X" );
