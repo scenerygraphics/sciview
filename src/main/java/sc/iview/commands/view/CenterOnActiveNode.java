@@ -40,11 +40,11 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
 import static sc.iview.commands.MenuWeights.VIEW;
-import static sc.iview.commands.MenuWeights.VIEW_TOGGLE_BOUNDING_GRID;
+import static sc.iview.commands.MenuWeights.VIEW_CENTER_ON_ACTIVE_NODE;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
 menu = {@Menu(label = "View", weight = VIEW), //
-        @Menu(label = "Center On Active Node", weight = VIEW_TOGGLE_BOUNDING_GRID+17)})
+        @Menu(label = "Center On Active Node", weight = VIEW_CENTER_ON_ACTIVE_NODE)})
 public class CenterOnActiveNode implements Command {
 
     @Parameter
