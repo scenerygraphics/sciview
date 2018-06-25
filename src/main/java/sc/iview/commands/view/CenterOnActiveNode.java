@@ -68,8 +68,6 @@ public class CenterOnActiveNode implements Command {
 
             float distance = (float) (bb.getBoundingSphere().getRadius() / Math.tan( sciView.getCamera().getFov() / 360 * java.lang.Math.PI ));
 
-            System.out.println( "Distance: " + distance );
-
             // Solve for the proper rotation
             Quaternion rotation = new Quaternion().setLookAt( sciView.getCamera().getForward().toFloatArray(),
                                                         new GLVector(0,1,0).toFloatArray(),
