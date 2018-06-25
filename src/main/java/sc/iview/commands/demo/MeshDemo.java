@@ -83,7 +83,7 @@ public class MeshDemo implements Command {
 
         Node msh = sciView.addMesh( m );
 
-        msh.fitInto( 15.0f, true );
+        //msh.fitInto( 15.0f, true );
 
         Material mat = new Material();
         mat.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
