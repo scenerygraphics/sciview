@@ -26,74 +26,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo;
+package sc.iview.commands.view;
 
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_MESH;
-
-import java.io.File;
-import java.io.IOException;
-
-import net.imagej.mesh.Mesh;
-
+import graphics.scenery.BoundingGrid;
+import graphics.scenery.Mesh;
+import graphics.scenery.Node;
 import org.scijava.command.Command;
-import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-
 import sc.iview.SciView;
 
-import cleargl.GLVector;
-import graphics.scenery.Material;
-import graphics.scenery.Node;
+import static sc.iview.commands.MenuWeights.VIEW;
+import static sc.iview.commands.MenuWeights.VIEW_TOGGLE_BOUNDING_GRID;
+import static sc.iview.commands.MenuWeights.VIEW_TOGGLE_FLOOR;
 
-/**
- * A demo of meshes.
- *
- * @author Kyle Harrington
- * @author Curtis Rueden
- */
-@Plugin(type = Command.class, label = "Mesh Demo", menuRoot = "SciView", //
-        menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Mesh", weight = DEMO_MESH) })
-public class MeshDemo implements Command {
+@Plugin(type = Command.class, menuRoot = "SciView", //
+menu = {@Menu(label = "View", weight = VIEW), //
+        @Menu(label = "Toggle Floor", weight = VIEW_TOGGLE_FLOOR)})
+public class ToggleFloor implements Command {
 
     @Parameter
-    private IOService io;
-
-    @Parameter
-    private LogService log;
+    private LogService logService;
 
     @Parameter
     private SciView sciView;
 
     @Override
     public void run() {
-        final Mesh m;
-        try {
-            File meshFile = ResourceLoader.createFile( getClass(), "/WieseRobert_simplified_Cip1.stl" );
-            m = (Mesh) io.open( meshFile.getAbsolutePath() );
-        }
-        catch (IOException exc) {
-            log.error( exc );
-            return;
-        }
-
-        Node msh = sciView.addMesh( m );
-
-        //msh.fitInto( 15.0f, true );
-
-        Material mat = new Material();
-        mat.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        mat.setDiffuse( new GLVector( 0.8f, 0.5f, 0.4f ) );
-        mat.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        //mat.setDoubleSided( true );
-
-        msh.setMaterial( mat );
-
-        msh.setNeedsUpdate( true );
-        msh.setDirty( true );
+        sciView.getFloor().setVisible( !sciView.getFloor().getVisible() );
     }
+
 }
