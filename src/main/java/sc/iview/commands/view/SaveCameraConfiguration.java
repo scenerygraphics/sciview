@@ -92,8 +92,6 @@ public class SaveCameraConfiguration implements Command {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        sciView.getCamera().setPosition( new GLVector(0,5,5) );
     }
 
 }
