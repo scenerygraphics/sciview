@@ -317,7 +317,11 @@ public class SciView extends SceneryBase {
         }
     }
     public void setFPSSpeed(float newspeed) {
-        fpsScrollSpeed = ((newspeed>=0.30f&&newspeed<30.0f)?newspeed:3.0f);
+        if (newspeed<0.30f)
+            newspeed = 0.3f;
+        else if (newspeed > 30.0f)
+            newspeed = 30.0f;
+        fpsScrollSpeed = newspeed;
         String helpString = "SciView help:\n\n";
         helpString += fpsScrollSpeed + "\n";
         log.warn(helpString);
@@ -327,7 +331,11 @@ public class SciView extends SceneryBase {
         return fpsScrollSpeed;
     }
     public void setMouseSpeed(float newspeed) {
-        mouseSpeedMult = ((newspeed>=0.03f&&newspeed<3.0f)?newspeed:0.25f);
+        if (newspeed<0.30f)
+            newspeed = 0.3f;
+        else if (newspeed > 3.0f)
+            newspeed = 3.0f;
+        mouseSpeedMult = newspeed;
         String helpString = "SciView help:\n\n";
         helpString += mouseSpeedMult + "\n";
         log.warn(helpString);
@@ -996,7 +1004,6 @@ public class SciView extends SceneryBase {
 
         Volume v = new Volume();
 
-        v.setColormap( "jet" );// TODO dont do this here
         getScene().addChild( v );
 
         @SuppressWarnings("unchecked")
