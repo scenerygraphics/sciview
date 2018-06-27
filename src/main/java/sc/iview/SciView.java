@@ -341,6 +341,30 @@ public class SciView extends SceneryBase {
         return mouseSpeedMult;
     }
 
+    public void resetFPSInputs() {
+        getInputHandler().addBehaviour( "move_forward_scroll", new MovementCommand( "move_forward", "forward",
+                () -> getScene().findObserver(),
+                getFPSSpeed() ) );
+        getInputHandler().addBehaviour( "move_forward", new MovementCommand( "move_forward", "forward",
+                () -> getScene().findObserver(),
+                getFPSSpeed() ) );
+        getInputHandler().addBehaviour( "move_back", new MovementCommand( "move_back", "back",
+                () -> getScene().findObserver(),
+                getFPSSpeed() ) );
+        getInputHandler().addBehaviour( "move_left", new MovementCommand( "move_left", "left",
+                () -> getScene().findObserver(),
+                getFPSSpeed() ) );
+        getInputHandler().addBehaviour( "move_right", new MovementCommand( "move_right", "right",
+                () -> getScene().findObserver(),
+                getFPSSpeed() ) );
+        getInputHandler().addBehaviour( "move_up", new MovementCommand( "move_up", "up",
+                () -> getScene().findObserver(),
+                getFPSSpeed() ) );
+        getInputHandler().addBehaviour( "move_down", new MovementCommand( "move_down", "down",
+                () -> getScene().findObserver(),
+                getFPSSpeed() ) );
+    }
+
     class enableIncrease implements ClickBehaviour {
 
         @Override
@@ -350,27 +374,7 @@ public class SciView extends SceneryBase {
 
             log.warn("Increasing FPS scroll Speed");
 
-            getInputHandler().addBehaviour( "move_forward_scroll", new MovementCommand( "move_forward", "forward",
-                    () -> getScene().findObserver(),
-                    getFPSSpeed() ) );
-            getInputHandler().addBehaviour( "move_forward", new MovementCommand( "move_forward", "forward",
-                    () -> getScene().findObserver(),
-                    getFPSSpeed() ) );
-            getInputHandler().addBehaviour( "move_back", new MovementCommand( "move_back", "back",
-                    () -> getScene().findObserver(),
-                    getFPSSpeed() ) );
-            getInputHandler().addBehaviour( "move_left", new MovementCommand( "move_left", "left",
-                    () -> getScene().findObserver(),
-                    getFPSSpeed() ) );
-            getInputHandler().addBehaviour( "move_right", new MovementCommand( "move_right", "right",
-                    () -> getScene().findObserver(),
-                    getFPSSpeed() ) );
-            getInputHandler().addBehaviour( "move_up", new MovementCommand( "move_up", "up",
-                    () -> getScene().findObserver(),
-                    getFPSSpeed() ) );
-            getInputHandler().addBehaviour( "move_down", new MovementCommand( "move_down", "down",
-                    () -> getScene().findObserver(),
-                    getFPSSpeed() ) );
+            resetFPSInputs();
         }
     }
 
@@ -383,28 +387,7 @@ public class SciView extends SceneryBase {
 
             log.warn( "Decreasing FPS scroll Speed" );
 
-            getInputHandler().addBehaviour( "move_forward_scroll", new MovementCommand( "move_forward", "forward",
-                    () -> getScene().findObserver(),
-                    getFPSSpeed() ) );
-            getInputHandler().addBehaviour( "move_forward", new MovementCommand( "move_forward", "forward",
-                    () -> getScene().findObserver(),
-                    getFPSSpeed() ) );
-            getInputHandler().addBehaviour( "move_back", new MovementCommand( "move_back", "back",
-                    () -> getScene().findObserver(),
-                    getFPSSpeed() ) );
-            getInputHandler().addBehaviour( "move_left", new MovementCommand( "move_left", "left",
-                    () -> getScene().findObserver(),
-                    getFPSSpeed() ) );
-            getInputHandler().addBehaviour( "move_right", new MovementCommand( "move_right", "right",
-                    () -> getScene().findObserver(),
-                    getFPSSpeed() ) );
-            getInputHandler().addBehaviour( "move_up", new MovementCommand( "move_up", "up",
-                    () -> getScene().findObserver(),
-                    getFPSSpeed() ) );
-            getInputHandler().addBehaviour( "move_down", new MovementCommand( "move_down", "down",
-                    () -> getScene().findObserver(),
-                    getFPSSpeed() ) );
-
+            resetFPSInputs();
         }
     }
     class showHelpDisplay implements ClickBehaviour {
@@ -520,27 +503,7 @@ public class SciView extends SceneryBase {
         helpString += defaultSpeed + "\n";
         log.warn(helpString);
 
-        getInputHandler().addBehaviour( "move_forward_scroll", new MovementCommand( "move_forward", "forward",
-                                                                                    () -> getScene().findObserver(),
-                                                                                    defaultSpeed ) );
-        getInputHandler().addBehaviour( "move_forward", new MovementCommand( "move_forward", "forward",
-                                                                             () -> getScene().findObserver(),
-                                                                             defaultSpeed ) );
-        getInputHandler().addBehaviour( "move_back", new MovementCommand( "move_back", "back",
-                                                                          () -> getScene().findObserver(),
-                                                                          defaultSpeed ) );
-        getInputHandler().addBehaviour( "move_left", new MovementCommand( "move_left", "left",
-                                                                          () -> getScene().findObserver(),
-                                                                          defaultSpeed ) );
-        getInputHandler().addBehaviour( "move_right", new MovementCommand( "move_right", "right",
-                                                                           () -> getScene().findObserver(),
-                                                                           defaultSpeed ) );
-        getInputHandler().addBehaviour( "move_up", new MovementCommand( "move_up", "up",
-                                                                        () -> getScene().findObserver(),
-                                                                        defaultSpeed ) );
-        getInputHandler().addBehaviour( "move_down", new MovementCommand( "move_down", "down",
-                                                                          () -> getScene().findObserver(),
-                                                                          defaultSpeed ) );
+        resetFPSInputs();
 
 //        getInputHandler().addKeyBinding( "move_up", "C" );
 //        getInputHandler().addKeyBinding( "move_down", "Z" );
