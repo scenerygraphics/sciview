@@ -28,12 +28,10 @@
  */
 package sc.iview.commands.edit;
 
-import static org.scijava.widget.ChoiceWidget.LIST_BOX_STYLE;
-import static sc.iview.commands.MenuWeights.EDIT;
-import static sc.iview.commands.MenuWeights.EDIT_PROPERTIES;
-
-import java.util.ArrayList;
-
+import cleargl.GLVector;
+import com.jogamp.opengl.math.Quaternion;
+import graphics.scenery.Node;
+import graphics.scenery.PointLight;
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
 import org.scijava.module.MutableModuleItem;
@@ -43,11 +41,13 @@ import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
 import org.scijava.util.ColorRGB;
 import org.scijava.widget.NumberWidget;
-
 import sc.iview.SciView;
 
-import cleargl.GLVector;
-import graphics.scenery.Node;
+import java.util.ArrayList;
+
+import static org.scijava.widget.ChoiceWidget.LIST_BOX_STYLE;
+import static sc.iview.commands.MenuWeights.EDIT;
+import static sc.iview.commands.MenuWeights.EDIT_PROPERTIES;
 
 /**
  * TODO: If the list of sceneNode changes while this dialog is open, it may not
@@ -73,6 +73,9 @@ public class Properties extends InteractiveCommand {
     @Parameter(required = false, style = LIST_BOX_STYLE, callback = "refreshSceneNodeInDialog")
     private String sceneNode;
 
+    @Parameter(callback = "refreshVisibilityInSceneNode")
+    private boolean visible;
+
     @Parameter(required = false, callback = "refreshColourInSceneNode")
     private ColorRGB colour;
 
@@ -85,6 +88,15 @@ public class Properties extends InteractiveCommand {
     @Parameter(label = "Position Z", style = NumberWidget.SCROLL_BAR_STYLE, min = "-50.0", max = "50.0", callback = "refreshPositionZInSceneNode")
     private double positionZ = 1;
 
+    @Parameter(label = "Rotation Phi", style = NumberWidget.SPINNER_STYLE, min = "-3.14159265358979323846", max = "3.14159265358979323846", stepSize = "0.01", callback = "refreshRotationInSceneNode")
+    private double rotationPhi;
+
+    @Parameter(label = "Rotation Theta", style = NumberWidget.SPINNER_STYLE, min = "0.0", max = "3.14159265358979323846", stepSize = "0.01", callback = "refreshRotationInSceneNode")
+    private double rotationTheta;
+
+    @Parameter(label = "Rotation Psi", style = NumberWidget.SPINNER_STYLE, min = "-3.14159265358979323846", max = "3.14159265358979323846", stepSize = "0.01", callback = "refreshRotationInSceneNode")
+    private double rotationPsi;
+
     boolean initializing = true;
 
     ArrayList<String> sceneNodeChoices = new ArrayList<>();
@@ -96,6 +108,7 @@ public class Properties extends InteractiveCommand {
 
         refreshSceneNodeInDialog();
         refreshColourInDialog();
+        refreshVisibilityInDialog();
 
         initializing = false;
 
@@ -105,7 +118,8 @@ public class Properties extends InteractiveCommand {
         initializing = true;
         sceneNodeChoices = new ArrayList<>();
         int count = 0;
-        for( Node node : sciView.getSceneNodes() ) {
+        // here, we want all nodes of the scene, not excluding PointLights and Cameras
+        for( Node node : sciView.getSceneNodes(n -> true) ) {
             sceneNodeChoices.add( makeIdentifier( node, count ) );
             count++;
         }
@@ -128,7 +142,7 @@ public class Properties extends InteractiveCommand {
         currentSceneNode = null;
 
         int count = 0;
-        for( Node node : sciView.getSceneNodes() ) {
+        for( Node node : sciView.getSceneNodes(n -> true) ) {
             if( identifier.equals( makeIdentifier( node, count ) ) ) {
                 currentSceneNode = node;
                 //System.out.println("current node found");
@@ -139,8 +153,9 @@ public class Properties extends InteractiveCommand {
 
         // update property fields according to scene node properties
         refreshColourInDialog();
+        refreshVisibilityInDialog();
 
-        if( sceneNodeChoices.size() != sciView.getSceneNodes().length ) {
+        if( sceneNodeChoices.size() != sciView.getSceneNodes(n -> true).length ) {
             rebuildSceneObjectChoiseList();
         }
     }
@@ -152,10 +167,54 @@ public class Properties extends InteractiveCommand {
         }
 
         initializing = true;
-        GLVector colourVector = currentSceneNode.getMaterial().getDiffuse();
+
+        GLVector colourVector;
+        if(currentSceneNode instanceof PointLight) {
+            colourVector = ((PointLight) currentSceneNode).getEmissionColor();
+        } else {
+            colourVector = currentSceneNode.getMaterial().getDiffuse();
+        }
+
         colour = new ColorRGB( ( int ) ( colourVector.get( 0 ) * 255 ), ( int ) ( colourVector.get( 1 ) * 255 ),
                                ( int ) ( colourVector.get( 2 ) * 255 ) );
         initializing = false;
+    }
+
+    private void refreshVisibilityInDialog() {
+        if( currentSceneNode == null ) {
+            return;
+        }
+
+        visible = currentSceneNode.getVisible();
+    }
+
+    private void refreshVisibilityInSceneNode() {
+        if( currentSceneNode == null ) {
+            return;
+        }
+
+        currentSceneNode.setVisible(visible);
+    }
+
+    private void refreshRotationInDialog() {
+        if( currentSceneNode == null) {
+            return;
+        }
+
+        float[] eulerAngles = new float[3];
+        currentSceneNode.getRotation().toEuler(eulerAngles);
+
+        rotationPhi = eulerAngles[0];
+        rotationTheta = eulerAngles[1];
+        rotationPsi = eulerAngles[2];
+    }
+
+    private void refreshRotationInSceneNode() {
+        if( currentSceneNode == null ) {
+            return;
+        }
+
+        currentSceneNode.setRotation(new Quaternion().setFromEuler((float)rotationPhi, (float)rotationTheta, (float)rotationPsi));
     }
 
     // =======================================
@@ -165,9 +224,17 @@ public class Properties extends InteractiveCommand {
             currentSceneNode.getMaterial().getDiffuse() == null ) {
             return;
         }
-        currentSceneNode.getMaterial().setDiffuse( new GLVector( ( float ) colour.getRed() / 255,
-                                                                 ( float ) colour.getGreen() / 255,
-                                                                 ( float ) colour.getBlue() / 255 ) );
+
+        if( currentSceneNode instanceof PointLight) {
+            ((PointLight) currentSceneNode).setEmissionColor(new GLVector(
+                    (float) colour.getRed() / 255,
+                    (float) colour.getGreen() / 255,
+                    (float) colour.getBlue() / 255));
+        } else {
+            currentSceneNode.getMaterial().setDiffuse(new GLVector((float) colour.getRed() / 255,
+                    (float) colour.getGreen() / 255,
+                    (float) colour.getBlue() / 255));
+        }
     }
 
     private void refreshPositionXInSceneNode() {
