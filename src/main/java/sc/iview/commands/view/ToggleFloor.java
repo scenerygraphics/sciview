@@ -28,9 +28,6 @@
  */
 package sc.iview.commands.view;
 
-import graphics.scenery.BoundingGrid;
-import graphics.scenery.Mesh;
-import graphics.scenery.Node;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
@@ -39,7 +36,6 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
 import static sc.iview.commands.MenuWeights.VIEW;
-import static sc.iview.commands.MenuWeights.VIEW_TOGGLE_BOUNDING_GRID;
 import static sc.iview.commands.MenuWeights.VIEW_TOGGLE_FLOOR;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
