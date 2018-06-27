@@ -37,6 +37,7 @@ import org.scijava.event.EventService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.script.ScriptService;
 import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
 import org.scijava.thread.ThreadService;
@@ -58,6 +59,9 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
 
     @Parameter
     private EventService eventService;
+
+    @Parameter
+    private ScriptService scriptService;
 
     @Parameter
     private ThreadService threadService;
@@ -131,6 +135,11 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
     @Override
     public int numSciView() {
         return sceneryViewers.size();
+    }
+
+    @Override
+    public void initialize() {
+        scriptService.addAlias(SciView.class);
     }
 
     /* Event Handlers */

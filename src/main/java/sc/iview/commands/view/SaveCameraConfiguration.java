@@ -79,7 +79,7 @@ public class SaveCameraConfiguration implements Command {
             GLVector pos = sciView.getCamera().getPosition();
             Quaternion rot = sciView.getCamera().getRotation();
 
-            String scriptContents = "; @sc.iview.SciView sciView\n\n";
+            String scriptContents = "; @SciView sciView\n\n";
             scriptContents += "(.setPosition (.getCamera sciView) (cleargl.GLVector. (float-array [" + pos.x() + " " + pos.y() + " " + pos.z() + "])))\n";
             scriptContents += "(.setRotation (.getCamera sciView) (com.jogamp.opengl.math.Quaternion. " + rot.getX() + " " + rot.getY() + " " + rot.getZ() + " " + rot.getW() + "))\n";
 
