@@ -1113,4 +1113,13 @@ public class SciView extends SceneryBase {
                              color.getGreen() / 255f, //
                              color.getBlue() / 255f );
     }
+
+    public boolean getPushMode() {
+        return getRenderer().getPushMode();
+    }
+
+    public boolean setPushMode(boolean push) {
+        getRenderer().setPushMode(push);
+        return getRenderer().getPushMode();
+    }
 }
