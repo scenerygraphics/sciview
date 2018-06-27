@@ -121,7 +121,7 @@ public class SciView extends SceneryBase {
     protected ArcballCameraControl targetArcball;
     protected FPSCameraControl fpsControl;
 
-    private Boolean defaultArcBall = true;// arcball target broken
+    private Boolean defaultArcBall = false;// arcball target broken
 
     Camera camera = null;
 
@@ -322,9 +322,7 @@ public class SciView extends SceneryBase {
         else if (newspeed > 30.0f)
             newspeed = 30.0f;
         fpsScrollSpeed = newspeed;
-        String helpString = "SciView help:\n\n";
-        helpString += fpsScrollSpeed + "\n";
-        log.warn(helpString);
+        log.warn( "FPS scroll speed: " + fpsScrollSpeed );
     }
 
     public float getFPSSpeed() {
@@ -336,9 +334,7 @@ public class SciView extends SceneryBase {
         else if (newspeed > 3.0f)
             newspeed = 3.0f;
         mouseSpeedMult = newspeed;
-        String helpString = "SciView help:\n\n";
-        helpString += mouseSpeedMult + "\n";
-        log.warn(helpString);
+        log.warn( "Mouse speed: " + mouseSpeedMult );
     }
 
     public float getMouseSpeed() {
@@ -349,38 +345,32 @@ public class SciView extends SceneryBase {
 
         @Override
         public void click(int x, int y) {
-            float temp = 0.0f;
-            temp = getFPSSpeed();
-            setFPSSpeed(temp + 0.5f);
-            temp = getMouseSpeed();
-            setMouseSpeed(temp + 0.05f);
-            String helpString = "SciView help:\n\n";
-            helpString += "Increasing FPS scroll Speed\n";
-            log.warn(helpString);
-            float defaultSpeed = 3.0f;
-            defaultSpeed = getFPSSpeed();
+            setFPSSpeed(getFPSSpeed() + 0.5f);
+            setMouseSpeed(getMouseSpeed() + 0.05f);
+
+            log.warn("Increasing FPS scroll Speed");
 
             getInputHandler().addBehaviour( "move_forward_scroll", new MovementCommand( "move_forward", "forward",
                     () -> getScene().findObserver(),
-                    defaultSpeed ) );
+                    getFPSSpeed() ) );
             getInputHandler().addBehaviour( "move_forward", new MovementCommand( "move_forward", "forward",
                     () -> getScene().findObserver(),
-                    defaultSpeed ) );
+                    getFPSSpeed() ) );
             getInputHandler().addBehaviour( "move_back", new MovementCommand( "move_back", "back",
                     () -> getScene().findObserver(),
-                    defaultSpeed ) );
+                    getFPSSpeed() ) );
             getInputHandler().addBehaviour( "move_left", new MovementCommand( "move_left", "left",
                     () -> getScene().findObserver(),
-                    defaultSpeed ) );
+                    getFPSSpeed() ) );
             getInputHandler().addBehaviour( "move_right", new MovementCommand( "move_right", "right",
                     () -> getScene().findObserver(),
-                    defaultSpeed ) );
+                    getFPSSpeed() ) );
             getInputHandler().addBehaviour( "move_up", new MovementCommand( "move_up", "up",
                     () -> getScene().findObserver(),
-                    defaultSpeed ) );
+                    getFPSSpeed() ) );
             getInputHandler().addBehaviour( "move_down", new MovementCommand( "move_down", "down",
                     () -> getScene().findObserver(),
-                    defaultSpeed ) );
+                    getFPSSpeed() ) );
         }
     }
 
@@ -388,39 +378,32 @@ public class SciView extends SceneryBase {
 
         @Override
         public void click(int x, int y) {
-            float temp = 0.0f;
-            temp = getFPSSpeed();
-            setFPSSpeed(temp - 0.1f);
-            temp = getMouseSpeed();
-            setMouseSpeed(temp - 0.05f);
-            String helpString = "SciView help:\n\n";
-            helpString += "Decreasing FPS scroll Speed\n";
-            log.warn(helpString);
+            setFPSSpeed(getFPSSpeed() - 0.1f);
+            setMouseSpeed(getMouseSpeed() - 0.05f);
 
-            float defaultSpeed = 3.0f;
-            defaultSpeed = getFPSSpeed();
+            log.warn( "Decreasing FPS scroll Speed" );
 
             getInputHandler().addBehaviour( "move_forward_scroll", new MovementCommand( "move_forward", "forward",
                     () -> getScene().findObserver(),
-                    defaultSpeed ) );
+                    getFPSSpeed() ) );
             getInputHandler().addBehaviour( "move_forward", new MovementCommand( "move_forward", "forward",
                     () -> getScene().findObserver(),
-                    defaultSpeed ) );
+                    getFPSSpeed() ) );
             getInputHandler().addBehaviour( "move_back", new MovementCommand( "move_back", "back",
                     () -> getScene().findObserver(),
-                    defaultSpeed ) );
+                    getFPSSpeed() ) );
             getInputHandler().addBehaviour( "move_left", new MovementCommand( "move_left", "left",
                     () -> getScene().findObserver(),
-                    defaultSpeed ) );
+                    getFPSSpeed() ) );
             getInputHandler().addBehaviour( "move_right", new MovementCommand( "move_right", "right",
                     () -> getScene().findObserver(),
-                    defaultSpeed ) );
+                    getFPSSpeed() ) );
             getInputHandler().addBehaviour( "move_up", new MovementCommand( "move_up", "up",
                     () -> getScene().findObserver(),
-                    defaultSpeed ) );
+                    getFPSSpeed() ) );
             getInputHandler().addBehaviour( "move_down", new MovementCommand( "move_down", "down",
                     () -> getScene().findObserver(),
-                    defaultSpeed ) );
+                    getFPSSpeed() ) );
 
         }
     }
