@@ -87,8 +87,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class SciView extends SceneryBase {
@@ -866,9 +866,13 @@ public class SciView extends SceneryBase {
     }
 
     public Node[] getSceneNodes() {
-        CopyOnWriteArrayList<Node> children = getScene().getChildren();
+        return getSceneNodes(n -> !(n instanceof Camera) && !(n instanceof PointLight));
+    }
 
-        return getScene().getChildren().toArray( new Node[children.size()] );
+    public Node[] getSceneNodes(Predicate<? super Node> filter) {
+        return getScene().getChildren()
+                .stream()
+                .filter(filter).toArray(Node[]::new);
     }
 
     public void deleteSelectedMesh() {
