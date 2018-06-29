@@ -90,13 +90,6 @@
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>SciView developers.</license.copyrightOwners>
 
-		<!--
-		HACK: The following list of allowed-to-be-duplicated classes
-		facilitates intended combinations of artifacts:
-		* com.google.android.tools:dx + junit:junit
-		-->
-		<allowedDuplicateClasses>junit.*</allowedDuplicateClasses>
-
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 
