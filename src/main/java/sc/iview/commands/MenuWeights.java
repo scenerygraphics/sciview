@@ -53,6 +53,7 @@ public final class MenuWeights {
     public static final double EDIT_ADD_POINT_LIGHT = 3;
     public static final double EDIT_ADD_LABEL_IMAGE = 4;
     public static final double EDIT_ADD_VOLUME = 5;
+    public static final double EDIT_TOGGLE_FLOOR = 50;
     public static final double EDIT_DELETE_OBJECT = 100;
     public static final double EDIT_PROPERTIES = 200;
 
@@ -67,7 +68,6 @@ public final class MenuWeights {
     public static final double VIEW_SET_LUT = 101;
     public static final double VIEW_TOGGLE_BOUNDING_GRID = 102;
     public static final double VIEW_CENTER_ON_ACTIVE_NODE = 103;
-    public static final double VIEW_TOGGLE_FLOOR = 104;
     public static final double VIEW_ARC_BALL_CONTROL = 200;
     public static final double VIEW_FPS_CONTROL = 201;
     public static final double VIEW_RESET_CAMERA_ROTATION = 202;

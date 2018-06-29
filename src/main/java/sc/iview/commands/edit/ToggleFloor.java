@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.commands.edit;
 
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
@@ -35,12 +35,12 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
-import static sc.iview.commands.MenuWeights.VIEW;
-import static sc.iview.commands.MenuWeights.VIEW_TOGGLE_FLOOR;
+import static sc.iview.commands.MenuWeights.EDIT;
+import static sc.iview.commands.MenuWeights.EDIT_TOGGLE_FLOOR;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
-menu = {@Menu(label = "View", weight = VIEW), //
-        @Menu(label = "Toggle Floor", weight = VIEW_TOGGLE_FLOOR)})
+menu = {@Menu(label = "Edit", weight = EDIT), //
+        @Menu(label = "Toggle Floor", weight = EDIT_TOGGLE_FLOOR)})
 public class ToggleFloor implements Command {
 
     @Parameter
