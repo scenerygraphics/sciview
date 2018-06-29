@@ -72,6 +72,7 @@ public final class MenuWeights {
     public static final double VIEW_FPS_CONTROL = 201;
     public static final double VIEW_RESET_CAMERA_ROTATION = 202;
     public static final double VIEW_RESET_CAMERA_POSITION = 203;
+    public static final double VIEW_SAVE_CAMERA_CONFIGURATION = 204;
 
     public static final double DEMO_LINES = 0;
     public static final double DEMO_MESH = 1;
