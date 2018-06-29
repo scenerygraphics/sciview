@@ -50,11 +50,12 @@ public class RotateView implements Command {
 
     @Override
     public void run() {
+        sciView.enableArcBallControl();
+
         sciView.animate( 30, () -> {
-            for( Node node : sciView.getSceneNodes() ) {
-                node.getRotation().rotateByAngleY( 0.01f );
-                node.setNeedsUpdate( true );
-            }
+            sciView.getTargetArcball().init(1,0);
+            sciView.getTargetArcball().drag(3,0);
+            sciView.getTargetArcball().end( 5, 0);
         } );
     }
 
