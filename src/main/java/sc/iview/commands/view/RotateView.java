@@ -53,9 +53,9 @@ public class RotateView implements Command {
         sciView.enableArcBallControl();
 
         sciView.animate( 30, () -> {
-            sciView.getTargetArcball().init(1,0);
-            sciView.getTargetArcball().drag(3,0);
-            sciView.getTargetArcball().end( 5, 0);
+            sciView.getTargetArcball().init( 1, 0 );
+            sciView.getTargetArcball().drag( 3, 0 );
+            sciView.getTargetArcball().end( 5, 0 );
         } );
     }
 
