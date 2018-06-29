@@ -724,7 +724,8 @@ public class SciView extends SceneryBase {
         final Object data = io.open( source );
         if( data instanceof net.imagej.mesh.Mesh ) addMesh( ( net.imagej.mesh.Mesh ) data );
         else if( data instanceof graphics.scenery.Mesh ) addMesh( ( graphics.scenery.Mesh ) data );
-        else if (data instanceof Dataset) addVolume( ( Dataset ) data );
+        else if( data instanceof graphics.scenery.PointCloud ) addPointCloud( ( graphics.scenery.PointCloud ) data );
+        else if( data instanceof Dataset ) addVolume( ( Dataset ) data );
         else if( data instanceof IterableInterval ) addVolume( ( ( IterableInterval ) data ), source);
         else if( data instanceof List ) {
             final List<?> list = ( List<?> ) data;
@@ -768,7 +769,7 @@ public class SciView extends SceneryBase {
         PointCloud pointCloud = new PointCloud( getDefaultPointSize(), name );
         Material material = new Material();
         FloatBuffer vBuffer = ByteBuffer.allocateDirect( flatVerts.length * 4 ).order(
-                                                                                 ByteOrder.nativeOrder() ).asFloatBuffer();
+                ByteOrder.nativeOrder() ).asFloatBuffer();
         FloatBuffer nBuffer = ByteBuffer.allocateDirect( 0 ).order( ByteOrder.nativeOrder() ).asFloatBuffer();
 
         vBuffer.put( flatVerts );
@@ -785,6 +786,18 @@ public class SciView extends SceneryBase {
         pointCloud.setPosition( new GLVector( 0f, 0f, 0f ) );
         getScene().addChild( pointCloud );
 
+
+        return pointCloud;
+    }
+
+    public graphics.scenery.Node addPointCloud( PointCloud pointCloud ) {
+
+        pointCloud.setupPointCloud();
+        pointCloud.getMaterial().setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        pointCloud.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        pointCloud.getMaterial().setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        pointCloud.setPosition( new GLVector( 0f, 0f, 0f ) );
+        getScene().addChild( pointCloud );
 
         return pointCloud;
     }
