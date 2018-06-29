@@ -58,7 +58,7 @@ public class Open implements Command {
     private SciView sciView;
 
     // TODO: Find a more extensible way than hard-coding the extensions.
-    @Parameter(style = "open,extensions:obj/ply/stl/xyz")
+    @Parameter(style = "open,extensions:obj/ply/stl/xyz/csv")
     private File file;
 
     @Override
