@@ -36,11 +36,8 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.script.AutoCompleter;
-import org.scijava.script.ScriptLanguage;
 import org.scijava.script.ScriptService;
 import sc.iview.SciView;
-import zmq.ZError;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -48,11 +45,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import static sc.iview.commands.MenuWeights.VIEW;
-import static sc.iview.commands.MenuWeights.VIEW_RESET_CAMERA_POSITION;
+import static sc.iview.commands.MenuWeights.VIEW_SAVE_CAMERA_CONFIGURATION;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
 menu = {@Menu(label = "View", weight = VIEW), //
-        @Menu(label = "Save Camera Configuration", weight = VIEW_RESET_CAMERA_POSITION+17)})
+        @Menu(label = "Save Camera Configuration", weight = VIEW_SAVE_CAMERA_CONFIGURATION)})
 public class SaveCameraConfiguration implements Command {
 
     @Parameter

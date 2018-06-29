@@ -38,7 +38,6 @@ import sc.iview.SciView;
 
 import static sc.iview.commands.MenuWeights.VIEW;
 import static sc.iview.commands.MenuWeights.VIEW_RESET_CAMERA_ROTATION;
-import static sc.iview.commands.MenuWeights.VIEW_TOGGLE_FLOOR;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
 menu = {@Menu(label = "View", weight = VIEW), //

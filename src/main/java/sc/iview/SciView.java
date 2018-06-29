@@ -865,6 +865,10 @@ public class SciView extends SceneryBase {
         getRenderer().screenshot();
     }
 
+    public void takeScreenshot( String path ) {
+        getRenderer().screenshot( path );
+    }
+
     public Node[] getSceneNodes() {
         return getSceneNodes(n -> !(n instanceof Camera) && !(n instanceof PointLight));
     }
@@ -1071,5 +1075,9 @@ public class SciView extends SceneryBase {
     public boolean setPushMode(boolean push) {
         getRenderer().setPushMode(push);
         return getRenderer().getPushMode();
+    }
+
+    public ArcballCameraControl getTargetArcball() {
+        return targetArcball;
     }
 }
