@@ -87,8 +87,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class SciView extends SceneryBase {
@@ -121,7 +121,7 @@ public class SciView extends SceneryBase {
     protected ArcballCameraControl targetArcball;
     protected FPSCameraControl fpsControl;
 
-    private Boolean defaultArcBall = true;// arcball target broken
+    private Boolean defaultArcBall = false;// arcball target broken
 
     Camera camera = null;
 
@@ -140,13 +140,13 @@ public class SciView extends SceneryBase {
 
     protected Node floor;
 
-    public SciView(Context context) {
-        super("SciView", 800, 600, false, context);
-        context.inject(this);
+    public SciView( Context context ) {
+        super( "SciView", 800, 600, false, context );
+        context.inject( this );
     }
 
-    public SciView(String applicationName, int windowWidth, int windowHeight) {
-        super(applicationName, windowWidth, windowHeight, false);
+    public SciView( String applicationName, int windowWidth, int windowHeight ) {
+        super( applicationName, windowWidth, windowHeight, false );
     }
 
     public InputHandler publicGetInputHandler() {
@@ -158,117 +158,113 @@ public class SciView extends SceneryBase {
     public void init() {
 
         // TODO: there is a Linux issue with the Vulkan renderer and X that leads to a known "RenderBadPicture" error
-        if (SystemUtils.IS_OS_LINUX && !System.getProperties().containsKey("scenery.Renderer")) {
-            System.setProperty("scenery.Renderer", "OpenGLRenderer");
+        if( SystemUtils.IS_OS_LINUX && !System.getProperties().containsKey("scenery.Renderer") ) {
+            System.setProperty("scenery.Renderer","OpenGLRenderer");
         }
 
-        if (useJavaFX) {
-            CountDownLatch latch = new CountDownLatch(1);
-            final SceneryPanel[] sceneryPanel = {null};
+        if( useJavaFX ) {
+            CountDownLatch latch = new CountDownLatch( 1 );
+            final SceneryPanel[] sceneryPanel = { null };
 
-            PlatformImpl.startup(() -> {
-            });
+            PlatformImpl.startup( () -> {} );
 
-            Platform.runLater(() -> {
+            Platform.runLater( () -> {
 
                 Stage stage = new Stage();
-                stage.setTitle("SciView");
+                stage.setTitle( "SciView" );
 
                 StackPane stackPane = new StackPane();
-                stackPane.setBackground(new Background(new BackgroundFill(Color.TRANSPARENT, CornerRadii.EMPTY,
-                        Insets.EMPTY)));
+                stackPane.setBackground( new Background( new BackgroundFill( Color.TRANSPARENT, CornerRadii.EMPTY,
+                                                                             Insets.EMPTY ) ) );
 
                 GridPane pane = new GridPane();
-                Label label = new Label("SciView - press U for usage help");
+                Label label = new Label( "SciView - press U for usage help" );
 
-                sceneryPanel[0] = new SceneryPanel(getWindowWidth(), getWindowHeight());
+                sceneryPanel[0] = new SceneryPanel( getWindowWidth(), getWindowHeight() );
 
-                GridPane.setHgrow(sceneryPanel[0], Priority.ALWAYS);
-                GridPane.setVgrow(sceneryPanel[0], Priority.ALWAYS);
+                GridPane.setHgrow( sceneryPanel[0], Priority.ALWAYS );
+                GridPane.setVgrow( sceneryPanel[0], Priority.ALWAYS );
 
-                GridPane.setFillHeight(sceneryPanel[0], true);
-                GridPane.setFillWidth(sceneryPanel[0], true);
+                GridPane.setFillHeight( sceneryPanel[0], true );
+                GridPane.setFillWidth( sceneryPanel[0], true );
 
-                GridPane.setHgrow(label, Priority.ALWAYS);
-                GridPane.setHalignment(label, HPos.CENTER);
-                GridPane.setValignment(label, VPos.BOTTOM);
+                GridPane.setHgrow( label, Priority.ALWAYS );
+                GridPane.setHalignment( label, HPos.CENTER );
+                GridPane.setValignment( label, VPos.BOTTOM );
 
-                label.maxWidthProperty().bind(pane.widthProperty());
+                label.maxWidthProperty().bind( pane.widthProperty() );
 
-                pane.setStyle("-fx-background-color: rgb(50,48,47);" + "-fx-font-family: Helvetica Neue, Helvetica, Segoe, Proxima Nova, Arial, sans-serif;" +
-                        "-fx-font-weight: 400;" + "-fx-font-size: 1.2em;" + "-fx-text-fill: white;" +
-                        "-fx-text-alignment: center;");
+                pane.setStyle( "-fx-background-color: rgb(50,48,47);" + "-fx-font-family: Helvetica Neue, Helvetica, Segoe, Proxima Nova, Arial, sans-serif;" +
+                               "-fx-font-weight: 400;" + "-fx-font-size: 1.2em;" + "-fx-text-fill: white;" +
+                               "-fx-text-alignment: center;" );
 
-                label.setStyle("-fx-padding: 0.2em;" + "-fx-text-fill: white;");
+                label.setStyle( "-fx-padding: 0.2em;" + "-fx-text-fill: white;" );
 
-                label.setTextAlignment(TextAlignment.CENTER);
+                label.setTextAlignment( TextAlignment.CENTER );
 
                 MenuBar menuBar = new MenuBar();
-                pane.add(menuBar, 1, 1);
-                pane.add(sceneryPanel[0], 1, 2);
-                pane.add(label, 1, 3);
-                stackPane.getChildren().addAll(pane);
+                pane.add( menuBar, 1, 1 );
+                pane.add( sceneryPanel[0], 1, 2 );
+                pane.add( label, 1, 3 );
+                stackPane.getChildren().addAll( pane );
 
-                javafx.scene.Scene scene = new javafx.scene.Scene(stackPane);
-                stage.setScene(scene);
-                stage.setOnCloseRequest(event -> {
+                javafx.scene.Scene scene = new javafx.scene.Scene( stackPane );
+                stage.setScene( scene );
+                stage.setOnCloseRequest( event -> {
                     getDisplay().close();
                     this.close();
-                });
+                } );
                 stage.focusedProperty().addListener((ov, t, t1) -> {
-                    if (t1)// If you just gained focus
-                        displayService.setActiveDisplay(getDisplay());
+                    if( t1 )// If you just gained focus
+                        displayService.setActiveDisplay( getDisplay() );
                 });
 
-                new JavaFXMenuCreator().createMenus(menus.getMenu("SciView"), menuBar);
+                new JavaFXMenuCreator().createMenus( menus.getMenu("SciView"), menuBar );
 
                 stage.show();
 
                 latch.countDown();
-            });
+            } );
 
             try {
                 latch.await();
-            } catch (InterruptedException e1) {
+            } catch( InterruptedException e1 ) {
                 e1.printStackTrace();
             }
 
-            setRenderer(Renderer.createRenderer(getHub(), getApplicationName(), getScene(), getWindowWidth(),
-                    getWindowHeight(), sceneryPanel[0]));
+            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), getWindowWidth(),
+                                                  getWindowHeight(), sceneryPanel[0] ) );
         } else {
-            setRenderer(Renderer.createRenderer(getHub(), getApplicationName(), getScene(), 512, 512));
+            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), 512, 512 ) );
         }
 
         // Enable push rendering by default
-        getRenderer().setPushMode(true);
+        getRenderer().setPushMode( true );
 
-        getHub().add(SceneryElement.Renderer, getRenderer());
+        getHub().add( SceneryElement.Renderer, getRenderer() );
 
         PointLight[] lights = new PointLight[2];
 
-        for (int i = 0; i < lights.length; i++) {
-            lights[i] = new PointLight(150.0f);
-            lights[i].setPosition(new GLVector(20.0f * i - 20.0f, 20.0f * i - 20.0f, 20.0f * i - 20.0f));
-            lights[i].setEmissionColor(new GLVector(1.0f, 1.0f, 1.0f));
-            lights[i].setIntensity(5000.2f * (i + 1));
-            getScene().addChild(lights[i]);
+        for( int i = 0; i < lights.length; i++ ) {
+            lights[i] = new PointLight( 150.0f );
+            lights[i].setPosition( new GLVector( 20.0f * i - 20.0f, 20.0f * i - 20.0f, 20.0f * i - 20.0f ) );
+            lights[i].setEmissionColor( new GLVector( 1.0f, 1.0f, 1.0f ) );
+            lights[i].setIntensity( 5000.2f * ( i + 1 ) );
+            getScene().addChild( lights[i] );
         }
 
         Camera cam = new DetachedHeadCamera();
-        cam.setPosition(new GLVector(0.0f, 5.0f, 5.0f));
-        cam.perspectiveCamera(50.0f, getWindowWidth(), getWindowHeight(), 0.001f, 750.0f);
+        cam.setPosition( new GLVector( 0.0f, 5.0f, 5.0f ) );
+        cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.001f, 750.0f );
         //cam.setTarget( new GLVector( 0, 0, 0 ) );
         //cam.setTargeted( true );
-        cam.setActive(true);
-        getScene().addChild(cam);
+        cam.setActive( true );
+        getScene().addChild( cam );
         this.camera = cam;
-        float yposition = -1.0f;
 
-        yposition = getFlooryaxis();
-
-        floor = new Box(new GLVector(500f, 0.2f, 500f));
-        floor.setPosition(new GLVector(0f, yposition, 0f));
-        floor.getMaterial().setDiffuse(new GLVector(1.0f, 1.0f, 1.0f));
+        floor = new Box( new GLVector( 500f, 0.2f, 500f ) );
+        floor.setPosition( new GLVector(0f,-1f,0f) );
+        floor.getMaterial().setDiffuse( new GLVector(1.0f, 1.0f, 1.0f) );
         getScene().addChild(floor);
 
         // Try to surround the scene with a box
@@ -285,21 +281,17 @@ public class SciView extends SceneryBase {
         //initialized = true; // inputSetup is called second, so that needs to toggle initialized
     }
 
-    public void setFloor(Node n) {
-        floor = n;
-    }
+    public void setFloor(Node n) { floor = n; }
 
-    public Node getFloor() {
-        return floor;
-    }
+    public Node getFloor() { return floor; }
 
     public float getFlooryaxis() {
         return flooryaxis;
     }
 
     public void setFlooryaxis(float newposition) {
-        if (newposition < -20f)
-            newposition = -20f;
+        if (newposition < -100f)
+            newposition = -100f;
         else if (newposition > 5f)
             newposition = 5f;
         flooryaxis = newposition;
@@ -328,8 +320,8 @@ public class SciView extends SceneryBase {
         String currentMode = "arcball";
 
         @Override
-        public void click(int x, int y) {
-            if (currentMode.startsWith("fps")) {
+        public void click( int x, int y ) {
+            if( currentMode.startsWith( "fps" ) ) {
                 enableArcBallControl();
 
                 currentMode = "arcball";
@@ -339,118 +331,81 @@ public class SciView extends SceneryBase {
                 currentMode = "fps";
             }
 
-            log.info("Switched to " + currentMode + " control");
+            log.info( "Switched to " + currentMode + " control" );
         }
     }
-
     public void setFPSSpeed(float newspeed) {
-        if (newspeed < 0.30f)
+        if (newspeed<0.30f)
             newspeed = 0.3f;
         else if (newspeed > 30.0f)
             newspeed = 30.0f;
         fpsScrollSpeed = newspeed;
-        String helpString = "SciView help:\n\n";
-        helpString += fpsScrollSpeed + "\n";
-        log.warn(helpString);
+        log.warn( "FPS scroll speed: " + fpsScrollSpeed );
     }
 
     public float getFPSSpeed() {
         return fpsScrollSpeed;
     }
-
     public void setMouseSpeed(float newspeed) {
-        if (newspeed < 0.30f)
+        if (newspeed<0.30f)
             newspeed = 0.3f;
         else if (newspeed > 3.0f)
             newspeed = 3.0f;
         mouseSpeedMult = newspeed;
-        String helpString = "SciView help:\n\n";
-        helpString += mouseSpeedMult + "\n";
-        log.warn(helpString);
+        log.warn( "Mouse speed: " + mouseSpeedMult );
     }
 
     public float getMouseSpeed() {
         return mouseSpeedMult;
     }
 
+    public void resetFPSInputs() {
+        getInputHandler().addBehaviour( "move_forward_scroll", new MovementCommand( "move_forward", "forward",
+                () -> getScene().findObserver(),
+                getFPSSpeed() ) );
+        getInputHandler().addBehaviour( "move_forward", new MovementCommand( "move_forward", "forward",
+                () -> getScene().findObserver(),
+                getFPSSpeed() ) );
+        getInputHandler().addBehaviour( "move_back", new MovementCommand( "move_back", "back",
+                () -> getScene().findObserver(),
+                getFPSSpeed() ) );
+        getInputHandler().addBehaviour( "move_left", new MovementCommand( "move_left", "left",
+                () -> getScene().findObserver(),
+                getFPSSpeed() ) );
+        getInputHandler().addBehaviour( "move_right", new MovementCommand( "move_right", "right",
+                () -> getScene().findObserver(),
+                getFPSSpeed() ) );
+        getInputHandler().addBehaviour( "move_up", new MovementCommand( "move_up", "up",
+                () -> getScene().findObserver(),
+                getFPSSpeed() ) );
+        getInputHandler().addBehaviour( "move_down", new MovementCommand( "move_down", "down",
+                () -> getScene().findObserver(),
+                getFPSSpeed() ) );
+    }
+
     class enableIncrease implements ClickBehaviour {
 
         @Override
         public void click(int x, int y) {
-            float temp = 0.0f;
-            temp = getFPSSpeed();
-            setFPSSpeed(temp + 0.5f);
-            temp = getMouseSpeed();
-            setMouseSpeed(temp + 0.05f);
-            String helpString = "SciView help:\n\n";
-            helpString += "Increasing FPS scroll Speed\n";
-            log.warn(helpString);
-            float defaultSpeed = 3.0f;
-            defaultSpeed = getFPSSpeed();
+            setFPSSpeed(getFPSSpeed() + 0.5f);
+            setMouseSpeed(getMouseSpeed() + 0.05f);
 
-            getInputHandler().addBehaviour("move_forward_scroll", new MovementCommand("move_forward", "forward",
-                    () -> getScene().findObserver(),
-                    defaultSpeed));
-            getInputHandler().addBehaviour("move_forward", new MovementCommand("move_forward", "forward",
-                    () -> getScene().findObserver(),
-                    defaultSpeed));
-            getInputHandler().addBehaviour("move_back", new MovementCommand("move_back", "back",
-                    () -> getScene().findObserver(),
-                    defaultSpeed));
-            getInputHandler().addBehaviour("move_left", new MovementCommand("move_left", "left",
-                    () -> getScene().findObserver(),
-                    defaultSpeed));
-            getInputHandler().addBehaviour("move_right", new MovementCommand("move_right", "right",
-                    () -> getScene().findObserver(),
-                    defaultSpeed));
-            getInputHandler().addBehaviour("move_up", new MovementCommand("move_up", "up",
-                    () -> getScene().findObserver(),
-                    defaultSpeed));
-            getInputHandler().addBehaviour("move_down", new MovementCommand("move_down", "down",
-                    () -> getScene().findObserver(),
-                    defaultSpeed));
+            log.warn("Increasing FPS scroll Speed");
+
+            resetFPSInputs();
         }
     }
-
 
     class enableDecrease implements ClickBehaviour {
 
         @Override
         public void click(int x, int y) {
-            float temp = 0.0f;
-            temp = getFPSSpeed();
-            setFPSSpeed(temp - 0.1f);
-            temp = getMouseSpeed();
-            setMouseSpeed(temp - 0.05f);
-            String helpString = "SciView help:\n\n";
-            helpString += "Decreasing FPS scroll Speed\n";
-            log.warn(helpString);
+            setFPSSpeed(getFPSSpeed() - 0.1f);
+            setMouseSpeed(getMouseSpeed() - 0.05f);
 
-            float defaultSpeed = 3.0f;
-            defaultSpeed = getFPSSpeed();
+            log.warn( "Decreasing FPS scroll Speed" );
 
-            getInputHandler().addBehaviour( "move_forward_scroll", new MovementCommand( "move_forward", "forward",
-                    () -> getScene().findObserver(),
-                    defaultSpeed ) );
-            getInputHandler().addBehaviour( "move_forward", new MovementCommand( "move_forward", "forward",
-                    () -> getScene().findObserver(),
-                    defaultSpeed ) );
-            getInputHandler().addBehaviour( "move_back", new MovementCommand( "move_back", "back",
-                    () -> getScene().findObserver(),
-                    defaultSpeed ) );
-            getInputHandler().addBehaviour( "move_left", new MovementCommand( "move_left", "left",
-                    () -> getScene().findObserver(),
-                    defaultSpeed ) );
-            getInputHandler().addBehaviour( "move_right", new MovementCommand( "move_right", "right",
-                    () -> getScene().findObserver(),
-                    defaultSpeed ) );
-            getInputHandler().addBehaviour( "move_up", new MovementCommand( "move_up", "up",
-                    () -> getScene().findObserver(),
-                    defaultSpeed ) );
-            getInputHandler().addBehaviour( "move_down", new MovementCommand( "move_down", "down",
-                    () -> getScene().findObserver(),
-                    defaultSpeed ) );
-
+            resetFPSInputs();
         }
     }
     class showHelpDisplay implements ClickBehaviour {
@@ -511,12 +466,6 @@ public class SciView extends SceneryBase {
         getInputHandler().addBehaviour("enable_increase", new enableIncrease());
         getInputHandler().addKeyBinding("enable_increase", "N");
 
-        /*getInputHandler().addBehaviour("lower_floor", new lowerFloor());
-        getInputHandler().addKeyBinding("lower_floor", "1");
-
-        getInputHandler().addBehaviour("raise_floor", new raiseFloor());
-        getInputHandler().addKeyBinding("raise_floor", "2");
-*/
         initialized = true;
     }
 
@@ -572,27 +521,7 @@ public class SciView extends SceneryBase {
         helpString += defaultSpeed + "\n";
         log.warn(helpString);
 
-        getInputHandler().addBehaviour( "move_forward_scroll", new MovementCommand( "move_forward", "forward",
-                                                                                    () -> getScene().findObserver(),
-                                                                                    defaultSpeed ) );
-        getInputHandler().addBehaviour( "move_forward", new MovementCommand( "move_forward", "forward",
-                                                                             () -> getScene().findObserver(),
-                                                                             defaultSpeed ) );
-        getInputHandler().addBehaviour( "move_back", new MovementCommand( "move_back", "back",
-                                                                          () -> getScene().findObserver(),
-                                                                          defaultSpeed ) );
-        getInputHandler().addBehaviour( "move_left", new MovementCommand( "move_left", "left",
-                                                                          () -> getScene().findObserver(),
-                                                                          defaultSpeed ) );
-        getInputHandler().addBehaviour( "move_right", new MovementCommand( "move_right", "right",
-                                                                           () -> getScene().findObserver(),
-                                                                           defaultSpeed ) );
-        getInputHandler().addBehaviour( "move_up", new MovementCommand( "move_up", "up",
-                                                                        () -> getScene().findObserver(),
-                                                                        defaultSpeed ) );
-        getInputHandler().addBehaviour( "move_down", new MovementCommand( "move_down", "down",
-                                                                          () -> getScene().findObserver(),
-                                                                          defaultSpeed ) );
+        resetFPSInputs();
 
 //        getInputHandler().addKeyBinding( "move_up", "C" );
 //        getInputHandler().addKeyBinding( "move_down", "Z" );
@@ -647,7 +576,6 @@ public class SciView extends SceneryBase {
 
         if( defaultArcBall ) enableArcBallControl();
 
-
         Node currentNode = getActiveNode();
 
         float temp = 0.0f;
@@ -699,16 +627,19 @@ public class SciView extends SceneryBase {
 
         if( defaultArcBall ) enableArcBallControl();
 
-
         Node currentNode = getActiveNode();
 
         float temp = 0.0f;
+        float rad = 0.0f;
+        Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
+        Node.BoundingSphere bs = currentNode.generateBoundingBox().getBoundingSphere();
         getFlooryaxis();
-        temp = position.yf();
+        temp = bb.getMin().y();
+        rad = bs.getRadius();
         if(getFlooryaxis() < temp){
 
         }else {
-            setFlooryaxis(temp - 7f);
+            setFlooryaxis(temp - rad);
         }
         getFloor().setVisible( !getFloor().getVisible());
 
@@ -754,6 +685,29 @@ public class SciView extends SceneryBase {
         getScene().addChild( line );
 
         if( defaultArcBall ) enableArcBallControl();
+
+        Node currentNode = getActiveNode();
+
+        float temp = 0.0f;
+        Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
+        getFlooryaxis();
+        temp = bb.getMin().y();
+        if(getFlooryaxis() < temp){
+
+        }else {
+            setFlooryaxis(temp - 1f);
+        }
+        getFloor().setVisible( !getFloor().getVisible());
+
+        float yposition = -1.0f;
+
+        yposition = getFlooryaxis();
+
+        floor = new Box(new GLVector(500f, 0.2f, 500f));
+        floor.setPosition(new GLVector(0f, yposition, 0f));
+        floor.getMaterial().setDiffuse(new GLVector(1.0f, 1.0f, 1.0f));
+        getScene().addChild(floor);
+
         return line;
     }
 
@@ -782,10 +736,9 @@ public class SciView extends SceneryBase {
         Node currentNode = getActiveNode();
 
         float temp = 0.0f;
-        BoundingGrid bg = new BoundingGrid();
-        bg.setNode(currentNode);
+        Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
         getFlooryaxis();
-        temp = bg.getNode().getBoundingBox().getMin().y();
+        temp = bb.getMin().y();
         if(getFlooryaxis() < temp){
 
         }else {
@@ -801,9 +754,6 @@ public class SciView extends SceneryBase {
         floor.setPosition(new GLVector(0f, yposition, 0f));
         floor.getMaterial().setDiffuse(new GLVector(1.0f, 1.0f, 1.0f));
         getScene().addChild(floor);
-        bg.setNode( null );
-        currentNode.getMetadata().remove("BoundingGrid");
-        bg.getScene().removeChild(bg);
 
         return line;
     }
@@ -885,7 +835,8 @@ public class SciView extends SceneryBase {
         final Object data = io.open( source );
         if( data instanceof net.imagej.mesh.Mesh ) addMesh( ( net.imagej.mesh.Mesh ) data );
         else if( data instanceof graphics.scenery.Mesh ) addMesh( ( graphics.scenery.Mesh ) data );
-        else if (data instanceof Dataset) addVolume( ( Dataset ) data );
+        else if( data instanceof graphics.scenery.PointCloud ) addPointCloud( ( graphics.scenery.PointCloud ) data );
+        else if( data instanceof Dataset ) addVolume( ( Dataset ) data );
         else if( data instanceof IterableInterval ) addVolume( ( ( IterableInterval ) data ), source);
         else if( data instanceof List ) {
             final List<?> list = ( List<?> ) data;
@@ -929,7 +880,7 @@ public class SciView extends SceneryBase {
         PointCloud pointCloud = new PointCloud( getDefaultPointSize(), name );
         Material material = new Material();
         FloatBuffer vBuffer = ByteBuffer.allocateDirect( flatVerts.length * 4 ).order(
-                                                                                 ByteOrder.nativeOrder() ).asFloatBuffer();
+                ByteOrder.nativeOrder() ).asFloatBuffer();
         FloatBuffer nBuffer = ByteBuffer.allocateDirect( 0 ).order( ByteOrder.nativeOrder() ).asFloatBuffer();
 
         vBuffer.put( flatVerts );
@@ -950,8 +901,43 @@ public class SciView extends SceneryBase {
         return pointCloud;
     }
 
+    public graphics.scenery.Node addPointCloud( PointCloud pointCloud ) {
+
+        pointCloud.setupPointCloud();
+        pointCloud.getMaterial().setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        pointCloud.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        pointCloud.getMaterial().setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        pointCloud.setPosition( new GLVector( 0f, 0f, 0f ) );
+        getScene().addChild( pointCloud );
+
+        return pointCloud;
+    }
+
     public graphics.scenery.Node addNode( Node n ) {
         getScene().addChild( n );
+
+        Node currentNode = getActiveNode();
+
+        float temp = 0.0f;
+        Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
+        getFlooryaxis();
+        temp = bb.getMin().y();
+        if(getFlooryaxis() < temp){
+
+        }else {
+            setFlooryaxis(temp - 1f);
+        }
+        getFloor().setVisible( !getFloor().getVisible());
+
+        float yposition = -1.0f;
+
+        yposition = getFlooryaxis();
+
+        floor = new Box(new GLVector(500f, 0.2f, 500f));
+        floor.setPosition(new GLVector(0f, yposition, 0f));
+        floor.getMaterial().setDiffuse(new GLVector(1.0f, 1.0f, 1.0f));
+        getScene().addChild(floor);
+
         return n;
     }
 
@@ -974,10 +960,9 @@ public class SciView extends SceneryBase {
         Node currentNode = getActiveNode();
 
         float temp = 0.0f;
-        BoundingGrid bg = new BoundingGrid();
-        bg.setNode(currentNode);
+        Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
         getFlooryaxis();
-        temp = bg.getNode().getBoundingBox().getMin().y();
+        temp = bb.getMin().y();
         if(getFlooryaxis() < temp){
 
         }else {
@@ -993,9 +978,7 @@ public class SciView extends SceneryBase {
         floor.setPosition(new GLVector(0f, yposition, 0f));
         floor.getMaterial().setDiffuse(new GLVector(1.0f, 1.0f, 1.0f));
         getScene().addChild(floor);
-        bg.setNode( null );
-        currentNode.getMetadata().remove("BoundingGrid");
-        bg.getScene().removeChild(bg);
+
 
         return scMesh;
     }
@@ -1052,10 +1035,18 @@ public class SciView extends SceneryBase {
         getRenderer().screenshot();
     }
 
-    public Node[] getSceneNodes() {
-        CopyOnWriteArrayList<Node> children = getScene().getChildren();
+    public void takeScreenshot( String path ) {
+        getRenderer().screenshot( path );
+    }
 
-        return getScene().getChildren().toArray( new Node[children.size()] );
+    public Node[] getSceneNodes() {
+        return getSceneNodes(n -> !(n instanceof Camera) && !(n instanceof PointLight));
+    }
+
+    public Node[] getSceneNodes(Predicate<? super Node> filter) {
+        return getScene().getChildren()
+                .stream()
+                .filter(filter).toArray(Node[]::new);
     }
 
     public void deleteSelectedMesh() {
@@ -1245,5 +1236,18 @@ public class SciView extends SceneryBase {
         return new GLVector( color.getRed() / 255f, //
                              color.getGreen() / 255f, //
                              color.getBlue() / 255f );
+    }
+
+    public boolean getPushMode() {
+        return getRenderer().getPushMode();
+    }
+
+    public boolean setPushMode(boolean push) {
+        getRenderer().setPushMode(push);
+        return getRenderer().getPushMode();
+    }
+
+    public ArcballCameraControl getTargetArcball() {
+        return targetArcball;
     }
 }
