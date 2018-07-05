@@ -285,11 +285,11 @@ public class SciView extends SceneryBase {
 
     public Node getFloor() { return floor; }
 
-    public float getFloory() {
+    private float getFloory() {
         return flooryaxis;
     }
 
-    public void setFloory(float new_pos) {
+    private void setFloory(float new_pos) {
         if (new_pos < -100f)
             new_pos = -100f;
         else if (new_pos > 5f)
