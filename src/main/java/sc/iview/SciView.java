@@ -289,12 +289,12 @@ public class SciView extends SceneryBase {
         return flooryaxis;
     }
 
-    public void setFloory(float position) {
-        if (position < -100f)
-            position = -100f;
-        else if (position > 5f)
-            position = 5f;
-        flooryaxis = position;
+    public void setFloory(float new_pos) {
+        if (new_pos < -100f)
+            new_pos = -100f;
+        else if (new_pos > 5f)
+            new_pos = 5f;
+        flooryaxis = new_pos;
         String helpString = "SciView help:\n\n";
         helpString += flooryaxis + "\n";
         log.warn(helpString);
