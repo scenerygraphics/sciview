@@ -584,7 +584,7 @@ public class SciView extends SceneryBase {
         getFloory();
         temp = position.yf();
         if(getFloory() < temp){
-
+            System.err.println( "Not lowered " );
         }else {
             setFloory(temp - 1f);
         }
@@ -639,7 +639,7 @@ public class SciView extends SceneryBase {
         temp = bb.getMin().y();
         rad = bs.getRadius();
         if(getFloory() < temp){
-
+            System.err.println( "Not lowered " );
         }else {
             setFloory(temp - rad);
         }
@@ -742,7 +742,7 @@ public class SciView extends SceneryBase {
         getFloory();
         temp = bb.getMin().y();
         if(getFloory() < temp){
-
+            System.err.println( "Not lowered " );
         }else {
             setFloory(temp - 1f);
         }
@@ -925,7 +925,7 @@ public class SciView extends SceneryBase {
         getFloory();
         temp = bb.getMin().y();
         if(getFloory() < temp){
-
+            System.err.println( "Not lowered " );
         }else {
             setFloory(temp - 1f);
         }
@@ -966,7 +966,7 @@ public class SciView extends SceneryBase {
         getFloory();
         temp = bb.getMin().y();
         if(getFloory() < temp){
-
+            System.err.println( "Not lowered " );
         }else {
             setFloory(temp - 1f);
         }
