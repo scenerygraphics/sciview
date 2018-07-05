@@ -285,16 +285,16 @@ public class SciView extends SceneryBase {
 
     public Node getFloor() { return floor; }
 
-    public float getFlooryaxis() {
+    public float getFloory() {
         return flooryaxis;
     }
 
-    public void setFlooryaxis(float newposition) {
-        if (newposition < -100f)
-            newposition = -100f;
-        else if (newposition > 5f)
-            newposition = 5f;
-        flooryaxis = newposition;
+    public void setFloory(float position) {
+        if (position < -100f)
+            position = -100f;
+        else if (position > 5f)
+            position = 5f;
+        flooryaxis = position;
         String helpString = "SciView help:\n\n";
         helpString += flooryaxis + "\n";
         log.warn(helpString);
@@ -576,21 +576,21 @@ public class SciView extends SceneryBase {
 
         if( defaultArcBall ) enableArcBallControl();
 
-        Node currentNode = getActiveNode();
+       // Node currentNode = getActiveNode();
 
         float temp = 0.0f;
-        getFlooryaxis();
+        getFloory();
         temp = position.yf();
-        if(getFlooryaxis() < temp){
+        if(getFloory() < temp){
 
         }else {
-            setFlooryaxis(temp - 1f);
+            setFloory(temp - 1f);
         }
         getFloor().setVisible( !getFloor().getVisible());
 
         float yposition = -1.0f;
 
-        yposition = getFlooryaxis();
+        yposition = getFloory();
 
         floor = new Box(new GLVector(500f, 0.2f, 500f));
         floor.setPosition(new GLVector(0f, yposition, 0f));
@@ -633,19 +633,19 @@ public class SciView extends SceneryBase {
         float rad = 0.0f;
         Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
         Node.BoundingSphere bs = currentNode.generateBoundingBox().getBoundingSphere();
-        getFlooryaxis();
+        getFloory();
         temp = bb.getMin().y();
         rad = bs.getRadius();
-        if(getFlooryaxis() < temp){
+        if(getFloory() < temp){
 
         }else {
-            setFlooryaxis(temp - rad);
+            setFloory(temp - rad);
         }
         getFloor().setVisible( !getFloor().getVisible());
 
         float yposition = -1.0f;
 
-        yposition = getFlooryaxis();
+        yposition = getFloory();
 
         floor = new Box(new GLVector(500f, 0.2f, 500f));
         floor.setPosition(new GLVector(0f, yposition, 0f));
@@ -690,18 +690,18 @@ public class SciView extends SceneryBase {
 
         float temp = 0.0f;
         Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
-        getFlooryaxis();
+        getFloory();
         temp = bb.getMin().y();
-        if(getFlooryaxis() < temp){
+        if(getFloory() < temp){
 
         }else {
-            setFlooryaxis(temp - 1f);
+            setFloory(temp - 1f);
         }
         getFloor().setVisible( !getFloor().getVisible());
 
         float yposition = -1.0f;
 
-        yposition = getFlooryaxis();
+        yposition = getFloory();
 
         floor = new Box(new GLVector(500f, 0.2f, 500f));
         floor.setPosition(new GLVector(0f, yposition, 0f));
@@ -737,18 +737,18 @@ public class SciView extends SceneryBase {
 
         float temp = 0.0f;
         Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
-        getFlooryaxis();
+        getFloory();
         temp = bb.getMin().y();
-        if(getFlooryaxis() < temp){
+        if(getFloory() < temp){
 
         }else {
-            setFlooryaxis(temp - 1f);
+            setFloory(temp - 1f);
         }
         getFloor().setVisible( !getFloor().getVisible());
 
         float yposition = -1.0f;
 
-        yposition = getFlooryaxis();
+        yposition = getFloory();
 
         floor = new Box(new GLVector(500f, 0.2f, 500f));
         floor.setPosition(new GLVector(0f, yposition, 0f));
@@ -920,18 +920,18 @@ public class SciView extends SceneryBase {
 
         float temp = 0.0f;
         Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
-        getFlooryaxis();
+        getFloory();
         temp = bb.getMin().y();
-        if(getFlooryaxis() < temp){
+        if(getFloory() < temp){
 
         }else {
-            setFlooryaxis(temp - 1f);
+            setFloory(temp - 1f);
         }
         getFloor().setVisible( !getFloor().getVisible());
 
         float yposition = -1.0f;
 
-        yposition = getFlooryaxis();
+        yposition = getFloory();
 
         floor = new Box(new GLVector(500f, 0.2f, 500f));
         floor.setPosition(new GLVector(0f, yposition, 0f));
@@ -961,18 +961,18 @@ public class SciView extends SceneryBase {
 
         float temp = 0.0f;
         Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
-        getFlooryaxis();
+        getFloory();
         temp = bb.getMin().y();
-        if(getFlooryaxis() < temp){
+        if(getFloory() < temp){
 
         }else {
-            setFlooryaxis(temp - 1f);
+            setFloory(temp - 1f);
         }
         getFloor().setVisible( !getFloor().getVisible());
 
         float yposition = -1.0f;
 
-        yposition = getFlooryaxis();
+        yposition = getFloory();
 
         floor = new Box(new GLVector(500f, 0.2f, 500f));
         floor.setPosition(new GLVector(0f, yposition, 0f));
