@@ -5,3 +5,11 @@
 /.classpath
 /.project
 /.settings/
+
+# IntelliJ
+.idea/
+*.ipr
+*.iml
+
+# Vim
+.*.swp

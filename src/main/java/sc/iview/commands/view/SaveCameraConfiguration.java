@@ -26,48 +26,67 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.file;
+package sc.iview.commands.view;
 
-import static sc.iview.commands.MenuWeights.FILE;
-import static sc.iview.commands.MenuWeights.FILE_OPEN;
-
-import java.io.File;
-import java.io.IOException;
-
+import cleargl.GLVector;
+import com.google.common.io.Files;
+import com.jogamp.opengl.math.Quaternion;
 import org.scijava.command.Command;
-import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-
+import org.scijava.script.ScriptService;
 import sc.iview.SciView;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import static sc.iview.commands.MenuWeights.VIEW;
+import static sc.iview.commands.MenuWeights.VIEW_SAVE_CAMERA_CONFIGURATION;
+
 @Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "File", weight = FILE), //
-                 @Menu(label = "Open...", weight = FILE_OPEN) })
-public class Open implements Command {
+menu = {@Menu(label = "View", weight = VIEW), //
+        @Menu(label = "Save Camera Configuration", weight = VIEW_SAVE_CAMERA_CONFIGURATION)})
+public class SaveCameraConfiguration implements Command {
 
     @Parameter
-    private IOService io;
-
-    @Parameter
-    private LogService log;
+    private LogService logService;
 
     @Parameter
     private SciView sciView;
 
-    // TODO: Find a more extensible way than hard-coding the extensions.
-    @Parameter(style = "open,extensions:obj/ply/stl/xyz/csv")
-    private File file;
+    @Parameter
+    private File saveFile;
+
+    @Parameter
+    private ScriptService scriptService;
 
     @Override
     public void run() {
         try {
-            sciView.open( file.getAbsolutePath() );
-        }
-        catch (final IOException | IllegalArgumentException exc) {
-            log.error( exc );
+            FileWriter fw = new FileWriter(saveFile);
+            BufferedWriter bw = new BufferedWriter(fw);
+
+            if( !Files.getFileExtension(saveFile.getAbsolutePath()).equalsIgnoreCase("clj") )
+                throw new IOException("File must be Clojure (extension = .clj)");
+
+            GLVector pos = sciView.getCamera().getPosition();
+            Quaternion rot = sciView.getCamera().getRotation();
+
+            String scriptContents = "; @SciView sciView\n\n";
+            scriptContents += "(.setPosition (.getCamera sciView) (cleargl.GLVector. (float-array [" + pos.x() + " " + pos.y() + " " + pos.z() + "])))\n";
+            scriptContents += "(.setRotation (.getCamera sciView) (com.jogamp.opengl.math.Quaternion. " + rot.getX() + " " + rot.getY() + " " + rot.getZ() + " " + rot.getW() + "))\n";
+
+            bw.write(scriptContents);
+
+            bw.close();
+            fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
+
 }

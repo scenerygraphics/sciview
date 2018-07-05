@@ -6,13 +6,13 @@
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -28,28 +28,28 @@
  */
 package sc.iview.commands.process;
 
-import static sc.iview.commands.MenuWeights.PROCESS;
-import static sc.iview.commands.MenuWeights.PROCESS_ISOSURFACE;
-
-import net.imagej.ImgPlus;
+import graphics.scenery.Node;
 import net.imagej.mesh.Mesh;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
+import net.imglib2.IterableInterval;
 import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
-
+import net.imglib2.type.numeric.RealType;
 import org.scijava.command.Command;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-
+import org.scijava.ui.UIService;
 import sc.iview.SciView;
 
+import static sc.iview.commands.MenuWeights.PROCESS;
+import static sc.iview.commands.MenuWeights.PROCESS_ISOSURFACE;
+
 @Plugin(type = Command.class, menuRoot = "SciView", //
-menu = {@Menu(label = "Process", weight = PROCESS), //
-        @Menu(label = "Isosurface", weight = PROCESS_ISOSURFACE)})
-public class Isosurface implements Command {
+        menu = {@Menu(label = "Process", weight = PROCESS), //
+                @Menu(label = "Isosurface", weight = PROCESS_ISOSURFACE)})
+public class Isosurface<T extends RealType> implements Command {
 
     @Parameter
     private OpService ops;
@@ -58,19 +58,24 @@ public class Isosurface implements Command {
     private SciView sciView;
 
     @Parameter
-    private ImgPlus<UnsignedByteType> image;
+    private IterableInterval<T> image;
 
     @Parameter
-    private int isoLevel;
+    private double isoLevel;
+
+    @Parameter
+    private UIService uiService;
 
     @Override
     public void run() {
+        T tmp = (T) image.firstElement().createVariable();
+        tmp.setReal(isoLevel);
 
-        Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( image, new UnsignedByteType( isoLevel ) );
+        Img<BitType> bitImg = (Img<BitType>) ops.threshold().apply(image, tmp);
 
-        Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
+        Mesh m = ops.geom().marchingCubes(bitImg, 1, new BitTypeVertexInterpolator());
 
-        sciView.addMesh( m );
+        Node scMesh = sciView.addMesh(m);
 
     }
 

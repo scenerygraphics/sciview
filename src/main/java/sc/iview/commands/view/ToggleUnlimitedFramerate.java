@@ -6,13 +6,13 @@
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -26,48 +26,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.file;
-
-import static sc.iview.commands.MenuWeights.FILE;
-import static sc.iview.commands.MenuWeights.FILE_OPEN;
-
-import java.io.File;
-import java.io.IOException;
+package sc.iview.commands.view;
 
 import org.scijava.command.Command;
-import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-
 import sc.iview.SciView;
 
+import static sc.iview.commands.MenuWeights.VIEW;
+import static sc.iview.commands.MenuWeights.VIEW_TOGGLE_UNLIMITED_FRAMERATE;
+
 @Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "File", weight = FILE), //
-                 @Menu(label = "Open...", weight = FILE_OPEN) })
-public class Open implements Command {
+        menu = {@Menu(label = "View", weight = VIEW), //
+                @Menu(label = "Toggle Unlimited Framerate", weight = VIEW_TOGGLE_UNLIMITED_FRAMERATE)})
+public class ToggleUnlimitedFramerate implements Command {
 
     @Parameter
-    private IOService io;
-
-    @Parameter
-    private LogService log;
+    private LogService logService;
 
     @Parameter
     private SciView sciView;
 
-    // TODO: Find a more extensible way than hard-coding the extensions.
-    @Parameter(style = "open,extensions:obj/ply/stl/xyz/csv")
-    private File file;
-
     @Override
     public void run() {
-        try {
-            sciView.open( file.getAbsolutePath() );
-        }
-        catch (final IOException | IllegalArgumentException exc) {
-            log.error( exc );
-        }
+        sciView.setPushMode(!sciView.getPushMode());
     }
+
 }

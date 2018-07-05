@@ -37,6 +37,7 @@ import org.scijava.event.EventService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.script.ScriptService;
 import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
 import org.scijava.thread.ThreadService;
@@ -58,6 +59,9 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
 
     @Parameter
     private EventService eventService;
+
+    @Parameter
+    private ScriptService scriptService;
 
     @Parameter
     private ThreadService threadService;
@@ -102,18 +106,28 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
         return null;
     }
 
+    public SciView makeSciView() {
+        SciView sv = new SciView( getContext() );
+
+        threadService.run( () -> sv.main() );
+        while( !sv.isInitialized() ) {
+            try {
+                Thread.sleep( 20 );
+            } catch( InterruptedException e ) {
+                logService.trace( e );
+            }
+        }
+
+        Display<?> display = displayService.createDisplay( sv );
+        displayService.setActiveDisplay( display );
+        sv.setDisplay( display );
+
+        return sv;
+    }
+
     @Override
     public void createSciView() {
-        SciView v = new SciView( getContext() );
-
-        // Maybe should use thread service instead
-        Thread viewerThread = new Thread() {
-            @Override
-            public void run() {
-                v.main();
-            }
-        };
-        viewerThread.start();
+        SciView v = makeSciView();
 
         sceneryViewers.add( v );
     }
@@ -121,6 +135,11 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
     @Override
     public int numSciView() {
         return sceneryViewers.size();
+    }
+
+    @Override
+    public void initialize() {
+        scriptService.addAlias(SciView.class);
     }
 
     /* Event Handlers */
@@ -143,19 +162,7 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
         }
 
         // Make one
-        SciView sv = new SciView( getContext() );
-
-        threadService.run( () -> sv.main() );
-        while( !sv.isInitialized() ) {
-            try {
-                Thread.sleep( 20 );
-            } catch( InterruptedException e ) {
-                logService.trace( e );
-            }
-        }
-
-        Display<?> display = displayService.createDisplay( sv );
-        displayService.setActiveDisplay( display );
+        SciView sv = makeSciView();
 
         return sv;
 

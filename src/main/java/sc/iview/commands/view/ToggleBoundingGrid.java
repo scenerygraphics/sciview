@@ -26,48 +26,51 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.file;
+package sc.iview.commands.view;
 
-import static sc.iview.commands.MenuWeights.FILE;
-import static sc.iview.commands.MenuWeights.FILE_OPEN;
-
-import java.io.File;
-import java.io.IOException;
-
+import graphics.scenery.BoundingGrid;
+import graphics.scenery.Mesh;
+import graphics.scenery.Node;
+import net.imagej.ops.OpService;
 import org.scijava.command.Command;
-import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-
 import sc.iview.SciView;
+import sc.iview.process.MeshConverter;
+
+import static sc.iview.commands.MenuWeights.*;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "File", weight = FILE), //
-                 @Menu(label = "Open...", weight = FILE_OPEN) })
-public class Open implements Command {
+menu = {@Menu(label = "View", weight = VIEW), //
+        @Menu(label = "Toggle Bounding Grid", weight = VIEW_TOGGLE_BOUNDING_GRID)})
+public class ToggleBoundingGrid implements Command {
 
     @Parameter
-    private IOService io;
-
-    @Parameter
-    private LogService log;
+    private LogService logService;
 
     @Parameter
     private SciView sciView;
 
-    // TODO: Find a more extensible way than hard-coding the extensions.
-    @Parameter(style = "open,extensions:obj/ply/stl/xyz/csv")
-    private File file;
-
     @Override
     public void run() {
-        try {
-            sciView.open( file.getAbsolutePath() );
+        if( sciView.getActiveNode() instanceof Mesh ) {
+            Node currentNode = sciView.getActiveNode();
+
+            if( currentNode.getMetadata().containsKey("BoundingGrid") ) {
+                BoundingGrid bg = (BoundingGrid) currentNode.getMetadata().get("BoundingGrid");
+                bg.setNode( null );
+                currentNode.getMetadata().remove("BoundingGrid");
+                bg.getScene().removeChild(bg);
+            } else {
+                BoundingGrid bg = new BoundingGrid();
+                bg.setNode(currentNode);
+
+                currentNode.getMetadata().put("BoundingGrid", bg);
+            }
         }
-        catch (final IOException | IllegalArgumentException exc) {
-            log.error( exc );
-        }
+
     }
+
 }

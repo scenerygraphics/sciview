@@ -28,35 +28,65 @@
  */
 package sc.iview.commands.view;
 
-import static sc.iview.commands.MenuWeights.VIEW;
-import static sc.iview.commands.MenuWeights.VIEW_ROTATE;
-
+import net.imagej.lut.LUTService;
+import net.imglib2.display.AbstractArrayColorTable;
+import net.imglib2.display.ColorTable;
 import org.scijava.command.Command;
+import org.scijava.command.DynamicCommand;
+import org.scijava.module.MutableModuleItem;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-
 import sc.iview.SciView;
 
-import graphics.scenery.Node;
+import java.io.IOException;
+import java.util.ArrayList;
+
+import static sc.iview.commands.MenuWeights.VIEW;
+import static sc.iview.commands.MenuWeights.VIEW_SCREENSHOT;
+import static sc.iview.commands.MenuWeights.VIEW_SET_LUT;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "View", weight = VIEW), //
-                 @Menu(label = "Rotate", weight = VIEW_ROTATE) })
-public class RotateView implements Command {
+                 @Menu(label = "Set LUT", weight = VIEW_SET_LUT) })
+public class SetLUT extends DynamicCommand {
 
     @Parameter
     private SciView sciView;
 
-    @Override
-    public void run() {
-        sciView.enableArcBallControl();
+    @Parameter
+    private LUTService lutService;
 
-        sciView.animate( 30, () -> {
-            sciView.getTargetArcball().init( 1, 0 );
-            sciView.getTargetArcball().drag( 3, 0 );
-            sciView.getTargetArcball().end( 5, 0 );
-        } );
+    @Parameter(label = "Selected LUT", choices = {}, callback = "lutNameChanged")
+    private String lutName;
+
+    @Parameter(label = "LUT Selection")
+    private ColorTable colorTable;
+
+    protected void lutNameChanged() {
+        final MutableModuleItem<String> lutNameItem = getInfo().getMutableInput("lutName", String.class);
+        try {
+            colorTable = lutService.loadLUT( lutService.findLUTs().get( lutName ) );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
+    @Override
+    public void initialize() {
+        try {
+            colorTable = lutService.loadLUT( lutService.findLUTs().get( "Red.lut" ) );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        final MutableModuleItem<String> lutNameItem = getInfo().getMutableInput("lutName", String.class );
+        lutNameItem.setChoices( new ArrayList( lutService.findLUTs().keySet() ) );
+    }
+
+    @Override
+    public void run() {
+        if( sciView.getActiveNode() != null ) {
+            sciView.setColormap( sciView.getActiveNode(), (AbstractArrayColorTable) colorTable);
+        }
+    }
 }

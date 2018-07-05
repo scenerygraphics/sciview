@@ -26,48 +26,33 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.file;
+package sc.iview.commands.view;
 
-import static sc.iview.commands.MenuWeights.FILE;
-import static sc.iview.commands.MenuWeights.FILE_OPEN;
-
-import java.io.File;
-import java.io.IOException;
-
+import com.jogamp.opengl.math.Quaternion;
 import org.scijava.command.Command;
-import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-
 import sc.iview.SciView;
 
+import static sc.iview.commands.MenuWeights.VIEW;
+import static sc.iview.commands.MenuWeights.VIEW_RESET_CAMERA_ROTATION;
+
 @Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "File", weight = FILE), //
-                 @Menu(label = "Open...", weight = FILE_OPEN) })
-public class Open implements Command {
+menu = {@Menu(label = "View", weight = VIEW), //
+        @Menu(label = "Reset Camera Rotation", weight = VIEW_RESET_CAMERA_ROTATION)})
+public class ResetCameraRotation implements Command {
 
     @Parameter
-    private IOService io;
-
-    @Parameter
-    private LogService log;
+    private LogService logService;
 
     @Parameter
     private SciView sciView;
 
-    // TODO: Find a more extensible way than hard-coding the extensions.
-    @Parameter(style = "open,extensions:obj/ply/stl/xyz/csv")
-    private File file;
-
     @Override
     public void run() {
-        try {
-            sciView.open( file.getAbsolutePath() );
-        }
-        catch (final IOException | IllegalArgumentException exc) {
-            log.error( exc );
-        }
+        sciView.getCamera().setRotation( new Quaternion(0, 0, 0, 1) );
     }
+
 }

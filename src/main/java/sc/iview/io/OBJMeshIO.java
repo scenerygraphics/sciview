@@ -31,6 +31,7 @@ package sc.iview.io;
 import org.scijava.io.AbstractIOPlugin;
 import org.scijava.io.IOPlugin;
 import org.scijava.plugin.Plugin;
+import org.scijava.util.FileUtils;
 
 /** {@link IOPlugin} adapter for Scenery OBJ reader. */
 @Plugin(type = IOPlugin.class)
@@ -47,4 +48,11 @@ public class OBJMeshIO extends AbstractIOPlugin<graphics.scenery.Mesh> {
     public Class<graphics.scenery.Mesh> getDataType() {
         return graphics.scenery.Mesh.class;
     }
+
+    @Override
+    public boolean supportsOpen(final String source) {
+        return FileUtils.getExtension(source).toLowerCase().equals(EXTENSION);
+    }
+
+    String EXTENSION = "obj";
 }

@@ -83,13 +83,13 @@ public class MeshDemo implements Command {
 
         Node msh = sciView.addMesh( m );
 
-        msh.fitInto( 15.0f, true );
+        //msh.fitInto( 15.0f, true );
 
         Material mat = new Material();
         mat.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
         mat.setDiffuse( new GLVector( 0.8f, 0.5f, 0.4f ) );
         mat.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        mat.setDoubleSided( true );
+        //mat.setDoubleSided( true );
 
         msh.setMaterial( mat );
 

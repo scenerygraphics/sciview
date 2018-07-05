@@ -5,13 +5,13 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>20.4.0</version>
+		<version>23.0.0</version>
 		<relativePath />
 	</parent>
 
 	<groupId>sc.iview</groupId>
 	<artifactId>sciview</artifactId>
-	<version>0.1.2-SNAPSHOT</version>
+	<version>0.1.4-SNAPSHOT</version>
 
 	<name>SciView</name>
 	<description>Scenery-backed 3D visualization package for ImageJ.</description>
@@ -90,21 +90,13 @@
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>SciView developers.</license.copyrightOwners>
 
-		<!--
-		HACK: The following list of allowed-to-be-duplicated classes
-		facilitates intended combinations of artifacts:
-		* com.google.android.tools:dx + junit:junit
-		-->
-		<allowedDuplicateClasses>junit.*</allowedDuplicateClasses>
-
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 
-		<scijava-common.version>2.72.0</scijava-common.version>
-		<imagej-mesh.version>0.7.0</imagej-mesh.version>
 		<imagej-mesh-io.version>0.1.0</imagej-mesh-io.version>
-		<imagej-ops.version>0.41.0</imagej-ops.version>
-		<scenery.version>0.4.1</scenery.version>
+		<scenery.version>0.5.0</scenery.version>
+		<imagej-mesh.version>0.7.1</imagej-mesh.version>
+		<cleargl.version>2.2.0</cleargl.version>
 	</properties>
 
 	<repositories>
@@ -135,6 +127,10 @@
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-ui-swing</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>ui-behaviour</artifactId>
+		</dependency>
 
 		<!-- ImageJ dependencies -->
 		<dependency>
@@ -144,11 +140,12 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-mesh</artifactId>
+            <version>${imagej-mesh.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-mesh-io</artifactId>
-			<version>${imagej-mesh-io.version}</version>
+            <version>${imagej-mesh-io.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
@@ -169,6 +166,7 @@
 		<dependency>
 			<groupId>graphics.scenery</groupId>
 			<artifactId>scenery</artifactId>
+			<version>${scenery.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.clearvolume</groupId>
