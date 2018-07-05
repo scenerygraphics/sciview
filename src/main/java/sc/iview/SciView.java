@@ -290,11 +290,13 @@ public class SciView extends SceneryBase {
     }
 
     private void setFloory(float new_pos) {
-        if (new_pos < -100f)
-            new_pos = -100f;
+        float temp_pos = 0f;
+        temp_pos = new_pos;
+        if (temp_pos < -100f)
+            temp_pos = -100f;
         else if (new_pos > 5f)
-            new_pos = 5f;
-        flooryaxis = new_pos;
+            temp_pos = 5f;
+        flooryaxis = temp_pos;
         String helpString = "SciView help:\n\n";
         helpString += flooryaxis + "\n";
         log.warn(helpString);
