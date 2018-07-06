@@ -133,6 +133,9 @@ public class SciView extends SceneryBase {
     private float fpsScrollSpeed = 3.0f;
 
     private float mouseSpeedMult = 0.25f;
+
+    private float flooryaxis = -1.0f;
+
     private Display<?> scijavaDisplay;
 
     protected Node floor;
@@ -281,6 +284,23 @@ public class SciView extends SceneryBase {
     public void setFloor(Node n) { floor = n; }
 
     public Node getFloor() { return floor; }
+
+    private float getFloory() {
+        return flooryaxis;
+    }
+
+    private void setFloory(float new_pos) {
+        float temp_pos = 0f;
+        temp_pos = new_pos;
+        if (temp_pos < -100f)
+            temp_pos = -100f;
+        else if (new_pos > 5f)
+            temp_pos = 5f;
+        flooryaxis = temp_pos;
+        String helpString = "SciView help:\n\n";
+        helpString += flooryaxis + "\n";
+        log.warn(helpString);
+    }
 
     public boolean isInitialized() {
         return initialized;
@@ -558,6 +578,27 @@ public class SciView extends SceneryBase {
 
         if( defaultArcBall ) enableArcBallControl();
 
+       // Node currentNode = getActiveNode();
+
+        float temp = 0.0f;
+        getFloory();
+        temp = position.yf();
+        if(getFloory() < temp){
+            System.err.println( "Not lowered " );
+        }else {
+            setFloory(temp - 1f);
+        }
+        getFloor().setVisible( !getFloor().getVisible());
+
+        float yposition = -1.0f;
+
+        yposition = getFloory();
+
+        floor = new Box(new GLVector(500f, 0.2f, 500f));
+        floor.setPosition(new GLVector(0f, yposition, 0f));
+        floor.getMaterial().setDiffuse(new GLVector(1.0f, 1.0f, 1.0f));
+        getScene().addChild(floor);
+
         return box;
 
         //System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
@@ -587,6 +628,32 @@ public class SciView extends SceneryBase {
         getScene().addChild( sphere );
 
         if( defaultArcBall ) enableArcBallControl();
+
+        Node currentNode = getActiveNode();
+
+        float temp = 0.0f;
+        float rad = 0.0f;
+        Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
+        Node.BoundingSphere bs = currentNode.generateBoundingBox().getBoundingSphere();
+        getFloory();
+        temp = bb.getMin().y();
+        rad = bs.getRadius();
+        if(getFloory() < temp){
+            System.err.println( "Not lowered " );
+        }else {
+            setFloory(temp - rad);
+        }
+        getFloor().setVisible( !getFloor().getVisible());
+
+        float yposition = -1.0f;
+
+        yposition = getFloory();
+
+        floor = new Box(new GLVector(500f, 0.2f, 500f));
+        floor.setPosition(new GLVector(0f, yposition, 0f));
+        floor.getMaterial().setDiffuse(new GLVector(1.0f, 1.0f, 1.0f));
+        getScene().addChild(floor);
+
         return sphere;
     }
 
@@ -620,6 +687,29 @@ public class SciView extends SceneryBase {
         getScene().addChild( line );
 
         if( defaultArcBall ) enableArcBallControl();
+
+        Node currentNode = getActiveNode();
+
+        float temp = 0.0f;
+        Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
+        getFloory();
+        temp = bb.getMin().y();
+        if(getFloory() < temp){
+            System.err.println( "Not lowered " );
+        }else {
+            setFloory(temp - 1f);
+        }
+        getFloor().setVisible( !getFloor().getVisible());
+
+        float yposition = -1.0f;
+
+        yposition = getFloory();
+
+        floor = new Box(new GLVector(500f, 0.2f, 500f));
+        floor.setPosition(new GLVector(0f, yposition, 0f));
+        floor.getMaterial().setDiffuse(new GLVector(1.0f, 1.0f, 1.0f));
+        getScene().addChild(floor);
+
         return line;
     }
 
@@ -644,6 +734,29 @@ public class SciView extends SceneryBase {
         getScene().addChild( line );
 
         if( defaultArcBall ) enableArcBallControl();
+
+        Node currentNode = getActiveNode();
+
+        float temp = 0.0f;
+        Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
+        getFloory();
+        temp = bb.getMin().y();
+        if(getFloory() < temp){
+            System.err.println( "Not lowered " );
+        }else {
+            setFloory(temp - 1f);
+        }
+        getFloor().setVisible( !getFloor().getVisible());
+
+        float yposition = -1.0f;
+
+        yposition = getFloory();
+
+        floor = new Box(new GLVector(500f, 0.2f, 500f));
+        floor.setPosition(new GLVector(0f, yposition, 0f));
+        floor.getMaterial().setDiffuse(new GLVector(1.0f, 1.0f, 1.0f));
+        getScene().addChild(floor);
+
         return line;
     }
 
@@ -804,6 +917,29 @@ public class SciView extends SceneryBase {
 
     public graphics.scenery.Node addNode( Node n ) {
         getScene().addChild( n );
+
+        Node currentNode = getActiveNode();
+
+        float temp = 0.0f;
+        Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
+        getFloory();
+        temp = bb.getMin().y();
+        if(getFloory() < temp){
+            System.err.println( "Not lowered " );
+        }else {
+            setFloory(temp - 1f);
+        }
+        getFloor().setVisible( !getFloor().getVisible());
+
+        float yposition = -1.0f;
+
+        yposition = getFloory();
+
+        floor = new Box(new GLVector(500f, 0.2f, 500f));
+        floor.setPosition(new GLVector(0f, yposition, 0f));
+        floor.getMaterial().setDiffuse(new GLVector(1.0f, 1.0f, 1.0f));
+        getScene().addChild(floor);
+
         return n;
     }
 
@@ -822,6 +958,29 @@ public class SciView extends SceneryBase {
         getScene().addChild( scMesh );
 
         if( defaultArcBall ) enableArcBallControl();
+
+        Node currentNode = getActiveNode();
+
+        float temp = 0.0f;
+        Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
+        getFloory();
+        temp = bb.getMin().y();
+        if(getFloory() < temp){
+            System.err.println( "Not lowered " );
+        }else {
+            setFloory(temp - 1f);
+        }
+        getFloor().setVisible( !getFloor().getVisible());
+
+        float yposition = -1.0f;
+
+        yposition = getFloory();
+
+        floor = new Box(new GLVector(500f, 0.2f, 500f));
+        floor.setPosition(new GLVector(0f, yposition, 0f));
+        floor.getMaterial().setDiffuse(new GLVector(1.0f, 1.0f, 1.0f));
+        getScene().addChild(floor);
+
 
         return scMesh;
     }
