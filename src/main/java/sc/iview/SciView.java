@@ -28,11 +28,72 @@
  */
 package sc.iview;
 
+import com.sun.javafx.application.PlatformImpl;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+
+import net.imagej.Dataset;
+import net.imagej.lut.LUTService;
+import net.imagej.ops.OpService;
+import net.imglib2.Cursor;
+import net.imglib2.IterableInterval;
+import net.imglib2.RealLocalizable;
+import net.imglib2.RealPoint;
+import net.imglib2.display.AbstractArrayColorTable;
+import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.view.Views;
+
+import org.apache.commons.lang3.SystemUtils;
+import org.scijava.Context;
+import org.scijava.display.Display;
+import org.scijava.display.DisplayService;
+import org.scijava.io.IOService;
+import org.scijava.log.LogService;
+import org.scijava.menu.MenuService;
+import org.scijava.plugin.Parameter;
+import org.scijava.thread.ThreadService;
+import org.scijava.ui.behaviour.ClickBehaviour;
+import org.scijava.util.ColorRGB;
+import org.scijava.util.ColorRGBA;
+import org.scijava.util.Colors;
+
+import sc.iview.javafx.JavaFXMenuCreator;
+import sc.iview.process.MeshConverter;
+import sc.iview.vector.ClearGLVector3;
+import sc.iview.vector.Vector3;
+
 import cleargl.GLTypeEnum;
 import cleargl.GLVector;
-import com.sun.javafx.application.PlatformImpl;
 import coremem.enums.NativeTypeEnum;
-import graphics.scenery.*;
+import graphics.scenery.BoundingGrid;
+import graphics.scenery.Box;
+import graphics.scenery.Camera;
+import graphics.scenery.DetachedHeadCamera;
+import graphics.scenery.GenericTexture;
+import graphics.scenery.Line;
+import graphics.scenery.Material;
+import graphics.scenery.Mesh;
+import graphics.scenery.Node;
+import graphics.scenery.PointCloud;
+import graphics.scenery.PointLight;
+import graphics.scenery.SceneryBase;
+import graphics.scenery.SceneryElement;
+import graphics.scenery.Sphere;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.controls.InputHandler;
 import graphics.scenery.controls.behaviours.ArcballCameraControl;
@@ -48,54 +109,17 @@ import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
-import javafx.scene.layout.*;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
-
-import net.imagej.Dataset;
-import net.imagej.lut.LUTService;
-import net.imagej.ops.OpService;
-import net.imglib2.Cursor;
-import net.imglib2.IterableInterval;
-import net.imglib2.RealLocalizable;
-import net.imglib2.RealPoint;
-import net.imglib2.display.AbstractArrayColorTable;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.view.Views;
-import org.apache.commons.lang3.SystemUtils;
-import org.scijava.Context;
-import org.scijava.display.Display;
-import org.scijava.display.DisplayService;
-import org.scijava.io.IOService;
-import org.scijava.log.LogService;
-import org.scijava.menu.MenuService;
-import org.scijava.plugin.Parameter;
-import org.scijava.thread.ThreadService;
-import org.scijava.ui.behaviour.ClickBehaviour;
-import org.scijava.util.ColorRGB;
-import org.scijava.util.ColorRGBA;
-import org.scijava.util.Colors;
-import sc.iview.javafx.JavaFXMenuCreator;
-import sc.iview.process.MeshConverter;
-import sc.iview.vector.ClearGLVector3;
-import sc.iview.vector.Vector3;
-
-
-import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 public class SciView extends SceneryBase {
 
@@ -280,7 +304,7 @@ public class SciView extends SceneryBase {
 
         floor = new Box( new GLVector( 500f, 0.2f, 500f ) );
 
-        animations = new LinkedList<java.util.concurrent.Future<?>>();
+        animations = new LinkedList<Future<?>>();
         floor.setPosition( new GLVector(0f,-1f,0f) );
         floor.getMaterial().setDiffuse( new GLVector(1.0f, 1.0f, 1.0f) );
         getScene().addChild(floor);
