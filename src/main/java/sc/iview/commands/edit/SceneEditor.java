@@ -148,6 +148,7 @@ public class SceneEditor implements UIComponent<JPanel> {
 
         treeModel = new DefaultTreeModel( root );
         tree = new JTree( treeModel );
+        tree.setRootVisible( false );
 
         tree.getSelectionModel().setSelectionMode( TreeSelectionModel.SINGLE_TREE_SELECTION );
         tree.addTreeSelectionListener( e -> {
