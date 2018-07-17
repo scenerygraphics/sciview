@@ -41,6 +41,7 @@ import javax.swing.JTree;
 import javax.swing.WindowConstants;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeSelectionModel;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -148,6 +149,7 @@ public class SceneEditor implements UIComponent<JPanel> {
         treeModel = new DefaultTreeModel( root );
         tree = new JTree( treeModel );
 
+        tree.getSelectionModel().setSelectionMode( TreeSelectionModel.SINGLE_TREE_SELECTION );
         tree.addTreeSelectionListener( e -> {
             final Object treeNode = e.getNewLeadSelectionPath().getLastPathComponent();
             final Node sceneNode = sceneNode( treeNode );
