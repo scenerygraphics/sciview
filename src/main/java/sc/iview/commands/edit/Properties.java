@@ -293,4 +293,11 @@ public class Properties extends InteractiveCommand {
     public void run() {
 
     }
+
+    public void setSceneNode(final Node node) {
+        currentSceneNode = node;
+        refreshColourInDialog();
+        refreshVisibilityInDialog();
+
+    }
 }
