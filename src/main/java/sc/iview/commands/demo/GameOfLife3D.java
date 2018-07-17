@@ -262,6 +262,7 @@ public class GameOfLife3D extends InteractiveCommand {
 
             sciView.getCamera().setPosition( new GLVector( 27.840086f, 20.392426f, 26.64901f ) );
             sciView.getCamera().setRotation( new Quaternion( 0.14639562f, 0.8187733f, -0.54965425f, 0.0778377f ));
+            volume.setName( "Game of Life 3D" );
         } else {
             // NB: Name must be unique each time.
             sciView.updateVolume( field, name + "-" + ++tick, voxelDims, volume );

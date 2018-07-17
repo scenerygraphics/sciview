@@ -63,6 +63,7 @@ public class MeshTextureDemo implements Command {
     @Override
     public void run() {
         Node msh = sciView.addBox();
+        msh.setName( "Mesh Texture Demo" );
         msh.fitInto( 10.0f, true );
 
         GenericTexture texture = generateGenericTexture();

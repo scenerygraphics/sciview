@@ -68,6 +68,6 @@ public class LineDemo implements Command {
 
         double edgeWidth = 0.1;
 
-        sciView.addLine( points, Colors.LIGHTSALMON, edgeWidth );
+        sciView.addLine( points, Colors.LIGHTSALMON, edgeWidth ).setName( "Lines Demo" );
     }
 }
