@@ -144,7 +144,7 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-mesh-io</artifactId>
-            <version>${imagej-mesh-io.version}</version>
+			<version>${imagej-mesh-io.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
