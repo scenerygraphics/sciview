@@ -151,6 +151,7 @@ public class SceneEditor implements UIComponent<JPanel> {
         tree.addTreeSelectionListener( e -> {
             final Object treeNode = e.getNewLeadSelectionPath().getLastPathComponent();
             final Node sceneNode = sceneNode( treeNode );
+            sciView.setActiveNode( sceneNode );
             updateProperties( sceneNode );
         } );
     }
