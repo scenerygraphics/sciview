@@ -140,7 +140,6 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-mesh</artifactId>
-            <version>${imagej-mesh.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
@@ -166,7 +165,6 @@
 		<dependency>
 			<groupId>graphics.scenery</groupId>
 			<artifactId>scenery</artifactId>
-			<version>${scenery.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.clearvolume</groupId>
