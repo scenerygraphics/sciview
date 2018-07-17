@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>23.0.0</version>
+		<version>23.1.1</version>
 		<relativePath />
 	</parent>
 
@@ -94,9 +94,6 @@
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 
 		<imagej-mesh-io.version>0.1.0</imagej-mesh-io.version>
-		<scenery.version>0.5.0</scenery.version>
-		<imagej-mesh.version>0.7.1</imagej-mesh.version>
-		<cleargl.version>2.2.0</cleargl.version>
 	</properties>
 
 	<repositories>
