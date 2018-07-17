@@ -228,6 +228,7 @@ public class GameOfLife3D extends InteractiveCommand {
             name = "Life Simulation";
             voxelDims = new float[] { 1, 1, 1 };
             volume = ( Volume ) sciView.addVolume( field, name, voxelDims );
+            volume.setName( "Game of Life 3D" );
         } else {
             // NB: Name must be unique each time.
             sciView.updateVolume( field, name + "-" + ++tick, voxelDims, volume );
