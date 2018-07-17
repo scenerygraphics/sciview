@@ -52,6 +52,8 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 import net.imagej.Dataset;
 import net.imagej.lut.LUTService;
 import net.imagej.ops.OpService;
@@ -444,12 +446,24 @@ public class SciView extends SceneryBase {
     public void inputSetup() {
         //setInputHandler((ClearGLInputHandler) viewer.getHub().get(SceneryElement.INPUT));
 
+        Function1<? super List<SelectResult>, Unit> selectAction = nearest -> {
+            log.warn( "Select action triggered" );
+            if(!nearest.isEmpty()) {
+                setActiveNode( nearest.get(0).getNode() );
+                log.warn( "Selected node: " + getActiveNode() );
+            }
+            return Unit.INSTANCE;
+        };
+
+        List<Class<? extends Object>> ignoredObjects = new ArrayList<>();
+        ignoredObjects.add(BoundingGrid.class);
+
         getInputHandler().useDefaultBindings( "" );
         getInputHandler().addBehaviour( "object_selection_mode", new SelectCommand( "objectSelector", getRenderer(),
                                                                                     getScene(),
                                                                                     () -> getScene().findObserver(),
-                                                                                    false, result -> this.selectNode(
-                                                                                                                      result ) ) );
+                                                                                    false, ignoredObjects, selectAction ) );
+        getInputHandler().addKeyBinding( "object_selection_mode", "double-click button1" );
 
         //enableArcBallControl();
         enableFPSControl();
