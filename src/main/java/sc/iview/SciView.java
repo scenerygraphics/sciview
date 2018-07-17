@@ -295,9 +295,10 @@ public class SciView extends SceneryBase {
         this.camera = cam;
 
         floor = new Box( new GLVector( 500f, 0.2f, 500f ) );
-        floor.setPosition( new GLVector(0f,-1f,0f) );
-        floor.getMaterial().setDiffuse( new GLVector(1.0f, 1.0f, 1.0f) );
-        getScene().addChild(floor);
+        floor.setName( "Floor" );
+        updateFloorPosition();
+        floor.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        getScene().addChild( floor );
 
         // Try to surround the scene with a box
 //        Box shell = new Box( new GLVector( 100.0f, 100.0f, 100.0f ), true );
@@ -634,14 +635,7 @@ public class SciView extends SceneryBase {
         }
         getFloor().setVisible( !getFloor().getVisible());
 
-        float yposition = -1.0f;
-
-        yposition = getFloory();
-
-        floor = new Box(new GLVector(500f, 0.2f, 500f));
-        floor.setPosition(new GLVector(0f, yposition, 0f));
-        floor.getMaterial().setDiffuse(new GLVector(1.0f, 1.0f, 1.0f));
-        getScene().addChild(floor);
+        updateFloorPosition();
 
         return box;
 
@@ -687,16 +681,8 @@ public class SciView extends SceneryBase {
         }else {
             setFloory(temp - rad);
         }
-        getFloor().setVisible( !getFloor().getVisible());
 
-        float yposition = -1.0f;
-
-        yposition = getFloory();
-
-        floor = new Box(new GLVector(500f, 0.2f, 500f));
-        floor.setPosition(new GLVector(0f, yposition, 0f));
-        floor.getMaterial().setDiffuse(new GLVector(1.0f, 1.0f, 1.0f));
-        getScene().addChild(floor);
+        updateFloorPosition();
 
         return sphere;
     }
@@ -743,16 +729,8 @@ public class SciView extends SceneryBase {
         }else {
             setFloory(temp - 1f);
         }
-        getFloor().setVisible( !getFloor().getVisible());
 
-        float yposition = -1.0f;
-
-        yposition = getFloory();
-
-        floor = new Box(new GLVector(500f, 0.2f, 500f));
-        floor.setPosition(new GLVector(0f, yposition, 0f));
-        floor.getMaterial().setDiffuse(new GLVector(1.0f, 1.0f, 1.0f));
-        getScene().addChild(floor);
+        updateFloorPosition();
 
         return line;
     }
@@ -790,16 +768,8 @@ public class SciView extends SceneryBase {
         }else {
             setFloory(temp - 1f);
         }
-        getFloor().setVisible( !getFloor().getVisible());
 
-        float yposition = -1.0f;
-
-        yposition = getFloory();
-
-        floor = new Box(new GLVector(500f, 0.2f, 500f));
-        floor.setPosition(new GLVector(0f, yposition, 0f));
-        floor.getMaterial().setDiffuse(new GLVector(1.0f, 1.0f, 1.0f));
-        getScene().addChild(floor);
+        updateFloorPosition();
 
         return line;
     }
@@ -973,16 +943,8 @@ public class SciView extends SceneryBase {
         }else {
             setFloory(temp - 1f);
         }
-        getFloor().setVisible( !getFloor().getVisible());
 
-        float yposition = -1.0f;
-
-        yposition = getFloory();
-
-        floor = new Box(new GLVector(500f, 0.2f, 500f));
-        floor.setPosition(new GLVector(0f, yposition, 0f));
-        floor.getMaterial().setDiffuse(new GLVector(1.0f, 1.0f, 1.0f));
-        getScene().addChild(floor);
+        updateFloorPosition();
 
         return n;
     }
@@ -1014,17 +976,8 @@ public class SciView extends SceneryBase {
         }else {
             setFloory(temp - 1f);
         }
-        getFloor().setVisible( !getFloor().getVisible());
 
-        float yposition = -1.0f;
-
-        yposition = getFloory();
-
-        floor = new Box(new GLVector(500f, 0.2f, 500f));
-        floor.setPosition(new GLVector(0f, yposition, 0f));
-        floor.getMaterial().setDiffuse(new GLVector(1.0f, 1.0f, 1.0f));
-        getScene().addChild(floor);
-
+        updateFloorPosition();
 
         return scMesh;
     }
@@ -1295,5 +1248,9 @@ public class SciView extends SceneryBase {
 
     public ArcballCameraControl getTargetArcball() {
         return targetArcball;
+    }
+
+    private void updateFloorPosition() {
+        floor.setPosition( new GLVector( 0f, flooryaxis, 0f ) );
     }
 }
