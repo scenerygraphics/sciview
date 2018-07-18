@@ -617,17 +617,7 @@ public class SciView extends SceneryBase {
 
         //System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
 
-        activeNode = box;
-
-        getScene().addChild( box );
-
-        if( defaultArcBall ) enableArcBallControl();
-
-        updateFloorPosition();
-
-        return box;
-
-        //System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
+        return addNode( box );
     }
 
     public graphics.scenery.Node addSphere() {
@@ -649,17 +639,7 @@ public class SciView extends SceneryBase {
         sphere.setMaterial( material );
         sphere.setPosition( ClearGLVector3.convert( position ) );
 
-        activeNode = sphere;
-
-        getScene().addChild( sphere );
-
-        if( defaultArcBall ) enableArcBallControl();
-
-        final Node currentNode = getActiveNode();
-
-        updateFloorPosition();
-
-        return sphere;
+        return addNode( sphere );
     }
 
     public graphics.scenery.Node addLine() {
@@ -690,15 +670,7 @@ public class SciView extends SceneryBase {
         line.setMaterial( material );
         line.setPosition( ClearGLVector3.convert( points[0] ) );
 
-        activeNode = line;
-
-        getScene().addChild( line );
-
-        if( defaultArcBall ) enableArcBallControl();
-
-        updateFloorPosition();
-
-        return line;
+        return addNode( line );
     }
 
     public graphics.scenery.Node addPointLight() {
@@ -712,8 +684,7 @@ public class SciView extends SceneryBase {
         light.setMaterial( material );
         light.setPosition( new GLVector( 0.0f, 0.0f, 0.0f ) );
 
-        getScene().addChild( light );
-        return light;
+        return addNode( light );
     }
 
     public void writeSCMesh( final String filename, final Mesh scMesh ) {
@@ -840,28 +811,25 @@ public class SciView extends SceneryBase {
         material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
         pointCloud.setMaterial( material );
         pointCloud.setPosition( new GLVector( 0f, 0f, 0f ) );
-        getScene().addChild( pointCloud );
 
-        return pointCloud;
+        return addNode( pointCloud );
     }
 
     public graphics.scenery.Node addPointCloud( final PointCloud pointCloud ) {
-
         pointCloud.setupPointCloud();
         pointCloud.getMaterial().setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
         pointCloud.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
         pointCloud.getMaterial().setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
         pointCloud.setPosition( new GLVector( 0f, 0f, 0f ) );
-        getScene().addChild( pointCloud );
 
-        return pointCloud;
+        return addNode( pointCloud );
     }
 
     public graphics.scenery.Node addNode( final Node n ) {
         getScene().addChild( n );
-
+        setActiveNode( n );
+        if( defaultArcBall ) enableArcBallControl();
         updateFloorPosition();
-
         return n;
     }
 
@@ -875,15 +843,7 @@ public class SciView extends SceneryBase {
         scMesh.setMaterial( material );
         scMesh.setPosition( new GLVector( 0.0f, 0.0f, 0.0f ) );
 
-        setActiveNode( scMesh );
-
-        getScene().addChild( scMesh );
-
-        if( defaultArcBall ) enableArcBallControl();
-
-        updateFloorPosition();
-
-        return scMesh;
+        return addNode( scMesh );
     }
 
     public graphics.scenery.Node addMesh( final net.imagej.mesh.Mesh mesh ) {
@@ -1026,7 +986,7 @@ public class SciView extends SceneryBase {
 
         final Volume v = new Volume();
 
-        getScene().addChild( v );
+        addNode( v );
 
         final T voxel = image.firstElement();
         final Class<?> voxelType = voxel.getClass();
