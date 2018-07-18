@@ -1141,9 +1141,7 @@ public class SciView extends SceneryBase {
 
         @SuppressWarnings("unchecked")
         Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
-        int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
         float minVal = Float.MIN_VALUE, maxVal = Float.MAX_VALUE;
-        NativeTypeEnum nType = null;
 
         if( voxelType == UnsignedByteType.class ) {
             minVal = 0;
@@ -1193,7 +1191,6 @@ public class SciView extends SceneryBase {
         @SuppressWarnings("unchecked")
         Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
         int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
-        float minVal = Float.MIN_VALUE, maxVal = Float.MAX_VALUE;
         NativeTypeEnum nType = null;
 
         if( voxelType == UnsignedByteType.class ) {
