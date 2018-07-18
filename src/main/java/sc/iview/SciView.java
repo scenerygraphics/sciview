@@ -1077,10 +1077,6 @@ public class SciView extends SceneryBase {
         return getApplicationName();
     }
 
-    public void addChild( final Node node ) {
-        getScene().addChild( node );
-    }
-
     public graphics.scenery.Node addVolume( final Dataset image ) {
         final float[] voxelDims = new float[image.numDimensions()];
         for( int d = 0; d < voxelDims.length; d++ ) {
