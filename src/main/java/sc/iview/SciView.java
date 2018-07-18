@@ -623,18 +623,6 @@ public class SciView extends SceneryBase {
 
         if( defaultArcBall ) enableArcBallControl();
 
-        // Node currentNode = getActiveNode();
-
-        float temp = 0.0f;
-        getFloory();
-        temp = position.yf();
-        if( getFloory() < temp ) {
-            System.err.println( "Not lowered " );
-        } else {
-            setFloory( temp - 1f );
-        }
-        getFloor().setVisible( !getFloor().getVisible() );
-
         updateFloorPosition();
 
         return box;
@@ -668,19 +656,6 @@ public class SciView extends SceneryBase {
         if( defaultArcBall ) enableArcBallControl();
 
         final Node currentNode = getActiveNode();
-
-        float temp = 0.0f;
-        float rad = 0.0f;
-        final Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
-        final Node.BoundingSphere bs = currentNode.generateBoundingBox().getBoundingSphere();
-        getFloory();
-        temp = bb.getMin().y();
-        rad = bs.getRadius();
-        if( getFloory() < temp ) {
-            System.err.println( "Not lowered " );
-        } else {
-            setFloory( temp - rad );
-        }
 
         updateFloorPosition();
 
@@ -718,18 +693,6 @@ public class SciView extends SceneryBase {
 
         if( defaultArcBall ) enableArcBallControl();
 
-        final Node currentNode = getActiveNode();
-
-        float temp = 0.0f;
-        final Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
-        getFloory();
-        temp = bb.getMin().y();
-        if( getFloory() < temp ) {
-            System.err.println( "Not lowered " );
-        } else {
-            setFloory( temp - 1f );
-        }
-
         updateFloorPosition();
 
         return line;
@@ -756,18 +719,6 @@ public class SciView extends SceneryBase {
         getScene().addChild( line );
 
         if( defaultArcBall ) enableArcBallControl();
-
-        final Node currentNode = getActiveNode();
-
-        float temp = 0.0f;
-        final Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
-        getFloory();
-        temp = bb.getMin().y();
-        if( getFloory() < temp ) {
-            System.err.println( "Not lowered " );
-        } else {
-            setFloory( temp - 1f );
-        }
 
         updateFloorPosition();
 
@@ -933,18 +884,6 @@ public class SciView extends SceneryBase {
     public graphics.scenery.Node addNode( final Node n ) {
         getScene().addChild( n );
 
-        final Node currentNode = getActiveNode();
-
-        float temp = 0.0f;
-        final Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
-        getFloory();
-        temp = bb.getMin().y();
-        if( getFloory() < temp ) {
-            System.err.println( "Not lowered " );
-        } else {
-            setFloory( temp - 1f );
-        }
-
         updateFloorPosition();
 
         return n;
@@ -965,18 +904,6 @@ public class SciView extends SceneryBase {
         getScene().addChild( scMesh );
 
         if( defaultArcBall ) enableArcBallControl();
-
-        final Node currentNode = getActiveNode();
-
-        float temp = 0.0f;
-        final Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
-        getFloory();
-        temp = bb.getMin().y();
-        if( getFloory() < temp ) {
-            System.err.println( "Not lowered " );
-        } else {
-            setFloory( temp - 1f );
-        }
 
         updateFloorPosition();
 
@@ -1241,6 +1168,15 @@ public class SciView extends SceneryBase {
     }
 
     private void updateFloorPosition() {
-        floor.setPosition( new GLVector( 0f, flooryaxis, 0f ) );
+        // Lower the floor below the active node, as needed.
+        final Node currentNode = getActiveNode();
+        if( currentNode != null ) {
+            final Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
+            final Node.BoundingSphere bs = bb.getBoundingSphere();
+            final float neededFloor = bb.getMin().y() - Math.max( bs.getRadius(), 1 );
+            if( neededFloor < getFloory() ) setFloory( neededFloor );
+        }
+
+        floor.setPosition( new GLVector( 0f, getFloory(), 0f ) );
     }
 }
