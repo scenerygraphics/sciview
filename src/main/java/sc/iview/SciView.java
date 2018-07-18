@@ -54,7 +54,7 @@ import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
-import net.imglib2.display.AbstractArrayColorTable;
+import net.imglib2.display.ColorTable;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
@@ -1094,7 +1094,7 @@ public class SciView extends SceneryBase {
         return addVolume( image, name, 1, 1, 1 );
     }
 
-    public void setColormap( Node n, AbstractArrayColorTable colorTable ) {
+    public void setColormap( Node n, ColorTable colorTable ) {
         n.getMaterial().getTextures().put("normal", "fromBuffer:diffuse" );
         n.getMaterial().setNeedsTextureReload( true );
 
@@ -1163,7 +1163,7 @@ public class SciView extends SceneryBase {
         v.setTrangemax( maxVal );
 
         try {
-            setColormap( v, (AbstractArrayColorTable) lutService.loadLUT( lutService.findLUTs().get("WCIF/ICA.lut") ));
+            setColormap( v, lutService.loadLUT( lutService.findLUTs().get("WCIF/ICA.lut") ));
         } catch (IOException e) {
             e.printStackTrace();
         }
