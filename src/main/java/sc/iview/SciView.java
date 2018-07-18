@@ -1108,7 +1108,7 @@ public class SciView extends SceneryBase {
         n.getMaterial().getTextures().put("normal", "fromBuffer:diffuse" );
         n.getMaterial().setNeedsTextureReload( true );
 
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect( ( int ) ( 4 * 4 * colorTable.getLength() ) );// Num bytes * num components * color map length
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect( 4 * 4 * colorTable.getLength() );// Num bytes * num components * color map length
         for( int k = 0; k < colorTable.getLength(); k++ ) {
             for( int c = 0; c < colorTable.getComponentCount(); c++ ) {
                 byteBuffer.put( (byte) colorTable.get( c, k ));// TODO this assumes numBits is 8, could by 16
@@ -1162,7 +1162,7 @@ public class SciView extends SceneryBase {
 
         updateVolume( image, name, voxelDimensions, v );
 
-        GLVector scaleVec = new GLVector(0.5f*(float) dimensions[0], 0.5f*(float) dimensions[1], 0.5f*(float) dimensions[2] );
+        GLVector scaleVec = new GLVector(0.5f*dimensions[0], 0.5f*dimensions[1], 0.5f*dimensions[2] );
 
         v.setScale( scaleVec );// TODO maybe dont do this
         // TODO: This translation should probably be accounted for in scenery; volumes use a corner-origin and
