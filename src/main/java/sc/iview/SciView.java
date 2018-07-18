@@ -671,31 +671,7 @@ public class SciView extends SceneryBase {
     }
 
     public graphics.scenery.Node addLine( final Vector3 start, final Vector3 stop, final ColorRGB color ) {
-
-        final Material material = new Material();
-        material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        material.setDiffuse( vector( color ) );
-        material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
-
-        final Line line = new Line( 2 );
-
-        line.addPoint( ClearGLVector3.convert( start ) );
-        line.addPoint( ClearGLVector3.convert( stop ) );
-
-        line.setEdgeWidth( 0.1f );
-
-        line.setMaterial( material );
-        line.setPosition( ClearGLVector3.convert( start ) );
-
-        activeNode = line;
-
-        getScene().addChild( line );
-
-        if( defaultArcBall ) enableArcBallControl();
-
-        updateFloorPosition();
-
-        return line;
+        return addLine( new Vector3[] { start, stop }, color, 0.1f );
     }
 
     public graphics.scenery.Node addLine( final Vector3[] points, final ColorRGB color, final double edgeWidth ) {
