@@ -34,6 +34,7 @@ import net.imagej.ImageJService;
 
 import org.scijava.Context;
 import org.scijava.service.SciJavaService;
+import org.scijava.thread.ThreadService;
 import org.scijava.ui.UIService;
 
 import cleargl.GLVector;
@@ -45,7 +46,7 @@ import cleargl.GLVector;
  */
 public class Main {
     public static void main( String... args ) {
-        Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class );
+        Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
 
         UIService ui = context.service( UIService.class );
         if( !ui.isVisible() ) ui.showUI();

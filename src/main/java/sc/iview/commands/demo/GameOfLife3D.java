@@ -32,6 +32,9 @@ package sc.iview.commands.demo;
 import static sc.iview.commands.MenuWeights.DEMO;
 import static sc.iview.commands.MenuWeights.DEMO_GAME_OF_LIFE;
 
+import cleargl.GLVector;
+import com.jogamp.opengl.math.Quaternion;
+import graphics.scenery.BoundingGrid;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
 import net.imglib2.Sampler;
@@ -86,11 +89,20 @@ public class GameOfLife3D extends InteractiveCommand {
     @Parameter(label = "Initial saturation % when randomizing", min = "1", max = "99", style = NumberWidget.SCROLL_BAR_STYLE, persist = false)
     private int saturation = 10;
 
+    @Parameter(label = "Play speed", min = "1", max="100", style = NumberWidget.SCROLL_BAR_STYLE, persist = false)
+    private int playSpeed = 10;
+
     @Parameter(callback = "iterate")
     private Button iterate;
 
     @Parameter(callback = "randomize")
     private Button randomize;
+
+    @Parameter(callback = "play")
+    private Button play;
+
+    @Parameter(callback = "pause")
+    private Button pause;
 
     private int w = 64, h = 64, d = 64;
     private Img<UnsignedByteType> field;
@@ -100,6 +112,18 @@ public class GameOfLife3D extends InteractiveCommand {
 
     /** Temporary buffer for use while recomputing the image. */
     private boolean[] bits = new boolean[w * h * d];
+
+    /** Repeatedly iterates the simulation until stopped **/
+    public void play() {
+        sciView.animate( playSpeed, () -> {
+            iterate();
+        } );
+    }
+
+    /** Stops the simulation **/
+    public void pause() {
+        sciView.stopAnimation();
+    }
 
     /** Randomizes a new bit field. */
     public void randomize() {
@@ -209,6 +233,8 @@ public class GameOfLife3D extends InteractiveCommand {
         return n;
     }
 
+
+
     private int val( RandomAccess<UnsignedByteType> access, int x, int y, int z ) {
         if( x < 0 || x >= w || y < 0 || y >= h || z < 0 || z >= d ) return 0;
         access.setPosition( x, 0 );
@@ -228,6 +254,14 @@ public class GameOfLife3D extends InteractiveCommand {
             name = "Life Simulation";
             voxelDims = new float[] { 1, 1, 1 };
             volume = ( Volume ) sciView.addVolume( field, name, voxelDims );
+
+            BoundingGrid bg = new BoundingGrid();
+            bg.setNode( volume );
+
+            volume.setRenderScale((float) 0.1);
+
+            sciView.getCamera().setPosition( new GLVector( 27.840086f, 20.392426f, 26.64901f ) );
+            sciView.getCamera().setRotation( new Quaternion( 0.14639562f, 0.8187733f, -0.54965425f, 0.0778377f ));
         } else {
             // NB: Name must be unique each time.
             sciView.updateVolume( field, name + "-" + ++tick, voxelDims, volume );
