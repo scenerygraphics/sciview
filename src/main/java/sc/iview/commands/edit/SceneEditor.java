@@ -41,6 +41,7 @@ import javax.swing.JTree;
 import javax.swing.WindowConstants;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import net.miginfocom.swing.MigLayout;
@@ -48,6 +49,7 @@ import net.miginfocom.swing.MigLayout;
 import org.scijava.Context;
 import org.scijava.command.CommandInfo;
 import org.scijava.command.CommandService;
+import org.scijava.event.EventHandler;
 import org.scijava.log.LogService;
 import org.scijava.module.Module;
 import org.scijava.module.ModuleException;
@@ -64,6 +66,10 @@ import org.scijava.util.DebugUtils;
 import org.scijava.widget.UIComponent;
 
 import sc.iview.SciView;
+import sc.iview.event.NodeActivatedEvent;
+import sc.iview.event.NodeAddedEvent;
+import sc.iview.event.NodeChangedEvent;
+import sc.iview.event.NodeRemovedEvent;
 
 import graphics.scenery.Node;
 
@@ -119,6 +125,34 @@ public class SceneEditor implements UIComponent<JPanel> {
         return JPanel.class;
     }
 
+    @EventHandler
+    private void onEvent( final NodeAddedEvent evt ) {
+        final Node node = evt.getNode();
+        System.out.println( "Node added: " + node );
+        rebuildTree();
+    }
+
+    @EventHandler
+    private void onEvent( final NodeRemovedEvent evt ) {
+        final Node node = evt.getNode();
+        System.out.println( "Node removed: " + node );
+        rebuildTree();
+    }
+
+    @EventHandler
+    private void onEvent( final NodeChangedEvent evt ) {
+        final Node node = evt.getNode();
+        System.out.println( "Node changed: " + node );
+        updateProperties( sciView.getActiveNode() );
+    }
+
+    @EventHandler
+    private void onEvent( final NodeActivatedEvent evt ) {
+        final Node node = evt.getNode();
+        System.out.println( "Node activated: " + node );
+        updateProperties( sciView.getActiveNode() );
+    }
+
     /** Initializes {@link #panel}. */
     private synchronized void initPanel() {
         if( panel != null ) return;
@@ -141,30 +175,16 @@ public class SceneEditor implements UIComponent<JPanel> {
     }
 
     private void createTree() {
-        final SceneryTreeNode root = new SceneryTreeNode();
-        for( final Node sceneNode : sciView.getSceneNodes( n -> true ) ) {
-            addNode( root, sceneNode );
-        }
-
-        treeModel = new DefaultTreeModel( root );
+        treeModel = new DefaultTreeModel( new SceneryTreeNode( sciView ) );
         tree = new JTree( treeModel );
         tree.setRootVisible( false );
 
         tree.getSelectionModel().setSelectionMode( TreeSelectionModel.SINGLE_TREE_SELECTION );
         tree.addTreeSelectionListener( e -> {
-            final Object treeNode = e.getNewLeadSelectionPath().getLastPathComponent();
-            final Node sceneNode = sceneNode( treeNode );
+            final Node sceneNode = sceneNode( e.getNewLeadSelectionPath() );
             sciView.setActiveNode( sceneNode );
             updateProperties( sceneNode );
         } );
-    }
-
-    private void addNode( final SceneryTreeNode parent, final Node child ) {
-        final SceneryTreeNode treeNode = new SceneryTreeNode( child );
-        parent.add( treeNode );
-        for( final Node n : child.getChildren() ) {
-            addNode( treeNode, n );
-        }
     }
 
     /** Generates a properties panel for the given node. */
@@ -211,17 +231,22 @@ public class SceneEditor implements UIComponent<JPanel> {
         props.repaint();
     }
 
-    /** Refreshes the tree to match the state of its model. */
-    private void refreshTree() {
-        treeModel.reload();
-        // TODO: retain previously expanded nodes only
-        for( int i = 0; i < tree.getRowCount(); i++ ) {
-            tree.expandRow( i );
-        }
+    /** Rebuilds the tree to match the state of the scene. */
+    private void rebuildTree() {
+        treeModel.setRoot( new SceneryTreeNode( sciView ) );
+
+//        treeModel.reload();
+//        // TODO: retain previously expanded nodes only
+//        for( int i = 0; i < tree.getRowCount(); i++ ) {
+//            tree.expandRow( i );
+//        }
+        updateProperties( sciView.getActiveNode() );
     }
 
     /** Retrieves the scenery node of a given tree node. */
-    private Node sceneNode( final Object treeNode ) {
+    private Node sceneNode( final TreePath treePath ) {
+        if( treePath == null ) return null;
+        final Object treeNode = treePath.getLastPathComponent();
         if( !( treeNode instanceof SceneryTreeNode ) ) return null;
         final SceneryTreeNode stn = ( SceneryTreeNode ) treeNode;
         final Object userObject = stn.getUserObject();
@@ -242,11 +267,14 @@ public class SceneEditor implements UIComponent<JPanel> {
     private static class SceneryTreeNode extends DefaultMutableTreeNode {
         private final Node node;
 
-        public SceneryTreeNode() {
-            this( null );
+        public SceneryTreeNode( final SciView sciView ) {
+            this( ( Node ) null );
+            for( final Node sceneNode : sciView.getSceneNodes( n -> true ) ) {
+                addNode( sceneNode );
+            }
         }
 
-        public SceneryTreeNode( final Node node ) {
+        private SceneryTreeNode( final Node node ) {
             super( node );
             this.node = node;
         }
@@ -254,6 +282,14 @@ public class SceneEditor implements UIComponent<JPanel> {
         @Override
         public String toString() {
             return node == null ? "<SCENE>" : node.getName();
+        }
+
+        private void addNode( final Node child ) {
+            final SceneryTreeNode treeNode = new SceneryTreeNode( child );
+            add( treeNode );
+            for( final Node n : child.getChildren() ) {
+                treeNode.addNode( n );
+            }
         }
     }
 }
