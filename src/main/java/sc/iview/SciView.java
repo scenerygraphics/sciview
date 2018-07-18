@@ -312,7 +312,6 @@ public class SciView extends SceneryBase {
         floor.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
         getScene().addChild( floor );
 
-
         // Try to surround the scene with a box
 //        Box shell = new Box( new GLVector( 100.0f, 100.0f, 100.0f ), true );
 //        shell.getMaterial().setDiffuse( new GLVector( 0.2f, 0.2f, 0.2f ) );
@@ -451,7 +450,6 @@ public class SciView extends SceneryBase {
             setFPSSpeed( getFPSSpeed() - 0.1f );
             setMouseSpeed( getMouseSpeed() - 0.05f );
 
-
             log.warn( "Decreasing FPS scroll Speed" );
 
             resetFPSInputs();
@@ -503,7 +501,6 @@ public class SciView extends SceneryBase {
 
         final List<Class<? extends Object>> ignoredObjects = new ArrayList<>();
         ignoredObjects.add( BoundingGrid.class );
-
 
         getInputHandler().useDefaultBindings( "" );
         getInputHandler().addBehaviour( "object_selection_mode", new SelectCommand( "objectSelector", getRenderer(),
