@@ -82,6 +82,7 @@ public class MeshDemo implements Command {
         }
 
         Node msh = sciView.addMesh( m );
+        msh.setName( "Mesh Demo" );
 
         //msh.fitInto( 15.0f, true );
 

@@ -43,7 +43,6 @@ import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
 import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
 
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
@@ -53,7 +52,6 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
-import cleargl.GLVector;
 import graphics.scenery.Node;
 
 /**
@@ -95,8 +93,8 @@ public class VolumeRenderDemo implements Command {
             return;
         }
 
-        System.out.println( cube.firstElement().getClass() );
         Node v = sciView.addVolume( cube, new float[] { 1, 1, 1 } );
+        v.setName( "Volume Render Demo" );
 
         if (iso) {
             int isoLevel = 1;
@@ -109,7 +107,7 @@ public class VolumeRenderDemo implements Command {
 
             Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
 
-            sciView.addMesh( m );
+            sciView.addMesh( m ).setName( "Volume Render Demo Isosurface" );
         }
 
     }

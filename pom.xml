@@ -164,10 +164,12 @@
 		<dependency>
 			<groupId>graphics.scenery</groupId>
 			<artifactId>scenery</artifactId>
+			<version>${scenery.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.clearvolume</groupId>
 			<artifactId>cleargl</artifactId>
+			<version>${cleargl.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.coremem</groupId>

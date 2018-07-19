@@ -38,12 +38,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
@@ -56,11 +51,11 @@ import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
-import net.imglib2.display.AbstractArrayColorTable;
+import net.imglib2.display.ColorTable;
+import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
 
 import org.apache.commons.lang3.SystemUtils;
@@ -154,7 +149,7 @@ public class SciView extends SceneryBase {
     /**
      * Queue keeps track of the currently running animations
      **/
-    private Queue<Future> animations;
+    private Queue<Future<?>> animations;
 
     /**
      * Animation pause tracking
@@ -309,11 +304,13 @@ public class SciView extends SceneryBase {
         this.camera = cam;
 
         floor = new Box( new GLVector( 500f, 0.2f, 500f ) );
-        floor.setPosition( new GLVector( 0f, -1f, 0f ) );
+
+        animations = new LinkedList<Future<?>>();
+
+        floor.setName( "Floor" );
+        updateFloorPosition();
         floor.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
         getScene().addChild( floor );
-
-        animations = new LinkedList<>();
 
         // Try to surround the scene with a box
 //        Box shell = new Box( new GLVector( 100.0f, 100.0f, 100.0f ), true );
@@ -632,36 +629,7 @@ public class SciView extends SceneryBase {
 
         //System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
 
-        activeNode = box;
-
-        getScene().addChild( box );
-
-        if( defaultArcBall ) enableArcBallControl();
-
-        // Node currentNode = getActiveNode();
-
-        float temp = 0.0f;
-        getFloory();
-        temp = position.yf();
-        if( getFloory() < temp ) {
-            System.err.println( "Not lowered " );
-        } else {
-            setFloory( temp - 1f );
-        }
-        getFloor().setVisible( !getFloor().getVisible() );
-
-        float yposition = -1.0f;
-
-        yposition = getFloory();
-
-        floor = new Box( new GLVector( 500f, 0.2f, 500f ) );
-        floor.setPosition( new GLVector( 0f, yposition, 0f ) );
-        floor.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        getScene().addChild( floor );
-
-        return box;
-
-        //System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
+        return addNode( box );
     }
 
     public graphics.scenery.Node addSphere() {
@@ -683,38 +651,7 @@ public class SciView extends SceneryBase {
         sphere.setMaterial( material );
         sphere.setPosition( ClearGLVector3.convert( position ) );
 
-        activeNode = sphere;
-
-        getScene().addChild( sphere );
-
-        if( defaultArcBall ) enableArcBallControl();
-
-        final Node currentNode = getActiveNode();
-
-        float temp = 0.0f;
-        float rad = 0.0f;
-        final Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
-        final Node.BoundingSphere bs = currentNode.generateBoundingBox().getBoundingSphere();
-        getFloory();
-        temp = bb.getMin().y();
-        rad = bs.getRadius();
-        if( getFloory() < temp ) {
-            System.err.println( "Not lowered " );
-        } else {
-            setFloory( temp - rad );
-        }
-        getFloor().setVisible( !getFloor().getVisible() );
-
-        float yposition = -1.0f;
-
-        yposition = getFloory();
-
-        floor = new Box( new GLVector( 500f, 0.2f, 500f ) );
-        floor.setPosition( new GLVector( 0f, yposition, 0f ) );
-        floor.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        getScene().addChild( floor );
-
-        return sphere;
+        return addNode( sphere );
     }
 
     public graphics.scenery.Node addLine() {
@@ -726,51 +663,7 @@ public class SciView extends SceneryBase {
     }
 
     public graphics.scenery.Node addLine( final Vector3 start, final Vector3 stop, final ColorRGB color ) {
-
-        final Material material = new Material();
-        material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        material.setDiffuse( vector( color ) );
-        material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
-
-        final Line line = new Line( 2 );
-
-        line.addPoint( ClearGLVector3.convert( start ) );
-        line.addPoint( ClearGLVector3.convert( stop ) );
-
-        line.setEdgeWidth( 0.1f );
-
-        line.setMaterial( material );
-        line.setPosition( ClearGLVector3.convert( start ) );
-
-        activeNode = line;
-
-        getScene().addChild( line );
-
-        if( defaultArcBall ) enableArcBallControl();
-
-        final Node currentNode = getActiveNode();
-
-        float temp = 0.0f;
-        final Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
-        getFloory();
-        temp = bb.getMin().y();
-        if( getFloory() < temp ) {
-            System.err.println( "Not lowered " );
-        } else {
-            setFloory( temp - 1f );
-        }
-        getFloor().setVisible( !getFloor().getVisible() );
-
-        float yposition = -1.0f;
-
-        yposition = getFloory();
-
-        floor = new Box( new GLVector( 500f, 0.2f, 500f ) );
-        floor.setPosition( new GLVector( 0f, yposition, 0f ) );
-        floor.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        getScene().addChild( floor );
-
-        return line;
+        return addLine( new Vector3[] { start, stop }, color, 0.1f );
     }
 
     public graphics.scenery.Node addLine( final Vector3[] points, final ColorRGB color, final double edgeWidth ) {
@@ -789,35 +682,7 @@ public class SciView extends SceneryBase {
         line.setMaterial( material );
         line.setPosition( ClearGLVector3.convert( points[0] ) );
 
-        activeNode = line;
-
-        getScene().addChild( line );
-
-        if( defaultArcBall ) enableArcBallControl();
-
-        final Node currentNode = getActiveNode();
-
-        float temp = 0.0f;
-        final Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
-        getFloory();
-        temp = bb.getMin().y();
-        if( getFloory() < temp ) {
-            System.err.println( "Not lowered " );
-        } else {
-            setFloory( temp - 1f );
-        }
-        getFloor().setVisible( !getFloor().getVisible() );
-
-        float yposition = -1.0f;
-
-        yposition = getFloory();
-
-        floor = new Box( new GLVector( 500f, 0.2f, 500f ) );
-        floor.setPosition( new GLVector( 0f, yposition, 0f ) );
-        floor.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        getScene().addChild( floor );
-
-        return line;
+        return addNode( line );
     }
 
     public graphics.scenery.Node addPointLight() {
@@ -831,8 +696,7 @@ public class SciView extends SceneryBase {
         light.setMaterial( material );
         light.setPosition( new GLVector( 0.0f, 0.0f, 0.0f ) );
 
-        getScene().addChild( light );
-        return light;
+        return addNode( light );
     }
 
     public void writeSCMesh( final String filename, final Mesh scMesh ) {
@@ -941,64 +805,43 @@ public class SciView extends SceneryBase {
 
         final PointCloud pointCloud = new PointCloud( getDefaultPointSize(), name );
         final Material material = new Material();
-        final FloatBuffer vBuffer = ByteBuffer.allocateDirect( flatVerts.length * 4 ).order(
-                                                                                             ByteOrder.nativeOrder() ).asFloatBuffer();
-        final FloatBuffer nBuffer = ByteBuffer.allocateDirect( 0 ).order( ByteOrder.nativeOrder() ).asFloatBuffer();
+        final FloatBuffer vBuffer = ByteBuffer.allocateDirect( flatVerts.length * 4 ) //
+                .order( ByteOrder.nativeOrder() ).asFloatBuffer();
+        final FloatBuffer nBuffer = ByteBuffer.allocateDirect( 0 ) //
+                .order( ByteOrder.nativeOrder() ).asFloatBuffer();
 
         vBuffer.put( flatVerts );
         vBuffer.flip();
 
         pointCloud.setVertices( vBuffer );
         pointCloud.setNormals( nBuffer );
-        pointCloud.setIndices( ByteBuffer.allocateDirect( 0 ).order( ByteOrder.nativeOrder() ).asIntBuffer() );
+        pointCloud.setIndices( ByteBuffer.allocateDirect( 0 ) //
+                .order( ByteOrder.nativeOrder() ).asIntBuffer() );
         pointCloud.setupPointCloud();
         material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
         material.setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
         material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
         pointCloud.setMaterial( material );
         pointCloud.setPosition( new GLVector( 0f, 0f, 0f ) );
-        getScene().addChild( pointCloud );
 
-        return pointCloud;
+        return addNode( pointCloud );
     }
 
     public graphics.scenery.Node addPointCloud( final PointCloud pointCloud ) {
-
         pointCloud.setupPointCloud();
         pointCloud.getMaterial().setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
         pointCloud.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
         pointCloud.getMaterial().setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
         pointCloud.setPosition( new GLVector( 0f, 0f, 0f ) );
-        getScene().addChild( pointCloud );
 
-        return pointCloud;
+        return addNode( pointCloud );
     }
 
     public graphics.scenery.Node addNode( final Node n ) {
         getScene().addChild( n );
-
-        final Node currentNode = getActiveNode();
-
-        float temp = 0.0f;
-        final Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
-        getFloory();
-        temp = bb.getMin().y();
-        if( getFloory() < temp ) {
-            System.err.println( "Not lowered " );
-        } else {
-            setFloory( temp - 1f );
-        }
-        getFloor().setVisible( !getFloor().getVisible() );
-
-        float yposition = -1.0f;
-
-        yposition = getFloory();
-
-        floor = new Box( new GLVector( 500f, 0.2f, 500f ) );
-        floor.setPosition( new GLVector( 0f, yposition, 0f ) );
-        floor.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        getScene().addChild( floor );
-
+        setActiveNode( n );
+        if( defaultArcBall ) enableArcBallControl();
+        updateFloorPosition();
         return n;
     }
 
@@ -1012,35 +855,7 @@ public class SciView extends SceneryBase {
         scMesh.setMaterial( material );
         scMesh.setPosition( new GLVector( 0.0f, 0.0f, 0.0f ) );
 
-        setActiveNode( scMesh );
-
-        getScene().addChild( scMesh );
-
-        if( defaultArcBall ) enableArcBallControl();
-
-        final Node currentNode = getActiveNode();
-
-        float temp = 0.0f;
-        final Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
-        getFloory();
-        temp = bb.getMin().y();
-        if( getFloory() < temp ) {
-            System.err.println( "Not lowered " );
-        } else {
-            setFloory( temp - 1f );
-        }
-        getFloor().setVisible( !getFloor().getVisible() );
-
-        float yposition = -1.0f;
-
-        yposition = getFloory();
-
-        floor = new Box( new GLVector( 500f, 0.2f, 500f ) );
-        floor.setPosition( new GLVector( 0f, yposition, 0f ) );
-        floor.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        getScene().addChild( floor );
-
-        return scMesh;
+        return addNode( scMesh );
     }
 
     public graphics.scenery.Node addMesh( final net.imagej.mesh.Mesh mesh ) {
@@ -1122,10 +937,6 @@ public class SciView extends SceneryBase {
         return getApplicationName();
     }
 
-    public void addChild( final Node node ) {
-        getScene().addChild( node );
-    }
-
     public graphics.scenery.Node addVolume( final Dataset image ) {
         final float[] voxelDims = new float[image.numDimensions()];
         for( int d = 0; d < voxelDims.length; d++ ) {
@@ -1149,7 +960,7 @@ public class SciView extends SceneryBase {
         return addVolume( image, name, 1, 1, 1 );
     }
 
-    public void setColormap( final Node n, final AbstractArrayColorTable colorTable ) {
+    public void setColormap( final Node n, final ColorTable colorTable ) {
         n.getMaterial().getTextures().put( "normal", "fromBuffer:diffuse" );
         n.getMaterial().setNeedsTextureReload( true );
 
@@ -1182,13 +993,11 @@ public class SciView extends SceneryBase {
 
         final Volume v = new Volume();
 
-        getScene().addChild( v );
+        addNode( v );
 
-        @SuppressWarnings("unchecked")
-        final Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
-        final int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
-        float minVal = Float.MIN_VALUE, maxVal = Float.MAX_VALUE;
-        final NativeTypeEnum nType = null;
+        final T voxel = image.firstElement();
+        final Class<?> voxelType = voxel.getClass();
+        final float minVal, maxVal;
 
         if( voxelType == UnsignedByteType.class ) {
             minVal = 0;
@@ -1196,13 +1005,12 @@ public class SciView extends SceneryBase {
         } else if( voxelType == UnsignedShortType.class ) {
             minVal = 0;
             maxVal = 65535;
-        } else if( voxelType == FloatType.class ) {
+        } else if( IntegerType.class.isAssignableFrom( voxelType ) ) {
+            minVal = ( float ) voxel.getMinValue();
+            maxVal = ( float ) voxel.getMaxValue();
+        } else {
             minVal = 0;
             maxVal = 1;
-        } else {
-            log.debug( "Type: " + voxelType +
-                       " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
-            return null;
         }
 
         updateVolume( image, name, voxelDimensions, v );
@@ -1219,8 +1027,7 @@ public class SciView extends SceneryBase {
         v.setTrangemax( maxVal );
 
         try {
-            setColormap( v, ( AbstractArrayColorTable ) lutService.loadLUT( lutService.findLUTs().get(
-                                                                                                       "WCIF/ICA.lut" ) ) );
+            setColormap( v, lutService.loadLUT( lutService.findLUTs().get( "WCIF/ICA.lut" ) ) );
         } catch( final IOException e ) {
             e.printStackTrace();
         }
@@ -1241,19 +1048,14 @@ public class SciView extends SceneryBase {
         @SuppressWarnings("unchecked")
         final Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
         final int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
-        final float minVal = Float.MIN_VALUE, maxVal = Float.MAX_VALUE;
         NativeTypeEnum nType = null;
 
         if( voxelType == UnsignedByteType.class ) {
             nType = NativeTypeEnum.UnsignedByte;
         } else if( voxelType == UnsignedShortType.class ) {
             nType = NativeTypeEnum.UnsignedShort;
-        } else if( voxelType == FloatType.class ) {
-            nType = NativeTypeEnum.Float;
         } else {
-            log.debug( "Type: " + voxelType +
-                       " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
-            return null;
+            nType = NativeTypeEnum.Float;
         }
 
         // Make and populate a ByteBuffer with the content of the Dataset
@@ -1267,8 +1069,8 @@ public class SciView extends SceneryBase {
                 byteBuffer.put( ( byte ) ( ( ( UnsignedByteType ) cursor.get() ).get() ) );
             } else if( voxelType == UnsignedShortType.class ) {
                 byteBuffer.putShort( ( short ) Math.abs( ( ( UnsignedShortType ) cursor.get() ).getShort() ) );
-            } else if( voxelType == FloatType.class ) {
-                byteBuffer.putFloat( ( ( FloatType ) cursor.get() ).get() );
+            } else {
+                byteBuffer.putFloat( cursor.get().getRealFloat() );
             }
         }
         byteBuffer.flip();
@@ -1311,5 +1113,18 @@ public class SciView extends SceneryBase {
     @Override
     protected void finalize() {
         stopAnimation();
+    }
+
+    private void updateFloorPosition() {
+        // Lower the floor below the active node, as needed.
+        final Node currentNode = getActiveNode();
+        if( currentNode != null ) {
+            final Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
+            final Node.BoundingSphere bs = bb.getBoundingSphere();
+            final float neededFloor = bb.getMin().y() - Math.max( bs.getRadius(), 1 );
+            if( neededFloor < getFloory() ) setFloory( neededFloor );
+        }
+
+        floor.setPosition( new GLVector( 0f, getFloory(), 0f ) );
     }
 }
