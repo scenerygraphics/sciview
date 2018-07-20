@@ -1090,6 +1090,7 @@ public class SciView extends SceneryBase {
         return targetArcball;
     }
 
+    @Override
     protected void finalize() {
         stopAnimation();
     }
