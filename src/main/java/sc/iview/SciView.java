@@ -943,7 +943,7 @@ public class SciView extends SceneryBase {
         n.getMaterial().setNeedsTextureReload( true );
 
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
-                ( int ) ( 4 * 4 * colorTable.getLength() ) );// Num bytes * num components * color map length
+                4 * 4 * colorTable.getLength() );// Num bytes * num components * color map length
         for( int k = 0; k < colorTable.getLength(); k++ ) {
             for( int c = 0; c < colorTable.getComponentCount(); c++ ) {
                 byteBuffer.put( ( byte ) colorTable.get( c, k ) );// TODO this assumes numBits is 8, could be 16
