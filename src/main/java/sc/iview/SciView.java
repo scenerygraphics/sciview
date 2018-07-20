@@ -86,6 +86,8 @@ import org.scijava.util.Colors;
 import sc.iview.controls.behaviours.CameraTranslateControl;
 import sc.iview.controls.behaviours.NodeTranslateControl;
 import sc.iview.event.NodeActivatedEvent;
+import sc.iview.event.NodeAddedEvent;
+import sc.iview.event.NodeRemovedEvent;
 import sc.iview.javafx.JavaFXMenuCreator;
 import sc.iview.process.MeshConverter;
 import sc.iview.vector.ClearGLVector3;
@@ -794,6 +796,7 @@ public class SciView extends SceneryBase {
         setActiveNode( n );
         if( defaultArcBall ) enableArcBallControl();
         updateFloorPosition();
+        eventService.publish( new NodeAddedEvent( n ) );
         return n;
     }
 
@@ -872,7 +875,9 @@ public class SciView extends SceneryBase {
     }
 
     public void deleteSelectedMesh() {
-        getScene().removeChild( getActiveNode() );
+        final Node n = getActiveNode();
+        getScene().removeChild( n );
+        eventService.publish( new NodeRemovedEvent( n ) );
     }
 
     public void dispose() {
