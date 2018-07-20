@@ -380,7 +380,7 @@ public class SciView extends SceneryBase {
         if( newspeed < 0.30f ) newspeed = 0.3f;
         else if( newspeed > 30.0f ) newspeed = 30.0f;
         fpsScrollSpeed = newspeed;
-        log.warn( "FPS scroll speed: " + fpsScrollSpeed );
+        log.debug( "FPS scroll speed: " + fpsScrollSpeed );
     }
 
     public float getFPSSpeed() {
@@ -391,7 +391,7 @@ public class SciView extends SceneryBase {
         if( newspeed < 0.30f ) newspeed = 0.3f;
         else if( newspeed > 3.0f ) newspeed = 3.0f;
         mouseSpeedMult = newspeed;
-        log.warn( "Mouse speed: " + mouseSpeedMult );
+        log.debug( "Mouse speed: " + mouseSpeedMult );
     }
 
     public float getMouseSpeed() {
@@ -428,7 +428,7 @@ public class SciView extends SceneryBase {
             setFPSSpeed( getFPSSpeed() + 0.5f );
             setMouseSpeed( getMouseSpeed() + 0.05f );
 
-            log.warn( "Increasing FPS scroll Speed" );
+            log.debug( "Increasing FPS scroll Speed" );
 
             resetFPSInputs();
         }
@@ -440,7 +440,7 @@ public class SciView extends SceneryBase {
             setFPSSpeed( getFPSSpeed() - 0.1f );
             setMouseSpeed( getMouseSpeed() - 0.05f );
 
-            log.warn( "Decreasing FPS scroll Speed" );
+            log.debug( "Decreasing FPS scroll Speed" );
 
             resetFPSInputs();
         }
@@ -463,7 +463,7 @@ public class SciView extends SceneryBase {
         Function1<? super List<SelectResult>, Unit> selectAction = nearest -> {
             if( !nearest.isEmpty() ) {
                 setActiveNode( nearest.get( 0 ).getNode() );
-                log.warn( "Selected node: " + getActiveNode().getName() );
+                log.debug( "Selected node: " + getActiveNode().getName() );
             }
             return Unit.INSTANCE;
         };
@@ -549,7 +549,7 @@ public class SciView extends SceneryBase {
                 }
             } );
             activeNode = result.get( 0 ).getNode();
-            //log.warn( "Selected " + activeNode );
+            log.debug( "Selected " + activeNode );
             return activeNode;
         }
         return null;
@@ -936,7 +936,7 @@ public class SciView extends SceneryBase {
 
     public <T extends RealType<T>> graphics.scenery.Node addVolume( IterableInterval<T> image, String name,
                                                                     float... voxelDimensions ) {
-        log.warn( "Add Volume" );
+        log.debug( "Add Volume" );
 
         long dimensions[] = new long[3];
         image.dimensions( dimensions );
@@ -992,7 +992,7 @@ public class SciView extends SceneryBase {
 
     public <T extends RealType<T>> graphics.scenery.Node updateVolume( IterableInterval<T> image, String name,
                                                                        float[] voxelDimensions, Volume v ) {
-        //log.warn( "Add Volume" );
+        log.debug( "Update Volume" );
 
         long dimensions[] = new long[3];
         image.dimensions( dimensions );

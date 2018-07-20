@@ -58,7 +58,7 @@ public class MeshToImage implements Command {
     private OpService ops;
 
     @Parameter
-    private LogService logService;
+    private LogService log;
 
     @Parameter
     private SciView sciView;
@@ -84,7 +84,7 @@ public class MeshToImage implements Command {
             img = ops.geom().voxelization( ijMesh, width, height, depth );
 
         } else {
-            logService.warn( "No active node. Add a mesh to the scene and select it." );
+            log.error( "No active node. Add a mesh to the scene and select it." );
         }
 
     }

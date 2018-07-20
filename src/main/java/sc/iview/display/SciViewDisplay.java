@@ -77,11 +77,11 @@ public class SciViewDisplay extends AbstractDisplay<SciView> {
 
     @EventHandler
     protected void onEvent( final DataUpdatedEvent event ) {
-        logService.warn( "Display updated! This warning probably shouldn't be here." );
+        // NB: Placeholder in case it's needed in future.
     }
 
     @EventHandler
     protected void onEvent( final DisplayDeletedEvent event ) {
-
+        // NB: Placeholder in case it's needed in future.
     }
 }
