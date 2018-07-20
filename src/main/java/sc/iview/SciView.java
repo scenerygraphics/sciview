@@ -103,19 +103,26 @@ public class SciView extends SceneryBase {
 
     public static final ColorRGB DEFAULT_COLOR = Colors.LIGHTGRAY;
 
-    @Parameter private LogService log;
+    @Parameter
+    private LogService log;
 
-    @Parameter private MenuService menus;
+    @Parameter
+    private MenuService menus;
 
-    @Parameter private IOService io;
+    @Parameter
+    private IOService io;
 
-    @Parameter private OpService ops;
+    @Parameter
+    private OpService ops;
 
-    @Parameter private DisplayService displayService;
+    @Parameter
+    private DisplayService displayService;
 
-    @Parameter private LUTService lutService;
+    @Parameter
+    private LUTService lutService;
 
-    @Parameter private ThreadService threadService;
+    @Parameter
+    private ThreadService threadService;
 
     /**
      * Queue keeps track of the currently running animations
@@ -127,28 +134,42 @@ public class SciView extends SceneryBase {
      **/
     private boolean animating;
 
+    /**
+     * This tracks the actively selected Node in the scene
+     */
     private Node activeNode = null;
 
+    /**
+     * Mouse controls for FPS movement and Arcball rotation
+     */
     protected ArcballCameraControl targetArcball;
     protected FPSCameraControl fpsControl;
 
     private Boolean defaultArcBall = false;// arcball target broken
 
+    /**
+     * The primary camera/observer in the scene
+     */
     Camera camera = null;
 
-    private boolean initialized = false;// i know TODO
-
+    /**
+     * JavaFX UI
+     */
     private boolean useJavaFX = true;
     SceneryPanel imagePanel = null;
 
+    /**
+     * Speeds for input controls
+     */
     private float fpsScrollSpeed = 3.0f;
 
     private float mouseSpeedMult = 0.25f;
 
-    private float flooryaxis = -1.0f;
-
     private Display<?> scijavaDisplay;
 
+    /**
+     * The floor that orients the user in the scene
+     */
     protected Node floor;
 
     public SciView( Context context ) {
@@ -311,12 +332,11 @@ public class SciView extends SceneryBase {
         temp_pos = new_pos;
         if( temp_pos < -100f ) temp_pos = -100f;
         else if( new_pos > 5f ) temp_pos = 5f;
-        flooryaxis = temp_pos;
-        floor.getPosition().set( 1, new_pos );
+        floor.getPosition().set( 1, temp_pos );
     }
 
     public boolean isInitialized() {
-        return initialized;
+        return sceneInitialized();
     }
 
     public Camera getCamera() {
@@ -354,24 +374,6 @@ public class SciView extends SceneryBase {
 
         getCamera().setDirty(true);
         getCamera().setNeedsUpdate(true);
-    }
-
-    class toggleCameraControl implements ClickBehaviour {
-        String currentMode = "arcball";
-
-        @Override public void click( int x, int y ) {
-            if( currentMode.startsWith( "fps" ) ) {
-                enableArcBallControl();
-
-                currentMode = "arcball";
-            } else {
-                enableFPSControl();
-
-                currentMode = "fps";
-            }
-
-            log.info( "Switched to " + currentMode + " control" );
-        }
     }
 
     public void setFPSSpeed( float newspeed ) {
@@ -458,8 +460,6 @@ public class SciView extends SceneryBase {
     }
 
     @Override public void inputSetup() {
-        //setInputHandler((ClearGLInputHandler) viewer.getHub().get(SceneryElement.INPUT));
-
         Function1<? super List<SelectResult>, Unit> selectAction = nearest -> {
             if( !nearest.isEmpty() ) {
                 setActiveNode( nearest.get( 0 ).getNode() );
@@ -486,12 +486,7 @@ public class SciView extends SceneryBase {
         getInputHandler().addBehaviour( "mouse_control_nodetranslate", new NodeTranslateControl( this, 0.002f ) );
         getInputHandler().addKeyBinding( "mouse_control_nodetranslate", "shift button2" );
 
-        // Keyboard controls
-//        getInputHandler().addBehaviour( "toggle_control_mode", new toggleCameraControl() );
-//        getInputHandler().addKeyBinding( "toggle_control_mode", "X" );
-
-        //setupCameraModeSwitching( "X" );
-
+        // Extra keyboard controls
         getInputHandler().addBehaviour( "show_help", new showHelpDisplay() );
         getInputHandler().addKeyBinding( "show_help", "U" );
 
@@ -500,8 +495,6 @@ public class SciView extends SceneryBase {
 
         getInputHandler().addBehaviour( "enable_increase", new enableIncrease() );
         getInputHandler().addKeyBinding( "enable_increase", "N" );
-
-        initialized = true;
     }
 
     public void enableArcBallControl() {
@@ -576,19 +569,15 @@ public class SciView extends SceneryBase {
 
     public graphics.scenery.Node addBox( final Vector3 position, final Vector3 size, final ColorRGB color,
                                          final boolean inside ) {
-        // TODO: use a material from the current pallate by default
+        // TODO: use a material from the current palate by default
         final Material boxmaterial = new Material();
         boxmaterial.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
         boxmaterial.setDiffuse( vector( color ) );
         boxmaterial.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        //boxmaterial.setDoubleSided( true );
-        //boxmaterial.getTextures().put("diffuse", SceneViewer3D.class.getResource("textures/helix.png").getFile() );
 
         final Box box = new Box( ClearGLVector3.convert( size ), inside );
         box.setMaterial( boxmaterial );
         box.setPosition( ClearGLVector3.convert( position ) );
-
-        //System.err.println( "Num elements in scene: " + viewer.getSceneNodes().size() );
 
         return addNode( box );
     }
@@ -606,7 +595,6 @@ public class SciView extends SceneryBase {
         material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
         material.setDiffuse( vector( color ) );
         material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        //boxmaterial.getTextures().put("diffuse", SceneViewer3D.class.getResource("textures/helix.png").getFile() );
 
         final Sphere sphere = new Sphere( radius, 20 );
         sphere.setMaterial( material );
@@ -651,7 +639,6 @@ public class SciView extends SceneryBase {
         material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
         material.setDiffuse( new GLVector( 0.0f, 1.0f, 0.0f ) );
         material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        //boxmaterial.getTextures().put("diffuse", SceneViewer3D.class.getResource("textures/helix.png").getFile() );
 
         final PointLight light = new PointLight( 5.0f );
         light.setMaterial( material );
@@ -810,7 +797,6 @@ public class SciView extends SceneryBase {
         material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
         material.setDiffuse( new GLVector( 0.0f, 1.0f, 0.0f ) );
         material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        //material.setDoubleSided( false );
 
         scMesh.setMaterial( material );
         scMesh.setPosition( new GLVector( 0.0f, 0.0f, 0.0f ) );
@@ -932,7 +918,7 @@ public class SciView extends SceneryBase {
                 ( int ) ( 4 * 4 * colorTable.getLength() ) );// Num bytes * num components * color map length
         for( int k = 0; k < colorTable.getLength(); k++ ) {
             for( int c = 0; c < colorTable.getComponentCount(); c++ ) {
-                byteBuffer.put( ( byte ) colorTable.get( c, k ) );// TODO this assumes numBits is 8, could by 16
+                byteBuffer.put( ( byte ) colorTable.get( c, k ) );// TODO this assumes numBits is 8, could be 16
             }
             if( colorTable.getComponentCount() == 3 ) byteBuffer.put( ( byte ) 255 );
         }
@@ -961,8 +947,7 @@ public class SciView extends SceneryBase {
 
         @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
         int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
-        float minVal = Float.MIN_VALUE, maxVal = Float.MAX_VALUE;
-        NativeTypeEnum nType = null;
+        float minVal, maxVal;
 
         if( voxelType == UnsignedByteType.class ) {
             minVal = 0;
@@ -1014,8 +999,7 @@ public class SciView extends SceneryBase {
 
         @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
         int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
-        float minVal = Float.MIN_VALUE, maxVal = Float.MAX_VALUE;
-        NativeTypeEnum nType = null;
+        NativeTypeEnum nType;
 
         if( voxelType == UnsignedByteType.class ) {
             nType = NativeTypeEnum.UnsignedByte;
