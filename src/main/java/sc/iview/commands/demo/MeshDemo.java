@@ -37,6 +37,7 @@ import java.io.IOException;
 import net.imagej.mesh.Mesh;
 
 import org.scijava.command.Command;
+import org.scijava.command.CommandService;
 import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
@@ -48,6 +49,7 @@ import sc.iview.SciView;
 import cleargl.GLVector;
 import graphics.scenery.Material;
 import graphics.scenery.Node;
+import sc.iview.commands.view.CenterOnActiveNode;
 
 /**
  * A demo of meshes.
@@ -68,6 +70,9 @@ public class MeshDemo implements Command {
 
     @Parameter
     private SciView sciView;
+
+    @Parameter
+    private CommandService commandService;
 
     @Override
     public void run() {
@@ -96,5 +101,7 @@ public class MeshDemo implements Command {
 
         msh.setNeedsUpdate( true );
         msh.setDirty( true );
+
+        sciView.centerOnNode( sciView.getActiveNode() );
     }
 }

@@ -58,28 +58,7 @@ public class CenterOnActiveNode implements Command {
         if( sciView.getActiveNode() instanceof Mesh ) {
             Node currentNode = sciView.getActiveNode();
 
-            Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
-
-            sciView.getCamera().setTarget( currentNode.getPosition() );
-            sciView.getCamera().setTargeted( true );
-
-            // Set forward direction to point from camera at active node
-            sciView.getCamera().setForward( bb.getBoundingSphere().getOrigin().minus( sciView.getCamera().getPosition() ).normalize().times( -1 ) );
-
-            float distance = (float) (bb.getBoundingSphere().getRadius() / Math.tan( sciView.getCamera().getFov() / 360 * java.lang.Math.PI ));
-
-            // Solve for the proper rotation
-            Quaternion rotation = new Quaternion().setLookAt( sciView.getCamera().getForward().toFloatArray(),
-                                                        new GLVector(0,1,0).toFloatArray(),
-                                                        new GLVector(1,0,0).toFloatArray(),
-                                                        new GLVector( 0,1,0).toFloatArray(),
-                                                        new GLVector( 0, 0, 1).toFloatArray() );
-
-            sciView.getCamera().setRotation( rotation.normalize() );
-            sciView.getCamera().setPosition( bb.getBoundingSphere().getOrigin().plus( sciView.getCamera().getForward().times( distance * -1 ) ) );
-
-            sciView.getCamera().setDirty(true);
-            sciView.getCamera().setNeedsUpdate(true);
+            sciView.centerOnNode( currentNode );
 
         }
 

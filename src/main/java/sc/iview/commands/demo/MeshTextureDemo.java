@@ -75,6 +75,8 @@ public class MeshTextureDemo implements Command {
 
         msh.setNeedsUpdate( true );
         msh.setDirty( true );
+
+        sciView.centerOnNode( sciView.getActiveNode() );
     }
 
     private static GenericTexture generateGenericTexture() {
