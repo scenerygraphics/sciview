@@ -991,8 +991,9 @@ public class SciView extends SceneryBase {
 
         updateVolume( image, name, voxelDimensions, v );
 
-        GLVector scaleVec = new GLVector( 0.5f * ( float ) dimensions[0], 0.5f * ( float ) dimensions[1],
-                                          0.5f * ( float ) dimensions[2] );
+        GLVector scaleVec = new GLVector( 0.5f * dimensions[0], //
+                                          0.5f * dimensions[1], //
+                                          0.5f * dimensions[2] );
 
         v.setScale( scaleVec );// TODO maybe dont do this
         // TODO: This translation should probably be accounted for in scenery; volumes use a corner-origin and
