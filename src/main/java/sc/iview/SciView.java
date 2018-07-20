@@ -330,6 +330,7 @@ public class SciView extends SceneryBase {
         this.camera = cam;
 
         floor = new Box( new GLVector( 500f, 0.2f, 500f ) );
+        floor.setName( "Floor" );
         floor.setPosition( new GLVector( 0f, -1f, 0f ) );
         floor.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
         getScene().addChild( floor );
