@@ -534,7 +534,7 @@ public class SciView extends SceneryBase {
         getInputHandler().addKeyBinding( "enable_increase", "N" );
     }
 
-    public void enableArcBallControl() {
+    private void enableArcBallControl() {
         GLVector target;
         if( getActiveNode() == null ) {
             target = new GLVector( 0, 0, 0 );
@@ -560,7 +560,7 @@ public class SciView extends SceneryBase {
         getInputHandler().addKeyBinding( "scroll_arcball", "shift scroll" );
     }
 
-    public void enableFPSControl() {
+    private void enableFPSControl() {
         Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
         fpsControl = new FPSCameraControl( "mouse_control", cameraSupplier, getRenderer().getWindow().getWidth(),
                                            getRenderer().getWindow().getHeight() );

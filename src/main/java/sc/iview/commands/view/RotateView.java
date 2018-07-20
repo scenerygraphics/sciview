@@ -38,8 +38,6 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
-import graphics.scenery.Node;
-
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "View", weight = VIEW), //
                  @Menu(label = "Rotate", weight = VIEW_ROTATE) })
@@ -50,8 +48,6 @@ public class RotateView implements Command {
 
     @Override
     public void run() {
-        sciView.enableArcBallControl();
-
         sciView.animate( 30, () -> {
             sciView.getTargetArcball().init( 1, 0 );
             sciView.getTargetArcball().drag( 3, 0 );
