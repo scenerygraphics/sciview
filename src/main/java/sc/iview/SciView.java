@@ -184,8 +184,6 @@ public class SciView extends SceneryBase {
     protected ArcballCameraControl targetArcball;
     protected FPSCameraControl fpsControl;
 
-    private Boolean defaultArcBall = false;// arcball target broken
-
     /**
      * The primary camera/observer in the scene
      */
@@ -573,25 +571,9 @@ public class SciView extends SceneryBase {
         getInputHandler().addBehaviour( "mouse_control_cameratranslate", new CameraTranslateControl( this, 0.002f ) );
         getInputHandler().addKeyBinding( "mouse_control_cameratranslate", "button2" );
 
-        float defaultSpeed = 3.0f;
-        defaultSpeed = getFPSSpeed();
         resetFPSInputs();
 
         getInputHandler().addKeyBinding( "move_forward_scroll", "scroll" );
-    }
-
-    private Object selectNode( List<SelectResult> result ) {
-        if( !result.isEmpty() ) {
-            Collections.sort( result, new Comparator<SelectResult>() {
-                @Override public int compare( SelectResult lhs, SelectResult rhs ) {
-                    return lhs.getDistance() > rhs.getDistance() ? -1 : lhs.getDistance() < rhs.getDistance() ? 1 : 0;
-                }
-            } );
-            activeNode = result.get( 0 ).getNode();
-            log.debug( "Selected " + activeNode );
-            return activeNode;
-        }
-        return null;
     }
 
     public graphics.scenery.Node addBox() {
@@ -826,7 +808,6 @@ public class SciView extends SceneryBase {
     public graphics.scenery.Node addNode( final Node n ) {
         getScene().addChild( n );
         setActiveNode( n );
-        if( defaultArcBall ) enableArcBallControl();
         updateFloorPosition();
         eventService.publish( new NodeAddedEvent( n ) );
         return n;
@@ -993,7 +974,6 @@ public class SciView extends SceneryBase {
         getScene().addChild( v );
 
         @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
-        int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
         float minVal, maxVal;
 
         if( voxelType == UnsignedByteType.class ) {
