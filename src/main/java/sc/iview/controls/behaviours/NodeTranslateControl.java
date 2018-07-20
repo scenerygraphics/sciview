@@ -30,11 +30,11 @@ public class NodeTranslateControl implements DragBehaviour {
     }
 
     /**
-     * This function is called upon mouse down and initialises the camera control
+     * This function is called upon mouse down and initializes the camera control
      * with the current window size.
      *
-     * @param[x] x position in window
-     * @param[y] y position in window
+     * x position in window
+     * y position in window
      */
     @Override public void init( int x, int y ) {
         if (firstEntered) {
