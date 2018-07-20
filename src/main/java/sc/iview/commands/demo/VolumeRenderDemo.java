@@ -110,5 +110,6 @@ public class VolumeRenderDemo implements Command {
             sciView.addMesh( m ).setName( "Volume Render Demo Isosurface" );
         }
 
+        sciView.centerOnNode( sciView.getActiveNode() );
     }
 }

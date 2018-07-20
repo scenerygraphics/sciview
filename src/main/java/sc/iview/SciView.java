@@ -30,6 +30,7 @@ package sc.iview;
 
 import cleargl.GLTypeEnum;
 import cleargl.GLVector;
+import com.jogamp.opengl.math.Quaternion;
 import com.sun.javafx.application.PlatformImpl;
 import coremem.enums.NativeTypeEnum;
 import graphics.scenery.*;
@@ -330,6 +331,31 @@ public class SciView extends SceneryBase {
         return scijavaDisplay;
     }
 
+    public void centerOnNode( Node currentNode ) {
+        Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
+
+        getCamera().setTarget( currentNode.getPosition() );
+        getCamera().setTargeted( true );
+
+        // Set forward direction to point from camera at active node
+        getCamera().setForward( bb.getBoundingSphere().getOrigin().minus( getCamera().getPosition() ).normalize().times( -1 ) );
+
+        float distance = (float) (bb.getBoundingSphere().getRadius() / Math.tan( getCamera().getFov() / 360 * java.lang.Math.PI ));
+
+        // Solve for the proper rotation
+        Quaternion rotation = new Quaternion().setLookAt( getCamera().getForward().toFloatArray(),
+                                                          new GLVector(0,1,0).toFloatArray(),
+                                                          new GLVector(1,0,0).toFloatArray(),
+                                                          new GLVector( 0,1,0).toFloatArray(),
+                                                          new GLVector( 0, 0, 1).toFloatArray() );
+
+        getCamera().setRotation( rotation.normalize() );
+        getCamera().setPosition( bb.getBoundingSphere().getOrigin().plus( getCamera().getForward().times( distance * -1 ) ) );
+
+        getCamera().setDirty(true);
+        getCamera().setNeedsUpdate(true);
+    }
+
     class toggleCameraControl implements ClickBehaviour {
         String currentMode = "arcball";
 
@@ -457,7 +483,7 @@ public class SciView extends SceneryBase {
         enableArcBallControl();
         enableFPSControl();
 
-        getInputHandler().addBehaviour( "mouse_control_nodetranslate", new NodeTranslateControl( this, 0.001f ) );
+        getInputHandler().addBehaviour( "mouse_control_nodetranslate", new NodeTranslateControl( this, 0.002f ) );
         getInputHandler().addKeyBinding( "mouse_control_nodetranslate", "shift button2" );
 
         // Keyboard controls
@@ -512,7 +538,7 @@ public class SciView extends SceneryBase {
         getInputHandler().addBehaviour( "mouse_control", fpsControl );
         getInputHandler().addKeyBinding( "mouse_control", "button1" );
 
-        getInputHandler().addBehaviour( "mouse_control_cameratranslate", new CameraTranslateControl( this, 0.001f ) );
+        getInputHandler().addBehaviour( "mouse_control_cameratranslate", new CameraTranslateControl( this, 0.002f ) );
         getInputHandler().addKeyBinding( "mouse_control_cameratranslate", "button2" );
 
         float defaultSpeed = 3.0f;
