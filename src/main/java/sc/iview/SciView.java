@@ -978,6 +978,11 @@ public class SciView extends SceneryBase {
         @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
         float minVal, maxVal;
 
+        if( voxelType != UnsignedByteType.class ) {
+            log.error( "Temporarily, only 8-bit images (UnsignedByteType) are supported" );
+            return null;
+        }
+
         if( voxelType == UnsignedByteType.class ) {
             minVal = 0;
             maxVal = 255;
