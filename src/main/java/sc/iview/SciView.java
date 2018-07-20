@@ -72,6 +72,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.scijava.Context;
 import org.scijava.display.Display;
 import org.scijava.display.DisplayService;
+import org.scijava.event.EventService;
 import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.menu.MenuService;
@@ -84,6 +85,7 @@ import org.scijava.util.ColorRGBA;
 import org.scijava.util.Colors;
 import sc.iview.controls.behaviours.CameraTranslateControl;
 import sc.iview.controls.behaviours.NodeTranslateControl;
+import sc.iview.event.NodeActivatedEvent;
 import sc.iview.javafx.JavaFXMenuCreator;
 import sc.iview.process.MeshConverter;
 import sc.iview.vector.ClearGLVector3;
@@ -114,6 +116,9 @@ public class SciView extends SceneryBase {
 
     @Parameter
     private OpService ops;
+
+    @Parameter
+    private EventService eventService;
 
     @Parameter
     private DisplayService displayService;
@@ -819,8 +824,10 @@ public class SciView extends SceneryBase {
     }
 
     public Node setActiveNode( Node n ) {
+        if( activeNode == n ) return activeNode;
         activeNode = n;
         targetArcball.setTarget( n.getPosition() );
+        eventService.publish( new NodeActivatedEvent( activeNode ) );
         return activeNode;
     }
 
