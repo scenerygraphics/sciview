@@ -49,7 +49,7 @@ public class DeleteObject implements Command {
     @Override
     public void run() {
         if( sciView.getActiveNode() != null ) {
-            sciView.deleteSelectedMesh();
+            sciView.deleteActiveNode();
         }
     }
 

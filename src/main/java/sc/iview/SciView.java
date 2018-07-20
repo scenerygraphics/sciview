@@ -874,10 +874,13 @@ public class SciView extends SceneryBase {
         return getScene().getChildren().stream().filter( filter ).toArray( Node[]::new );
     }
 
-    public void deleteSelectedMesh() {
-        final Node n = getActiveNode();
-        getScene().removeChild( n );
-        eventService.publish( new NodeRemovedEvent( n ) );
+    public void deleteActiveNode() {
+        deleteNode( getActiveNode() );
+    }
+
+    public void deleteNode( Node node ) {
+        node.getParent().removeChild( node );
+        eventService.publish( new NodeRemovedEvent( node ) );
     }
 
     public void dispose() {
