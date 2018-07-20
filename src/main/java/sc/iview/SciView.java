@@ -895,6 +895,7 @@ public class SciView extends SceneryBase {
     public void deleteNode( Node node ) {
         node.getParent().removeChild( node );
         eventService.publish( new NodeRemovedEvent( node ) );
+        if( activeNode == node ) setActiveNode( null );
     }
 
     public void dispose() {
