@@ -310,7 +310,7 @@ public class SciView extends SceneryBase {
 
         getHub().add( SceneryElement.Renderer, getRenderer() );
 
-        PointLight[] lights = new PointLight[2];
+        PointLight[] lights = new PointLight[3];
 
         for( int i = 0; i < lights.length; i++ ) {
             lights[i] = new PointLight( 150.0f );
