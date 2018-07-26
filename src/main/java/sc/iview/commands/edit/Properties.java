@@ -73,8 +73,8 @@ import graphics.scenery.PointLight;
                  @Menu(label = "Properties...", weight = EDIT_PROPERTIES) })
 public class Properties extends InteractiveCommand {
 
-    private static final String PI_NEG = "-3.14159265358979323846";
-    private static final String PI_POS = "3.14159265358979323846";
+    private static final String PI_NEG = "-3.142";
+    private static final String PI_POS = "3.142";
 
     @Parameter
     private UIService uiSrv;
@@ -92,26 +92,26 @@ public class Properties extends InteractiveCommand {
     private ColorRGB colour;
 
     @Parameter(label = "Position X", style = NumberWidget.SCROLL_BAR_STYLE, //
-            min = "-50.0", max = "50.0", callback = "updateNodeProperties")
+            stepSize = "0.1", callback = "updateNodeProperties")
     private float positionX = 1;
 
     @Parameter(label = "Position Y", style = NumberWidget.SCROLL_BAR_STYLE, //
-            min = "-50.0", max = "50.0", callback = "updateNodeProperties")
+            stepSize = "0.1", callback = "updateNodeProperties")
     private float positionY = 1;
 
     @Parameter(label = "Position Z", style = NumberWidget.SCROLL_BAR_STYLE, //
-            min = "-50.0", max = "50.0", callback = "updateNodeProperties")
+            stepSize = "0.1", callback = "updateNodeProperties")
     private float positionZ = 1;
 
-    @Parameter(label = "Rotation Phi", style = NumberWidget.SCROLL_BAR_STYLE, //
+    @Parameter(label = "Rotation Phi", style = NumberWidget.SPINNER_STYLE, //
             min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
     private float rotationPhi;
 
-    @Parameter(label = "Rotation Theta", style = NumberWidget.SCROLL_BAR_STYLE, //
+    @Parameter(label = "Rotation Theta", style = NumberWidget.SPINNER_STYLE, //
             min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
     private float rotationTheta;
 
-    @Parameter(label = "Rotation Psi", style = NumberWidget.SCROLL_BAR_STYLE, //
+    @Parameter(label = "Rotation Psi", style = NumberWidget.SPINNER_STYLE, //
             min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
     private float rotationPsi;
 
