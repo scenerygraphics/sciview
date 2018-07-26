@@ -105,6 +105,7 @@ import graphics.scenery.PointCloud;
 import graphics.scenery.PointLight;
 import graphics.scenery.SceneryBase;
 import graphics.scenery.SceneryElement;
+import graphics.scenery.Settings;
 import graphics.scenery.Sphere;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.controls.InputHandler;
@@ -894,6 +895,10 @@ public class SciView extends SceneryBase {
         return getScene().getChildren().stream().filter( filter ).toArray( Node[]::new );
     }
 
+    public Node[] getAllSceneNodes() {
+        return getSceneNodes( n -> true );
+    }
+
     public void deleteActiveNode() {
         deleteNode( getActiveNode() );
     }
@@ -1121,5 +1126,13 @@ public class SciView extends SceneryBase {
         }
 
         floor.setPosition( new GLVector( 0f, getFloory(), 0f ) );
+    }
+
+    public Settings getScenerySettings() {
+        return this.getSettings();
+    }
+
+    public Renderer getSceneryRenderer() {
+        return this.getRenderer();
     }
 }
