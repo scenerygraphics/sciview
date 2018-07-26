@@ -1,4 +1,4 @@
-[![](https://travis-ci.org/scenerygraphics/SciView.svg?branch=master)](https://travis-ci.org/scenerygraphics/SciView)
+[![](https://travis-ci.org/scenerygraphics/sciview.svg?branch=master)](https://travis-ci.org/scenerygraphics/sciview)
 +[![Join the chat at https://gitter.im/scenerygraphics/SciView](https://badges.gitter.im/scenerygraphics/SciView.svg)](https://gitter.im/scenerygraphics/SciView?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 # SciView
