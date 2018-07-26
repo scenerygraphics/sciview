@@ -91,17 +91,33 @@ public class Properties extends InteractiveCommand {
     @Parameter(required = false, callback = "updateNodeProperties")
     private ColorRGB colour;
 
-    @Parameter(label = "Position X", style = NumberWidget.SCROLL_BAR_STYLE, //
+    @Parameter(label = "Position X", style = NumberWidget.SPINNER_STYLE, //
             stepSize = "0.1", callback = "updateNodeProperties")
-    private float positionX = 1;
+    private float positionX = 0;
 
-    @Parameter(label = "Position Y", style = NumberWidget.SCROLL_BAR_STYLE, //
+    @Parameter(label = "Position Y", style = NumberWidget.SPINNER_STYLE, //
             stepSize = "0.1", callback = "updateNodeProperties")
-    private float positionY = 1;
+    private float positionY = 0;
 
-    @Parameter(label = "Position Z", style = NumberWidget.SCROLL_BAR_STYLE, //
+    @Parameter(label = "Position Z", style = NumberWidget.SPINNER_STYLE, //
             stepSize = "0.1", callback = "updateNodeProperties")
-    private float positionZ = 1;
+    private float positionZ = 0;
+
+    @Parameter(label = "Scale X", style = NumberWidget.SPINNER_STYLE, //
+            stepSize = "0.1", callback = "updateNodeProperties")
+    private float scaleX = 1;
+
+    @Parameter(label = "Scale Y", style = NumberWidget.SPINNER_STYLE, //
+            stepSize = "0.1", callback = "updateNodeProperties")
+    private float scaleY = 1;
+
+    @Parameter(label = "Scale Z", style = NumberWidget.SPINNER_STYLE, //
+            stepSize = "0.1", callback = "updateNodeProperties")
+    private float scaleZ = 1;
+
+    @Parameter(label = "Global Renderscale", style = NumberWidget.SPINNER_STYLE, //
+            stepSize = "0.1", callback = "updateNodeProperties")
+    private float renderscale = 1;
 
     @Parameter(label = "Rotation Phi", style = NumberWidget.SPINNER_STYLE, //
             min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
@@ -228,6 +244,14 @@ public class Properties extends InteractiveCommand {
         rotationTheta = eulerAngles[1];
         rotationPsi = eulerAngles[2];
 
+        // update scale
+        final GLVector scale = currentSceneNode.getScale();
+        scaleX = scale.x();
+        scaleY = scale.y();
+        scaleZ = scale.z();
+
+        renderscale = currentSceneNode.getRenderScale();
+
         fieldsUpdating = false;
     }
 
@@ -260,6 +284,16 @@ public class Properties extends InteractiveCommand {
         position.set( 1, ( positionY ) );
         position.set( 2, ( positionZ ) );
         currentSceneNode.setPosition( position );
+
+        // update scale
+        final GLVector scale = currentSceneNode.getScale();
+        scale.set( 0, scaleX );
+        scale.set( 1, scaleY );
+        scale.set( 2, scaleZ );
+        currentSceneNode.setScale(scale);
+
+        // update render scale
+        currentSceneNode.setRenderScale(renderscale);
     }
 
     private String makeIdentifier( final Node node, final int count ) {
