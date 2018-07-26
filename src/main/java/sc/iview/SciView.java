@@ -329,7 +329,7 @@ public class SciView extends SceneryBase {
 
         Camera cam = new DetachedHeadCamera();
         cam.setPosition( new GLVector( 0.0f, 5.0f, 5.0f ) );
-        cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.001f, 750.0f );
+        cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 1000.0f );
         //cam.setTarget( new GLVector( 0, 0, 0 ) );
         //cam.setTargeted( true );
         cam.setActive( true );
