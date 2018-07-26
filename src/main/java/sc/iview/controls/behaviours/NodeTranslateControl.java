@@ -5,8 +5,6 @@ import com.jogamp.opengl.math.Quaternion;
 import org.scijava.ui.behaviour.DragBehaviour;
 import sc.iview.SciView;
 
-import static sun.misc.GThreadHelper.unlock;
-
 public class NodeTranslateControl implements DragBehaviour {
 
     protected SciView sciView;
