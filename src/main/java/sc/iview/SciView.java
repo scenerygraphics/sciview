@@ -310,13 +310,19 @@ public class SciView extends SceneryBase {
 
         getHub().add( SceneryElement.Renderer, getRenderer() );
 
-        PointLight[] lights = new PointLight[3];
+        GLVector[] tetrahedron = new GLVector[4];
+        tetrahedron[0] = new GLVector( 1.0f, 0f, -1.0f/(float)Math.sqrt(2.0f) );
+        tetrahedron[1] = new GLVector( -1.0f,0f,-1.0f/(float)Math.sqrt(2.0) );
+        tetrahedron[2] = new GLVector( 0.0f,1.0f,1.0f/(float)Math.sqrt(2.0) );
+        tetrahedron[3] = new GLVector( 0.0f,-1.0f,1.0f/(float)Math.sqrt(2.0) );
+
+        PointLight[] lights = new PointLight[4];
 
         for( int i = 0; i < lights.length; i++ ) {
             lights[i] = new PointLight( 150.0f );
-            lights[i].setPosition( new GLVector( 20.0f * i - 20.0f, 20.0f * i - 20.0f, 20.0f * i - 20.0f ) );
+            lights[i].setPosition( tetrahedron[i].times(25.0f) );
             lights[i].setEmissionColor( new GLVector( 1.0f, 1.0f, 1.0f ) );
-            lights[i].setIntensity( 5000.2f * ( i + 1 ) );
+            lights[i].setIntensity( 2500.0f );
             getScene().addChild( lights[i] );
         }
 
