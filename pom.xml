@@ -94,7 +94,7 @@
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 
 		<imagej-mesh-io.version>0.1.0</imagej-mesh-io.version>
-		<scenery.version>0.5.2</scenery.version>
+		<scenery.version>0.6.0-SNAPSHOT</scenery.version>
 		<cleargl.version>2.2.1</cleargl.version>
 		<script-editor.version>0.3.0</script-editor.version>
 	</properties>
