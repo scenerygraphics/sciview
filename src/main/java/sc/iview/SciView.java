@@ -955,19 +955,32 @@ public class SciView extends SceneryBase {
         n.getMaterial().getTextures().put( "normal", "fromBuffer:diffuse" );
         n.getMaterial().setNeedsTextureReload( true );
 
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
-                4 * 4 * colorTable.getLength() );// Num bytes * num components * color map length
+        final int copies = 16;
+
+        final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
+                4 * colorTable.getLength() * copies );// Num bytes * num components * color map length * height of color map texture
+
+        final byte[] tmp = new byte[4 * colorTable.getLength()];
         for( int k = 0; k < colorTable.getLength(); k++ ) {
             for( int c = 0; c < colorTable.getComponentCount(); c++ ) {
-                byteBuffer.put( ( byte ) colorTable.get( c, k ) );// TODO this assumes numBits is 8, could be 16
+                // TODO this assumes numBits is 8, could be 16
+                tmp[4 * k + c] = ( byte ) colorTable.get( c, k );
             }
-            if( colorTable.getComponentCount() == 3 ) byteBuffer.put( ( byte ) 255 );
+
+            if( colorTable.getComponentCount() == 3 ) {
+                tmp[4 * k + 3] = (byte)255;
+            }
         }
+
+        for( int i = 0; i < copies; i++ ) {
+            byteBuffer.put(tmp);
+        }
+
         byteBuffer.flip();
 
         n.getMaterial().getTransferTextures().put( "diffuse", new GenericTexture( "colorTable",
                                                                                   new GLVector( colorTable.getLength(),
-                                                                                                1.0f, 1.0f ), 4,
+                                                                                                copies, 1.0f ), 4,
                                                                                   GLTypeEnum.UnsignedByte,
                                                                                   byteBuffer ) );
         n.getMaterial().getTextures().put( "diffuse", "fromBuffer:diffuse" );
@@ -988,11 +1001,6 @@ public class SciView extends SceneryBase {
 
         @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
         float minVal, maxVal;
-
-        if( voxelType != UnsignedByteType.class ) {
-            log.error( "Temporarily, only 8-bit images (UnsignedByteType) are supported" );
-            return null;
-        }
 
         if( voxelType == UnsignedByteType.class ) {
             minVal = 0;
