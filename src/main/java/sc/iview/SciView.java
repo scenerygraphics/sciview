@@ -978,12 +978,12 @@ public class SciView extends SceneryBase {
 
         byteBuffer.flip();
 
-        n.getMaterial().getTransferTextures().put( "diffuse", new GenericTexture( "colorTable",
+        n.getMaterial().getTransferTextures().put( "lookupTable", new GenericTexture( "colorTable",
                                                                                   new GLVector( colorTable.getLength(),
                                                                                                 copies, 1.0f ), 4,
                                                                                   GLTypeEnum.UnsignedByte,
                                                                                   byteBuffer ) );
-        n.getMaterial().getTextures().put( "diffuse", "fromBuffer:diffuse" );
+        n.getMaterial().getTextures().put( "normal", "fromBuffer:lookupTable" );
         n.getMaterial().setNeedsTextureReload( true );
 
     }
