@@ -31,6 +31,7 @@ package sc.iview.commands.edit;
 import static sc.iview.commands.MenuWeights.EDIT;
 import static sc.iview.commands.MenuWeights.EDIT_ADD_VOLUME;
 
+import graphics.scenery.Node;
 import net.imagej.Dataset;
 import net.imagej.ops.OpService;
 
@@ -62,18 +63,22 @@ public class AddVolume implements Command {
     @Parameter
     private Dataset image;
 
-    @Parameter
+    @Parameter(label = "Voxel Size X")
     private float voxelWidth = 1.0f;
 
-    @Parameter
+    @Parameter(label = "Voxel Size Y")
     private float voxelHeight = 1.0f;
 
-    @Parameter
+    @Parameter(label = "Voxel Size Z")
     private float voxelDepth = 1.0f;
+
+    @Parameter(label = "Global rendering scale")
+    private float renderScale = 1.0f;
 
     @Override
     public void run() {
-        sciView.addVolume( image, new float[] { voxelWidth, voxelHeight, voxelDepth } );
+        Node n = sciView.addVolume( image, new float[] { voxelWidth, voxelHeight, voxelDepth } );
+        n.setRenderScale(renderScale);
     }
 
 }
