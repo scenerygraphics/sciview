@@ -952,9 +952,6 @@ public class SciView extends SceneryBase {
     }
 
     public void setColormap( Node n, ColorTable colorTable ) {
-        n.getMaterial().getTextures().put( "normal", "fromBuffer:diffuse" );
-        n.getMaterial().setNeedsTextureReload( true );
-
         final int copies = 16;
 
         final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
@@ -978,14 +975,14 @@ public class SciView extends SceneryBase {
 
         byteBuffer.flip();
 
-        n.getMaterial().getTransferTextures().put( "lookupTable", new GenericTexture( "colorTable",
-                                                                                  new GLVector( colorTable.getLength(),
-                                                                                                copies, 1.0f ), 4,
-                                                                                  GLTypeEnum.UnsignedByte,
-                                                                                  byteBuffer ) );
-        n.getMaterial().getTextures().put( "normal", "fromBuffer:lookupTable" );
-        n.getMaterial().setNeedsTextureReload( true );
-
+        if(n instanceof Volume) {
+            ((Volume) n).getColormaps().put("sciviewColormap", new Volume.Colormap.ColormapBuffer(new GenericTexture("colorTable",
+                    new GLVector(colorTable.getLength(),
+                            copies, 1.0f), 4,
+                    GLTypeEnum.UnsignedByte,
+                    byteBuffer)));
+            ((Volume) n).setColormap("sciviewColormap");
+        }
     }
 
     public <T extends RealType<T>> graphics.scenery.Node addVolume( IterableInterval<T> image, String name,
