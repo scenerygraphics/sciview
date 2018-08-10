@@ -35,7 +35,11 @@ import static sc.iview.commands.MenuWeights.EDIT_PROPERTIES;
 import com.jogamp.opengl.math.Quaternion;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import graphics.scenery.*;
+import graphics.scenery.volumes.Volume;
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
 import org.scijava.module.MutableModuleItem;
@@ -49,9 +53,6 @@ import org.scijava.widget.NumberWidget;
 import sc.iview.SciView;
 
 import cleargl.GLVector;
-import graphics.scenery.Material;
-import graphics.scenery.Node;
-import graphics.scenery.PointLight;
 
 /**
  * A command for interactively editing a node's properties.
@@ -130,6 +131,32 @@ public class Properties extends InteractiveCommand {
     @Parameter(label = "Rotation Psi", style = NumberWidget.SPINNER_STYLE, //
             min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
     private float rotationPsi;
+
+    /* Volume properties */
+    @Parameter(label = "Rendering Mode", style = LIST_BOX_STYLE, callback = "updateNodeProperties")
+    private String renderingMode;
+
+    /* Bounding Grid properties */
+    @Parameter(label = "Grid Color", callback = "updateNodeProperties")
+    private ColorRGB gridColor;
+
+    @Parameter(label = "Ticks only", callback = "updateNodeProperties")
+    private boolean ticksOnly;
+
+    /* TextBoard properties */
+    @Parameter(label = "Text", callback = "updateNodeProperties")
+    private String text;
+
+    @Parameter(label = "Text Color", callback = "updateNodeProperties")
+    private ColorRGB fontColor;
+
+    @Parameter(label = "Background Color", callback = "updateNodeProperties")
+    private ColorRGB backgroundColor;
+
+    @Parameter(label = "Transparent Background", callback = "updateNodeProperties")
+    private boolean transparentBackground;
+
+    private List renderingModeChoices = Arrays.asList("Local Maximum Projection", "Maximum Projection", "Alpha Blending");
 
     boolean fieldsUpdating = true;
 
@@ -252,6 +279,42 @@ public class Properties extends InteractiveCommand {
 
         renderscale = currentSceneNode.getRenderScale();
 
+        if(currentSceneNode instanceof Volume) {
+            final MutableModuleItem<String> renderingModeInput = getInfo().getMutableInput( "renderingMode", String.class );
+            renderingModeInput.setChoices(renderingModeChoices);
+
+            renderingMode = (String)renderingModeChoices.get(((Volume)currentSceneNode).getRenderingMethod());
+        } else {
+            getInfo().removeInput(getInfo().getMutableInput( "renderingMode", String.class ));
+        }
+
+        if(currentSceneNode instanceof BoundingGrid) {
+            gridColor = new ColorRGB((int)((BoundingGrid)currentSceneNode).getGridColor().x() * 255,
+                    (int)((BoundingGrid)currentSceneNode).getGridColor().y() * 255,
+                    (int)((BoundingGrid)currentSceneNode).getGridColor().z() * 255);
+
+            ticksOnly = ((BoundingGrid)currentSceneNode).getTicksOnly() > 0;
+        } else {
+           getInfo().removeInput(getInfo().getMutableInput( "gridColor", ColorRGB.class ));
+            getInfo().removeInput(getInfo().getMutableInput( "ticksOnly", Boolean.class ));
+        }
+
+        if(currentSceneNode instanceof TextBoard) {
+            text = ((TextBoard)currentSceneNode).getText();
+            fontColor = new ColorRGB((int)((TextBoard)currentSceneNode).getFontColor().x() * 255,
+                    (int)((TextBoard)currentSceneNode).getFontColor().y() * 255,
+                    (int)((TextBoard)currentSceneNode).getFontColor().z() * 255);
+            backgroundColor = new ColorRGB((int)((TextBoard)currentSceneNode).getBackgroundColor().x() * 255,
+                    (int)((TextBoard)currentSceneNode).getBackgroundColor().y() * 255,
+                    (int)((TextBoard)currentSceneNode).getBackgroundColor().z() * 255);
+            transparentBackground = ((TextBoard)currentSceneNode).getTransparent() > 0;
+        } else {
+            getInfo().removeInput(getInfo().getMutableInput( "fontColor", ColorRGB.class ));
+            getInfo().removeInput(getInfo().getMutableInput( "backgroundColor", ColorRGB.class ));
+            getInfo().removeInput(getInfo().getMutableInput( "transparentBackground", Boolean.class ));
+            getInfo().removeInput(getInfo().getMutableInput( "text", String.class ));
+        }
+
         fieldsUpdating = false;
     }
 
@@ -294,6 +357,43 @@ public class Properties extends InteractiveCommand {
 
         // update render scale
         currentSceneNode.setRenderScale(renderscale);
+
+        if(currentSceneNode instanceof Volume) {
+            final int mode = renderingModeChoices.indexOf(renderingMode);
+
+            if(mode != -1) {
+                ((Volume) currentSceneNode).setRenderingMethod(mode);
+            }
+        }
+
+        if(currentSceneNode instanceof BoundingGrid) {
+            int ticks;
+
+            if(ticksOnly) {
+                ticks = 1;
+            } else {
+                ticks = 0;
+            }
+
+            ((BoundingGrid)currentSceneNode).setTicksOnly(ticks);
+
+            ((BoundingGrid)currentSceneNode).setGridColor(new GLVector(gridColor.getRed()/255.0f, gridColor.getGreen()/255.0f, gridColor.getBlue()/255.0f));
+        }
+
+        if(currentSceneNode instanceof TextBoard) {
+            int transparent;
+
+            if(transparentBackground) {
+                transparent = 1;
+            } else {
+                transparent = 0;
+            }
+
+            ((TextBoard)currentSceneNode).setTransparent(transparent);
+            ((TextBoard)currentSceneNode).setText(text);
+            ((TextBoard)currentSceneNode).setFontColor(new GLVector(fontColor.getRed()/255.0f, fontColor.getGreen()/255.0f, fontColor.getBlue()/255.0f));
+            ((TextBoard)currentSceneNode).setBackgroundColor(new GLVector(backgroundColor.getRed()/255.0f, backgroundColor.getGreen()/255.0f, backgroundColor.getBlue()/255.0f));
+        }
     }
 
     private String makeIdentifier( final Node node, final int count ) {
