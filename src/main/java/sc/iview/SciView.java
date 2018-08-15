@@ -44,9 +44,11 @@ import graphics.scenery.controls.behaviours.SelectCommand.SelectResult;
 import graphics.scenery.utils.SceneryPanel;
 import graphics.scenery.volumes.Volume;
 import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
 import javafx.application.Platform;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
@@ -229,18 +231,23 @@ public class SciView extends SceneryBase {
 
                 sceneryPanel[0] = new SceneryPanel( getWindowWidth(), getWindowHeight() );
 
-                Image loadingImage = new Image(this.getClass().getResourceAsStream("sciview-logo.png"), 600, 100, true, true);
+                Image loadingImage = new Image(this.getClass().getResourceAsStream("sciview-logo.png"), 600, 200, true, true);
                 ImageView loadingImageView = new ImageView(loadingImage);
                 loadingLabel = new Label("SciView is starting.");
                 loadingLabel.setStyle(
-                        "-fx-opacity: 0.9;" +
+                        "-fx-background-color: rgb(50,48,47);" +
+                        "-fx-opacity: 1.0;" +
                         "-fx-font-color: rgb(200, 200, 200); " +
                         "-fx-font-weight: 400; " +
                         "-fx-font-size: 2.2em; " +
                         "-fx-text-fill: white;");
                 loadingLabel.setTextFill(Paint.valueOf("white"));
                 loadingLabel.setGraphic(loadingImageView);
+                loadingLabel.setGraphicTextGap(40.0);
                 loadingLabel.setContentDisplay(ContentDisplay.TOP);
+                loadingLabel.prefHeightProperty().bind(pane.heightProperty());
+                loadingLabel.prefWidthProperty().bind(pane.widthProperty());
+                loadingLabel.setAlignment(Pos.CENTER);
 
                 GridPane.setHgrow( sceneryPanel[0], Priority.ALWAYS );
                 GridPane.setVgrow( sceneryPanel[0], Priority.ALWAYS );
@@ -338,7 +345,7 @@ public class SciView extends SceneryBase {
         animations = new LinkedList<>();
 
         Platform.runLater(() -> {
-            while(!getScene().getInitialized()) {
+            while(!getRenderer().getFirstImageReady()) {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -348,9 +355,10 @@ public class SciView extends SceneryBase {
 
             // fade out loading screen, show status bar
             FadeTransition ft = new FadeTransition(Duration.millis(500), loadingLabel);
-            ft.setFromValue(0.9);
+            ft.setFromValue(1.0);
             ft.setToValue(0.0);
             ft.setCycleCount(1);
+            ft.setInterpolator(Interpolator.EASE_OUT);
             ft.play();
 
             statusLabel.setVisible(true);
