@@ -188,6 +188,7 @@ public class SciView extends SceneryBase {
     private Label statusLabel;
     private Label loadingLabel;
     private StackPane stackPane;
+    private MenuBar menuBar;
     private final SceneryPanel[] sceneryPanel = { null };
 
     public SciView( Context context ) {
@@ -209,6 +210,7 @@ public class SciView extends SceneryBase {
         if( SystemUtils.IS_OS_LINUX && !System.getProperties().containsKey( "scenery.Renderer" ) ) {
             System.setProperty( "scenery.Renderer", "OpenGLRenderer" );
         }
+
 
         if( useJavaFX ) {
             CountDownLatch latch = new CountDownLatch( 1 );
@@ -237,7 +239,6 @@ public class SciView extends SceneryBase {
                 loadingLabel.setStyle(
                         "-fx-background-color: rgb(50,48,47);" +
                         "-fx-opacity: 1.0;" +
-                        "-fx-font-color: rgb(200, 200, 200); " +
                         "-fx-font-weight: 400; " +
                         "-fx-font-size: 2.2em; " +
                         "-fx-text-fill: white;");
@@ -270,7 +271,7 @@ public class SciView extends SceneryBase {
 
                 statusLabel.setTextAlignment( TextAlignment.CENTER );
 
-                MenuBar menuBar = new MenuBar();
+                menuBar = new MenuBar();
                 pane.add( menuBar, 1, 1 );
                 pane.add( sceneryPanel[0], 1, 2 );
                 pane.add( statusLabel, 1, 3 );
@@ -359,9 +360,12 @@ public class SciView extends SceneryBase {
             ft.setToValue(0.0);
             ft.setCycleCount(1);
             ft.setInterpolator(Interpolator.EASE_OUT);
-            ft.play();
+            ft.setOnFinished(event -> {
+                loadingLabel.setVisible(false);
+                statusLabel.setVisible(true);
+            });
 
-            statusLabel.setVisible(true);
+            ft.play();
         });
     }
 
