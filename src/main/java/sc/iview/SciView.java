@@ -895,7 +895,7 @@ public class SciView extends SceneryBase {
     }
 
     public void takeScreenshot( String path ) {
-        getRenderer().screenshot( path );
+        getRenderer().screenshot( path, false );
     }
 
     public Node[] getSceneNodes() {
