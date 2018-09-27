@@ -40,21 +40,18 @@ import graphics.scenery.controls.behaviours.ArcballCameraControl;
 import graphics.scenery.controls.behaviours.FPSCameraControl;
 import graphics.scenery.controls.behaviours.MovementCommand;
 import graphics.scenery.controls.behaviours.SelectCommand;
-import graphics.scenery.controls.behaviours.SelectCommand.SelectResult;
 import graphics.scenery.utils.SceneryPanel;
 import graphics.scenery.volumes.Volume;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.application.Platform;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.geometry.VPos;
-import javafx.scene.control.ContentDisplay;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuBar;
+import javafx.event.EventType;
+import javafx.geometry.*;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -276,6 +273,33 @@ public class SciView extends SceneryBase {
                 pane.add( sceneryPanel[0], 1, 2 );
                 pane.add( statusLabel, 1, 3 );
                 stackPane.getChildren().addAll(pane, loadingLabel);
+
+                final ContextMenu contextMenu = new ContextMenu();
+                final MenuItem title = new MenuItem("Node");
+                final MenuItem position = new MenuItem("Position");
+                title.setDisable(true);
+                position.setDisable(true);
+                contextMenu.getItems().addAll(title, position);
+
+                sceneryPanel[0].setOnContextMenuRequested(event -> {
+                    final Point2D localPosition = sceneryPanel[0].sceneToLocal(event.getSceneX(), event.getSceneY());
+                    final List<Scene.RaycastResult> matches = camera.getNodesForScreenSpacePosition((int)localPosition.getX(), (int)localPosition.getY());
+                    if(matches.size() > 0) {
+                        final Node firstMatch = matches.get(0).getNode();
+                        title.setText("Node: " + firstMatch.getName() + " (" + firstMatch.getClass().getSimpleName() + ")");
+                        position.setText(firstMatch.getPosition().toString());
+                    } else {
+                        title.setText("(no matches)");
+                        position.setText("");
+                    }
+                    contextMenu.show(sceneryPanel[0], event.getScreenX(), event.getScreenY());
+                });
+
+                sceneryPanel[0].setOnMouseClicked(event -> {
+                    if(event.getButton() == MouseButton.PRIMARY) {
+                        contextMenu.hide();
+                    }
+                });
 
                 javafx.scene.Scene scene = new javafx.scene.Scene( stackPane );
                 stage.setScene( scene );
@@ -520,7 +544,7 @@ public class SciView extends SceneryBase {
     }
 
     @Override public void inputSetup() {
-        Function1<? super List<SelectResult>, Unit> selectAction = nearest -> {
+        Function1<? super List<Scene.RaycastResult>, Unit> selectAction = nearest -> {
             if( !nearest.isEmpty() ) {
                 setActiveNode( nearest.get( 0 ).getNode() );
                 log.debug( "Selected node: " + getActiveNode().getName() );
