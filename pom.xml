@@ -93,10 +93,7 @@
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 
-		<imagej-mesh-io.version>0.1.0</imagej-mesh-io.version>
 		<scenery.version>0.6.1</scenery.version>
-		<cleargl.version>2.2.1</cleargl.version>
-		<script-editor.version>0.3.0</script-editor.version>
 		<lwjgl.version>3.2.0</lwjgl.version>
 	</properties>
 
@@ -135,7 +132,6 @@
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>script-editor</artifactId>
-			<version>${script-editor.version}</version>
 		</dependency>
 
 		<!-- ImageJ dependencies -->
@@ -150,7 +146,6 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-mesh-io</artifactId>
-			<version>${imagej-mesh-io.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
@@ -171,12 +166,10 @@
 		<dependency>
 			<groupId>graphics.scenery</groupId>
 			<artifactId>scenery</artifactId>
-			<version>${scenery.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.clearvolume</groupId>
 			<artifactId>cleargl</artifactId>
-			<version>${cleargl.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.coremem</groupId>
