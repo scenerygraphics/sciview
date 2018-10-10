@@ -28,27 +28,36 @@
  */
 package sc.iview;
 
+import cleargl.GLTypeEnum;
+import cleargl.GLVector;
 import com.jogamp.opengl.math.Quaternion;
 import com.sun.javafx.application.PlatformImpl;
-
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-
+import coremem.enums.NativeTypeEnum;
+import graphics.scenery.*;
+import graphics.scenery.backends.Renderer;
+import graphics.scenery.controls.InputHandler;
+import graphics.scenery.controls.behaviours.ArcballCameraControl;
+import graphics.scenery.controls.behaviours.FPSCameraControl;
+import graphics.scenery.controls.behaviours.MovementCommand;
+import graphics.scenery.controls.behaviours.SelectCommand;
+import graphics.scenery.utils.SceneryPanel;
+import graphics.scenery.volumes.Volume;
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.application.Platform;
+import javafx.geometry.*;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.text.TextAlignment;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 import net.imagej.Dataset;
 import net.imagej.lut.LUTService;
 import net.imagej.ops.OpService;
@@ -62,7 +71,6 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
-
 import org.apache.commons.lang3.SystemUtils;
 import org.scijava.Context;
 import org.scijava.display.Display;
@@ -78,7 +86,6 @@ import org.scijava.ui.behaviour.InputTrigger;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.ColorRGBA;
 import org.scijava.util.Colors;
-
 import sc.iview.controls.behaviours.CameraTranslateControl;
 import sc.iview.controls.behaviours.NodeTranslateControl;
 import sc.iview.event.NodeActivatedEvent;
@@ -89,50 +96,15 @@ import sc.iview.process.MeshConverter;
 import sc.iview.vector.ClearGLVector3;
 import sc.iview.vector.Vector3;
 
-import cleargl.GLTypeEnum;
-import cleargl.GLVector;
-import coremem.enums.NativeTypeEnum;
-import graphics.scenery.BoundingGrid;
-import graphics.scenery.Box;
-import graphics.scenery.Camera;
-import graphics.scenery.DetachedHeadCamera;
-import graphics.scenery.GenericTexture;
-import graphics.scenery.Line;
-import graphics.scenery.Material;
-import graphics.scenery.Mesh;
-import graphics.scenery.Node;
-import graphics.scenery.PointCloud;
-import graphics.scenery.PointLight;
-import graphics.scenery.SceneryBase;
-import graphics.scenery.SceneryElement;
-import graphics.scenery.Settings;
-import graphics.scenery.Sphere;
-import graphics.scenery.backends.Renderer;
-import graphics.scenery.controls.InputHandler;
-import graphics.scenery.controls.behaviours.ArcballCameraControl;
-import graphics.scenery.controls.behaviours.FPSCameraControl;
-import graphics.scenery.controls.behaviours.MovementCommand;
-import graphics.scenery.controls.behaviours.SelectCommand;
-import graphics.scenery.controls.behaviours.SelectCommand.SelectResult;
-import graphics.scenery.utils.SceneryPanel;
-import graphics.scenery.volumes.Volume;
-import javafx.application.Platform;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuBar;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
-import javafx.scene.text.TextAlignment;
-import javafx.stage.Stage;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public class SciView extends SceneryBase {
 
@@ -208,6 +180,12 @@ public class SciView extends SceneryBase {
      */
     protected Node floor;
 
+    private Label statusLabel;
+    private Label loadingLabel;
+    private StackPane stackPane;
+    private MenuBar menuBar;
+    private final SceneryPanel[] sceneryPanel = { null };
+
     public SciView( Context context ) {
         super( "SciView", 800, 600, false, context );
         context.inject( this );
@@ -228,9 +206,9 @@ public class SciView extends SceneryBase {
             System.setProperty( "scenery.Renderer", "OpenGLRenderer" );
         }
 
+
         if( useJavaFX ) {
             CountDownLatch latch = new CountDownLatch( 1 );
-            final SceneryPanel[] sceneryPanel = { null };
 
             PlatformImpl.startup( () -> {
             } );
@@ -240,14 +218,32 @@ public class SciView extends SceneryBase {
                 Stage stage = new Stage();
                 stage.setTitle( "SciView" );
 
-                StackPane stackPane = new StackPane();
+                stackPane = new StackPane();
                 stackPane.setBackground(
                         new Background( new BackgroundFill( Color.TRANSPARENT, CornerRadii.EMPTY, Insets.EMPTY ) ) );
 
                 GridPane pane = new GridPane();
-                Label label = new Label( "SciView - press U for usage help" );
+                statusLabel = new Label( "SciView - press U for usage help" );
+                statusLabel.setVisible(false);
 
                 sceneryPanel[0] = new SceneryPanel( getWindowWidth(), getWindowHeight() );
+
+                Image loadingImage = new Image(this.getClass().getResourceAsStream("sciview-logo.png"), 600, 200, true, true);
+                ImageView loadingImageView = new ImageView(loadingImage);
+                loadingLabel = new Label("SciView is starting.");
+                loadingLabel.setStyle(
+                        "-fx-background-color: rgb(50,48,47);" +
+                        "-fx-opacity: 1.0;" +
+                        "-fx-font-weight: 400; " +
+                        "-fx-font-size: 2.2em; " +
+                        "-fx-text-fill: white;");
+                loadingLabel.setTextFill(Paint.valueOf("white"));
+                loadingLabel.setGraphic(loadingImageView);
+                loadingLabel.setGraphicTextGap(40.0);
+                loadingLabel.setContentDisplay(ContentDisplay.TOP);
+                loadingLabel.prefHeightProperty().bind(pane.heightProperty());
+                loadingLabel.prefWidthProperty().bind(pane.widthProperty());
+                loadingLabel.setAlignment(Pos.CENTER);
 
                 GridPane.setHgrow( sceneryPanel[0], Priority.ALWAYS );
                 GridPane.setVgrow( sceneryPanel[0], Priority.ALWAYS );
@@ -255,26 +251,53 @@ public class SciView extends SceneryBase {
                 GridPane.setFillHeight( sceneryPanel[0], true );
                 GridPane.setFillWidth( sceneryPanel[0], true );
 
-                GridPane.setHgrow( label, Priority.ALWAYS );
-                GridPane.setHalignment( label, HPos.CENTER );
-                GridPane.setValignment( label, VPos.BOTTOM );
+                GridPane.setHgrow( statusLabel, Priority.ALWAYS );
+                GridPane.setHalignment( statusLabel, HPos.CENTER );
+                GridPane.setValignment( statusLabel, VPos.BOTTOM );
 
-                label.maxWidthProperty().bind( pane.widthProperty() );
+                statusLabel.maxWidthProperty().bind( pane.widthProperty() );
 
                 pane.setStyle( "-fx-background-color: rgb(50,48,47);" +
                                "-fx-font-family: Helvetica Neue, Helvetica, Segoe, Proxima Nova, Arial, sans-serif;" +
                                "-fx-font-weight: 400;" + "-fx-font-size: 1.2em;" + "-fx-text-fill: white;" +
                                "-fx-text-alignment: center;" );
 
-                label.setStyle( "-fx-padding: 0.2em;" + "-fx-text-fill: white;" );
+                statusLabel.setStyle( "-fx-padding: 0.2em;" + "-fx-text-fill: white;" );
 
-                label.setTextAlignment( TextAlignment.CENTER );
+                statusLabel.setTextAlignment( TextAlignment.CENTER );
 
-                MenuBar menuBar = new MenuBar();
+                menuBar = new MenuBar();
                 pane.add( menuBar, 1, 1 );
                 pane.add( sceneryPanel[0], 1, 2 );
-                pane.add( label, 1, 3 );
-                stackPane.getChildren().addAll( pane );
+                pane.add( statusLabel, 1, 3 );
+                stackPane.getChildren().addAll(pane, loadingLabel);
+
+                final ContextMenu contextMenu = new ContextMenu();
+                final MenuItem title = new MenuItem("Node");
+                final MenuItem position = new MenuItem("Position");
+                title.setDisable(true);
+                position.setDisable(true);
+                contextMenu.getItems().addAll(title, position);
+
+                sceneryPanel[0].setOnContextMenuRequested(event -> {
+                    final Point2D localPosition = sceneryPanel[0].sceneToLocal(event.getSceneX(), event.getSceneY());
+                    final List<Scene.RaycastResult> matches = camera.getNodesForScreenSpacePosition((int)localPosition.getX(), (int)localPosition.getY());
+                    if(matches.size() > 0) {
+                        final Node firstMatch = matches.get(0).getNode();
+                        title.setText("Node: " + firstMatch.getName() + " (" + firstMatch.getClass().getSimpleName() + ")");
+                        position.setText(firstMatch.getPosition().toString());
+                    } else {
+                        title.setText("(no matches)");
+                        position.setText("");
+                    }
+                    contextMenu.show(sceneryPanel[0], event.getScreenX(), event.getScreenY());
+                });
+
+                sceneryPanel[0].setOnMouseClicked(event -> {
+                    if(event.getButton() == MouseButton.PRIMARY) {
+                        contextMenu.hide();
+                    }
+                });
 
                 javafx.scene.Scene scene = new javafx.scene.Scene( stackPane );
                 stage.setScene( scene );
@@ -344,18 +367,32 @@ public class SciView extends SceneryBase {
 
         animations = new LinkedList<>();
 
-        // Try to surround the scene with a box
-//        Box shell = new Box( new GLVector( 100.0f, 100.0f, 100.0f ), true );
-//        shell.getMaterial().setDiffuse( new GLVector( 0.2f, 0.2f, 0.2f ) );
-//        shell.getMaterial().setSpecular( GLVector.getNullVector( 3 ) );
-//        shell.getMaterial().setAmbient( GLVector.getNullVector( 3 ) );
-//        //shell.getMaterial().setDoubleSided( true );
-//        shell.getMaterial().setCullingMode( Material.CullingMode.Front );
-//        // Could we generate a grid pattern with proper scale/units as a texture right now?
-//        shell.setPosition( new GLVector(0,0,0) );
-//        getCamera().addChild( shell );
+        Platform.runLater(() -> {
+            while(!getRenderer().getFirstImageReady()) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
 
-        //initialized = true; // inputSetup is called second, so that needs to toggle initialized
+            // fade out loading screen, show status bar
+            FadeTransition ft = new FadeTransition(Duration.millis(500), loadingLabel);
+            ft.setFromValue(1.0);
+            ft.setToValue(0.0);
+            ft.setCycleCount(1);
+            ft.setInterpolator(Interpolator.EASE_OUT);
+            ft.setOnFinished(event -> {
+                loadingLabel.setVisible(false);
+                statusLabel.setVisible(true);
+            });
+
+            ft.play();
+        });
+    }
+
+    public void setStatusText(String text) {
+        statusLabel.setText(text);
     }
 
     public void setFloor( Node n ) {
@@ -505,7 +542,7 @@ public class SciView extends SceneryBase {
     }
 
     @Override public void inputSetup() {
-        Function1<? super List<SelectResult>, Unit> selectAction = nearest -> {
+        Function1<? super List<Scene.RaycastResult>, Unit> selectAction = nearest -> {
             if( !nearest.isEmpty() ) {
                 setActiveNode( nearest.get( 0 ).getNode() );
                 log.debug( "Selected node: " + getActiveNode().getName() );
@@ -850,7 +887,7 @@ public class SciView extends SceneryBase {
     public Node setActiveNode( Node n ) {
         if( activeNode == n ) return activeNode;
         activeNode = n;
-        targetArcball.setTarget( n == null ? new GLVector( 0, 0, 0 ) : n.getPosition() );
+        targetArcball.setTarget( n == null ? () -> new GLVector( 0, 0, 0 ) : n::getPosition);
         eventService.publish( new NodeActivatedEvent( activeNode ) );
         return activeNode;
     }
@@ -884,7 +921,7 @@ public class SciView extends SceneryBase {
     }
 
     public void takeScreenshot( String path ) {
-        getRenderer().screenshot( path );
+        getRenderer().screenshot( path, false );
     }
 
     public Node[] getSceneNodes() {
@@ -952,27 +989,37 @@ public class SciView extends SceneryBase {
     }
 
     public void setColormap( Node n, ColorTable colorTable ) {
-        n.getMaterial().getTextures().put( "normal", "fromBuffer:diffuse" );
-        n.getMaterial().setNeedsTextureReload( true );
+        final int copies = 16;
 
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
-                4 * 4 * colorTable.getLength() );// Num bytes * num components * color map length
+        final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
+                4 * colorTable.getLength() * copies );// Num bytes * num components * color map length * height of color map texture
+
+        final byte[] tmp = new byte[4 * colorTable.getLength()];
         for( int k = 0; k < colorTable.getLength(); k++ ) {
             for( int c = 0; c < colorTable.getComponentCount(); c++ ) {
-                byteBuffer.put( ( byte ) colorTable.get( c, k ) );// TODO this assumes numBits is 8, could be 16
+                // TODO this assumes numBits is 8, could be 16
+                tmp[4 * k + c] = ( byte ) colorTable.get( c, k );
             }
-            if( colorTable.getComponentCount() == 3 ) byteBuffer.put( ( byte ) 255 );
+
+            if( colorTable.getComponentCount() == 3 ) {
+                tmp[4 * k + 3] = (byte)255;
+            }
         }
+
+        for( int i = 0; i < copies; i++ ) {
+            byteBuffer.put(tmp);
+        }
+
         byteBuffer.flip();
 
-        n.getMaterial().getTransferTextures().put( "diffuse", new GenericTexture( "colorTable",
-                                                                                  new GLVector( colorTable.getLength(),
-                                                                                                1.0f, 1.0f ), 4,
-                                                                                  GLTypeEnum.UnsignedByte,
-                                                                                  byteBuffer ) );
-        n.getMaterial().getTextures().put( "diffuse", "fromBuffer:diffuse" );
-        n.getMaterial().setNeedsTextureReload( true );
-
+        if(n instanceof Volume) {
+            ((Volume) n).getColormaps().put("sciviewColormap", new Volume.Colormap.ColormapBuffer(new GenericTexture("colorTable",
+                    new GLVector(colorTable.getLength(),
+                            copies, 1.0f), 4,
+                    GLTypeEnum.UnsignedByte,
+                    byteBuffer)));
+            ((Volume) n).setColormap("sciviewColormap");
+        }
     }
 
     public <T extends RealType<T>> graphics.scenery.Node addVolume( IterableInterval<T> image, String name,
@@ -988,11 +1035,6 @@ public class SciView extends SceneryBase {
 
         @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
         float minVal, maxVal;
-
-        if( voxelType != UnsignedByteType.class ) {
-            log.error( "Temporarily, only 8-bit images (UnsignedByteType) are supported" );
-            return null;
-        }
 
         if( voxelType == UnsignedByteType.class ) {
             minVal = 0;
