@@ -56,7 +56,6 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.TextAlignment;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
@@ -186,7 +185,6 @@ public class SciView extends SceneryBase {
     private Label loadingLabel;
     private StackPane stackPane;
     private MenuBar menuBar;
-    private Stage stage;
     private final SceneryPanel[] sceneryPanel = { null };
 
     public SciView( Context context ) {
@@ -204,6 +202,12 @@ public class SciView extends SceneryBase {
 
     @SuppressWarnings("restriction") @Override public void init() {
 
+        JFrame frame = new JFrame("SciView");
+        final JFXPanel fxPanel = new JFXPanel();
+        frame.add(fxPanel);
+        frame.setSize(getWindowWidth(), getWindowHeight());
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
         if( useJavaFX ) {
             CountDownLatch latch = new CountDownLatch( 1 );
 
@@ -211,14 +215,6 @@ public class SciView extends SceneryBase {
             } );
 
             Platform.runLater( () -> {
-
-                JFrame frame = new JFrame("Swing and JavaFX");
-                final JFXPanel fxPanel = new JFXPanel();
-                frame.add(fxPanel);
-                frame.setSize(800, 600);
-                frame.setVisible(true);
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
                 stackPane = new StackPane();
                 stackPane.setBackground(
                         new Background( new BackgroundFill( Color.TRANSPARENT, CornerRadii.EMPTY, Insets.EMPTY ) ) );
@@ -302,6 +298,7 @@ public class SciView extends SceneryBase {
 
                 javafx.scene.Scene scene = new javafx.scene.Scene( stackPane );
                 fxPanel.setScene(scene);
+                frame.setVisible(true);
 //                stage.setScene( scene );
 //                stage.setOnCloseRequest( event -> {
 //                    getDisplay().close();
