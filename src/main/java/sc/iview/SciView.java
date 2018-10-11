@@ -201,12 +201,6 @@ public class SciView extends SceneryBase {
 
     @SuppressWarnings("restriction") @Override public void init() {
 
-        // TODO: there is a Linux issue with the Vulkan renderer and X that leads to a known "RenderBadPicture" error
-        if( SystemUtils.IS_OS_LINUX && !System.getProperties().containsKey( "scenery.Renderer" ) ) {
-            System.setProperty( "scenery.Renderer", "OpenGLRenderer" );
-        }
-
-
         if( useJavaFX ) {
             CountDownLatch latch = new CountDownLatch( 1 );
 
