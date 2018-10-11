@@ -223,7 +223,7 @@ public class SciView extends SceneryBase {
                 statusLabel = new Label( "SciView - press U for usage help" );
                 statusLabel.setVisible(false);
 
-                sceneryPanel[0] = new SceneryPanel( getWindowWidth(), getWindowHeight() );
+               sceneryPanel[0] = new SceneryPanel(100, 100);
 
                 Image loadingImage = new Image(this.getClass().getResourceAsStream("sciview-logo.png"), 600, 200, true, true);
                 ImageView loadingImageView = new ImageView(loadingImage);
@@ -298,6 +298,9 @@ public class SciView extends SceneryBase {
 
                 javafx.scene.Scene scene = new javafx.scene.Scene( stackPane );
                 fxPanel.setScene(scene);
+//                scene.addEventHandler(MouseEvent.ANY, event -> getLogger().info("Mouse event: " + event.toString()));
+//                sceneryPanel[0].addEventHandler(MouseEvent.ANY, event -> getLogger().info("PANEL Mouse event: " + event.toString()));
+
                 frame.setVisible(true);
 //                stage.setScene( scene );
 //                stage.setOnCloseRequest( event -> {
@@ -322,10 +325,13 @@ public class SciView extends SceneryBase {
                 e1.printStackTrace();
             }
 
-            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), getWindowWidth(),
-                                                  getWindowHeight(), sceneryPanel[0] ) );
+            // window width and window height get ignored by the renderer if it is embedded.
+            // dimensions are determined from the SceneryPanel, then.
+            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(),
+                                                  getWindowWidth(), getWindowHeight(),
+                                                  sceneryPanel[0] ) );
         } else {
-            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), 512, 512 ) );
+            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), getWindowWidth(), getWindowHeight()) );
         }
 
         // Enable push rendering by default
