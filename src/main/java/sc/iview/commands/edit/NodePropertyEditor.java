@@ -78,7 +78,7 @@ import graphics.scenery.Node;
  *
  * @author Curtis Rueden
  */
-public class SceneEditor implements UIComponent<JPanel> {
+public class NodePropertyEditor implements UIComponent<JPanel> {
 
     private final SciView sciView;
 
@@ -99,14 +99,14 @@ public class SceneEditor implements UIComponent<JPanel> {
     private JTree tree;
     private JPanel props;
 
-    public SceneEditor( final SciView sciView ) {
+    public NodePropertyEditor(final SciView sciView ) {
         this.sciView = sciView;
         sciView.getScijavaContext().inject( this );
     }
 
     /** Creates and displays a window containing the scene editor. */
     public void show() {
-        final JFrame frame = new JFrame( "Scene Editor" );
+        final JFrame frame = new JFrame( "Node Properties" );
         frame.setContentPane( getComponent() );
         // FIXME: Why doesn't the frame disappear when closed?
         frame.setDefaultCloseOperation( WindowConstants.DISPOSE_ON_CLOSE );

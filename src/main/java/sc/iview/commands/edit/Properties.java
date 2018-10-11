@@ -68,10 +68,13 @@ import cleargl.GLVector;
  *
  * @author Robert Haase, Scientific Computing Facility, MPI-CBG Dresden
  * @author Curtis Rueden
+ * @author Kyle Harrington
+ * @author Ulrik Guenther
  */
 @Plugin(type = Command.class, initializer = "initValues", menuRoot = "SciView", //
         menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Properties...", weight = EDIT_PROPERTIES) })
+                 @Menu(label = "Properties...", weight = EDIT_PROPERTIES) },
+        visible = false)
 public class Properties extends InteractiveCommand {
 
     private static final String PI_NEG = "-3.142";

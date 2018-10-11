@@ -39,21 +39,21 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
 /**
- * Command that displays a {@link SceneEditor} window.
+ * Command that displays a {@link NodePropertyEditor} window.
  *
  * @author Curtis Rueden
  */
 @Plugin(type = Command.class, initializer = "initValues", menuRoot = "SciView", //
         menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Scene...", weight = EDIT_SCENE) })
-public class EditScene implements Command {
+                 @Menu(label = "Node Properties", weight = EDIT_SCENE) })
+public class NodeProperties implements Command {
 
     @Parameter
     private SciView sciView;
 
     @Override
     public void run() {
-        final SceneEditor sceneEditor = new SceneEditor( sciView );
-        sceneEditor.show();
+        final NodePropertyEditor nodePropertyEditor = new NodePropertyEditor( sciView );
+        nodePropertyEditor.show();
     }
 }
