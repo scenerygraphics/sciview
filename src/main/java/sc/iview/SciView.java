@@ -34,6 +34,7 @@ import com.jogamp.opengl.math.Quaternion;
 import com.sun.javafx.application.PlatformImpl;
 import coremem.enums.NativeTypeEnum;
 import graphics.scenery.*;
+import graphics.scenery.Box;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.controls.InputHandler;
 import graphics.scenery.controls.behaviours.ArcballCameraControl;
@@ -45,6 +46,7 @@ import graphics.scenery.volumes.Volume;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.application.Platform;
+import javafx.embed.swing.JFXPanel;
 import javafx.geometry.*;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -71,7 +73,6 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
-import org.apache.commons.lang3.SystemUtils;
 import org.scijava.Context;
 import org.scijava.display.Display;
 import org.scijava.display.DisplayService;
@@ -96,6 +97,7 @@ import sc.iview.process.MeshConverter;
 import sc.iview.vector.ClearGLVector3;
 import sc.iview.vector.Vector3;
 
+import javax.swing.*;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -184,6 +186,7 @@ public class SciView extends SceneryBase {
     private Label loadingLabel;
     private StackPane stackPane;
     private MenuBar menuBar;
+    private Stage stage;
     private final SceneryPanel[] sceneryPanel = { null };
 
     public SciView( Context context ) {
@@ -209,8 +212,12 @@ public class SciView extends SceneryBase {
 
             Platform.runLater( () -> {
 
-                Stage stage = new Stage();
-                stage.setTitle( "SciView" );
+                JFrame frame = new JFrame("Swing and JavaFX");
+                final JFXPanel fxPanel = new JFXPanel();
+                frame.add(fxPanel);
+                frame.setSize(800, 600);
+                frame.setVisible(true);
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
                 stackPane = new StackPane();
                 stackPane.setBackground(
@@ -294,19 +301,20 @@ public class SciView extends SceneryBase {
                 });
 
                 javafx.scene.Scene scene = new javafx.scene.Scene( stackPane );
-                stage.setScene( scene );
-                stage.setOnCloseRequest( event -> {
-                    getDisplay().close();
-                    this.close();
-                } );
-                stage.focusedProperty().addListener( ( ov, t, t1 ) -> {
-                    if( t1 )// If you just gained focus
-                        displayService.setActiveDisplay( getDisplay() );
-                } );
+                fxPanel.setScene(scene);
+//                stage.setScene( scene );
+//                stage.setOnCloseRequest( event -> {
+//                    getDisplay().close();
+//                    this.close();
+//                } );
+//                stage.focusedProperty().addListener( ( ov, t, t1 ) -> {
+//                    if( t1 )// If you just gained focus
+//                        displayService.setActiveDisplay( getDisplay() );
+//                } );
 
                 new JavaFXMenuCreator().createMenus( menus.getMenu( "SciView" ), menuBar );
 
-                stage.show();
+//                stage.show();
 
                 latch.countDown();
             } );
