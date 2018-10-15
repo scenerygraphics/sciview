@@ -48,7 +48,11 @@ import javafx.animation.Interpolator;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.geometry.*;
+import javafx.geometry.Insets;
 import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
@@ -97,11 +101,13 @@ import sc.iview.vector.ClearGLVector3;
 import sc.iview.vector.Vector3;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
@@ -201,11 +207,23 @@ public class SciView extends SceneryBase {
     }
 
     @SuppressWarnings("restriction") @Override public void init() {
+        int x, y;
+
+        try {
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+
+            x = screenSize.width/2 - getWindowWidth()/2;
+            y = screenSize.height/2 - getWindowWidth()/2;
+        } catch(HeadlessException e) {
+            x = 10;
+            y = 10;
+        }
 
         JFrame frame = new JFrame("SciView");
         final JFXPanel fxPanel = new JFXPanel();
         frame.add(fxPanel);
         frame.setSize(getWindowWidth(), getWindowHeight());
+        frame.setLocation(x, y);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         if( useJavaFX ) {
@@ -330,6 +348,7 @@ public class SciView extends SceneryBase {
             setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(),
                                                   getWindowWidth(), getWindowHeight(),
                                                   sceneryPanel[0] ) );
+            getLogger().info("panel size: " + sceneryPanel[0].getWidth() + "," + sceneryPanel[0].getHeight());
         } else {
             setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), getWindowWidth(), getWindowHeight()) );
         }
