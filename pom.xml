@@ -93,7 +93,7 @@
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 
-		<scenery.version>0.6.1</scenery.version>
+		<scenery.version>0.6.2</scenery.version>
 		<lwjgl.version>3.2.0</lwjgl.version>
 	</properties>
 

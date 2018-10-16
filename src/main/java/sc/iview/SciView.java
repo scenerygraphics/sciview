@@ -34,6 +34,7 @@ import com.jogamp.opengl.math.Quaternion;
 import com.sun.javafx.application.PlatformImpl;
 import coremem.enums.NativeTypeEnum;
 import graphics.scenery.*;
+import graphics.scenery.Box;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.controls.InputHandler;
 import graphics.scenery.controls.behaviours.ArcballCameraControl;
@@ -45,8 +46,13 @@ import graphics.scenery.volumes.Volume;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.application.Platform;
+import javafx.embed.swing.JFXPanel;
 import javafx.geometry.*;
+import javafx.geometry.Insets;
 import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
@@ -54,7 +60,6 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.TextAlignment;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
@@ -71,7 +76,6 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
-import org.apache.commons.lang3.SystemUtils;
 import org.scijava.Context;
 import org.scijava.display.Display;
 import org.scijava.display.DisplayService;
@@ -96,11 +100,14 @@ import sc.iview.process.MeshConverter;
 import sc.iview.vector.ClearGLVector3;
 import sc.iview.vector.Vector3;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
@@ -200,6 +207,24 @@ public class SciView extends SceneryBase {
     }
 
     @SuppressWarnings("restriction") @Override public void init() {
+        int x, y;
+
+        try {
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+
+            x = screenSize.width/2 - getWindowWidth()/2;
+            y = screenSize.height/2 - getWindowWidth()/2;
+        } catch(HeadlessException e) {
+            x = 10;
+            y = 10;
+        }
+
+        JFrame frame = new JFrame("SciView");
+        final JFXPanel fxPanel = new JFXPanel();
+        frame.add(fxPanel);
+        frame.setSize(getWindowWidth(), getWindowHeight());
+        frame.setLocation(x, y);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         if( useJavaFX ) {
             CountDownLatch latch = new CountDownLatch( 1 );
@@ -208,10 +233,6 @@ public class SciView extends SceneryBase {
             } );
 
             Platform.runLater( () -> {
-
-                Stage stage = new Stage();
-                stage.setTitle( "SciView" );
-
                 stackPane = new StackPane();
                 stackPane.setBackground(
                         new Background( new BackgroundFill( Color.TRANSPARENT, CornerRadii.EMPTY, Insets.EMPTY ) ) );
@@ -220,7 +241,7 @@ public class SciView extends SceneryBase {
                 statusLabel = new Label( "SciView - press U for usage help" );
                 statusLabel.setVisible(false);
 
-                sceneryPanel[0] = new SceneryPanel( getWindowWidth(), getWindowHeight() );
+               sceneryPanel[0] = new SceneryPanel(100, 100);
 
                 Image loadingImage = new Image(this.getClass().getResourceAsStream("sciview-logo.png"), 600, 200, true, true);
                 ImageView loadingImageView = new ImageView(loadingImage);
@@ -294,19 +315,24 @@ public class SciView extends SceneryBase {
                 });
 
                 javafx.scene.Scene scene = new javafx.scene.Scene( stackPane );
-                stage.setScene( scene );
-                stage.setOnCloseRequest( event -> {
-                    getDisplay().close();
-                    this.close();
-                } );
-                stage.focusedProperty().addListener( ( ov, t, t1 ) -> {
-                    if( t1 )// If you just gained focus
-                        displayService.setActiveDisplay( getDisplay() );
-                } );
+                fxPanel.setScene(scene);
+//                scene.addEventHandler(MouseEvent.ANY, event -> getLogger().info("Mouse event: " + event.toString()));
+//                sceneryPanel[0].addEventHandler(MouseEvent.ANY, event -> getLogger().info("PANEL Mouse event: " + event.toString()));
+
+                frame.setVisible(true);
+//                stage.setScene( scene );
+//                stage.setOnCloseRequest( event -> {
+//                    getDisplay().close();
+//                    this.close();
+//                } );
+//                stage.focusedProperty().addListener( ( ov, t, t1 ) -> {
+//                    if( t1 )// If you just gained focus
+//                        displayService.setActiveDisplay( getDisplay() );
+//                } );
 
                 new JavaFXMenuCreator().createMenus( menus.getMenu( "SciView" ), menuBar );
 
-                stage.show();
+//                stage.show();
 
                 latch.countDown();
             } );
@@ -317,10 +343,14 @@ public class SciView extends SceneryBase {
                 e1.printStackTrace();
             }
 
-            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), getWindowWidth(),
-                                                  getWindowHeight(), sceneryPanel[0] ) );
+            // window width and window height get ignored by the renderer if it is embedded.
+            // dimensions are determined from the SceneryPanel, then.
+            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(),
+                                                  getWindowWidth(), getWindowHeight(),
+                                                  sceneryPanel[0] ) );
+            getLogger().info("panel size: " + sceneryPanel[0].getWidth() + "," + sceneryPanel[0].getHeight());
         } else {
-            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), 512, 512 ) );
+            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), getWindowWidth(), getWindowHeight()) );
         }
 
         // Enable push rendering by default
