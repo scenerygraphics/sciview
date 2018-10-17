@@ -14,4 +14,9 @@ curl -fsLO https://raw.githubusercontent.com/scijava/scijava-scripts/master/trav
 sh travis-build.sh $encrypted_eb7aa63bf7ac_key $encrypted_eb7aa63bf7ac_iv
 
 # Upload release version to the ImageJ update site.
-test "$UPLOAD_TO_UPDATE_SITE" && sh sciview_deploy.sh
+if [ "$UPLOAD_TO_UPDATE_SITE" ]
+then
+  sh sciview_deploy.sh
+else
+  echo '--> Not a release build; skippin upload to update site.'
+fi
