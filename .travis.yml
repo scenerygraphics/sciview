@@ -7,7 +7,7 @@ branches:
 install: true
 script:
   - ".travis/build.sh"
-  - bash sciview_deploy.sh
+  - bash travis_script.sh
 cache:
   directories:
   - "~/.m2/repository"
