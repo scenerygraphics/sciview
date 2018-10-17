@@ -23,8 +23,8 @@ then
   
   echo
   echo "====== Releasing SciView $pomVersion ======"
-  curl -O https://raw.githubusercontent.com/scijava/scijava-scripts/master/release-version.sh
-  sh release-version.sh $pomVersion
+  git checkout git@github.com:scijava/scijava-scripts.git
+  sh scijava-scripts/release-version.sh $pomVersion
   
   # Checkout the tag
   echo
