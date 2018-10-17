@@ -23,7 +23,7 @@ then
   
   echo
   echo "====== Releasing SciView $pomVersion ======"
-  git clone git@github.com:scijava/scijava-scripts.git
+  git clone https://github.com/scijava/scijava-scripts.git
   sh scijava-scripts/release-version.sh $pomVersion
   
   # Checkout the tag
