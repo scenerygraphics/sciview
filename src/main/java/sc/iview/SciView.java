@@ -66,8 +66,8 @@ import kotlin.jvm.functions.Function1;
 import net.imagej.Dataset;
 import net.imagej.lut.LUTService;
 import net.imagej.ops.OpService;
-import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
 import net.imglib2.display.ColorTable;
@@ -75,6 +75,8 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.Intervals;
+import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 import org.scijava.Context;
 import org.scijava.display.Display;
@@ -801,7 +803,7 @@ public class SciView extends SceneryBase {
         else if( data instanceof graphics.scenery.Mesh ) addMesh( ( graphics.scenery.Mesh ) data );
         else if( data instanceof graphics.scenery.PointCloud ) addPointCloud( ( graphics.scenery.PointCloud ) data );
         else if( data instanceof Dataset ) addVolume( ( Dataset ) data );
-        else if( data instanceof IterableInterval ) addVolume( ( ( IterableInterval ) data ), source );
+        else if( data instanceof RandomAccessibleInterval ) addVolume( ( ( RandomAccessibleInterval ) data ), source );
         else if( data instanceof List ) {
             final List<?> list = ( List<?> ) data;
             if( list.isEmpty() ) {
@@ -998,17 +1000,15 @@ public class SciView extends SceneryBase {
         return addVolume( image, voxelDims );
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" }) public graphics.scenery.Node addVolume( Dataset image,
-                                                                                           float[] voxelDimensions ) {
-        return addVolume( ( IterableInterval ) Views.flatIterable( image.getImgPlus() ), image.getName(),
-                          voxelDimensions );
+    @SuppressWarnings({ "rawtypes", "unchecked" }) public Node addVolume( Dataset image, float[] voxelDimensions ) {
+        return addVolume( (RandomAccessibleInterval) image.getImgPlus(), image.getName(), voxelDimensions );
     }
 
-    public <T extends RealType<T>> graphics.scenery.Node addVolume( IterableInterval<T> image ) {
+    public < T extends RealType< T > > Node addVolume( RandomAccessibleInterval< T > image ) {
         return addVolume( image, "Volume" );
     }
 
-    public <T extends RealType<T>> graphics.scenery.Node addVolume( IterableInterval<T> image, String name ) {
+    public < T extends RealType< T > > Node addVolume( RandomAccessibleInterval< T > image, String name ) {
         return addVolume( image, name, 1, 1, 1 );
     }
 
@@ -1046,8 +1046,8 @@ public class SciView extends SceneryBase {
         }
     }
 
-    public <T extends RealType<T>> graphics.scenery.Node addVolume( IterableInterval<T> image, String name,
-                                                                    float... voxelDimensions ) {
+    public < T extends RealType< T > > Node addVolume( RandomAccessibleInterval< T > image, String name,
+                                                       float... voxelDimensions ) {
         log.debug( "Add Volume" );
 
         long dimensions[] = new long[3];
@@ -1057,20 +1057,20 @@ public class SciView extends SceneryBase {
 
         getScene().addChild( v );
 
-        @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
+        @SuppressWarnings("unchecked") T type = ( T ) Util.getTypeFromInterval( image );
         float minVal, maxVal;
 
-        if( voxelType == UnsignedByteType.class ) {
+        if( type instanceof UnsignedByteType ) {
             minVal = 0;
             maxVal = 255;
-        } else if( voxelType == UnsignedShortType.class ) {
+        } else if( type instanceof UnsignedShortType ) {
             minVal = 0;
             maxVal = 65535;
-        } else if( voxelType == FloatType.class ) {
+        } else if( type instanceof FloatType ) {
             minVal = 0;
             maxVal = 1;
         } else {
-            log.debug( "Type: " + voxelType +
+            log.debug( "Type: " + type.getClass() +
                        " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
             return null;
         }
@@ -1101,48 +1101,44 @@ public class SciView extends SceneryBase {
         return v;
     }
 
-    public <T extends RealType<T>> graphics.scenery.Node updateVolume( IterableInterval<T> image, String name,
-                                                                       float[] voxelDimensions, Volume v ) {
+    public < T extends RealType< T > > Node updateVolume( RandomAccessibleInterval< T > image, String name,
+                                                          float[] voxelDimensions, Volume v ) {
         log.debug( "Update Volume" );
 
         long dimensions[] = new long[3];
         image.dimensions( dimensions );
 
-        @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
-        int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
-        NativeTypeEnum nType;
-
-        if( voxelType == UnsignedByteType.class ) {
+        @SuppressWarnings("unchecked") T type = ( T ) Util.getTypeFromInterval( image );
+        final NativeTypeEnum nType;
+        if( type instanceof UnsignedByteType ) {
             nType = NativeTypeEnum.UnsignedByte;
-        } else if( voxelType == UnsignedShortType.class ) {
+        } else if( type instanceof UnsignedShortType ) {
             nType = NativeTypeEnum.UnsignedShort;
-        } else if( voxelType == FloatType.class ) {
+        } else if( type instanceof FloatType ) {
             nType = NativeTypeEnum.Float;
         } else {
-            log.debug( "Type: " + voxelType +
+            log.debug( "Type: " + type.getClass() +
                        " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
             return null;
         }
 
         // Make and populate a ByteBuffer with the content of the Dataset
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
-                ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2] ) );
-        Cursor<T> cursor = image.cursor();
-
-        while( cursor.hasNext() ) {
-            cursor.fwd();
-            if( voxelType == UnsignedByteType.class ) {
-                byteBuffer.put( ( byte ) ( ( ( UnsignedByteType ) cursor.get() ).get() ) );
-            } else if( voxelType == UnsignedShortType.class ) {
-                byteBuffer.putShort( ( short ) Math.abs( ( ( UnsignedShortType ) cursor.get() ).getShort() ) );
-            } else if( voxelType == FloatType.class ) {
-                byteBuffer.putFloat( ( ( FloatType ) cursor.get() ).get() );
-            }
+        final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
+                ( int ) ( nType.getSizeInBytes() * Intervals.numElements( dimensions ) ) );
+        if( type instanceof UnsignedByteType ) {
+            @SuppressWarnings("unchecked") final IterableInterval< UnsignedByteType > ubytes = ( IterableInterval< UnsignedByteType > ) Views.flatIterable( image );
+            ubytes.forEach( t -> byteBuffer.put( t.getByte() ) );
+        } else if( type instanceof UnsignedShortType ) {
+            @SuppressWarnings("unchecked") final IterableInterval< UnsignedShortType > ushorts = ( IterableInterval< UnsignedShortType > ) Views.flatIterable( image );
+            ushorts.forEach( t -> byteBuffer.putShort( ( t.getShort() ) ) );
+        } else { // if( type instanceof FloatType )
+            @SuppressWarnings("unchecked") final IterableInterval< FloatType > floats = ( IterableInterval< FloatType > ) Views.flatIterable( image );
+            floats.forEach( t -> byteBuffer.putFloat( t.get() ) );
         }
         byteBuffer.flip();
 
         v.readFromBuffer( name, byteBuffer, dimensions[0], dimensions[1], dimensions[2], voxelDimensions[0],
-                          voxelDimensions[1], voxelDimensions[2], nType, bytesPerVoxel );
+                          voxelDimensions[1], voxelDimensions[2], nType, ( int ) nType.getSizeInBytes() );
 
         v.setDirty( true );
         v.setNeedsUpdate( true );
