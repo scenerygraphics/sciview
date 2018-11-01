@@ -89,6 +89,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.thread.ThreadService;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.InputTrigger;
+import org.scijava.util.ArrayUtils;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.ColorRGBA;
 import org.scijava.util.Colors;
@@ -1124,7 +1125,7 @@ public class SciView extends SceneryBase {
 
         // Make and populate a ByteBuffer with the content of the Dataset
         final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
-                ( int ) ( nType.getSizeInBytes() * Intervals.numElements( dimensions ) ) );
+                ArrayUtils.safeMultiply32( nType.getSizeInBytes(), Intervals.numElements( dimensions ) ) );
         if( type instanceof UnsignedByteType ) {
             @SuppressWarnings("unchecked") final IterableInterval< UnsignedByteType > ubytes = ( IterableInterval< UnsignedByteType > ) Views.flatIterable( image );
             ubytes.forEach( t -> byteBuffer.put( t.getByte() ) );
