@@ -42,6 +42,7 @@ import graphics.scenery.controls.behaviours.FPSCameraControl;
 import graphics.scenery.controls.behaviours.MovementCommand;
 import graphics.scenery.controls.behaviours.SelectCommand;
 import graphics.scenery.utils.SceneryPanel;
+import graphics.scenery.utils.Statistics;
 import graphics.scenery.volumes.Volume;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
@@ -108,6 +109,7 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.*;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
@@ -1196,6 +1198,10 @@ public class SciView extends SceneryBase {
 
     public Settings getScenerySettings() {
         return this.getSettings();
+    }
+
+    public Statistics getSceneryStats() {
+        return this.getStats();
     }
 
     public Renderer getSceneryRenderer() {
