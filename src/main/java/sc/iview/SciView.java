@@ -170,12 +170,6 @@ public class SciView extends SceneryBase {
     Camera camera = null;
 
     /**
-     * JavaFX UI
-     */
-    private boolean useJavaFX = true;
-    SceneryPanel imagePanel = null;
-
-    /**
      * Speeds for input controls
      */
     private float fpsScrollSpeed = 3.0f;
@@ -228,132 +222,128 @@ public class SciView extends SceneryBase {
         frame.setLocation(x, y);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        if( useJavaFX ) {
-            CountDownLatch latch = new CountDownLatch( 1 );
+        CountDownLatch latch = new CountDownLatch( 1 );
 
-            PlatformImpl.startup( () -> {
-            } );
+        PlatformImpl.startup( () -> {
+        } );
 
-            Platform.runLater( () -> {
-                stackPane = new StackPane();
-                stackPane.setBackground(
-                        new Background( new BackgroundFill( Color.TRANSPARENT, CornerRadii.EMPTY, Insets.EMPTY ) ) );
+        Platform.runLater( () -> {
+            stackPane = new StackPane();
+            stackPane.setBackground(
+                    new Background( new BackgroundFill( Color.TRANSPARENT, CornerRadii.EMPTY, Insets.EMPTY ) ) );
 
-                GridPane pane = new GridPane();
-                statusLabel = new Label( "SciView - press U for usage help" );
-                statusLabel.setVisible(false);
+            GridPane pane = new GridPane();
+            statusLabel = new Label( "SciView - press U for usage help" );
+            statusLabel.setVisible( false );
 
-               sceneryPanel[0] = new SceneryPanel(100, 100);
+            sceneryPanel[0] = new SceneryPanel( 100, 100 );
 
-                Image loadingImage = new Image(this.getClass().getResourceAsStream("sciview-logo.png"), 600, 200, true, true);
-                ImageView loadingImageView = new ImageView(loadingImage);
-                loadingLabel = new Label("SciView is starting.");
-                loadingLabel.setStyle(
-                        "-fx-background-color: rgb(50,48,47);" +
-                        "-fx-opacity: 1.0;" +
-                        "-fx-font-weight: 400; " +
-                        "-fx-font-size: 2.2em; " +
-                        "-fx-text-fill: white;");
-                loadingLabel.setTextFill(Paint.valueOf("white"));
-                loadingLabel.setGraphic(loadingImageView);
-                loadingLabel.setGraphicTextGap(40.0);
-                loadingLabel.setContentDisplay(ContentDisplay.TOP);
-                loadingLabel.prefHeightProperty().bind(pane.heightProperty());
-                loadingLabel.prefWidthProperty().bind(pane.widthProperty());
-                loadingLabel.setAlignment(Pos.CENTER);
+            Image loadingImage = new Image(this.getClass().getResourceAsStream("sciview-logo.png"), 600, 200, true, true);
+            ImageView loadingImageView = new ImageView(loadingImage);
+            loadingLabel = new Label("SciView is starting.");
+            loadingLabel.setStyle(
+                    "-fx-background-color: rgb(50,48,47);" +
+                    "-fx-opacity: 1.0;" +
+                    "-fx-font-weight: 400; " +
+                    "-fx-font-size: 2.2em; " +
+                    "-fx-text-fill: white;");
+            loadingLabel.setTextFill(Paint.valueOf("white"));
+            loadingLabel.setGraphic(loadingImageView);
+            loadingLabel.setGraphicTextGap(40.0);
+            loadingLabel.setContentDisplay(ContentDisplay.TOP);
+            loadingLabel.prefHeightProperty().bind(pane.heightProperty());
+            loadingLabel.prefWidthProperty().bind(pane.widthProperty());
+            loadingLabel.setAlignment(Pos.CENTER);
 
-                GridPane.setHgrow( sceneryPanel[0], Priority.ALWAYS );
-                GridPane.setVgrow( sceneryPanel[0], Priority.ALWAYS );
+            GridPane.setHgrow( sceneryPanel[0], Priority.ALWAYS );
+            GridPane.setVgrow( sceneryPanel[0], Priority.ALWAYS );
 
-                GridPane.setFillHeight( sceneryPanel[0], true );
-                GridPane.setFillWidth( sceneryPanel[0], true );
+            GridPane.setFillHeight( sceneryPanel[0], true );
+            GridPane.setFillWidth( sceneryPanel[0], true );
 
-                GridPane.setHgrow( statusLabel, Priority.ALWAYS );
-                GridPane.setHalignment( statusLabel, HPos.CENTER );
-                GridPane.setValignment( statusLabel, VPos.BOTTOM );
+            GridPane.setHgrow( statusLabel, Priority.ALWAYS );
+            GridPane.setHalignment( statusLabel, HPos.CENTER );
+            GridPane.setValignment( statusLabel, VPos.BOTTOM );
 
-                statusLabel.maxWidthProperty().bind( pane.widthProperty() );
+            statusLabel.maxWidthProperty().bind( pane.widthProperty() );
 
-                pane.setStyle( "-fx-background-color: rgb(50,48,47);" +
-                               "-fx-font-family: Helvetica Neue, Helvetica, Segoe, Proxima Nova, Arial, sans-serif;" +
-                               "-fx-font-weight: 400;" + "-fx-font-size: 1.2em;" + "-fx-text-fill: white;" +
-                               "-fx-text-alignment: center;" );
+            pane.setStyle( "-fx-background-color: rgb(50,48,47);" +
+                           "-fx-font-family: Helvetica Neue, Helvetica, Segoe, Proxima Nova, Arial, sans-serif;" +
+                           "-fx-font-weight: 400;" + "-fx-font-size: 1.2em;" + "-fx-text-fill: white;" +
+                           "-fx-text-alignment: center;" );
 
-                statusLabel.setStyle( "-fx-padding: 0.2em;" + "-fx-text-fill: white;" );
+            statusLabel.setStyle( "-fx-padding: 0.2em;" + "-fx-text-fill: white;" );
 
-                statusLabel.setTextAlignment( TextAlignment.CENTER );
+            statusLabel.setTextAlignment( TextAlignment.CENTER );
 
-                menuBar = new MenuBar();
-                pane.add( menuBar, 1, 1 );
-                pane.add( sceneryPanel[0], 1, 2 );
-                pane.add( statusLabel, 1, 3 );
-                stackPane.getChildren().addAll(pane, loadingLabel);
+            menuBar = new MenuBar();
+            pane.add( menuBar, 1, 1 );
+            pane.add( sceneryPanel[0], 1, 2 );
+            pane.add( statusLabel, 1, 3 );
+            stackPane.getChildren().addAll(pane, loadingLabel);
 
-                final ContextMenu contextMenu = new ContextMenu();
-                final MenuItem title = new MenuItem("Node");
-                final MenuItem position = new MenuItem("Position");
-                title.setDisable(true);
-                position.setDisable(true);
-                contextMenu.getItems().addAll(title, position);
+            final ContextMenu contextMenu = new ContextMenu();
+            final MenuItem title = new MenuItem("Node");
+            final MenuItem position = new MenuItem("Position");
+            title.setDisable(true);
+            position.setDisable(true);
+            contextMenu.getItems().addAll(title, position);
 
-                sceneryPanel[0].setOnContextMenuRequested(event -> {
-                    final Point2D localPosition = sceneryPanel[0].sceneToLocal(event.getSceneX(), event.getSceneY());
-                    final List<Scene.RaycastResult> matches = camera.getNodesForScreenSpacePosition((int)localPosition.getX(), (int)localPosition.getY());
-                    if(matches.size() > 0) {
-                        final Node firstMatch = matches.get(0).getNode();
-                        title.setText("Node: " + firstMatch.getName() + " (" + firstMatch.getClass().getSimpleName() + ")");
-                        position.setText(firstMatch.getPosition().toString());
-                    } else {
-                        title.setText("(no matches)");
-                        position.setText("");
-                    }
-                    contextMenu.show(sceneryPanel[0], event.getScreenX(), event.getScreenY());
-                });
+            sceneryPanel[0].setOnContextMenuRequested(event -> {
+                final Point2D localPosition = sceneryPanel[0].sceneToLocal(event.getSceneX(), event.getSceneY());
+                final List<Scene.RaycastResult> matches = camera.getNodesForScreenSpacePosition((int)localPosition.getX(), (int)localPosition.getY());
+                if( matches.size() > 0 ) {
+                    final Node firstMatch = matches.get(0).getNode();
+                    title.setText("Node: " + firstMatch.getName() + " (" + firstMatch.getClass().getSimpleName() + ")");
+                    position.setText(firstMatch.getPosition().toString());
+                } else {
+                    title.setText("(no matches)");
+                    position.setText("");
+                }
+                contextMenu.show(sceneryPanel[0], event.getScreenX(), event.getScreenY());
+            });
 
-                sceneryPanel[0].setOnMouseClicked(event -> {
-                    if(event.getButton() == MouseButton.PRIMARY) {
-                        contextMenu.hide();
-                    }
-                });
+            sceneryPanel[0].setOnMouseClicked(event -> {
+                if(event.getButton() == MouseButton.PRIMARY) {
+                    contextMenu.hide();
+                }
+            });
 
-                javafx.scene.Scene scene = new javafx.scene.Scene( stackPane );
-                fxPanel.setScene(scene);
-//                scene.addEventHandler(MouseEvent.ANY, event -> getLogger().info("Mouse event: " + event.toString()));
-//                sceneryPanel[0].addEventHandler(MouseEvent.ANY, event -> getLogger().info("PANEL Mouse event: " + event.toString()));
+            javafx.scene.Scene scene = new javafx.scene.Scene( stackPane );
+            fxPanel.setScene(scene);
+//          scene.addEventHandler(MouseEvent.ANY, event -> getLogger().info("Mouse event: " + event.toString()));
+//          sceneryPanel[0].addEventHandler(MouseEvent.ANY, event -> getLogger().info("PANEL Mouse event: " + event.toString()));
 
-                frame.setVisible(true);
-//                stage.setScene( scene );
-//                stage.setOnCloseRequest( event -> {
-//                    getDisplay().close();
-//                    this.close();
-//                } );
-//                stage.focusedProperty().addListener( ( ov, t, t1 ) -> {
-//                    if( t1 )// If you just gained focus
-//                        displayService.setActiveDisplay( getDisplay() );
-//                } );
+            frame.setVisible(true);
+//          stage.setScene( scene );
+//          stage.setOnCloseRequest( event -> {
+//              getDisplay().close();
+//              this.close();
+//          } );
+//          stage.focusedProperty().addListener( ( ov, t, t1 ) -> {
+//              if( t1 )// If you just gained focus
+//                  displayService.setActiveDisplay( getDisplay() );
+//          } );
 
-                new JavaFXMenuCreator().createMenus( menus.getMenu( "SciView" ), menuBar );
+            new JavaFXMenuCreator().createMenus( menus.getMenu( "SciView" ), menuBar );
 
-//                stage.show();
+//          stage.show();
 
-                latch.countDown();
-            } );
+            latch.countDown();
+        } );
 
-            try {
-                latch.await();
-            } catch( InterruptedException e1 ) {
-                e1.printStackTrace();
-            }
-
-            // window width and window height get ignored by the renderer if it is embedded.
-            // dimensions are determined from the SceneryPanel, then.
-            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(),
-                                                  getWindowWidth(), getWindowHeight(),
-                                                  sceneryPanel[0] ) );
-            getLogger().info("panel size: " + sceneryPanel[0].getWidth() + "," + sceneryPanel[0].getHeight());
-        } else {
-            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), getWindowWidth(), getWindowHeight()) );
+        try {
+            latch.await();
+        } catch( InterruptedException e1 ) {
+            e1.printStackTrace();
         }
+
+        // window width and window height get ignored by the renderer if it is embedded.
+        // dimensions are determined from the SceneryPanel, then.
+        setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(),
+                                              getWindowWidth(), getWindowHeight(),
+                                              sceneryPanel[0] ) );
+        getLogger().info("panel size: " + sceneryPanel[0].getWidth() + "," + sceneryPanel[0].getHeight());
 
         // Enable push rendering by default
         getRenderer().setPushMode( true );
