@@ -41,6 +41,8 @@ import graphics.scenery.controls.behaviours.ArcballCameraControl;
 import graphics.scenery.controls.behaviours.FPSCameraControl;
 import graphics.scenery.controls.behaviours.MovementCommand;
 import graphics.scenery.controls.behaviours.SelectCommand;
+import graphics.scenery.utils.SceneryFXPanel;
+import graphics.scenery.utils.SceneryJPanel;
 import graphics.scenery.utils.SceneryPanel;
 import graphics.scenery.utils.Statistics;
 import graphics.scenery.volumes.Volume;
@@ -88,6 +90,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.thread.ThreadService;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.InputTrigger;
+import org.scijava.ui.swing.menu.SwingJMenuBarCreator;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.ColorRGBA;
 import org.scijava.util.Colors;
@@ -172,8 +175,7 @@ public class SciView extends SceneryBase {
     /**
      * JavaFX UI
      */
-    private boolean useJavaFX = true;
-    SceneryPanel imagePanel = null;
+    private boolean useJavaFX = false;
 
     /**
      * Speeds for input controls
@@ -222,13 +224,14 @@ public class SciView extends SceneryBase {
         }
 
         JFrame frame = new JFrame("SciView");
-        final JFXPanel fxPanel = new JFXPanel();
-        frame.add(fxPanel);
         frame.setSize(getWindowWidth(), getWindowHeight());
         frame.setLocation(x, y);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         if( useJavaFX ) {
+            final JFXPanel fxPanel = new JFXPanel();
+            frame.add(fxPanel);
+
             CountDownLatch latch = new CountDownLatch( 1 );
 
             PlatformImpl.startup( () -> {
@@ -243,7 +246,7 @@ public class SciView extends SceneryBase {
                 statusLabel = new Label( "SciView - press U for usage help" );
                 statusLabel.setVisible(false);
 
-               sceneryPanel[0] = new SceneryPanel(100, 100);
+                final SceneryFXPanel panel = new SceneryFXPanel(100, 100);
 
                 Image loadingImage = new Image(this.getClass().getResourceAsStream("sciview-logo.png"), 600, 200, true, true);
                 ImageView loadingImageView = new ImageView(loadingImage);
@@ -262,11 +265,11 @@ public class SciView extends SceneryBase {
                 loadingLabel.prefWidthProperty().bind(pane.widthProperty());
                 loadingLabel.setAlignment(Pos.CENTER);
 
-                GridPane.setHgrow( sceneryPanel[0], Priority.ALWAYS );
-                GridPane.setVgrow( sceneryPanel[0], Priority.ALWAYS );
+                GridPane.setHgrow( panel, Priority.ALWAYS );
+                GridPane.setVgrow( panel, Priority.ALWAYS );
 
-                GridPane.setFillHeight( sceneryPanel[0], true );
-                GridPane.setFillWidth( sceneryPanel[0], true );
+                GridPane.setFillHeight( panel, true );
+                GridPane.setFillWidth( panel, true );
 
                 GridPane.setHgrow( statusLabel, Priority.ALWAYS );
                 GridPane.setHalignment( statusLabel, HPos.CENTER );
@@ -285,7 +288,7 @@ public class SciView extends SceneryBase {
 
                 menuBar = new MenuBar();
                 pane.add( menuBar, 1, 1 );
-                pane.add( sceneryPanel[0], 1, 2 );
+                pane.add( panel, 1, 2 );
                 pane.add( statusLabel, 1, 3 );
                 stackPane.getChildren().addAll(pane, loadingLabel);
 
@@ -296,8 +299,8 @@ public class SciView extends SceneryBase {
                 position.setDisable(true);
                 contextMenu.getItems().addAll(title, position);
 
-                sceneryPanel[0].setOnContextMenuRequested(event -> {
-                    final Point2D localPosition = sceneryPanel[0].sceneToLocal(event.getSceneX(), event.getSceneY());
+                panel.setOnContextMenuRequested(event -> {
+                    final Point2D localPosition = panel.sceneToLocal(event.getSceneX(), event.getSceneY());
                     final List<Scene.RaycastResult> matches = camera.getNodesForScreenSpacePosition((int)localPosition.getX(), (int)localPosition.getY());
                     if(matches.size() > 0) {
                         final Node firstMatch = matches.get(0).getNode();
@@ -307,14 +310,16 @@ public class SciView extends SceneryBase {
                         title.setText("(no matches)");
                         position.setText("");
                     }
-                    contextMenu.show(sceneryPanel[0], event.getScreenX(), event.getScreenY());
+                    contextMenu.show(panel, event.getScreenX(), event.getScreenY());
                 });
 
-                sceneryPanel[0].setOnMouseClicked(event -> {
+                panel.setOnMouseClicked(event -> {
                     if(event.getButton() == MouseButton.PRIMARY) {
                         contextMenu.hide();
                     }
                 });
+
+                sceneryPanel[0] = panel;
 
                 javafx.scene.Scene scene = new javafx.scene.Scene( stackPane );
                 fxPanel.setScene(scene);
@@ -346,17 +351,32 @@ public class SciView extends SceneryBase {
             }
 
             // window width and window height get ignored by the renderer if it is embedded.
-            // dimensions are determined from the SceneryPanel, then.
+            // dimensions are determined from the SceneryFXPanel, then.
             setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(),
                                                   getWindowWidth(), getWindowHeight(),
                                                   sceneryPanel[0] ) );
-            getLogger().info("panel size: " + sceneryPanel[0].getWidth() + "," + sceneryPanel[0].getHeight());
+            getLogger().info("panel size: " + sceneryPanel[0].getPanelWidth() + "," + sceneryPanel[0].getPanelHeight());
         } else {
-            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(), getWindowWidth(), getWindowHeight()) );
+            getLogger().info("Using Swing");
+            final JPanel p = new JPanel(new BorderLayout(0, 0));
+            final SceneryJPanel panel = new SceneryJPanel();
+            final JMenuBar swingMenuBar = new JMenuBar();
+            new SwingJMenuBarCreator().createMenus(menus.getMenu("SciView"), swingMenuBar);
+            frame.setJMenuBar(swingMenuBar);
+            p.setBackground(java.awt.Color.GREEN);
+            p.add(panel, BorderLayout.CENTER);
+            frame.add(p);
+            frame.setVisible(true);
+            sceneryPanel[0] = panel;
+
+            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(),
+                    getWindowWidth(), getWindowHeight(),
+                    sceneryPanel[0]) );
+            getLogger().info("Created renderer");
         }
 
         // Enable push rendering by default
-        getRenderer().setPushMode( true );
+//        getRenderer().setPushMode( true );
 
         getHub().add( SceneryElement.Renderer, getRenderer() );
 
@@ -393,28 +413,32 @@ public class SciView extends SceneryBase {
 
         animations = new LinkedList<>();
 
-        Platform.runLater(() -> {
-            while(!getRenderer().getFirstImageReady()) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+        if(useJavaFX) {
+            Platform.runLater(() -> {
+                while (!getRenderer().getFirstImageReady()) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
-            }
 
-            // fade out loading screen, show status bar
-            FadeTransition ft = new FadeTransition(Duration.millis(500), loadingLabel);
-            ft.setFromValue(1.0);
-            ft.setToValue(0.0);
-            ft.setCycleCount(1);
-            ft.setInterpolator(Interpolator.EASE_OUT);
-            ft.setOnFinished(event -> {
-                loadingLabel.setVisible(false);
-                statusLabel.setVisible(true);
+                // fade out loading screen, show status bar
+                FadeTransition ft = new FadeTransition(Duration.millis(500), loadingLabel);
+                ft.setFromValue(1.0);
+                ft.setToValue(0.0);
+                ft.setCycleCount(1);
+                ft.setInterpolator(Interpolator.EASE_OUT);
+                ft.setOnFinished(event -> {
+                    loadingLabel.setVisible(false);
+                    statusLabel.setVisible(true);
+                });
+
+                ft.play();
             });
-
-            ft.play();
-        });
+        } else {
+            getLogger().info("Done initializing SciView");
+        }
     }
 
     public void setStatusText(String text) {
