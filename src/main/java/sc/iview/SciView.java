@@ -376,7 +376,7 @@ public class SciView extends SceneryBase {
         }
 
         // Enable push rendering by default
-//        getRenderer().setPushMode( true );
+        getRenderer().setPushMode( true );
 
         getHub().add( SceneryElement.Renderer, getRenderer() );
 
