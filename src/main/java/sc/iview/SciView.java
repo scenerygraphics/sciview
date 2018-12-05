@@ -355,9 +355,7 @@ public class SciView extends SceneryBase {
             setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(),
                                                   getWindowWidth(), getWindowHeight(),
                                                   sceneryPanel[0] ) );
-            getLogger().info("panel size: " + sceneryPanel[0].getPanelWidth() + "," + sceneryPanel[0].getPanelHeight());
         } else {
-            getLogger().info("Using Swing");
             final JPanel p = new JPanel(new BorderLayout(0, 0));
             final SceneryJPanel panel = new SceneryJPanel();
             final JMenuBar swingMenuBar = new JMenuBar();
@@ -372,7 +370,6 @@ public class SciView extends SceneryBase {
             setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(),
                     getWindowWidth(), getWindowHeight(),
                     sceneryPanel[0]) );
-            getLogger().info("Created renderer");
         }
 
         // Enable push rendering by default
