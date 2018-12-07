@@ -214,6 +214,29 @@ public class SciView extends SceneryBase {
         return getInputHandler();
     }
 
+    public class TransparentSlider extends JSlider {
+
+        public TransparentSlider() {
+            // Important, we taking over the filling of the
+            // component...
+            setOpaque(false);
+            setBackground(java.awt.Color.DARK_GRAY);
+            setForeground(java.awt.Color.LIGHT_GRAY);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2d = (Graphics2D) g.create();
+            g2d.setColor(getBackground());
+            g2d.setComposite(AlphaComposite.SrcOver.derive(0.9f));
+            g2d.fillRect(0, 0, getWidth(), getHeight());
+            g2d.dispose();
+
+            super.paintComponent(g);
+        }
+
+    }
+
     private JSlider timepointSlider = null;
 
     @SuppressWarnings("restriction") @Override public void init() {
@@ -364,7 +387,10 @@ public class SciView extends SceneryBase {
         } else {
             final JPanel p = new JPanel(new BorderLayout(0, 0));
             final SceneryJPanel panel = new SceneryJPanel();
-            timepointSlider = new JSlider(JSlider.HORIZONTAL, 0, 1, 1);
+            timepointSlider = new JSlider();
+            timepointSlider.setPaintTicks(true);
+            timepointSlider.setSnapToTicks(true);
+            timepointSlider.setPaintLabels(true);
             final JMenuBar swingMenuBar = new JMenuBar();
             new SwingJMenuBarCreator().createMenus(menus.getMenu("SciView"), swingMenuBar);
             frame.setJMenuBar(swingMenuBar);
@@ -954,9 +980,16 @@ public class SciView extends SceneryBase {
         targetArcball.setTarget( n == null ? () -> new GLVector( 0, 0, 0 ) : n::getPosition);
         eventService.publish( new NodeActivatedEvent( activeNode ) );
         if(n instanceof BDVVolume) {
+            timepointSlider.setOpaque(false);
             timepointSlider.setMinimum(0);
             timepointSlider.setMaximum(((BDVVolume) n).getMaxTimepoint());
             timepointSlider.setVisible(true);
+            final int spacing = (int)Math.ceil(((BDVVolume) n).getMaxTimepoint()/10);
+            timepointSlider.setMajorTickSpacing(spacing);
+            timepointSlider.setMinorTickSpacing(spacing/4);
+            timepointSlider.setPaintTicks(true);
+            timepointSlider.setLabelTable(timepointSlider.createStandardLabels(spacing));
+            timepointSlider.setValue(((BDVVolume) n).getCurrentTimepoint());
 
             timepointSlider.addChangeListener(e -> ((BDVVolume) n).goToTimePoint(timepointSlider.getValue()));
         } else {
@@ -1052,6 +1085,7 @@ public class SciView extends SceneryBase {
 
     public graphics.scenery.Node addBDVVolume( String source ) {
         final VolumeViewerOptions opts = new VolumeViewerOptions();
+        opts.maxCacheSizeInMB(Integer.parseInt(System.getProperty("scenery.BDVVolume.maxCacheSize", "512")));
         final BDVVolume v = new BDVVolume(source, opts);
         v.setScale(new GLVector(0.01f, 0.01f, 0.01f));
 
