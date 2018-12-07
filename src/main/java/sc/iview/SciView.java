@@ -46,6 +46,7 @@ import graphics.scenery.utils.SceneryJPanel;
 import graphics.scenery.utils.SceneryPanel;
 import graphics.scenery.utils.Statistics;
 import graphics.scenery.volumes.Volume;
+import graphics.scenery.volumes.bdv.BDVVolume;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.application.Platform;
@@ -103,8 +104,11 @@ import sc.iview.javafx.JavaFXMenuCreator;
 import sc.iview.process.MeshConverter;
 import sc.iview.vector.ClearGLVector3;
 import sc.iview.vector.Vector3;
+import tpietzsch.example2.VolumeViewerOptions;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -198,7 +202,7 @@ public class SciView extends SceneryBase {
     private final SceneryPanel[] sceneryPanel = { null };
 
     public SciView( Context context ) {
-        super( "SciView", 800, 600, false, context );
+        super( "SciView", 1280, 720, false, context );
         context.inject( this );
     }
 
@@ -210,6 +214,8 @@ public class SciView extends SceneryBase {
         return getInputHandler();
     }
 
+    private JSlider timepointSlider = null;
+
     @SuppressWarnings("restriction") @Override public void init() {
         int x, y;
 
@@ -217,7 +223,7 @@ public class SciView extends SceneryBase {
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
             x = screenSize.width/2 - getWindowWidth()/2;
-            y = screenSize.height/2 - getWindowWidth()/2;
+            y = screenSize.height/2 - getWindowHeight()/2;
         } catch(HeadlessException e) {
             x = 10;
             y = 10;
@@ -358,11 +364,17 @@ public class SciView extends SceneryBase {
         } else {
             final JPanel p = new JPanel(new BorderLayout(0, 0));
             final SceneryJPanel panel = new SceneryJPanel();
+            timepointSlider = new JSlider(JSlider.HORIZONTAL, 0, 1, 1);
             final JMenuBar swingMenuBar = new JMenuBar();
             new SwingJMenuBarCreator().createMenus(menus.getMenu("SciView"), swingMenuBar);
             frame.setJMenuBar(swingMenuBar);
+            p.setLayout(new OverlayLayout(p));
             p.setBackground(java.awt.Color.GREEN);
+            p.add(timepointSlider);
             p.add(panel, BorderLayout.CENTER);
+            timepointSlider.setAlignmentY(1.0f);
+            timepointSlider.setAlignmentX(1.0f);
+            timepointSlider.setVisible(false);
             frame.add(p);
             frame.setVisible(true);
             sceneryPanel[0] = panel;
@@ -819,6 +831,11 @@ public class SciView extends SceneryBase {
     }
 
     public void open( final String source ) throws IOException {
+        if(source.endsWith(".xml")) {
+            addBDVVolume(source);
+            return;
+        }
+
         final Object data = io.open( source );
         if( data instanceof net.imagej.mesh.Mesh ) addMesh( ( net.imagej.mesh.Mesh ) data );
         else if( data instanceof graphics.scenery.Mesh ) addMesh( ( graphics.scenery.Mesh ) data );
@@ -936,6 +953,18 @@ public class SciView extends SceneryBase {
         activeNode = n;
         targetArcball.setTarget( n == null ? () -> new GLVector( 0, 0, 0 ) : n::getPosition);
         eventService.publish( new NodeActivatedEvent( activeNode ) );
+        if(n instanceof BDVVolume) {
+            timepointSlider.setMinimum(0);
+            timepointSlider.setMaximum(((BDVVolume) n).getMaxTimepoint());
+            timepointSlider.setVisible(true);
+
+            timepointSlider.addChangeListener(e -> ((BDVVolume) n).goToTimePoint(timepointSlider.getValue()));
+        } else {
+            for (ChangeListener changeListener : timepointSlider.getChangeListeners()) {
+                timepointSlider.removeChangeListener(changeListener);
+            }
+            timepointSlider.setVisible(false);
+        }
         return activeNode;
     }
 
@@ -1019,6 +1048,17 @@ public class SciView extends SceneryBase {
             voxelDims[d] = ( float ) image.axis( d ).averageScale( 0, 1 );
         }
         return addVolume( image, voxelDims );
+    }
+
+    public graphics.scenery.Node addBDVVolume( String source ) {
+        final VolumeViewerOptions opts = new VolumeViewerOptions();
+        final BDVVolume v = new BDVVolume(source, opts);
+        v.setScale(new GLVector(0.01f, 0.01f, 0.01f));
+
+        getScene().addChild(v);
+        setActiveNode(v);
+
+        return v;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" }) public graphics.scenery.Node addVolume( Dataset image,
