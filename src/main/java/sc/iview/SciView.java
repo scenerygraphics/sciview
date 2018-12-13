@@ -33,8 +33,8 @@ import cleargl.GLVector;
 import com.jogamp.opengl.math.Quaternion;
 import com.sun.javafx.application.PlatformImpl;
 import coremem.enums.NativeTypeEnum;
-import graphics.scenery.*;
 import graphics.scenery.Box;
+import graphics.scenery.*;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.controls.InputHandler;
 import graphics.scenery.controls.behaviours.ArcballCameraControl;
@@ -51,12 +51,12 @@ import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
-import javafx.geometry.*;
 import javafx.geometry.Insets;
-import javafx.scene.control.*;
+import javafx.geometry.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
@@ -106,17 +106,18 @@ import sc.iview.vector.ClearGLVector3;
 import sc.iview.vector.Vector3;
 import tpietzsch.example2.VolumeViewerOptions;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.util.*;
 import java.util.List;
 import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
@@ -197,6 +198,8 @@ public class SciView extends SceneryBase {
 
     private Label statusLabel;
     private Label loadingLabel;
+    private JLabel splashLabel;
+    private SceneryJPanel panel;
     private StackPane stackPane;
     private MenuBar menuBar;
     private final SceneryPanel[] sceneryPanel = { null };
@@ -386,7 +389,7 @@ public class SciView extends SceneryBase {
                                                   sceneryPanel[0] ) );
         } else {
             final JPanel p = new JPanel(new BorderLayout(0, 0));
-            final SceneryJPanel panel = new SceneryJPanel();
+            panel = new SceneryJPanel();
             timepointSlider = new JSlider();
             timepointSlider.setPaintTicks(true);
             timepointSlider.setSnapToTicks(true);
@@ -394,13 +397,27 @@ public class SciView extends SceneryBase {
             final JMenuBar swingMenuBar = new JMenuBar();
             new SwingJMenuBarCreator().createMenus(menus.getMenu("SciView"), swingMenuBar);
             frame.setJMenuBar(swingMenuBar);
+
+            BufferedImage splashImage;
+            try {
+                splashImage = ImageIO.read(this.getClass().getResourceAsStream("sciview-logo.png"));
+            } catch (IOException e) {
+              getLogger().warn("Could not read splash image 'sciview-logo.png'");
+              splashImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+            }
+            splashLabel = new JLabel(new ImageIcon(splashImage.getScaledInstance(500, 200, java.awt.Image.SCALE_SMOOTH)));
+            splashLabel.setBackground(new java.awt.Color(50, 48, 47));
+
             p.setLayout(new OverlayLayout(p));
-            p.setBackground(java.awt.Color.GREEN);
+            p.setBackground(new java.awt.Color(50, 48, 47));
+            p.add(splashLabel, BorderLayout.CENTER);
             p.add(timepointSlider);
             p.add(panel, BorderLayout.CENTER);
             timepointSlider.setAlignmentY(1.0f);
             timepointSlider.setAlignmentX(1.0f);
             timepointSlider.setVisible(false);
+            panel.setVisible(false);
+
             frame.add(p);
             frame.setVisible(true);
             sceneryPanel[0] = panel;
@@ -472,7 +489,21 @@ public class SciView extends SceneryBase {
                 ft.play();
             });
         } else {
-            getLogger().info("Done initializing SciView");
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    while (!getSceneryRenderer().getFirstImageReady()) {
+                        getLogger().info("Waiting for renderer");
+                        Thread.sleep(100);
+                    }
+
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                }
+
+                panel.setVisible(true);
+                splashLabel.setVisible(false);
+                getLogger().info("Done initializing SciView");
+            });
         }
     }
 
@@ -1091,6 +1122,7 @@ public class SciView extends SceneryBase {
 
         getScene().addChild(v);
         setActiveNode(v);
+        v.goToTimePoint(0);
 
         return v;
     }
