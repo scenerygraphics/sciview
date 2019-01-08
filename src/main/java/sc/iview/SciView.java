@@ -203,6 +203,7 @@ public class SciView extends SceneryBase {
     private StackPane stackPane;
     private MenuBar menuBar;
     private final SceneryPanel[] sceneryPanel = { null };
+    private JSlider timepointSlider = null;
 
     public SciView( Context context ) {
         super( "SciView", 1280, 720, false, context );
@@ -239,8 +240,6 @@ public class SciView extends SceneryBase {
         }
 
     }
-
-    private JSlider timepointSlider = null;
 
     @SuppressWarnings("restriction") @Override public void init() {
         int x, y;
@@ -737,19 +736,19 @@ public class SciView extends SceneryBase {
         getInputHandler().addKeyBinding( "move_forward_scroll", "scroll" );
     }
 
-    public graphics.scenery.Node addBox() {
+    public Node addBox() {
         return addBox( new ClearGLVector3( 0.0f, 0.0f, 0.0f ) );
     }
 
-    public graphics.scenery.Node addBox( Vector3 position ) {
+    public Node addBox( Vector3 position ) {
         return addBox( position, new ClearGLVector3( 1.0f, 1.0f, 1.0f ) );
     }
 
-    public graphics.scenery.Node addBox( Vector3 position, Vector3 size ) {
+    public Node addBox( Vector3 position, Vector3 size ) {
         return addBox( position, size, DEFAULT_COLOR, false );
     }
 
-    public graphics.scenery.Node addBox( final Vector3 position, final Vector3 size, final ColorRGB color,
+    public Node addBox( final Vector3 position, final Vector3 size, final ColorRGB color,
                                          final boolean inside ) {
         // TODO: use a material from the current palate by default
         final Material boxmaterial = new Material();
@@ -764,15 +763,15 @@ public class SciView extends SceneryBase {
         return addNode( box );
     }
 
-    public graphics.scenery.Node addSphere() {
+    public Node addSphere() {
         return addSphere( new ClearGLVector3( 0.0f, 0.0f, 0.0f ), 1 );
     }
 
-    public graphics.scenery.Node addSphere( Vector3 position, float radius ) {
+    public Node addSphere( Vector3 position, float radius ) {
         return addSphere( position, radius, DEFAULT_COLOR );
     }
 
-    public graphics.scenery.Node addSphere( final Vector3 position, final float radius, final ColorRGB color ) {
+    public Node addSphere( final Vector3 position, final float radius, final ColorRGB color ) {
         final Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
         material.setDiffuse( vector( color ) );
@@ -785,19 +784,19 @@ public class SciView extends SceneryBase {
         return addNode( sphere );
     }
 
-    public graphics.scenery.Node addLine() {
+    public Node addLine() {
         return addLine( new ClearGLVector3( 0.0f, 0.0f, 0.0f ), new ClearGLVector3( 0.0f, 0.0f, 0.0f ) );
     }
 
-    public graphics.scenery.Node addLine( Vector3 start, Vector3 stop ) {
+    public Node addLine( Vector3 start, Vector3 stop ) {
         return addLine( start, stop, DEFAULT_COLOR );
     }
 
-    public graphics.scenery.Node addLine( Vector3 start, Vector3 stop, ColorRGB color ) {
+    public Node addLine( Vector3 start, Vector3 stop, ColorRGB color ) {
         return addLine( new Vector3[] { start, stop }, color, 0.1f );
     }
 
-    public graphics.scenery.Node addLine( final Vector3[] points, final ColorRGB color, final double edgeWidth ) {
+    public Node addLine( final Vector3[] points, final ColorRGB color, final double edgeWidth ) {
         final Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
         material.setDiffuse( vector( color ) );
@@ -816,7 +815,7 @@ public class SciView extends SceneryBase {
         return addNode( line );
     }
 
-    public graphics.scenery.Node addPointLight() {
+    public Node addPointLight() {
         final Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
         material.setDiffuse( new GLVector( 0.0f, 1.0f, 0.0f ) );
@@ -922,11 +921,11 @@ public class SciView extends SceneryBase {
         }
     }
 
-    public graphics.scenery.Node addPointCloud( Collection<? extends RealLocalizable> points ) {
+    public Node addPointCloud( Collection<? extends RealLocalizable> points ) {
         return addPointCloud( points, "PointCloud" );
     }
 
-    public graphics.scenery.Node addPointCloud( final Collection<? extends RealLocalizable> points,
+    public Node addPointCloud( final Collection<? extends RealLocalizable> points,
                                                 final String name ) {
         final float[] flatVerts = new float[points.size() * 3];
         int k = 0;
@@ -961,7 +960,7 @@ public class SciView extends SceneryBase {
         return addNode( pointCloud );
     }
 
-    public graphics.scenery.Node addPointCloud( final PointCloud pointCloud ) {
+    public Node addPointCloud( final PointCloud pointCloud ) {
         pointCloud.setupPointCloud();
         pointCloud.getMaterial().setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
         pointCloud.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
@@ -971,7 +970,7 @@ public class SciView extends SceneryBase {
         return addNode( pointCloud );
     }
 
-    public graphics.scenery.Node addNode( final Node n ) {
+    public Node addNode( final Node n ) {
         getScene().addChild( n );
         setActiveNode( n );
         updateFloorPosition();
@@ -979,7 +978,7 @@ public class SciView extends SceneryBase {
         return n;
     }
 
-    public graphics.scenery.Node addMesh( final Mesh scMesh ) {
+    public Node addMesh( final Mesh scMesh ) {
         final Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
         material.setDiffuse( new GLVector( 0.0f, 1.0f, 0.0f ) );
@@ -991,7 +990,7 @@ public class SciView extends SceneryBase {
         return addNode( scMesh );
     }
 
-    public graphics.scenery.Node addMesh( net.imagej.mesh.Mesh mesh ) {
+    public Node addMesh( net.imagej.mesh.Mesh mesh ) {
         Mesh scMesh = MeshConverter.toScenery( mesh );
 
         return addMesh( scMesh );
@@ -1106,7 +1105,7 @@ public class SciView extends SceneryBase {
         getScene().addChild( node );
     }
 
-    public graphics.scenery.Node addVolume( Dataset image ) {
+    public Node addVolume( Dataset image ) {
         float[] voxelDims = new float[image.numDimensions()];
         for( int d = 0; d < voxelDims.length; d++ ) {
             voxelDims[d] = ( float ) image.axis( d ).averageScale( 0, 1 );
@@ -1114,7 +1113,7 @@ public class SciView extends SceneryBase {
         return addVolume( image, voxelDims );
     }
 
-    public graphics.scenery.Node addBDVVolume( String source ) {
+    public Node addBDVVolume( String source ) {
         final VolumeViewerOptions opts = new VolumeViewerOptions();
         opts.maxCacheSizeInMB(Integer.parseInt(System.getProperty("scenery.BDVVolume.maxCacheSize", "512")));
         final BDVVolume v = new BDVVolume(source, opts);
@@ -1127,17 +1126,17 @@ public class SciView extends SceneryBase {
         return v;
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" }) public graphics.scenery.Node addVolume( Dataset image,
+    @SuppressWarnings({ "rawtypes", "unchecked" }) public Node addVolume( Dataset image,
                                                                                            float[] voxelDimensions ) {
         return addVolume( ( IterableInterval ) Views.flatIterable( image.getImgPlus() ), image.getName(),
                           voxelDimensions );
     }
 
-    public <T extends RealType<T>> graphics.scenery.Node addVolume( IterableInterval<T> image ) {
+    public <T extends RealType<T>> Node addVolume( IterableInterval<T> image ) {
         return addVolume( image, "Volume" );
     }
 
-    public <T extends RealType<T>> graphics.scenery.Node addVolume( IterableInterval<T> image, String name ) {
+    public <T extends RealType<T>> Node addVolume( IterableInterval<T> image, String name ) {
         return addVolume( image, name, 1, 1, 1 );
     }
 
@@ -1175,7 +1174,7 @@ public class SciView extends SceneryBase {
         }
     }
 
-    public <T extends RealType<T>> graphics.scenery.Node addVolume( IterableInterval<T> image, String name,
+    public <T extends RealType<T>> Node addVolume( IterableInterval<T> image, String name,
                                                                     float... voxelDimensions ) {
         log.debug( "Add Volume" );
 
@@ -1230,7 +1229,7 @@ public class SciView extends SceneryBase {
         return v;
     }
 
-    public <T extends RealType<T>> graphics.scenery.Node updateVolume( IterableInterval<T> image, String name,
+    public <T extends RealType<T>> Node updateVolume( IterableInterval<T> image, String name,
                                                                        float[] voxelDimensions, Volume v ) {
         log.debug( "Update Volume" );
 
