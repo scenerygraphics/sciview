@@ -422,9 +422,14 @@ public class SciView extends SceneryBase {
             JPanel nodepropPanel = nodePropertyEditor.getComponent();
             nodepropPanel.setVisible(true);
 
-            JSplitPane sl = new JSplitPane(SwingConstants.VERTICAL, nodepropPanel, p);
+            JSplitPane sl = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
+                                            new JScrollPane( nodePropertyEditor.getTree() ), //
+                                            p);
+            JSplitPane sl2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
+                    sl,
+                    new JScrollPane( nodePropertyEditor.getProps() ));
 
-            frame.add(sl);
+            frame.add(sl2);
             frame.setVisible(true);
             sceneryPanel[0] = panel;
 

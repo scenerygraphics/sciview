@@ -99,6 +99,14 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     private JTree tree;
     private JPanel props;
 
+    public JPanel getProps() {
+        return props;
+    }
+
+    public JTree getTree() {
+        return tree;
+    }
+
     public NodePropertyEditor(final SciView sciView ) {
         this.sciView = sciView;
         sciView.getScijavaContext().inject( this );
