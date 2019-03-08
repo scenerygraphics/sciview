@@ -95,6 +95,7 @@ import org.scijava.ui.swing.menu.SwingJMenuBarCreator;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.ColorRGBA;
 import org.scijava.util.Colors;
+import sc.iview.commands.edit.NodePropertyEditor;
 import sc.iview.controls.behaviours.CameraTranslateControl;
 import sc.iview.controls.behaviours.NodeTranslateControl;
 import sc.iview.event.NodeActivatedEvent;
@@ -258,6 +259,7 @@ public class SciView extends SceneryBase {
         frame.setSize(getWindowWidth(), getWindowHeight());
         frame.setLocation(x, y);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        final NodePropertyEditor nodePropertyEditor = new NodePropertyEditor( this );
 
         if( useJavaFX ) {
             final JFXPanel fxPanel = new JFXPanel();
@@ -417,7 +419,12 @@ public class SciView extends SceneryBase {
             timepointSlider.setVisible(false);
             panel.setVisible(false);
 
-            frame.add(p);
+            JPanel nodepropPanel = nodePropertyEditor.getComponent();
+            nodepropPanel.setVisible(true);
+
+            JSplitPane sl = new JSplitPane(SwingConstants.VERTICAL, nodepropPanel, p);
+
+            frame.add(sl);
             frame.setVisible(true);
             sceneryPanel[0] = panel;
 
@@ -501,9 +508,11 @@ public class SciView extends SceneryBase {
 
                 panel.setVisible(true);
                 splashLabel.setVisible(false);
+                nodePropertyEditor.rebuildTree();
                 getLogger().info("Done initializing SciView");
             });
         }
+
     }
 
     public void setStatusText(String text) {

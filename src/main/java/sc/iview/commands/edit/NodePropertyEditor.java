@@ -105,13 +105,16 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     }
 
     /** Creates and displays a window containing the scene editor. */
-    public void show() {
+    public JFrame show() {
         final JFrame frame = new JFrame( "Node Properties" );
+        frame.setLocation(200, 200);
+
         frame.setContentPane( getComponent() );
         // FIXME: Why doesn't the frame disappear when closed?
         frame.setDefaultCloseOperation( WindowConstants.DISPOSE_ON_CLOSE );
         frame.setSize( 600, 400 );
-        frame.setVisible( true );
+        return frame;
+//        frame.setVisible( true );
     }
 
     @Override
@@ -232,7 +235,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     }
 
     /** Rebuilds the tree to match the state of the scene. */
-    private void rebuildTree() {
+    public void rebuildTree() {
         treeModel.setRoot( new SceneryTreeNode( sciView ) );
 
 //        treeModel.reload();
