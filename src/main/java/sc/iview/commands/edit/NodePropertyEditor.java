@@ -113,7 +113,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     }
 
     /** Creates and displays a window containing the scene editor. */
-    public JFrame show() {
+    public void show() {
         final JFrame frame = new JFrame( "Node Properties" );
         frame.setLocation(200, 200);
 
@@ -121,8 +121,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         // FIXME: Why doesn't the frame disappear when closed?
         frame.setDefaultCloseOperation( WindowConstants.DISPOSE_ON_CLOSE );
         frame.setSize( 600, 400 );
-        return frame;
-//        frame.setVisible( true );
+        frame.setVisible( true );
     }
 
     @Override

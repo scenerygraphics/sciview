@@ -248,7 +248,7 @@ public class SciView extends SceneryBase {
         try {
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
-            x = screenSize.width/2 - getWindowWidth()/2;
+            x = screenSize.width/2 - getWindowWidth()/2 - 300;
             y = screenSize.height/2 - getWindowHeight()/2;
         } catch(HeadlessException e) {
             x = 10;
@@ -256,7 +256,7 @@ public class SciView extends SceneryBase {
         }
 
         JFrame frame = new JFrame("SciView");
-        frame.setSize(getWindowWidth(), getWindowHeight());
+        frame.setSize(getWindowWidth()+600, getWindowHeight());
         frame.setLocation(x, y);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         final NodePropertyEditor nodePropertyEditor = new NodePropertyEditor( this );
@@ -424,10 +424,15 @@ public class SciView extends SceneryBase {
 
             JSplitPane sl = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
                                             new JScrollPane( nodePropertyEditor.getTree() ), //
-                                            p);
+                                            p );
+            sl.setDividerLocation( 200 );
+
+//            sl.setOneTouchExpandable(true);
             JSplitPane sl2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
                     sl,
                     new JScrollPane( nodePropertyEditor.getProps() ));
+//            sl2.setOneTouchExpandable(true);
+            sl2.setDividerLocation( 1000 );
 
             frame.add(sl2);
             frame.setVisible(true);
@@ -461,7 +466,7 @@ public class SciView extends SceneryBase {
 
         Camera cam = new DetachedHeadCamera();
         cam.setPosition( new GLVector( 0.0f, 5.0f, 5.0f ) );
-        cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 1000.0f );
+        cam.perspectiveCamera( 50.0f, getWindowWidth()+600, getWindowHeight(), 0.1f, 1000.0f );
         //cam.setTarget( new GLVector( 0, 0, 0 ) );
         //cam.setTargeted( true );
         cam.setActive( true );
