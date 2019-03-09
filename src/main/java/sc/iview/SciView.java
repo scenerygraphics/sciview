@@ -520,8 +520,8 @@ public class SciView extends SceneryBase {
                 } catch (InterruptedException e) {
                 }
 
-                panel.setVisible(true);
                 splashLabel.setVisible(false);
+                panel.setVisible(true);
                 nodePropertyEditor.rebuildTree();
                 getLogger().info("Done initializing SciView");
             });
