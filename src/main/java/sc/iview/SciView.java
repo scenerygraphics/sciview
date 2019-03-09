@@ -256,7 +256,7 @@ public class SciView extends SceneryBase {
         }
 
         JFrame frame = new JFrame("SciView");
-        frame.setSize(getWindowWidth()+600, getWindowHeight());
+        frame.setSize(getWindowWidth(), getWindowHeight());
         frame.setLocation(x, y);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         final NodePropertyEditor nodePropertyEditor = new NodePropertyEditor( this );
@@ -422,20 +422,24 @@ public class SciView extends SceneryBase {
             JPanel nodepropPanel = nodePropertyEditor.getComponent();
             nodepropPanel.setVisible(true);
 
-            JSplitPane sl = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
-                                            new JScrollPane( nodePropertyEditor.getTree() ), //
-                                            p );
-            sl.setDividerLocation( 200 );
+            JTree inspectorTree = nodePropertyEditor.getTree();
+            JPanel inspectorProperties = nodePropertyEditor.getProps();
 
-//            sl.setOneTouchExpandable(true);
-            JSplitPane sl2 = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
-                    sl,
-                    new JScrollPane( nodePropertyEditor.getProps() ));
-//            sl2.setOneTouchExpandable(true);
-            sl2.setDividerLocation( 1000 );
+            JSplitPane inspector = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
+                    new JScrollPane( inspectorTree ),
+                    new JScrollPane( inspectorProperties ));
+            inspector.setDividerLocation( getWindowHeight() / 3 );
+            inspector.setContinuousLayout(true);
 
-            frame.add(sl2);
+            JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
+                    p,
+                    inspector
+                    );
+            mainSplitPane.setDividerLocation( getWindowWidth()/4 * 3 );
+
+            frame.add(mainSplitPane);
             frame.setVisible(true);
+
             sceneryPanel[0] = panel;
 
             setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(),
