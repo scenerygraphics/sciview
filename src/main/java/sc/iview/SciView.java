@@ -431,12 +431,14 @@ public class SciView extends SceneryBase {
                     new JScrollPane( inspectorProperties ));
             inspector.setDividerLocation( getWindowHeight() / 3 );
             inspector.setContinuousLayout(true);
+            inspector.setBorder(BorderFactory.createEmptyBorder());
 
             mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
                     p,
                     inspector
                     );
             mainSplitPane.setDividerLocation( getWindowWidth()/4 * 3 );
+            mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
 
             frame.add(mainSplitPane);
             frame.setVisible(true);
