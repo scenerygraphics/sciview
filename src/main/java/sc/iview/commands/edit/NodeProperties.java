@@ -53,7 +53,6 @@ public class NodeProperties implements Command {
 
     @Override
     public void run() {
-        final NodePropertyEditor nodePropertyEditor = new NodePropertyEditor( sciView );
-        nodePropertyEditor.show();
+        sciView.toggleInspectorWindow();
     }
 }
