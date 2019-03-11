@@ -203,6 +203,7 @@ public class SciView extends SceneryBase {
     private SceneryJPanel panel;
     private StackPane stackPane;
     private MenuBar menuBar;
+    private JSplitPane mainSplitPane;
     private final SceneryPanel[] sceneryPanel = { null };
     private JSlider timepointSlider = null;
 
@@ -256,6 +257,7 @@ public class SciView extends SceneryBase {
         }
 
         JFrame frame = new JFrame("SciView");
+        frame.setLayout(new BorderLayout(0, 0));
         frame.setSize(getWindowWidth(), getWindowHeight());
         frame.setLocation(x, y);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -408,16 +410,16 @@ public class SciView extends SceneryBase {
             }
             splashLabel = new JLabel(new ImageIcon(splashImage.getScaledInstance(500, 200, java.awt.Image.SCALE_SMOOTH)));
             splashLabel.setBackground(new java.awt.Color(50, 48, 47));
+            splashLabel.setOpaque(true);
 
             p.setLayout(new OverlayLayout(p));
             p.setBackground(new java.awt.Color(50, 48, 47));
-            p.add(splashLabel, BorderLayout.CENTER);
-            p.add(timepointSlider);
+            p.add(timepointSlider, BorderLayout.SOUTH);
             p.add(panel, BorderLayout.CENTER);
             timepointSlider.setAlignmentY(1.0f);
             timepointSlider.setAlignmentX(1.0f);
             timepointSlider.setVisible(false);
-            panel.setVisible(false);
+            panel.setVisible(true);
 
             JPanel nodepropPanel = nodePropertyEditor.getComponent();
             nodepropPanel.setVisible(true);
@@ -438,6 +440,10 @@ public class SciView extends SceneryBase {
             mainSplitPane.setDividerLocation( getWindowWidth()/4 * 3 );
 
             frame.add(mainSplitPane);
+
+            frame.setGlassPane(splashLabel);
+            frame.getGlassPane().setVisible(true);
+//            frame.getGlassPane().setBackground(new java.awt.Color(50, 48, 47, 255));
             frame.setVisible(true);
 
             sceneryPanel[0] = panel;
@@ -520,9 +526,8 @@ public class SciView extends SceneryBase {
                 } catch (InterruptedException e) {
                 }
 
-                splashLabel.setVisible(false);
-                panel.setVisible(true);
                 nodePropertyEditor.rebuildTree();
+                frame.getGlassPane().setVisible(false);
                 getLogger().info("Done initializing SciView");
             });
         }
