@@ -207,7 +207,6 @@ public class SciView extends SceneryBase {
     private final SceneryPanel[] sceneryPanel = { null };
     private JSlider timepointSlider = null;
     private JSplitPane inspector;
-    private JSplitPane mainSplitPane;
 
     public SciView( Context context ) {
         super( "SciView", 1280, 720, false, context );
