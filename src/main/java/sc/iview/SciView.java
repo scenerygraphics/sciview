@@ -206,6 +206,8 @@ public class SciView extends SceneryBase {
     private JSplitPane mainSplitPane;
     private final SceneryPanel[] sceneryPanel = { null };
     private JSlider timepointSlider = null;
+    private JSplitPane inspector;
+    private JSplitPane mainSplitPane;
 
     public SciView( Context context ) {
         super( "SciView", 1280, 720, false, context );
@@ -421,23 +423,24 @@ public class SciView extends SceneryBase {
             timepointSlider.setVisible(false);
             panel.setVisible(true);
 
-            JPanel nodepropPanel = nodePropertyEditor.getComponent();
-            nodepropPanel.setVisible(true);
+            nodePropertyEditor.getComponent(); // Initialize node property panel
 
             JTree inspectorTree = nodePropertyEditor.getTree();
             JPanel inspectorProperties = nodePropertyEditor.getProps();
 
-            JSplitPane inspector = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
+            inspector = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
                     new JScrollPane( inspectorTree ),
                     new JScrollPane( inspectorProperties ));
             inspector.setDividerLocation( getWindowHeight() / 3 );
             inspector.setContinuousLayout(true);
+            inspector.setBorder(BorderFactory.createEmptyBorder());
 
-            JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
+            mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
                     p,
                     inspector
                     );
             mainSplitPane.setDividerLocation( getWindowWidth()/4 * 3 );
+            mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
 
             frame.add(mainSplitPane);
 
@@ -1057,6 +1060,20 @@ public class SciView extends SceneryBase {
             timepointSlider.setVisible(false);
         }
         return activeNode;
+    }
+
+    public void toggleInspectorWindow()
+    {
+        boolean currentlyVisible = inspector.isVisible();
+        if(currentlyVisible) {
+            inspector.setVisible(false);
+            mainSplitPane.setDividerLocation(getWindowWidth());
+        }
+        else {
+            inspector.setVisible(true);
+            mainSplitPane.setDividerLocation(getWindowWidth()/4 * 3);
+        }
+
     }
 
     public synchronized void animate( int fps, Runnable action ) {
