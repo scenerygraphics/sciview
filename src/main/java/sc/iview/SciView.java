@@ -205,8 +205,8 @@ public class SciView extends SceneryBase {
     private MenuBar menuBar;
     private final SceneryPanel[] sceneryPanel = { null };
     private JSlider timepointSlider = null;
-    JSplitPane inspector;
-    JSplitPane mainSplitPane;
+    private JSplitPane inspector;
+    private JSplitPane mainSplitPane;
 
     public SciView( Context context ) {
         super( "SciView", 1280, 720, false, context );
@@ -1059,8 +1059,8 @@ public class SciView extends SceneryBase {
 
     public void toggleInspectorWindow()
     {
-        boolean currentVisibility = inspector.isVisible();
-        if(currentVisibility == true) {
+        boolean currentlyVisible = inspector.isVisible();
+        if(currentlyVisible) {
             inspector.setVisible(false);
             mainSplitPane.setDividerLocation(getWindowWidth());
         }
