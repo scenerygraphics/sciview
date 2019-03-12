@@ -26,7 +26,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.commands.edit;
+
+import static sc.iview.commands.MenuWeights.EDIT;
+import static sc.iview.commands.MenuWeights.EDIT_SCENE;
 
 import org.scijava.command.Command;
 import org.scijava.plugin.Menu;
@@ -35,23 +38,22 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
-import static sc.iview.commands.MenuWeights.*;
-
 /**
  * Command that displays a {@link NodePropertyEditor} window.
  *
  * @author Curtis Rueden
  */
 @Plugin(type = Command.class, initializer = "initValues", menuRoot = "SciView", //
-        menu = { @Menu(label = "View", weight = VIEW), //
-                 @Menu(label = "Toggle Inspector", weight = VIEW_TOGGLE_INSPECTOR) })
-public class ToggleInspector implements Command {
+        menu = { @Menu(label = "Edit", weight = EDIT), //
+                 @Menu(label = "Node Properties", weight = EDIT_SCENE) })
+public class NodeProperties implements Command {
 
     @Parameter
     private SciView sciView;
 
     @Override
     public void run() {
-        sciView.toggleInspectorWindow();
+        final NodePropertyEditor nodePropertyEditor = new NodePropertyEditor( sciView );
+        nodePropertyEditor.show();
     }
 }

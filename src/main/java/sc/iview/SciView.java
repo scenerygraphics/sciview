@@ -95,7 +95,6 @@ import org.scijava.ui.swing.menu.SwingJMenuBarCreator;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.ColorRGBA;
 import org.scijava.util.Colors;
-import sc.iview.commands.view.NodePropertyEditor;
 import sc.iview.controls.behaviours.CameraTranslateControl;
 import sc.iview.controls.behaviours.NodeTranslateControl;
 import sc.iview.event.NodeActivatedEvent;
@@ -203,10 +202,8 @@ public class SciView extends SceneryBase {
     private SceneryJPanel panel;
     private StackPane stackPane;
     private MenuBar menuBar;
-    private JSplitPane mainSplitPane;
     private final SceneryPanel[] sceneryPanel = { null };
     private JSlider timepointSlider = null;
-    private JSplitPane inspector;
 
     public SciView( Context context ) {
         super( "SciView", 1280, 720, false, context );
@@ -258,11 +255,9 @@ public class SciView extends SceneryBase {
         }
 
         JFrame frame = new JFrame("SciView");
-        frame.setLayout(new BorderLayout(0, 0));
         frame.setSize(getWindowWidth(), getWindowHeight());
         frame.setLocation(x, y);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        final NodePropertyEditor nodePropertyEditor = new NodePropertyEditor( this );
 
         if( useJavaFX ) {
             final JFXPanel fxPanel = new JFXPanel();
@@ -411,43 +406,19 @@ public class SciView extends SceneryBase {
             }
             splashLabel = new JLabel(new ImageIcon(splashImage.getScaledInstance(500, 200, java.awt.Image.SCALE_SMOOTH)));
             splashLabel.setBackground(new java.awt.Color(50, 48, 47));
-            splashLabel.setOpaque(true);
 
             p.setLayout(new OverlayLayout(p));
             p.setBackground(new java.awt.Color(50, 48, 47));
-            p.add(timepointSlider, BorderLayout.SOUTH);
+            p.add(splashLabel, BorderLayout.CENTER);
+            p.add(timepointSlider);
             p.add(panel, BorderLayout.CENTER);
             timepointSlider.setAlignmentY(1.0f);
             timepointSlider.setAlignmentX(1.0f);
             timepointSlider.setVisible(false);
-            panel.setVisible(true);
+            panel.setVisible(false);
 
-            nodePropertyEditor.getComponent(); // Initialize node property panel
-
-            JTree inspectorTree = nodePropertyEditor.getTree();
-            JPanel inspectorProperties = nodePropertyEditor.getProps();
-
-            inspector = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
-                    new JScrollPane( inspectorTree ),
-                    new JScrollPane( inspectorProperties ));
-            inspector.setDividerLocation( getWindowHeight() / 3 );
-            inspector.setContinuousLayout(true);
-            inspector.setBorder(BorderFactory.createEmptyBorder());
-
-            mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
-                    p,
-                    inspector
-                    );
-            mainSplitPane.setDividerLocation( getWindowWidth()/4 * 3 );
-            mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
-
-            frame.add(mainSplitPane);
-
-            frame.setGlassPane(splashLabel);
-            frame.getGlassPane().setVisible(true);
-//            frame.getGlassPane().setBackground(new java.awt.Color(50, 48, 47, 255));
+            frame.add(p);
             frame.setVisible(true);
-
             sceneryPanel[0] = panel;
 
             setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(),
@@ -528,12 +499,11 @@ public class SciView extends SceneryBase {
                 } catch (InterruptedException e) {
                 }
 
-                nodePropertyEditor.rebuildTree();
-                frame.getGlassPane().setVisible(false);
+                panel.setVisible(true);
+                splashLabel.setVisible(false);
                 getLogger().info("Done initializing SciView");
             });
         }
-
     }
 
     public void setStatusText(String text) {
@@ -1059,20 +1029,6 @@ public class SciView extends SceneryBase {
             timepointSlider.setVisible(false);
         }
         return activeNode;
-    }
-
-    public void toggleInspectorWindow()
-    {
-        boolean currentlyVisible = inspector.isVisible();
-        if(currentlyVisible) {
-            inspector.setVisible(false);
-            mainSplitPane.setDividerLocation(getWindowWidth());
-        }
-        else {
-            inspector.setVisible(true);
-            mainSplitPane.setDividerLocation(getWindowWidth()/4 * 3);
-        }
-
     }
 
     public synchronized void animate( int fps, Runnable action ) {
