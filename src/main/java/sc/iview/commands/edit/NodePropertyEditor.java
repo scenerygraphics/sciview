@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.commands.edit;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -66,7 +66,6 @@ import org.scijava.util.DebugUtils;
 import org.scijava.widget.UIComponent;
 
 import sc.iview.SciView;
-import sc.iview.commands.edit.Properties;
 import sc.iview.event.NodeActivatedEvent;
 import sc.iview.event.NodeAddedEvent;
 import sc.iview.event.NodeChangedEvent;
@@ -100,14 +99,6 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     private JTree tree;
     private JPanel props;
 
-    public JPanel getProps() {
-        return props;
-    }
-
-    public JTree getTree() {
-        return tree;
-    }
-
     public NodePropertyEditor(final SciView sciView ) {
         this.sciView = sciView;
         sciView.getScijavaContext().inject( this );
@@ -116,8 +107,6 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     /** Creates and displays a window containing the scene editor. */
     public void show() {
         final JFrame frame = new JFrame( "Node Properties" );
-        frame.setLocation(200, 200);
-
         frame.setContentPane( getComponent() );
         // FIXME: Why doesn't the frame disappear when closed?
         frame.setDefaultCloseOperation( WindowConstants.DISPOSE_ON_CLOSE );
@@ -243,7 +232,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     }
 
     /** Rebuilds the tree to match the state of the scene. */
-    public void rebuildTree() {
+    private void rebuildTree() {
         treeModel.setRoot( new SceneryTreeNode( sciView ) );
 
 //        treeModel.reload();
