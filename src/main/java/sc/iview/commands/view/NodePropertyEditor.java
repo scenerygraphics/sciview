@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit;
+package sc.iview.commands.view;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -66,6 +66,7 @@ import org.scijava.util.DebugUtils;
 import org.scijava.widget.UIComponent;
 
 import sc.iview.SciView;
+import sc.iview.commands.edit.Properties;
 import sc.iview.event.NodeActivatedEvent;
 import sc.iview.event.NodeAddedEvent;
 import sc.iview.event.NodeChangedEvent;

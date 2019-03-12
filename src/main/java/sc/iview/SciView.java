@@ -95,7 +95,7 @@ import org.scijava.ui.swing.menu.SwingJMenuBarCreator;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.ColorRGBA;
 import org.scijava.util.Colors;
-import sc.iview.commands.edit.NodePropertyEditor;
+import sc.iview.commands.view.NodePropertyEditor;
 import sc.iview.controls.behaviours.CameraTranslateControl;
 import sc.iview.controls.behaviours.NodeTranslateControl;
 import sc.iview.event.NodeActivatedEvent;
