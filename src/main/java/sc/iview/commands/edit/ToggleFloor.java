@@ -28,15 +28,12 @@
  */
 package sc.iview.commands.edit;
 
-import com.sun.org.glassfish.gmbal.ParameterNames;
 import org.scijava.command.Command;
-import org.scijava.event.EventService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
-import sc.iview.event.NodeChangedEvent;
 
 import static sc.iview.commands.MenuWeights.EDIT;
 import static sc.iview.commands.MenuWeights.EDIT_TOGGLE_FLOOR;
@@ -52,13 +49,9 @@ public class ToggleFloor implements Command {
     @Parameter
     private SciView sciView;
 
-    @Parameter
-    private EventService eventService;
-
     @Override
     public void run() {
         sciView.getFloor().setVisible( !sciView.getFloor().getVisible() );
-        eventService.publish(new NodeChangedEvent(sciView.getFloor()));
     }
 
 }
