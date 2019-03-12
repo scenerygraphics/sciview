@@ -250,7 +250,7 @@ public class SciView extends SceneryBase {
         try {
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
-            x = screenSize.width/2 - getWindowWidth()/2 - 300;
+            x = screenSize.width/2 - getWindowWidth()/2;
             y = screenSize.height/2 - getWindowHeight()/2;
         } catch(HeadlessException e) {
             x = 10;
