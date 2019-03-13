@@ -95,6 +95,10 @@ public class Properties extends InteractiveCommand {
     @Parameter(required = false, callback = "updateNodeProperties")
     private ColorRGB colour;
 
+    @Parameter(label = "Intensity", style = NumberWidget.SPINNER_STYLE, //
+            stepSize = "0.1", callback = "updateNodeProperties")
+    private float intensity = 0;
+
     @Parameter(label = "Position X", style = NumberWidget.SPINNER_STYLE, //
             stepSize = "0.1", callback = "updateNodeProperties")
     private float positionX = 0;
@@ -289,6 +293,12 @@ public class Properties extends InteractiveCommand {
             renderingMode = (String)renderingModeChoices.get(((Volume)currentSceneNode).getRenderingMethod());
         } else {
             getInfo().removeInput(getInfo().getMutableInput( "renderingMode", String.class ));
+        }
+
+        if(currentSceneNode instanceof PointLight) {
+            intensity = ((PointLight)currentSceneNode).getIntensity();
+        } else {
+            getInfo().removeInput(getInfo().getMutableInput( "intensity", Float.class ));
         }
 
         if(currentSceneNode instanceof BoundingGrid) {
