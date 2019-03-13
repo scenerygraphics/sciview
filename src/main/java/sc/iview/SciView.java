@@ -207,6 +207,7 @@ public class SciView extends SceneryBase {
     private final SceneryPanel[] sceneryPanel = { null };
     private JSlider timepointSlider = null;
     private JSplitPane inspector;
+    private NodePropertyEditor nodePropertyEditor;
 
     public SciView( Context context ) {
         super( "SciView", 1280, 720, false, context );
@@ -262,7 +263,7 @@ public class SciView extends SceneryBase {
         frame.setSize(getWindowWidth(), getWindowHeight());
         frame.setLocation(x, y);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        final NodePropertyEditor nodePropertyEditor = new NodePropertyEditor( this );
+        nodePropertyEditor = new NodePropertyEditor( this );
 
         if( useJavaFX ) {
             final JFXPanel fxPanel = new JFXPanel();
@@ -1058,6 +1059,7 @@ public class SciView extends SceneryBase {
             }
             timepointSlider.setVisible(false);
         }
+        nodePropertyEditor.rebuildTree();
         return activeNode;
     }
 
