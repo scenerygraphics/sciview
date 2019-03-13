@@ -30,6 +30,7 @@ package sc.iview;
 
 import cleargl.GLTypeEnum;
 import cleargl.GLVector;
+import com.bulenkov.darcula.DarculaLaf;
 import com.jogamp.opengl.math.Quaternion;
 import com.sun.javafx.application.PlatformImpl;
 import coremem.enums.NativeTypeEnum;
@@ -110,6 +111,7 @@ import tpietzsch.example2.VolumeViewerOptions;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.ChangeListener;
+import javax.swing.plaf.basic.BasicLookAndFeel;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -246,6 +248,15 @@ public class SciView extends SceneryBase {
     }
 
     @SuppressWarnings("restriction") @Override public void init() {
+        if(Boolean.parseBoolean(System.getProperty("sciview.useDarcula", "false"))) {
+            try {
+                BasicLookAndFeel darcula = new DarculaLaf();
+                UIManager.setLookAndFeel(darcula);
+            } catch (Exception e) {
+                System.err.println("Could not load Darcula Look and Feel");
+            }
+        }
+
         int x, y;
 
         try {
@@ -399,6 +410,7 @@ public class SciView extends SceneryBase {
             timepointSlider.setPaintTicks(true);
             timepointSlider.setSnapToTicks(true);
             timepointSlider.setPaintLabels(true);
+            JPopupMenu.setDefaultLightWeightPopupEnabled(false);
             final JMenuBar swingMenuBar = new JMenuBar();
             new SwingJMenuBarCreator().createMenus(menus.getMenu("SciView"), swingMenuBar);
             frame.setJMenuBar(swingMenuBar);
@@ -439,10 +451,10 @@ public class SciView extends SceneryBase {
                     p,
                     inspector
                     );
-            mainSplitPane.setDividerLocation( getWindowWidth()/4 * 3 );
+            mainSplitPane.setDividerLocation( getWindowWidth()/3 * 2 );
             mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
 
-            frame.add(mainSplitPane);
+            frame.add(mainSplitPane, BorderLayout.CENTER);
 
             frame.setGlassPane(splashLabel);
             frame.getGlassPane().setVisible(true);
@@ -473,7 +485,7 @@ public class SciView extends SceneryBase {
             lights[i] = new PointLight( 150.0f );
             lights[i].setPosition( tetrahedron[i].times(25.0f) );
             lights[i].setEmissionColor( new GLVector( 1.0f, 1.0f, 1.0f ) );
-            lights[i].setIntensity( 2500.0f );
+            lights[i].setIntensity( 100.0f );
             getScene().addChild( lights[i] );
         }
 
