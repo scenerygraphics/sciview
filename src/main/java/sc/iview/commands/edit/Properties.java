@@ -95,6 +95,9 @@ public class Properties extends InteractiveCommand {
     @Parameter(required = false, callback = "updateNodeProperties")
     private ColorRGB colour;
 
+    @Parameter(label = "Name", callback = "updateNodeProperties")
+    private String name;
+
     @Parameter(label = "Intensity", style = NumberWidget.SPINNER_STYLE, //
             stepSize = "0.1", callback = "updateNodeProperties")
     private float intensity = 0;
@@ -286,6 +289,8 @@ public class Properties extends InteractiveCommand {
 
         renderscale = currentSceneNode.getRenderScale();
 
+        name = currentSceneNode.getName();
+
         if(currentSceneNode instanceof Volume) {
             final MutableModuleItem<String> renderingModeInput = getInfo().getMutableInput( "renderingMode", String.class );
             renderingModeInput.setChoices(renderingModeChoices);
@@ -370,6 +375,12 @@ public class Properties extends InteractiveCommand {
 
         // update render scale
         currentSceneNode.setRenderScale(renderscale);
+
+        currentSceneNode.setName(name);
+
+        if(currentSceneNode instanceof PointLight) {
+            ((PointLight) currentSceneNode).setIntensity(intensity);
+        }
 
         if(currentSceneNode instanceof Volume) {
             final int mode = renderingModeChoices.indexOf(renderingMode);
