@@ -40,6 +40,7 @@ import java.util.List;
 
 import graphics.scenery.*;
 import graphics.scenery.volumes.Volume;
+import graphics.scenery.volumes.bdv.BDVVolume;
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
 import org.scijava.module.MutableModuleItem;
@@ -97,6 +98,9 @@ public class Properties extends InteractiveCommand {
 
     @Parameter(label = "Name", callback = "updateNodeProperties")
     private String name;
+
+    @Parameter(label = "Timepoint", callback = "updateNodeProperties")
+    private int timepoint = 0;
 
     @Parameter(label = "Intensity", style = NumberWidget.SPINNER_STYLE, //
             stepSize = "0.1", callback = "updateNodeProperties")
@@ -333,6 +337,14 @@ public class Properties extends InteractiveCommand {
             getInfo().removeInput(getInfo().getMutableInput( "text", String.class ));
         }
 
+        if(currentSceneNode instanceof BDVVolume) {
+            timepoint = ((BDVVolume)currentSceneNode).getCurrentTimepoint();
+            getInfo().getMutableInput("timepoint", Integer.class).setMinimumValue(0);
+            getInfo().getMutableInput("timepoint", Integer.class).setMaximumValue(((BDVVolume) currentSceneNode).getMaxTimepoint());
+        } else {
+            getInfo().removeInput(getInfo().getMutableInput("timepoint", Integer.class));
+        }
+
         fieldsUpdating = false;
     }
 
@@ -417,6 +429,10 @@ public class Properties extends InteractiveCommand {
             ((TextBoard)currentSceneNode).setText(text);
             ((TextBoard)currentSceneNode).setFontColor(new GLVector(fontColor.getRed()/255.0f, fontColor.getGreen()/255.0f, fontColor.getBlue()/255.0f));
             ((TextBoard)currentSceneNode).setBackgroundColor(new GLVector(backgroundColor.getRed()/255.0f, backgroundColor.getGreen()/255.0f, backgroundColor.getBlue()/255.0f));
+        }
+
+        if(currentSceneNode instanceof BDVVolume) {
+            ((BDVVolume) currentSceneNode).goToTimePoint(timepoint);
         }
     }
 
