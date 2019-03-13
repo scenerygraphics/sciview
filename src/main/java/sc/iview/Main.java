@@ -28,6 +28,7 @@
  */
 package sc.iview;
 
+import graphics.scenery.SceneryBase;
 import io.scif.SCIFIOService;
 
 import net.imagej.ImageJService;
@@ -46,6 +47,9 @@ import cleargl.GLVector;
  */
 public class Main {
     public static void main( String... args ) {
+        SceneryBase.xinitThreads();
+
+
         System.setProperty( "scijava.log.level:sc.iview", "debug" );
         Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
 
@@ -54,11 +58,5 @@ public class Main {
 
         SciViewService sciViewService = context.service( SciViewService.class );
         SciView sciView = sciViewService.getOrCreateActiveSciView();
-        sciView.getCamera().setPosition( new GLVector( 0.0f, 0.0f, 5.0f ) );
-        sciView.getCamera().setTargeted( true );
-        sciView.getCamera().setTarget( new GLVector( 0, 0, 0 ) );
-        sciView.getCamera().setDirty( true );
-        sciView.getCamera().setNeedsUpdate( true );
-        //sciView.getCamera().setNeedsUpdateWorld(true);
     }
 }
