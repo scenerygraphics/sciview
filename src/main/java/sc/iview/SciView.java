@@ -46,6 +46,7 @@ import graphics.scenery.utils.SceneryFXPanel;
 import graphics.scenery.utils.SceneryJPanel;
 import graphics.scenery.utils.SceneryPanel;
 import graphics.scenery.utils.Statistics;
+import graphics.scenery.volumes.TransferFunction;
 import graphics.scenery.volumes.Volume;
 import graphics.scenery.volumes.bdv.BDVVolume;
 import javafx.animation.FadeTransition;
@@ -1072,6 +1073,12 @@ public class SciView extends SceneryBase {
             timepointSlider.setVisible(false);
         }
         nodePropertyEditor.rebuildTree();
+        getScene().getOnNodePropertiesChanged().put("updateInspector",
+                node -> { if(node == activeNode) {
+                    nodePropertyEditor.updateProperties(activeNode);
+                }
+                return null;
+        });
         return activeNode;
     }
 
@@ -1222,6 +1229,8 @@ public class SciView extends SceneryBase {
 
         byteBuffer.flip();
 
+        n.getMetadata().put("sciviewColormap", colorTable);
+
         if(n instanceof Volume) {
             ((Volume) n).getColormaps().put("sciviewColormap", new Volume.Colormap.ColormapBuffer(new GenericTexture("colorTable",
                     new GLVector(colorTable.getLength(),
@@ -1275,12 +1284,14 @@ public class SciView extends SceneryBase {
 
         v.setTrangemin( minVal );
         v.setTrangemax( maxVal );
+        v.setTransferFunction(TransferFunction.ramp(0.0f, 0.4f));
 
         try {
             setColormap( v, lutService.loadLUT( lutService.findLUTs().get( "WCIF/ICA.lut" ) ) );
         } catch( IOException e ) {
             e.printStackTrace();
         }
+
 
         setActiveNode( v );
 

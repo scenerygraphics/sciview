@@ -199,7 +199,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     }
 
     /** Generates a properties panel for the given node. */
-    private void updateProperties( final Node sceneNode ) {
+    public void updateProperties( final Node sceneNode ) {
         if( sceneNode == null ) {
             updatePropertiesPanel( null );
             return;
