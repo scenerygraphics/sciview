@@ -37,6 +37,7 @@ import coremem.enums.NativeTypeEnum;
 import graphics.scenery.Box;
 import graphics.scenery.*;
 import graphics.scenery.backends.Renderer;
+import graphics.scenery.backends.vulkan.VulkanRenderer;
 import graphics.scenery.controls.InputHandler;
 import graphics.scenery.controls.OpenVRHMD;
 import graphics.scenery.controls.TrackerInput;
@@ -1393,6 +1394,12 @@ public class SciView extends SceneryBase {
                 final OpenVRHMD hmd = new OpenVRHMD(false, true);
                 getHub().add(SceneryElement.HMDInput, hmd);
                 ti = hmd;
+
+                // we need to force reloading the renderer as the HMD might require device or instance extensions
+                if(getRenderer() instanceof VulkanRenderer) {
+                    replaceRenderer(getRenderer().getClass().getSimpleName(), true);
+                    Thread.sleep(1000);
+                }
             } catch (Exception e) {
                 getLogger().error("Could not add OpenVRHMD: " + e.toString());
             }
@@ -1406,6 +1413,14 @@ public class SciView extends SceneryBase {
             ((DetachedHeadCamera) cam).setTracker(null);
         }
 
+        while(getRenderer().getInitialized() == false) {
+            getLogger().info("Waiting for renderer");
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         getRenderer().toggleVR();
     }
 }
