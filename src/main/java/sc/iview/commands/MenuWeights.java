@@ -72,6 +72,7 @@ public final class MenuWeights {
     public static final double VIEW_RESET_CAMERA_POSITION = 203;
     public static final double VIEW_SAVE_CAMERA_CONFIGURATION = 204;
     public static final double VIEW_TOGGLE_INSPECTOR = 302;
+    public static final double VIEW_RENDER_TO_OPENVR = 303;
 
 
     public static final double DEMO_LINES = 0;

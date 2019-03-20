@@ -38,6 +38,8 @@ import graphics.scenery.Box;
 import graphics.scenery.*;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.controls.InputHandler;
+import graphics.scenery.controls.OpenVRHMD;
+import graphics.scenery.controls.TrackerInput;
 import graphics.scenery.controls.behaviours.ArcballCameraControl;
 import graphics.scenery.controls.behaviours.FPSCameraControl;
 import graphics.scenery.controls.behaviours.MovementCommand;
@@ -1401,5 +1403,37 @@ public class SciView extends SceneryBase {
 
     public Renderer getSceneryRenderer() {
         return this.getRenderer();
+    }
+
+    protected boolean vrActive = false;
+
+    public void toggleVRRendering() {
+        vrActive = !vrActive;
+        Camera cam = getScene().getActiveObserver();
+        if(!(cam instanceof DetachedHeadCamera)) {
+            return;
+        }
+
+        TrackerInput ti = null;
+
+        if (!getHub().has(SceneryElement.HMDInput)) {
+            try {
+                final OpenVRHMD hmd = new OpenVRHMD(false, true);
+                getHub().add(SceneryElement.HMDInput, hmd);
+                ti = hmd;
+            } catch (Exception e) {
+                getLogger().error("Could not add OpenVRHMD: " + e.toString());
+            }
+        } else {
+            ti = getHub().getWorkingHMD();
+        }
+
+        if(vrActive && ti != null) {
+            ((DetachedHeadCamera) cam).setTracker(ti);
+        } else {
+            ((DetachedHeadCamera) cam).setTracker(null);
+        }
+
+        getRenderer().toggleVR();
     }
 }
