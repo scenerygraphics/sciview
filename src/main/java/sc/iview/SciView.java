@@ -210,7 +210,6 @@ public class SciView extends SceneryBase {
     private MenuBar menuBar;
     private JSplitPane mainSplitPane;
     private final SceneryPanel[] sceneryPanel = { null };
-    private JSlider timepointSlider = null;
     private JSplitPane inspector;
     private NodePropertyEditor nodePropertyEditor;
 
@@ -409,10 +408,6 @@ public class SciView extends SceneryBase {
         } else {
             final JPanel p = new JPanel(new BorderLayout(0, 0));
             panel = new SceneryJPanel();
-            timepointSlider = new JSlider();
-            timepointSlider.setPaintTicks(true);
-            timepointSlider.setSnapToTicks(true);
-            timepointSlider.setPaintLabels(true);
             JPopupMenu.setDefaultLightWeightPopupEnabled(false);
             final JMenuBar swingMenuBar = new JMenuBar();
             new SwingJMenuBarCreator().createMenus(menus.getMenu("SciView"), swingMenuBar);
@@ -431,11 +426,7 @@ public class SciView extends SceneryBase {
 
             p.setLayout(new OverlayLayout(p));
             p.setBackground(new java.awt.Color(50, 48, 47));
-            p.add(timepointSlider, BorderLayout.SOUTH);
             p.add(panel, BorderLayout.CENTER);
-            timepointSlider.setAlignmentY(1.0f);
-            timepointSlider.setAlignmentX(1.0f);
-            timepointSlider.setVisible(false);
             panel.setVisible(true);
 
             nodePropertyEditor.getComponent(); // Initialize node property panel
@@ -1055,25 +1046,6 @@ public class SciView extends SceneryBase {
         activeNode = n;
         targetArcball.setTarget( n == null ? () -> new GLVector( 0, 0, 0 ) : n::getPosition);
         eventService.publish( new NodeActivatedEvent( activeNode ) );
-        if(n instanceof BDVVolume) {
-            timepointSlider.setOpaque(false);
-            timepointSlider.setMinimum(0);
-            timepointSlider.setMaximum(((BDVVolume) n).getMaxTimepoint());
-            timepointSlider.setVisible(true);
-            final int spacing = (int)Math.ceil(((BDVVolume) n).getMaxTimepoint()/10);
-            timepointSlider.setMajorTickSpacing(spacing);
-            timepointSlider.setMinorTickSpacing(spacing/4);
-            timepointSlider.setPaintTicks(true);
-            timepointSlider.setLabelTable(timepointSlider.createStandardLabels(spacing));
-            timepointSlider.setValue(((BDVVolume) n).getCurrentTimepoint());
-
-            timepointSlider.addChangeListener(e -> ((BDVVolume) n).goToTimePoint(timepointSlider.getValue()));
-        } else {
-            for (ChangeListener changeListener : timepointSlider.getChangeListeners()) {
-                timepointSlider.removeChangeListener(changeListener);
-            }
-            timepointSlider.setVisible(false);
-        }
         nodePropertyEditor.rebuildTree();
         getScene().getOnNodePropertiesChanged().put("updateInspector",
                 node -> { if(node == activeNode) {
