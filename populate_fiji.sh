@@ -50,12 +50,13 @@ if [ ! -f fiji-nojre.zip ]
 then
   echo
   echo "--> Downloading Fiji"
-  curl -O http://downloads.imagej.net/fiji/latest/fiji-nojre.zip
+  curl -L -O http://downloads.imagej.net/fiji/latest/fiji-nojre.zip || 
+      die "Could not download Fiji"
 fi
 
 echo "--> Unpacking Fiji"
 rm -rf Fiji.app
-unzip fiji-nojre.zip
+unzip fiji-nojre.zip || die "Could not unpack Fiji"
 
 echo
 echo "--> Updating Fiji"
@@ -115,6 +116,7 @@ do
         natives-linux*-i586) platform=linux32 ;;
         natives-linux*) platform=linux64 ;;
         natives-osx|natives-mac*) platform=macosx ;;
+        natives-all*) platform="" ;;
         *) die "Unsupported platform: $c" ;;
       esac
       install "$gavpc" "Fiji.app/jars/$platform"
