@@ -40,7 +40,7 @@ import sc.iview.SciView;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "View", weight = VIEW), //
-                 @Menu(label = "Rotate", weight = VIEW_ROTATE) })
+                 @Menu(label = "Circle camera around current object", weight = VIEW_ROTATE) })
 public class RotateView implements Command {
 
     @Parameter
