@@ -1414,6 +1414,15 @@ public class SciView extends SceneryBase {
                 if(getRenderer() instanceof VulkanRenderer) {
                     replaceRenderer(getRenderer().getClass().getSimpleName(), true);
                     Thread.sleep(1000);
+
+                    while(getRenderer().getInitialized() == false) {
+                        getLogger().info("Waiting for renderer");
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             } catch (Exception e) {
                 getLogger().error("Could not add OpenVRHMD: " + e.toString());
@@ -1428,14 +1437,6 @@ public class SciView extends SceneryBase {
             ((DetachedHeadCamera) cam).setTracker(null);
         }
 
-        while(getRenderer().getInitialized() == false) {
-            getLogger().info("Waiting for renderer");
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
         getRenderer().toggleVR();
     }
 }
