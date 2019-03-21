@@ -114,7 +114,6 @@ import tpietzsch.example2.VolumeViewerOptions;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicLookAndFeel;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -421,9 +420,25 @@ public class SciView extends SceneryBase {
               getLogger().warn("Could not read splash image 'sciview-logo.png'");
               splashImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
             }
-            splashLabel = new JLabel(new ImageIcon(splashImage.getScaledInstance(500, 200, java.awt.Image.SCALE_SMOOTH)));
+
+            final String sceneryVersion = SceneryBase.class.getPackage().getImplementationVersion();
+            final String sciviewVersion = SciView.class.getPackage().getImplementationVersion();
+            final String versionString;
+
+            if(sceneryVersion == null || sciviewVersion == null) {
+                versionString = "";
+            } else {
+                versionString = "\n\nsciview " + sciviewVersion + " / scenery " + sceneryVersion;
+            }
+
+            splashLabel = new JLabel(versionString,
+                    new ImageIcon(splashImage.getScaledInstance(500, 200, java.awt.Image.SCALE_SMOOTH)),
+                    SwingConstants.CENTER);
             splashLabel.setBackground(new java.awt.Color(50, 48, 47));
+            splashLabel.setForeground(new java.awt.Color(78, 76, 75));
             splashLabel.setOpaque(true);
+            splashLabel.setVerticalTextPosition(JLabel.BOTTOM);
+            splashLabel.setHorizontalTextPosition(JLabel.CENTER);
 
             p.setLayout(new OverlayLayout(p));
             p.setBackground(new java.awt.Color(50, 48, 47));
