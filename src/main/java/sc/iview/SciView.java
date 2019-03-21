@@ -116,6 +116,8 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicLookAndFeel;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -465,6 +467,13 @@ public class SciView extends SceneryBase {
             mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
 
             frame.add(mainSplitPane, BorderLayout.CENTER);
+
+            frame.addWindowListener(new WindowAdapter() {
+                @Override public void windowClosing(WindowEvent e) {
+                    getLogger().debug("Closing SciView window.");
+                    close();
+                }
+            });
 
             frame.setGlassPane(splashLabel);
             frame.getGlassPane().setVisible(true);
