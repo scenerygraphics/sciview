@@ -150,6 +150,9 @@ public class Properties extends InteractiveCommand {
     @Parameter(label = "Rendering Mode", style = LIST_BOX_STYLE, callback = "updateNodeProperties")
     private String renderingMode;
 
+    @Parameter(label = "AO steps", style = NumberWidget.SPINNER_STYLE, callback = "updateNodeProperties")
+    private int occlusionSteps;
+
     /* Bounding Grid properties */
     @Parameter(label = "Grid Color", callback = "updateNodeProperties")
     private ColorRGB gridColor;
@@ -300,6 +303,7 @@ public class Properties extends InteractiveCommand {
             renderingModeInput.setChoices(renderingModeChoices);
 
             renderingMode = (String)renderingModeChoices.get(((Volume)currentSceneNode).getRenderingMethod());
+            occlusionSteps = ((Volume)currentSceneNode).getOcclusionSteps();
         } else {
             getInfo().removeInput(getInfo().getMutableInput( "renderingMode", String.class ));
         }
@@ -400,6 +404,8 @@ public class Properties extends InteractiveCommand {
             if(mode != -1) {
                 ((Volume) currentSceneNode).setRenderingMethod(mode);
             }
+
+            ((Volume)currentSceneNode).setOcclusionSteps(occlusionSteps);
         }
 
         if(currentSceneNode instanceof BoundingGrid) {
