@@ -72,6 +72,8 @@ echo
 echo "--> Copying dependencies into Fiji installation"
 (set -x; mvn -Dimagej.app.directory=Fiji.app)
 
+echo "--> Removing slf4j bindings"
+(set -x; rm -f Fiji.app/jars/slf4j-simple-*.jar)
 # -- Put back jar/gluegen-rt and jar/jogl-all --
 
 echo
