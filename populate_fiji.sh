@@ -22,6 +22,12 @@ install() {
     die "Install failed"
 }
 
+# Copies the given Maven coordinate to the specified output directory, keeping the groupId
+installWithGroupId() {
+  (set -x; mvn dependency:copy -Dartifact="$1" -DoutputDirectory="$2" -Dmdep.prependGroupId=true > /dev/null) ||
+    die "Install failed"
+}
+
 # Deletes the natives JAR with the given artifactId and classifier.
 deleteNative() {
   (set -x; rm -f Fiji.app/jars/$1-[0-9]*-$2.jar Fiji.app/jars/*/$1-[0-9]*-$2.jar) ||
@@ -69,7 +75,7 @@ echo "--> Copying dependencies into Fiji installation"
 # -- Put back jar/gluegen-rt and jar/jogl-all --
 
 echo
-echo "--> Reinstalling gluegen-rt and jogl-all"
+echo "--> Reinstalling gluegen-rt, jogl-all, jocl, jinput, and ffmpeg"
 gluegenJar=$(echo Fiji.app/jars/gluegen-rt-main-*.jar)
 gluegenVersion=$(mid "$gluegenJar" "-" ".jar")
 install "org.jogamp.gluegen:gluegen-rt:$gluegenVersion" Fiji.app/jars
@@ -77,6 +83,18 @@ install "org.jogamp.gluegen:gluegen-rt:$gluegenVersion" Fiji.app/jars
 joglJar=$(echo Fiji.app/jars/jogl-all-main-*.jar)
 joglVersion=$(mid "$joglJar" "-" ".jar")
 install "org.jogamp.jogl:jogl-all:$joglVersion" Fiji.app/jars
+
+joclGAV=$(mvn dependency:tree | grep jocl | awk -e '{print $NF}' | cut -d: -f1-4 | sed 's/:jar//g')
+installWithGroupId "$joclGAV" Fiji.app/jars
+
+jinputGAV=$(mvn dependency:tree | grep jinput | head -n1 | awk -e '{print $NF}' | cut -d: -f1-4 | sed 's/:jar//g' | sed 's/:compile//g')
+install "$jinputGAV" Fiji.app/jars
+
+ffmpegGAV=$(mvn dependency:tree | grep 'ffmpeg:jar' | head -n1 | awk -e '{print $NF}' | cut -d: -f1-4 | sed 's/:jar//g' | sed 's/:compile//g')
+installWithGroupId "$ffmpegGAV" Fiji.app/jars
+installWithGroupId "$ffmpegGAV:jar:windows-x86_64" Fiji.app/jars/win64
+installWithGroupId "$ffmpegGAV:jar:linux-x86_64" Fiji.app/jars/linux64
+installWithGroupId "$ffmpegGAV:jar:macosx-x86_64" Fiji.app/jars/macosx
 
 # -- Get the list of native libraries --
 
@@ -111,9 +129,9 @@ do
     *)
       deleteNative "$a" "$c"
       case "$c" in
-        natives-win*-i586) platform=win32 ;;
+        natives-win*-i586) continue ;;
         natives-win*) platform=win64 ;;
-        natives-linux*-i586) platform=linux32 ;;
+        natives-linux*-i586) continue ;;
         natives-linux*) platform=linux64 ;;
         natives-osx|natives-mac*) platform=macosx ;;
         natives-all*) platform="" ;;
