@@ -45,10 +45,7 @@ import graphics.scenery.controls.behaviours.ArcballCameraControl;
 import graphics.scenery.controls.behaviours.FPSCameraControl;
 import graphics.scenery.controls.behaviours.MovementCommand;
 import graphics.scenery.controls.behaviours.SelectCommand;
-import graphics.scenery.utils.SceneryFXPanel;
-import graphics.scenery.utils.SceneryJPanel;
-import graphics.scenery.utils.SceneryPanel;
-import graphics.scenery.utils.Statistics;
+import graphics.scenery.utils.*;
 import graphics.scenery.volumes.TransferFunction;
 import graphics.scenery.volumes.Volume;
 import graphics.scenery.volumes.bdv.BDVVolume;
@@ -100,6 +97,7 @@ import org.scijava.ui.swing.menu.SwingJMenuBarCreator;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.ColorRGBA;
 import org.scijava.util.Colors;
+import org.scijava.util.VersionUtils;
 import sc.iview.commands.view.NodePropertyEditor;
 import sc.iview.controls.behaviours.CameraTranslateControl;
 import sc.iview.controls.behaviours.NodeTranslateControl;
@@ -259,6 +257,33 @@ public class SciView extends SceneryBase {
             } catch (Exception e) {
                 System.err.println("Could not load Darcula Look and Feel");
             }
+        }
+
+        LogbackUtils.setLogLevel(null, System.getProperty("scenery.LogLevel", "info"));
+
+        // determine imagej-launcher version and to disable Vulkan if XInitThreads() fix
+        // is not deployed
+        try {
+            final Class<?> launcherClass = Class.forName("net.imagej.launcher.ClassLauncher");
+            String versionString = VersionUtils.getVersion(launcherClass);
+
+            if (versionString != null && ExtractsNatives.Companion.getPlatform() == ExtractsNatives.Platform.LINUX) {
+                versionString = versionString.substring(0, 5);
+
+                final Version launcherVersion = new Version(versionString);
+                final Version nonWorkingVersion = new Version("4.0.5");
+
+                if (launcherVersion.compareTo(nonWorkingVersion) <= 0
+                        && !Boolean.parseBoolean(System.getProperty("sciview.DisableLauncherVersionCheck", "false"))) {
+                    getLogger().info("imagej-launcher version smaller or equal to non-working version (" + versionString + " vs. 4.0.5), disabling Vulkan as rendering backend. Disable check by setting 'scenery.DisableLauncherVersionCheck' system property to 'true'.");
+                    System.setProperty("scenery.Renderer", "OpenGLRenderer");
+                } else {
+                    getLogger().info("imagej-launcher version bigger that non-working version (" + versionString + " vs. 4.0.5), all good.");
+                }
+            }
+        } catch (ClassNotFoundException cnfe) {
+            // Didn't find the launcher, so we're probably good.
+            getLogger().info("imagej-launcher not found, not touching renderer preferences.");
         }
 
         int x, y;
