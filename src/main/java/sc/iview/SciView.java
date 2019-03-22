@@ -552,8 +552,8 @@ public class SciView extends SceneryBase {
             SwingUtilities.invokeLater(() -> {
                 try {
                     while (!getSceneryRenderer().getFirstImageReady()) {
-                        getLogger().info("Waiting for renderer");
-                        Thread.sleep(100);
+                        getLogger().info("Waiting for renderer initialisation");
+                        Thread.sleep(300);
                     }
 
                     Thread.sleep(200);
@@ -1425,9 +1425,9 @@ public class SciView extends SceneryBase {
                     Thread.sleep(1000);
 
                     while(getRenderer().getInitialized() == false) {
-                        getLogger().info("Waiting for renderer");
+                        getLogger().info("Waiting for renderer reinitialisation");
                         try {
-                            Thread.sleep(200);
+                            Thread.sleep(300);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
