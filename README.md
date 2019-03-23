@@ -16,8 +16,7 @@ In Fiji, go to `Help -> Update` and activate the `SciView` update site. In case 
 
 ## Developers
 
-[Kyle Harrington](https://www.capsidaho.com), University of Idaho 
-[Ulrik Guenther](https://ulrik.is/writing), MPI-CBG
+[Kyle Harrington](https://www.capsidaho.com), University of Idaho & [Ulrik Guenther](https://ulrik.is/writing), MPI-CBG
 
 ## Contributors
 
