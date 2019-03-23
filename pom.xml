@@ -11,7 +11,7 @@
 
 	<groupId>sc.iview</groupId>
 	<artifactId>sciview</artifactId>
-	<version>0.2.0-SNAPSHOT</version>
+	<version>0.2.0-beta-1-SNAPSHOT</version>
 
 	<name>SciView</name>
 	<description>Scenery-backed 3D visualization package for ImageJ.</description>
@@ -43,13 +43,22 @@
 				<role>maintainer</role>
 			</roles>
 		</developer>
-	</developers>
-	<contributors>
-		<contributor>
+		<developer>
 			<name>Ulrik Günther</name>
 			<url>https://imagej.net/User:Skalarproduktraum</url>
 			<properties><id>skalarproduktraum</id></properties>
-		</contributor>
+			<roles>
+				<role>founder</role>
+				<role>lead</role>
+				<role>developer</role>
+				<role>debugger</role>
+				<role>reviewer</role>
+				<role>support</role>
+				<role>maintainer</role>
+			</roles>
+		</developer>
+	</developers>
+	<contributors>
 		<contributor>
 			<name>Robert Haase</name>
 			<url>https://imagej.net/User:Haesleinhuepf</url>
