@@ -1256,11 +1256,13 @@ public class SciView extends SceneryBase {
         n.getMetadata().put("sciviewColormap", colorTable);
 
         if(n instanceof Volume) {
-            ((Volume) n).getColormaps().put("sciviewColormap", new Volume.Colormap.ColormapBuffer(new GenericTexture("colorTable",
-                    new GLVector(colorTable.getLength(),
-                            copies, 1.0f), 4,
+            ((Volume) n).getColormaps().put("sciviewColormap",
+                    new Volume.Colormap.ColormapBuffer(new GenericTexture("colorTable",
+                    new GLVector(colorTable.getLength(), copies, 1.0f), 4,
                     GLTypeEnum.UnsignedByte,
-                    byteBuffer)));
+                    byteBuffer,
+                    // don't repeat the color map
+                    false, false, false)));
             ((Volume) n).setColormap("sciviewColormap");
         }
     }
@@ -1295,16 +1297,6 @@ public class SciView extends SceneryBase {
         }
 
         updateVolume( image, name, voxelDimensions, v );
-
-        GLVector scaleVec = new GLVector( 0.5f * dimensions[0], //
-                                          0.5f * dimensions[1], //
-                                          0.5f * dimensions[2] );
-
-        v.setScale( scaleVec );// TODO maybe dont do this
-        // TODO: This translation should probably be accounted for in scenery; volumes use a corner-origin and
-        //        meshes use center-origin coordinate systems.
-        v.setPosition( v.getPosition().plus( new GLVector( 0.5f * dimensions[0] - 0.5f, 0.5f * dimensions[1] - 0.5f,
-                                                           0.5f * dimensions[2] - 0.5f ) ) );
 
         v.setTrangemin( minVal );
         v.setTrangemax( maxVal );
