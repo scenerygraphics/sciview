@@ -254,14 +254,18 @@ public class GameOfLife3D extends InteractiveCommand {
             BoundingGrid bg = new BoundingGrid();
             bg.setNode( volume );
 
-            volume.setRenderScale((float) 0.1);
-            volume.putAbove(new GLVector(0.0f, 1.0f, 0.0f));
+            volume.setVoxelSizeX(10.0f);
+            volume.setVoxelSizeY(10.0f);
+            volume.setVoxelSizeZ(10.0f);
+
+            volume.putAbove(new GLVector(0.0f, 0.0f, 0.0f));
             volume.setRenderingMethod(2);
             volume.getTransferFunction().addControlPoint(0.0f, 0.0f);
-            volume.getTransferFunction().addControlPoint(0.4f, 0.1f);
+            volume.getTransferFunction().addControlPoint(0.4f, 0.3f);
 
-            sciView.getCamera().setPosition( new GLVector( 0.0f, 3.5f, 14.5f ) );
             volume.setName( "Game of Life 3D" );
+
+            sciView.centerOnNode(volume);
         } else {
             // NB: Name must be unique each time.
             sciView.updateVolume( field, name + "-" + ++tick, voxelDims, volume );
