@@ -31,6 +31,9 @@ package sc.iview.commands.demo;
 import static sc.iview.commands.MenuWeights.DEMO;
 import static sc.iview.commands.MenuWeights.DEMO_VOLUME_RENDER;
 
+import cleargl.GLVector;
+import graphics.scenery.volumes.TransferFunction;
+import graphics.scenery.volumes.Volume;
 import io.scif.services.DatasetIOService;
 
 import java.io.File;
@@ -53,6 +56,7 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
 import graphics.scenery.Node;
+import sc.iview.process.MeshConverter;
 
 /**
  * A demo of volume rendering.
@@ -93,7 +97,9 @@ public class VolumeRenderDemo implements Command {
             return;
         }
 
-        Node v = sciView.addVolume( cube, new float[] { 1, 1, 1 } );
+        Volume v = (Volume)sciView.addVolume( cube, new float[] { 1, 1, 1 } );
+        v.setTransferFunction(TransferFunction.ramp(0.4f, 0.1f));
+        v.setRenderScale(100.0f);
         v.setName( "Volume Render Demo" );
 
         if (iso) {
@@ -103,13 +109,18 @@ public class VolumeRenderDemo implements Command {
             Img<UnsignedByteType> cubeImg = ( Img<UnsignedByteType> ) cube.getImgPlus().getImg();
 
             Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( cubeImg, new UnsignedByteType( isoLevel ) );
-            //Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().maxEntropy( cubeImg );
 
             Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
 
-            sciView.addMesh( m ).setName( "Volume Render Demo Isosurface" );
+            graphics.scenery.Mesh isoSurfaceMesh = MeshConverter.toScenery(m);
+            sciView.addMesh(isoSurfaceMesh);
+
+            isoSurfaceMesh.setRenderScale(0.1f);
+            isoSurfaceMesh.setPosition(new GLVector(-1.0f, -1.0f, -1.0f));
+            isoSurfaceMesh.setName( "Volume Render Demo Isosurface" );
         }
 
+        sciView.setActiveNode(v);
         sciView.centerOnNode( sciView.getActiveNode() );
     }
 }
