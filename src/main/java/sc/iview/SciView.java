@@ -1433,8 +1433,13 @@ public class SciView extends SceneryBase {
         if (!getHub().has(SceneryElement.HMDInput)) {
             try {
                 final OpenVRHMD hmd = new OpenVRHMD(false, true);
-                getHub().add(SceneryElement.HMDInput, hmd);
-                ti = hmd;
+
+                if(hmd.initializedAndWorking()) {
+                    getHub().add(SceneryElement.HMDInput, hmd);
+                    ti = hmd;
+                } else {
+                    getLogger().warn("Could not initialise VR headset, just activating stereo rendering.");
+                }
 
                 // we need to force reloading the renderer as the HMD might require device or instance extensions
                 if(getRenderer() instanceof VulkanRenderer) {
