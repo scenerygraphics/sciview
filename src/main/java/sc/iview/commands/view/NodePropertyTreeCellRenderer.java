@@ -1,5 +1,6 @@
 package sc.iview.commands.view;
 
+import cleargl.GLVector;
 import graphics.scenery.*;
 import graphics.scenery.volumes.Volume;
 
@@ -53,6 +54,12 @@ class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
             setIcon(lightIcon);
             setOpenIcon(lightIcon);
             setClosedIcon(lightIcon);
+
+            final GLVector emissionColor = ((Light) n).getEmissionColor();
+            setForeground(new Color(
+                    emissionColor.x(),
+                    emissionColor.y(),
+                    emissionColor.z()));
         } else if(n instanceof TextBoard) {
             setIcon(textIcon);
             setOpenIcon(textIcon);
