@@ -1096,7 +1096,8 @@ public class SciView extends SceneryBase {
         activeNode = n;
         targetArcball.setTarget( n == null ? () -> new GLVector( 0, 0, 0 ) : () -> n.getBoundingBox().getBoundingSphere().getOrigin());
         eventService.publish( new NodeActivatedEvent( activeNode ) );
-        nodePropertyEditor.rebuildTree();
+        // TODO: Is this necessary here?
+        // nodePropertyEditor.rebuildTree();
         getScene().getOnNodePropertiesChanged().put("updateInspector",
                 node -> { if(node == activeNode) {
                     nodePropertyEditor.updateProperties(activeNode);

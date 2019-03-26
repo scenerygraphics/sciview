@@ -30,6 +30,7 @@ package sc.iview.commands.view;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.util.Enumeration;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -247,8 +248,21 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         props.repaint();
     }
 
+    private TreePath find(DefaultMutableTreeNode root, Node n) {
+        @SuppressWarnings("unchecked")
+        Enumeration<DefaultMutableTreeNode> e = root.depthFirstEnumeration();
+        while (e.hasMoreElements()) {
+            DefaultMutableTreeNode node = e.nextElement();
+            if (node.getUserObject() == n) {
+                return new TreePath(node.getPath());
+            }
+        }
+        return null;
+    }
+
     /** Rebuilds the tree to match the state of the scene. */
     public void rebuildTree() {
+        final TreePath currentPath = tree.getSelectionPath();
         treeModel.setRoot( new SceneryTreeNode( sciView ) );
 
 //        treeModel.reload();
@@ -257,6 +271,14 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
 //            tree.expandRow( i );
 //        }
         updateProperties( sciView.getActiveNode() );
+
+        if(currentPath != null) {
+            final Node selectedNode = ((SceneryTreeNode)currentPath.getLastPathComponent()).node;
+            final TreePath newPath = find((DefaultMutableTreeNode) treeModel.getRoot(), selectedNode);
+            if(newPath != null) {
+                tree.setSelectionPath(newPath);
+            }
+        }
     }
 
     /** Retrieves the scenery node of a given tree node. */
