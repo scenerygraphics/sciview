@@ -39,10 +39,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.WindowConstants;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
-import javax.swing.tree.TreeSelectionModel;
+import javax.swing.tree.*;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -160,7 +157,11 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     @EventHandler
     private void onEvent( final NodeActivatedEvent evt ) {
         final Node node = evt.getNode();
-        System.out.println( "Node activated: " + node );
+        if(node != null) {
+            System.out.println("Node activated: " + node + " (" + node.getName() + ")");
+        } else {
+            System.out.println("Node activated: " + node);
+        }
         updateProperties( sciView.getActiveNode() );
     }
 
@@ -188,7 +189,8 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     private void createTree() {
         treeModel = new DefaultTreeModel( new SceneryTreeNode( sciView ) );
         tree = new JTree( treeModel );
-        tree.setRootVisible( false );
+        tree.setRootVisible( true );
+        tree.setCellRenderer(new NodePropertyTreeCellRenderer());
 
         tree.getSelectionModel().setSelectionMode( TreeSelectionModel.SINGLE_TREE_SELECTION );
         tree.addTreeSelectionListener( e -> {
@@ -292,7 +294,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
 
         @Override
         public String toString() {
-            return node == null ? "<SCENE>" : node.getName();
+            return node == null ? "Scene" : node.getName();
         }
 
         private void addNode( final Node child ) {
