@@ -9,7 +9,9 @@ import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import java.awt.*;
+import java.awt.font.TextAttribute;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * Class to render Node Property Tree with custom icons, depending on node type.
@@ -40,6 +42,19 @@ class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
         }
 
         return (Icon) UIManager.get("Tree.leafIcon");
+    }
+
+    public NodePropertyTreeCellRenderer() {
+        setOpaque(true);
+    }
+
+    @Override
+    public Color getBackground() {
+        if(overrideColor && nodeBackground != null) {
+            return nodeBackground;
+        } else {
+            return super.getBackground();
+        }
     }
 
     @Override
@@ -166,6 +181,20 @@ class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
                 setClosedIcon(nodeIcon);
             }
         }
+
+        Font font = component.getFont();
+        Map map = font.getAttributes();
+
+        if(selected) {
+            map.put(TextAttribute.FONT, font);
+            map.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_LOW_DOTTED);
+        } else {
+            map.put(TextAttribute.FONT, font);
+            map.put(TextAttribute.UNDERLINE, -1);
+        }
+
+        font = Font.getFont(map);
+        component.setFont(font);
 
         return this;
     }
