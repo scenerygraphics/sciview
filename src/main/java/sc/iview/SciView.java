@@ -636,24 +636,24 @@ public class SciView extends SceneryBase {
     public void centerOnNode( Node currentNode ) {
         if( currentNode == null ) return;
 
-        Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
+        Node.OrientedBoundingBox bb = currentNode.getBoundingBox();
 
-        getCamera().setTarget( currentNode.getPosition() );
+        getCamera().setTarget( bb.getBoundingSphere().getOrigin() );
         getCamera().setTargeted( true );
 
         // Set forward direction to point from camera at active node
-        getCamera().setForward( bb.getBoundingSphere().getOrigin().minus( getCamera().getPosition() ).normalize().times( -1 ) );
+        GLVector forward = bb.getBoundingSphere().getOrigin().minus( getCamera().getPosition() ).normalize().times( -1 );
 
         float distance = (float) (bb.getBoundingSphere().getRadius() / Math.tan( getCamera().getFov() / 360 * java.lang.Math.PI ));
 
         // Solve for the proper rotation
-        Quaternion rotation = new Quaternion().setLookAt( getCamera().getForward().toFloatArray(),
+        Quaternion rotation = new Quaternion().setLookAt( forward.toFloatArray(),
                                                           new GLVector(0,1,0).toFloatArray(),
                                                           new GLVector(1,0,0).toFloatArray(),
                                                           new GLVector( 0,1,0).toFloatArray(),
                                                           new GLVector( 0, 0, 1).toFloatArray() );
 
-        getCamera().setRotation( rotation.normalize() );
+        getCamera().setRotation( rotation.invert().normalize() );
         getCamera().setPosition( bb.getBoundingSphere().getOrigin().plus( getCamera().getForward().times( distance * -1 ) ) );
 
         getCamera().setDirty(true);
@@ -1094,7 +1094,7 @@ public class SciView extends SceneryBase {
     public Node setActiveNode( Node n ) {
         if( activeNode == n ) return activeNode;
         activeNode = n;
-        targetArcball.setTarget( n == null ? () -> new GLVector( 0, 0, 0 ) : n::getPosition);
+        targetArcball.setTarget( n == null ? () -> new GLVector( 0, 0, 0 ) : () -> n.getBoundingBox().getBoundingSphere().getOrigin());
         eventService.publish( new NodeActivatedEvent( activeNode ) );
         nodePropertyEditor.rebuildTree();
         getScene().getOnNodePropertiesChanged().put("updateInspector",
