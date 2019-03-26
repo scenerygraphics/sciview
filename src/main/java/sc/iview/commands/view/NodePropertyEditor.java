@@ -241,6 +241,9 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         props.removeAll();
         props.add( c == null ? new JLabel( "<no node selected>" ) : c );
         props.validate();
+        if ( c != null ) {
+            props.setSize(c.getSize());
+        }
         props.repaint();
     }
 
