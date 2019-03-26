@@ -1429,6 +1429,7 @@ public class SciView extends SceneryBase {
         }
 
         TrackerInput ti = null;
+        boolean hmdAdded = false;
 
         if (!getHub().has(SceneryElement.HMDInput)) {
             try {
@@ -1441,20 +1442,7 @@ public class SciView extends SceneryBase {
                     getLogger().warn("Could not initialise VR headset, just activating stereo rendering.");
                 }
 
-                // we need to force reloading the renderer as the HMD might require device or instance extensions
-                if(getRenderer() instanceof VulkanRenderer) {
-                    replaceRenderer(getRenderer().getClass().getSimpleName(), true);
-                    Thread.sleep(1000);
-
-                    while(getRenderer().getInitialized() == false) {
-                        getLogger().info("Waiting for renderer reinitialisation");
-                        try {
-                            Thread.sleep(300);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
+                hmdAdded = true;
             } catch (Exception e) {
                 getLogger().error("Could not add OpenVRHMD: " + e.toString());
             }
@@ -1468,6 +1456,23 @@ public class SciView extends SceneryBase {
             ((DetachedHeadCamera) cam).setTracker(null);
         }
 
-        getRenderer().toggleVR();
+        getRenderer().setPushMode(false);
+        // we need to force reloading the renderer as the HMD might require device or instance extensions
+        if(getRenderer() instanceof VulkanRenderer && hmdAdded) {
+            replaceRenderer(getRenderer().getClass().getSimpleName(), true, true);
+            getRenderer().toggleVR();
+
+            while(getRenderer().getInitialized() == false || getRenderer().getFirstImageReady() == false) {
+                getLogger().info("Waiting for renderer reinitialisation");
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            getRenderer().toggleVR();
+        }
+
     }
 }
