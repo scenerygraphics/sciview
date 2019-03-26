@@ -64,9 +64,9 @@ import sc.iview.process.MeshConverter;
  * @author Kyle Harrington
  * @author Curtis Rueden
  */
-@Plugin(type = Command.class, label = "Volume Render Demo", menuRoot = "SciView", //
+@Plugin(type = Command.class, label = "Volume Render/Isosurface Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Volume Render", weight = DEMO_VOLUME_RENDER) })
+                 @Menu(label = "Volume Render/Isosurface", weight = DEMO_VOLUME_RENDER) })
 public class VolumeRenderDemo implements Command {
 
     @Parameter
@@ -81,8 +81,8 @@ public class VolumeRenderDemo implements Command {
     @Parameter
     private SciView sciView;
 
-    @Parameter
-    private boolean iso;
+    @Parameter(label = "Show isosurface")
+    private boolean iso = true;
 
     @Override
     public void run() {
@@ -116,7 +116,6 @@ public class VolumeRenderDemo implements Command {
             sciView.addMesh(isoSurfaceMesh);
 
             isoSurfaceMesh.setRenderScale(0.1f);
-            isoSurfaceMesh.setPosition(new GLVector(-1.0f, -1.0f, -1.0f));
             isoSurfaceMesh.setName( "Volume Render Demo Isosurface" );
         }
 
