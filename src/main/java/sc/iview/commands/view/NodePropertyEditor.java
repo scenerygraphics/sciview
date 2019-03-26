@@ -239,7 +239,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
 
     private void updatePropertiesPanel( final Component c ) {
         props.removeAll();
-        props.add( c == null ? new JLabel( "<no node selected>" ) : c );
+        props.add( c == null ? new JLabel( "No node selected. Select one from the tree above." ) : c );
         props.validate();
         if ( c != null ) {
             props.setSize(c.getSize());
