@@ -28,8 +28,9 @@
  */
 package sc.iview.commands.view;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Enumeration;
 
 import javax.swing.JFrame;
@@ -196,9 +197,27 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         tree.getSelectionModel().setSelectionMode( TreeSelectionModel.SINGLE_TREE_SELECTION );
         tree.addTreeSelectionListener( e -> {
             final Node sceneNode = sceneNode( e.getNewLeadSelectionPath() );
-            sciView.setActiveNode( sceneNode );
+//            sciView.setActiveNode( sceneNode );
             updateProperties( sceneNode );
         } );
+
+        tree.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+
+                if(e.getClickCount() == 2) {
+                    SceneryTreeNode n = (SceneryTreeNode)tree.getLastSelectedPathComponent();
+                    if(n == null) {
+                        return;
+                    }
+
+                    Node node = (Node)n.getUserObject();
+                    sciView.setActiveNode( node );
+                    sciView.centerOnNode( node );
+                }
+            }
+        });
     }
 
     /** Generates a properties panel for the given node. */
@@ -240,11 +259,20 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
 
     private void updatePropertiesPanel( final Component c ) {
         props.removeAll();
-        props.add( c == null ? new JLabel( "No node selected. Select one from the tree above." ) : c );
-        props.validate();
-        if ( c != null ) {
+
+        if( c == null ) {
+            final JLabel usageLabel = new JLabel( "<html><em>No node selected.</em><br><br>" +
+                    "Single-clicking a node in the tree above selects it, while double-clicking centers the 3D view on the node.<br><br>" +
+                    "Drag in the 3D view to the left to look around, hold shift while dragging to rotate around selected node. Scrolling while holding shift zooms in and out.<br><br>" +
+                    "W, A, S, D moves you around, holding shift while moving slows down the movement.</html>");
+            usageLabel.setPreferredSize(new Dimension(300, 100));
+            props.add( usageLabel );
+        } else {
+            props.add( c );
             props.setSize(c.getSize());
         }
+
+        props.validate();
         props.repaint();
     }
 
@@ -274,10 +302,14 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
 
         if(currentPath != null) {
             final Node selectedNode = ((SceneryTreeNode)currentPath.getLastPathComponent()).node;
-            final TreePath newPath = find((DefaultMutableTreeNode) treeModel.getRoot(), selectedNode);
-            if(newPath != null) {
-                tree.setSelectionPath(newPath);
-            }
+            trySelectNode(selectedNode);
+        }
+    }
+
+    public void trySelectNode(Node node) {
+        final TreePath newPath = find((DefaultMutableTreeNode) treeModel.getRoot(), node);
+        if(newPath != null) {
+            tree.setSelectionPath(newPath);
         }
     }
 

@@ -85,6 +85,7 @@ import net.imglib2.view.Views;
 import org.scijava.Context;
 import org.scijava.display.Display;
 import org.scijava.display.DisplayService;
+import org.scijava.event.EventHandler;
 import org.scijava.event.EventService;
 import org.scijava.io.IOService;
 import org.scijava.log.LogService;
@@ -103,6 +104,7 @@ import sc.iview.controls.behaviours.CameraTranslateControl;
 import sc.iview.controls.behaviours.NodeTranslateControl;
 import sc.iview.event.NodeActivatedEvent;
 import sc.iview.event.NodeAddedEvent;
+import sc.iview.event.NodeChangedEvent;
 import sc.iview.event.NodeRemovedEvent;
 import sc.iview.javafx.JavaFXMenuCreator;
 import sc.iview.process.MeshConverter;
@@ -591,6 +593,8 @@ public class SciView extends SceneryBase {
             });
         }
 
+        // subscribe to Node{Added, Removed, Changed} events
+        eventService.subscribe(this);
     }
 
     public void setStatusText(String text) {
@@ -637,6 +641,7 @@ public class SciView extends SceneryBase {
         if( currentNode == null ) return;
 
         Node.OrientedBoundingBox bb = currentNode.getBoundingBox();
+        if( bb == null ) return;
 
         getCamera().setTarget( bb.getBoundingSphere().getOrigin() );
         getCamera().setTargeted( true );
@@ -747,6 +752,7 @@ public class SciView extends SceneryBase {
         Function1<? super List<Scene.RaycastResult>, Unit> selectAction = nearest -> {
             if( !nearest.isEmpty() ) {
                 setActiveNode( nearest.get( 0 ).getNode() );
+                nodePropertyEditor.trySelectNode( getActiveNode() );
                 log.debug( "Selected node: " + getActiveNode().getName() );
             }
             return Unit.INSTANCE;
@@ -1097,7 +1103,6 @@ public class SciView extends SceneryBase {
         targetArcball.setTarget( n == null ? () -> new GLVector( 0, 0, 0 ) : () -> n.getBoundingBox().getBoundingSphere().getOrigin());
         eventService.publish( new NodeActivatedEvent( activeNode ) );
         // TODO: Is this necessary here?
-        // nodePropertyEditor.rebuildTree();
         getScene().getOnNodePropertiesChanged().put("updateInspector",
                 node -> { if(node == activeNode) {
                     nodePropertyEditor.updateProperties(activeNode);
@@ -1105,6 +1110,25 @@ public class SciView extends SceneryBase {
                 return null;
         });
         return activeNode;
+    }
+
+    @EventHandler
+    protected void onNodeAdded(NodeAddedEvent event) {
+        nodePropertyEditor.rebuildTree();
+    }
+
+    @EventHandler
+    protected void onNodeRemoved(NodeRemovedEvent event) {
+        nodePropertyEditor.rebuildTree();
+    }
+
+    @EventHandler
+    protected void onNodeChanged(NodeChangedEvent event) {
+    }
+
+    @EventHandler
+    protected void onNodeActivated(NodeActivatedEvent event) {
+
     }
 
     public void toggleInspectorWindow()
@@ -1311,6 +1335,7 @@ public class SciView extends SceneryBase {
 
 
         setActiveNode( v );
+        eventService.publish( new NodeAddedEvent( v ) );
 
         return v;
     }
