@@ -85,6 +85,7 @@ import net.imglib2.view.Views;
 import org.scijava.Context;
 import org.scijava.display.Display;
 import org.scijava.display.DisplayService;
+import org.scijava.event.EventHandler;
 import org.scijava.event.EventService;
 import org.scijava.io.IOService;
 import org.scijava.log.LogService;
@@ -103,6 +104,7 @@ import sc.iview.controls.behaviours.CameraTranslateControl;
 import sc.iview.controls.behaviours.NodeTranslateControl;
 import sc.iview.event.NodeActivatedEvent;
 import sc.iview.event.NodeAddedEvent;
+import sc.iview.event.NodeChangedEvent;
 import sc.iview.event.NodeRemovedEvent;
 import sc.iview.javafx.JavaFXMenuCreator;
 import sc.iview.process.MeshConverter;
@@ -129,6 +131,9 @@ import java.util.concurrent.Future;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+// we suppress unused warnings here because @Parameter-annotated fields
+// get updated automatically by SciJava.
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class SciView extends SceneryBase {
 
     public static final ColorRGB DEFAULT_COLOR = Colors.LIGHTGRAY;
@@ -583,6 +588,7 @@ public class SciView extends SceneryBase {
 
                     Thread.sleep(200);
                 } catch (InterruptedException e) {
+                    getLogger().error("Renderer construction interrupted.");
                 }
 
                 nodePropertyEditor.rebuildTree();
@@ -591,6 +597,8 @@ public class SciView extends SceneryBase {
             });
         }
 
+        // subscribe to Node{Added, Removed, Changed} events
+        eventService.subscribe(this);
     }
 
     public void setStatusText(String text) {
@@ -605,13 +613,12 @@ public class SciView extends SceneryBase {
         return floor;
     }
 
-    private float getFloory() {
+    private float getFloorY() {
         return floor.getPosition().y();
     }
 
-    private void setFloory( float new_pos ) {
-        float temp_pos = 0f;
-        temp_pos = new_pos;
+    private void setFloorY(float new_pos ) {
+        float temp_pos = new_pos;
         if( temp_pos < -100f ) temp_pos = -100f;
         else if( new_pos > 5f ) temp_pos = 5f;
         floor.getPosition().set( 1, temp_pos );
@@ -636,24 +643,25 @@ public class SciView extends SceneryBase {
     public void centerOnNode( Node currentNode ) {
         if( currentNode == null ) return;
 
-        Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
+        Node.OrientedBoundingBox bb = currentNode.getBoundingBox();
+        if( bb == null ) return;
 
-        getCamera().setTarget( currentNode.getPosition() );
+        getCamera().setTarget( bb.getBoundingSphere().getOrigin() );
         getCamera().setTargeted( true );
 
         // Set forward direction to point from camera at active node
-        getCamera().setForward( bb.getBoundingSphere().getOrigin().minus( getCamera().getPosition() ).normalize().times( -1 ) );
+        GLVector forward = bb.getBoundingSphere().getOrigin().minus( getCamera().getPosition() ).normalize().times( -1 );
 
         float distance = (float) (bb.getBoundingSphere().getRadius() / Math.tan( getCamera().getFov() / 360 * java.lang.Math.PI ));
 
         // Solve for the proper rotation
-        Quaternion rotation = new Quaternion().setLookAt( getCamera().getForward().toFloatArray(),
+        Quaternion rotation = new Quaternion().setLookAt( forward.toFloatArray(),
                                                           new GLVector(0,1,0).toFloatArray(),
                                                           new GLVector(1,0,0).toFloatArray(),
                                                           new GLVector( 0,1,0).toFloatArray(),
                                                           new GLVector( 0, 0, 1).toFloatArray() );
 
-        getCamera().setRotation( rotation.normalize() );
+        getCamera().setRotation( rotation.invert().normalize() );
         getCamera().setPosition( bb.getBoundingSphere().getOrigin().plus( getCamera().getForward().times( distance * -1 ) ) );
 
         getCamera().setDirty(true);
@@ -683,25 +691,31 @@ public class SciView extends SceneryBase {
     }
 
     public void resetFPSInputs() {
-        getInputHandler().addBehaviour( "move_forward_scroll",
+        InputHandler h = getInputHandler();
+        if(h == null) {
+            getLogger().error("InputHandler is null, cannot change bindings.");
+            return;
+        }
+
+        h.addBehaviour( "move_forward_scroll",
                                         new MovementCommand( "move_forward", "forward", () -> getScene().findObserver(),
                                                              getFPSSpeed() ) );
-        getInputHandler().addBehaviour( "move_forward",
+        h.addBehaviour( "move_forward",
                                         new MovementCommand( "move_forward", "forward", () -> getScene().findObserver(),
                                                              getFPSSpeed() ) );
-        getInputHandler().addBehaviour( "move_back",
+        h.addBehaviour( "move_back",
                                         new MovementCommand( "move_back", "back", () -> getScene().findObserver(),
                                                              getFPSSpeed() ) );
-        getInputHandler().addBehaviour( "move_left",
+        h.addBehaviour( "move_left",
                                         new MovementCommand( "move_left", "left", () -> getScene().findObserver(),
                                                              getFPSSpeed() ) );
-        getInputHandler().addBehaviour( "move_right",
+        h.addBehaviour( "move_right",
                                         new MovementCommand( "move_right", "right", () -> getScene().findObserver(),
                                                              getFPSSpeed() ) );
-        getInputHandler().addBehaviour( "move_up",
+        h.addBehaviour( "move_up",
                                         new MovementCommand( "move_up", "up", () -> getScene().findObserver(),
                                                              getFPSSpeed() ) );
-        getInputHandler().addBehaviour( "move_down",
+        h.addBehaviour( "move_down",
                                         new MovementCommand( "move_down", "down", () -> getScene().findObserver(),
                                                              getFPSSpeed() ) );
     }
@@ -747,41 +761,54 @@ public class SciView extends SceneryBase {
         Function1<? super List<Scene.RaycastResult>, Unit> selectAction = nearest -> {
             if( !nearest.isEmpty() ) {
                 setActiveNode( nearest.get( 0 ).getNode() );
+                nodePropertyEditor.trySelectNode( getActiveNode() );
                 log.debug( "Selected node: " + getActiveNode().getName() );
             }
             return Unit.INSTANCE;
         };
 
-        List<Class<? extends Object>> ignoredObjects = new ArrayList<>();
+        List<Class<?>> ignoredObjects = new ArrayList<>();
         ignoredObjects.add( BoundingGrid.class );
 
-        getInputHandler().useDefaultBindings( "" );
+        final InputHandler h = getInputHandler();
+        if(h == null) {
+            getLogger().error("InputHandler is null, cannot run input setup.");
+            return;
+        }
+
+        h.useDefaultBindings( "" );
 
         // Mouse controls
-        getInputHandler().addBehaviour( "object_selection_mode",
+        h.addBehaviour( "object_selection_mode",
                                         new SelectCommand( "objectSelector", getRenderer(), getScene(),
                                                            () -> getScene().findObserver(), false, ignoredObjects,
                                                            selectAction ) );
-        getInputHandler().addKeyBinding( "object_selection_mode", "double-click button1" );
+        h.addKeyBinding( "object_selection_mode", "double-click button1" );
 
         enableArcBallControl();
         enableFPSControl();
 
-        getInputHandler().addBehaviour( "mouse_control_nodetranslate", new NodeTranslateControl( this, 0.002f ) );
-        getInputHandler().addKeyBinding( "mouse_control_nodetranslate", "shift button2" );
+        h.addBehaviour( "mouse_control_nodetranslate", new NodeTranslateControl( this, 0.002f ) );
+        h.addKeyBinding( "mouse_control_nodetranslate", "shift button2" );
 
         // Extra keyboard controls
-        getInputHandler().addBehaviour( "show_help", new showHelpDisplay() );
-        getInputHandler().addKeyBinding( "show_help", "U" );
+        h.addBehaviour( "show_help", new showHelpDisplay() );
+        h.addKeyBinding( "show_help", "U" );
 
-        getInputHandler().addBehaviour( "enable_decrease", new enableDecrease() );
-        getInputHandler().addKeyBinding( "enable_decrease", "M" );
+        h.addBehaviour( "enable_decrease", new enableDecrease() );
+        h.addKeyBinding( "enable_decrease", "M" );
 
-        getInputHandler().addBehaviour( "enable_increase", new enableIncrease() );
-        getInputHandler().addKeyBinding( "enable_increase", "N" );
+        h.addBehaviour( "enable_increase", new enableIncrease() );
+        h.addKeyBinding( "enable_increase", "N" );
     }
 
     private void enableArcBallControl() {
+        final InputHandler h = getInputHandler();
+        if(h == null) {
+            getLogger().error("InputHandler is null, cannot setup arcball.");
+            return;
+        }
+
         GLVector target;
         if( getActiveNode() == null ) {
             target = new GLVector( 0, 0, 0 );
@@ -801,26 +828,32 @@ public class SciView extends SceneryBase {
         targetArcball.setScrollSpeedMultiplier( 0.05f );
         targetArcball.setDistance( getCamera().getPosition().minus( target ).magnitude() );
 
-        getInputHandler().addBehaviour( "mouse_control_arcball", targetArcball );
-        getInputHandler().addKeyBinding( "mouse_control_arcball", "shift button1" );
-        getInputHandler().addBehaviour( "scroll_arcball", targetArcball );
-        getInputHandler().addKeyBinding( "scroll_arcball", "shift scroll" );
+        h.addBehaviour( "mouse_control_arcball", targetArcball );
+        h.addKeyBinding( "mouse_control_arcball", "shift button1" );
+        h.addBehaviour( "scroll_arcball", targetArcball );
+        h.addKeyBinding( "scroll_arcball", "shift scroll" );
     }
 
     private void enableFPSControl() {
+        final InputHandler h = getInputHandler();
+        if(h == null) {
+            getLogger().error("InputHandler is null, cannot setup fps control.");
+            return;
+        }
+
         Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
         fpsControl = new FPSCameraControl( "mouse_control", cameraSupplier, getRenderer().getWindow().getWidth(),
                                            getRenderer().getWindow().getHeight() );
 
-        getInputHandler().addBehaviour( "mouse_control", fpsControl );
-        getInputHandler().addKeyBinding( "mouse_control", "button1" );
+        h.addBehaviour( "mouse_control", fpsControl );
+        h.addKeyBinding( "mouse_control", "button1" );
 
-        getInputHandler().addBehaviour( "mouse_control_cameratranslate", new CameraTranslateControl( this, 0.002f ) );
-        getInputHandler().addKeyBinding( "mouse_control_cameratranslate", "button2" );
+        h.addBehaviour( "mouse_control_cameratranslate", new CameraTranslateControl( this, 0.002f ) );
+        h.addKeyBinding( "mouse_control_cameratranslate", "button2" );
 
         resetFPSInputs();
 
-        getInputHandler().addKeyBinding( "move_forward_scroll", "scroll" );
+        h.addKeyBinding( "move_forward_scroll", "scroll" );
     }
 
     public Node addBox() {
@@ -1094,9 +1127,9 @@ public class SciView extends SceneryBase {
     public Node setActiveNode( Node n ) {
         if( activeNode == n ) return activeNode;
         activeNode = n;
-        targetArcball.setTarget( n == null ? () -> new GLVector( 0, 0, 0 ) : n::getPosition);
+        targetArcball.setTarget( n == null ? () -> new GLVector( 0, 0, 0 ) : () -> n.getBoundingBox().getBoundingSphere().getOrigin());
         eventService.publish( new NodeActivatedEvent( activeNode ) );
-        nodePropertyEditor.rebuildTree();
+        // TODO: Is this necessary here?
         getScene().getOnNodePropertiesChanged().put("updateInspector",
                 node -> { if(node == activeNode) {
                     nodePropertyEditor.updateProperties(activeNode);
@@ -1104,6 +1137,27 @@ public class SciView extends SceneryBase {
                 return null;
         });
         return activeNode;
+    }
+
+    @EventHandler
+    protected void onNodeAdded(NodeAddedEvent event) {
+        nodePropertyEditor.rebuildTree();
+    }
+
+    @EventHandler
+    protected void onNodeRemoved(NodeRemovedEvent event) {
+        nodePropertyEditor.rebuildTree();
+    }
+
+    @EventHandler
+    protected void onNodeChanged(NodeChangedEvent event) {
+        // TODO: add listener code for node changes, if necessary
+    }
+
+    @EventHandler
+    protected void onNodeActivated(NodeActivatedEvent event) {
+        // TODO: add listener code for node activation, if necessary
+        // NOTE: do not update property window here, this will lead to a loop.
     }
 
     public void toggleInspectorWindow()
@@ -1256,11 +1310,13 @@ public class SciView extends SceneryBase {
         n.getMetadata().put("sciviewColormap", colorTable);
 
         if(n instanceof Volume) {
-            ((Volume) n).getColormaps().put("sciviewColormap", new Volume.Colormap.ColormapBuffer(new GenericTexture("colorTable",
-                    new GLVector(colorTable.getLength(),
-                            copies, 1.0f), 4,
+            ((Volume) n).getColormaps().put("sciviewColormap",
+                    new Volume.Colormap.ColormapBuffer(new GenericTexture("colorTable",
+                    new GLVector(colorTable.getLength(), copies, 1.0f), 4,
                     GLTypeEnum.UnsignedByte,
-                    byteBuffer)));
+                    byteBuffer,
+                    // don't repeat the color map
+                    false, false, false)));
             ((Volume) n).setColormap("sciviewColormap");
         }
     }
@@ -1269,7 +1325,7 @@ public class SciView extends SceneryBase {
                                                                     float... voxelDimensions ) {
         log.debug( "Add Volume" );
 
-        long dimensions[] = new long[3];
+        long[] dimensions = new long[3];
         image.dimensions( dimensions );
 
         Volume v = new Volume();
@@ -1296,16 +1352,6 @@ public class SciView extends SceneryBase {
 
         updateVolume( image, name, voxelDimensions, v );
 
-        GLVector scaleVec = new GLVector( 0.5f * dimensions[0], //
-                                          0.5f * dimensions[1], //
-                                          0.5f * dimensions[2] );
-
-        v.setScale( scaleVec );// TODO maybe dont do this
-        // TODO: This translation should probably be accounted for in scenery; volumes use a corner-origin and
-        //        meshes use center-origin coordinate systems.
-        v.setPosition( v.getPosition().plus( new GLVector( 0.5f * dimensions[0] - 0.5f, 0.5f * dimensions[1] - 0.5f,
-                                                           0.5f * dimensions[2] - 0.5f ) ) );
-
         v.setTrangemin( minVal );
         v.setTrangemax( maxVal );
         v.setTransferFunction(TransferFunction.ramp(0.0f, 0.4f));
@@ -1318,6 +1364,7 @@ public class SciView extends SceneryBase {
 
 
         setActiveNode( v );
+        eventService.publish( new NodeAddedEvent( v ) );
 
         return v;
     }
@@ -1326,7 +1373,7 @@ public class SciView extends SceneryBase {
                                                                        float[] voxelDimensions, Volume v ) {
         log.debug( "Update Volume" );
 
-        long dimensions[] = new long[3];
+        long[] dimensions = new long[3];
         image.dimensions( dimensions );
 
         @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
@@ -1407,12 +1454,16 @@ public class SciView extends SceneryBase {
         final Node currentNode = getActiveNode();
         if( currentNode != null ) {
             final Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
+            if(bb == null) {
+                getLogger().warn("Node " + currentNode.getName() + " does not have a bounding box, not adjusting floor.");
+                return;
+            }
             final Node.BoundingSphere bs = bb.getBoundingSphere();
             final float neededFloor = bb.getMin().y() - Math.max( bs.getRadius(), 1 );
-            if( neededFloor < getFloory() ) setFloory( neededFloor );
+            if( neededFloor < getFloorY() ) setFloorY( neededFloor );
         }
 
-        floor.setPosition( new GLVector( 0f, getFloory(), 0f ) );
+        floor.setPosition( new GLVector( 0f, getFloorY(), 0f ) );
     }
 
     public Settings getScenerySettings() {
@@ -1437,27 +1488,20 @@ public class SciView extends SceneryBase {
         }
 
         TrackerInput ti = null;
+        boolean hmdAdded = false;
 
         if (!getHub().has(SceneryElement.HMDInput)) {
             try {
                 final OpenVRHMD hmd = new OpenVRHMD(false, true);
-                getHub().add(SceneryElement.HMDInput, hmd);
-                ti = hmd;
 
-                // we need to force reloading the renderer as the HMD might require device or instance extensions
-                if(getRenderer() instanceof VulkanRenderer) {
-                    replaceRenderer(getRenderer().getClass().getSimpleName(), true);
-                    Thread.sleep(1000);
-
-                    while(getRenderer().getInitialized() == false) {
-                        getLogger().info("Waiting for renderer reinitialisation");
-                        try {
-                            Thread.sleep(300);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                if(hmd.initializedAndWorking()) {
+                    getHub().add(SceneryElement.HMDInput, hmd);
+                    ti = hmd;
+                } else {
+                    getLogger().warn("Could not initialise VR headset, just activating stereo rendering.");
                 }
+
+                hmdAdded = true;
             } catch (Exception e) {
                 getLogger().error("Could not add OpenVRHMD: " + e.toString());
             }
@@ -1471,6 +1515,23 @@ public class SciView extends SceneryBase {
             ((DetachedHeadCamera) cam).setTracker(null);
         }
 
-        getRenderer().toggleVR();
+        getRenderer().setPushMode(false);
+        // we need to force reloading the renderer as the HMD might require device or instance extensions
+        if(getRenderer() instanceof VulkanRenderer && hmdAdded) {
+            replaceRenderer(getRenderer().getClass().getSimpleName(), true, true);
+            getRenderer().toggleVR();
+
+            while(!getRenderer().getInitialized() || !getRenderer().getFirstImageReady()) {
+                getLogger().info("Waiting for renderer reinitialisation");
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            getRenderer().toggleVR();
+        }
+
     }
 }

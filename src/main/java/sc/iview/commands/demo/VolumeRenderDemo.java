@@ -28,14 +28,9 @@
  */
 package sc.iview.commands.demo;
 
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_VOLUME_RENDER;
-
+import graphics.scenery.volumes.TransferFunction;
+import graphics.scenery.volumes.Volume;
 import io.scif.services.DatasetIOService;
-
-import java.io.File;
-import java.io.IOException;
-
 import net.imagej.Dataset;
 import net.imagej.mesh.Mesh;
 import net.imagej.ops.OpService;
@@ -43,16 +38,19 @@ import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
 import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
-
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-
 import sc.iview.SciView;
+import sc.iview.process.MeshConverter;
 
-import graphics.scenery.Node;
+import java.io.File;
+import java.io.IOException;
+
+import static sc.iview.commands.MenuWeights.DEMO;
+import static sc.iview.commands.MenuWeights.DEMO_VOLUME_RENDER;
 
 /**
  * A demo of volume rendering.
@@ -60,9 +58,9 @@ import graphics.scenery.Node;
  * @author Kyle Harrington
  * @author Curtis Rueden
  */
-@Plugin(type = Command.class, label = "Volume Render Demo", menuRoot = "SciView", //
+@Plugin(type = Command.class, label = "Volume Render/Isosurface Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Volume Render", weight = DEMO_VOLUME_RENDER) })
+                 @Menu(label = "Volume Render/Isosurface", weight = DEMO_VOLUME_RENDER) })
 public class VolumeRenderDemo implements Command {
 
     @Parameter
@@ -77,8 +75,8 @@ public class VolumeRenderDemo implements Command {
     @Parameter
     private SciView sciView;
 
-    @Parameter
-    private boolean iso;
+    @Parameter(label = "Show isosurface")
+    private boolean iso = true;
 
     @Override
     public void run() {
@@ -93,7 +91,9 @@ public class VolumeRenderDemo implements Command {
             return;
         }
 
-        Node v = sciView.addVolume( cube, new float[] { 1, 1, 1 } );
+        Volume v = (Volume)sciView.addVolume( cube, new float[] { 1, 1, 1 } );
+        v.setTransferFunction(TransferFunction.ramp(0.4f, 0.1f));
+        v.setRenderScale(100.0f);
         v.setName( "Volume Render Demo" );
 
         if (iso) {
@@ -103,13 +103,17 @@ public class VolumeRenderDemo implements Command {
             Img<UnsignedByteType> cubeImg = ( Img<UnsignedByteType> ) cube.getImgPlus().getImg();
 
             Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( cubeImg, new UnsignedByteType( isoLevel ) );
-            //Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().maxEntropy( cubeImg );
 
             Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
 
-            sciView.addMesh( m ).setName( "Volume Render Demo Isosurface" );
+            graphics.scenery.Mesh isoSurfaceMesh = MeshConverter.toScenery(m);
+            sciView.addMesh(isoSurfaceMesh);
+
+            isoSurfaceMesh.setRenderScale(0.1f);
+            isoSurfaceMesh.setName( "Volume Render Demo Isosurface" );
         }
 
+        sciView.setActiveNode(v);
         sciView.centerOnNode( sciView.getActiveNode() );
     }
 }

@@ -28,8 +28,10 @@
  */
 package sc.iview.commands.view;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Enumeration;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -39,10 +41,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.WindowConstants;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
-import javax.swing.tree.TreeSelectionModel;
+import javax.swing.tree.*;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -160,7 +159,11 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     @EventHandler
     private void onEvent( final NodeActivatedEvent evt ) {
         final Node node = evt.getNode();
-        System.out.println( "Node activated: " + node );
+        if(node != null) {
+            System.out.println("Node activated: " + node + " (" + node.getName() + ")");
+        } else {
+            System.out.println("Node activated: " + node);
+        }
         updateProperties( sciView.getActiveNode() );
     }
 
@@ -188,14 +191,33 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     private void createTree() {
         treeModel = new DefaultTreeModel( new SceneryTreeNode( sciView ) );
         tree = new JTree( treeModel );
-        tree.setRootVisible( false );
+        tree.setRootVisible( true );
+        tree.setCellRenderer(new NodePropertyTreeCellRenderer());
 
         tree.getSelectionModel().setSelectionMode( TreeSelectionModel.SINGLE_TREE_SELECTION );
         tree.addTreeSelectionListener( e -> {
             final Node sceneNode = sceneNode( e.getNewLeadSelectionPath() );
-            sciView.setActiveNode( sceneNode );
+//            sciView.setActiveNode( sceneNode );
             updateProperties( sceneNode );
         } );
+
+        tree.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+
+                if(e.getClickCount() == 2) {
+                    SceneryTreeNode n = (SceneryTreeNode)tree.getLastSelectedPathComponent();
+                    if(n == null) {
+                        return;
+                    }
+
+                    Node node = (Node)n.getUserObject();
+                    sciView.setActiveNode( node );
+                    sciView.centerOnNode( node );
+                }
+            }
+        });
     }
 
     /** Generates a properties panel for the given node. */
@@ -237,13 +259,38 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
 
     private void updatePropertiesPanel( final Component c ) {
         props.removeAll();
-        props.add( c == null ? new JLabel( "<no node selected>" ) : c );
+
+        if( c == null ) {
+            final JLabel usageLabel = new JLabel( "<html><em>No node selected.</em><br><br>" +
+                    "Single-clicking a node in the tree above selects it, while double-clicking centers the 3D view on the node.<br><br>" +
+                    "Drag in the 3D view to the left to look around, hold shift while dragging to rotate around selected node. Scrolling while holding shift zooms in and out.<br><br>" +
+                    "W, A, S, D moves you around, holding shift while moving slows down the movement.</html>");
+            usageLabel.setPreferredSize(new Dimension(300, 100));
+            props.add( usageLabel );
+        } else {
+            props.add( c );
+            props.setSize(c.getSize());
+        }
+
         props.validate();
         props.repaint();
     }
 
+    private TreePath find(DefaultMutableTreeNode root, Node n) {
+        @SuppressWarnings("unchecked")
+        Enumeration<DefaultMutableTreeNode> e = root.depthFirstEnumeration();
+        while (e.hasMoreElements()) {
+            DefaultMutableTreeNode node = e.nextElement();
+            if (node.getUserObject() == n) {
+                return new TreePath(node.getPath());
+            }
+        }
+        return null;
+    }
+
     /** Rebuilds the tree to match the state of the scene. */
     public void rebuildTree() {
+        final TreePath currentPath = tree.getSelectionPath();
         treeModel.setRoot( new SceneryTreeNode( sciView ) );
 
 //        treeModel.reload();
@@ -252,6 +299,18 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
 //            tree.expandRow( i );
 //        }
         updateProperties( sciView.getActiveNode() );
+
+        if(currentPath != null) {
+            final Node selectedNode = ((SceneryTreeNode)currentPath.getLastPathComponent()).node;
+            trySelectNode(selectedNode);
+        }
+    }
+
+    public void trySelectNode(Node node) {
+        final TreePath newPath = find((DefaultMutableTreeNode) treeModel.getRoot(), node);
+        if(newPath != null) {
+            tree.setSelectionPath(newPath);
+        }
     }
 
     /** Retrieves the scenery node of a given tree node. */
@@ -292,7 +351,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
 
         @Override
         public String toString() {
-            return node == null ? "<SCENE>" : node.getName();
+            return node == null ? "Scene" : node.getName();
         }
 
         private void addNode( final Node child ) {
