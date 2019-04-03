@@ -1174,20 +1174,22 @@ public class SciView extends SceneryBase {
 
     }
 
-    public synchronized void animate( int fps, Runnable action ) {
+    public synchronized Future<?> animate(int fps, Runnable action ) {
         // TODO: Make animation speed less laggy and more accurate.
         final int delay = 1000 / fps;
-        animations.add( threadService.run( () -> {
-            while( animating ) {
+        Future<?> thread = threadService.run(() -> {
+            while (animating) {
                 action.run();
                 try {
-                    Thread.sleep( delay );
-                } catch( InterruptedException e ) {
+                    Thread.sleep(delay);
+                } catch (InterruptedException e) {
                     break;
                 }
             }
-        } ) );
+        });
+        animations.add( thread );
         animating = true;
+        return thread;
     }
 
     public synchronized void stopAnimation() {

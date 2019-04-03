@@ -73,9 +73,6 @@ public class GameOfLife3D extends InteractiveCommand {
     @Parameter
     private SciView sciView;
 
-    @Parameter
-    private EventService eventService;
-
     @Parameter(label = "Starvation threshold", min = "0", max = "26", persist = false)
     private int starvation = 5;
 
@@ -185,7 +182,7 @@ public class GameOfLife3D extends InteractiveCommand {
         field = ArrayImgs.unsignedBytes( w, h, d );
         randomize();
 
-        eventService.subscribe(this);
+        //eventService.subscribe(this);
     }
 
     // -- Previewable methods --
