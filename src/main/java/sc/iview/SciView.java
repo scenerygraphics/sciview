@@ -1490,7 +1490,7 @@ public class SciView extends SceneryBase {
             replaceRenderer(getRenderer().getClass().getSimpleName(), true, true);
             getRenderer().toggleVR();
 
-            while(getRenderer().getInitialized() == false || getRenderer().getFirstImageReady() == false) {
+            while(!getRenderer().getInitialized() || !getRenderer().getFirstImageReady()) {
                 getLogger().info("Waiting for renderer reinitialisation");
                 try {
                     Thread.sleep(200);
