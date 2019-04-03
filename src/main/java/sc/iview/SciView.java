@@ -1124,11 +1124,13 @@ public class SciView extends SceneryBase {
 
     @EventHandler
     protected void onNodeChanged(NodeChangedEvent event) {
+        // TODO: add listener code for node changes, if necessary
     }
 
     @EventHandler
     protected void onNodeActivated(NodeActivatedEvent event) {
-
+        // TODO: add listener code for node activation, if necessary
+        // NOTE: do not update property window here, this will lead to a loop.
     }
 
     public void toggleInspectorWindow()
