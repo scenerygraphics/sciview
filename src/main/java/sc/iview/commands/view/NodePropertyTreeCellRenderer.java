@@ -28,7 +28,6 @@ class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
     private static final Icon textIcon = getImageIcon("text.png");
     private static final Icon volumeIcon = getImageIcon("volume.png");
 
-    private Color nodeForeground = null;
     private Color nodeBackground = null;
     private boolean overrideColor = false;
 
@@ -76,11 +75,11 @@ class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
      * @param rgb RGB color, with each channel in [0, 1].
      * @return converted color in HSL space
      */
-    public static GLVector RGBtoHSL(GLVector rgb) {
+    public static GLVector convertRGBtoHSL(GLVector rgb) {
         float max = Math.max(rgb.x(), Math.max(rgb.y(), rgb.z()));
         float min = Math.min(rgb.x(), Math.min(rgb.y(), rgb.z()));
-        float h = (max + min)/2.0f;
-        float s = (max + min)/2.0f;
+        float h;
+        float s;
         float l = (max + min)/2.0f;
 
         if(max == min) {
@@ -140,7 +139,7 @@ class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
                     emissionColor.x(),
                     emissionColor.y(),
                     emissionColor.z());
-            final GLVector hslEmissionColor = RGBtoHSL(emissionColor);
+            final GLVector hslEmissionColor = convertRGBtoHSL(emissionColor);
 
 
             setOpaque(true);
