@@ -40,12 +40,15 @@ import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
+import org.scijava.event.EventHandler;
+import org.scijava.event.EventService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.Button;
 import org.scijava.widget.NumberWidget;
 import sc.iview.SciView;
+import sc.iview.event.NodeRemovedEvent;
 
 import static sc.iview.commands.MenuWeights.DEMO;
 import static sc.iview.commands.MenuWeights.DEMO_GAME_OF_LIFE;
@@ -69,6 +72,9 @@ public class GameOfLife3D extends InteractiveCommand {
 
     @Parameter
     private SciView sciView;
+
+    @Parameter
+    private EventService eventService;
 
     @Parameter(label = "Starvation threshold", min = "0", max = "26", persist = false)
     private int starvation = 5;
@@ -111,9 +117,7 @@ public class GameOfLife3D extends InteractiveCommand {
 
     /** Repeatedly iterates the simulation until stopped **/
     public void play() {
-        sciView.animate( playSpeed, () -> {
-            iterate();
-        } );
+        sciView.animate( playSpeed, this::iterate);
     }
 
     /** Stops the simulation **/
@@ -180,6 +184,8 @@ public class GameOfLife3D extends InteractiveCommand {
     public void run() {
         field = ArrayImgs.unsignedBytes( w, h, d );
         randomize();
+
+        eventService.subscribe(this);
     }
 
     // -- Previewable methods --
@@ -269,6 +275,17 @@ public class GameOfLife3D extends InteractiveCommand {
         } else {
             // NB: Name must be unique each time.
             sciView.updateVolume( field, name + "-" + ++tick, voxelDims, volume );
+        }
+    }
+
+    /**
+     * Stops the animation when the volume node is removed.
+     * @param event
+     */
+    @EventHandler
+    private void  onNodeRemoved(NodeRemovedEvent event) {
+        if(event.getNode() == volume) {
+            sciView.stopAnimation();
         }
     }
 }
