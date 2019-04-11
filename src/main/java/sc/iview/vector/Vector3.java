@@ -269,4 +269,9 @@ public interface Vector3 extends RealLocalizable, RealPositionable {
 
     @Override
     default int numDimensions() { return 3; }
+
+    // Extra convenience methods
+    default double getLength() {
+        return Math.sqrt( getDoublePosition(0) * getDoublePosition(0) + getDoublePosition(1) * getDoublePosition(1) + getDoublePosition(2) * getDoublePosition(2) );
+    }
 }
