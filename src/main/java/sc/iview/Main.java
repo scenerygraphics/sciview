@@ -49,7 +49,6 @@ public class Main {
     public static void main( String... args ) {
         SceneryBase.xinitThreads();
 
-
         System.setProperty( "scijava.log.level:sc.iview", "debug" );
         Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
 

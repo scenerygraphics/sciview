@@ -904,6 +904,12 @@ public class SciView extends SceneryBase {
         return addNode( sphere );
     }
 
+    public Node addCylinder( final Vector3 position, final float radius, final float height, final int num_segments ) {
+        final Cylinder cyl = new Cylinder( radius, height, num_segments );
+        cyl.setPosition( ClearGLVector3.convert( position ) );
+        return cyl;
+    }
+
     public Node addLine() {
         return addLine( new ClearGLVector3( 0.0f, 0.0f, 0.0f ), new ClearGLVector3( 0.0f, 0.0f, 0.0f ) );
     }

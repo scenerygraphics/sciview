@@ -52,6 +52,11 @@ public class FloatVector3 implements Vector3 {
     @Override public void setZ( float position ) { z = position; }
 
     @Override
+    public Vector3 copy() {
+        return new FloatVector3(xf(),yf(),zf());
+    }
+
+    @Override
     public String toString() {
         return "[" + xf() + "; " + yf() + "; " + zf() + "]";
     }
