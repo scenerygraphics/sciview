@@ -260,7 +260,7 @@ public class SciView extends SceneryBase {
                 BasicLookAndFeel darcula = new DarculaLaf();
                 UIManager.setLookAndFeel(darcula);
             } catch (Exception e) {
-                System.err.println("Could not load Darcula Look and Feel");
+                getLogger().info("Could not load Darcula Look and Feel");
             }
         }
 
@@ -1265,10 +1265,13 @@ public class SciView extends SceneryBase {
     }
 
     public Node addBDVVolume( String source ) {
+        //getSettings().set("Renderer.HDR.Exposure", 20.0f);
+
         final VolumeViewerOptions opts = new VolumeViewerOptions();
         opts.maxCacheSizeInMB(Integer.parseInt(System.getProperty("scenery.BDVVolume.maxCacheSize", "512")));
         final BDVVolume v = new BDVVolume(source, opts);
         v.setScale(new GLVector(0.01f, 0.01f, 0.01f));
+        v.setBoundingBox(v.generateBoundingBox());
 
         getScene().addChild(v);
         setActiveNode(v);
