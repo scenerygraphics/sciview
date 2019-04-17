@@ -217,6 +217,7 @@ public class SciView extends SceneryBase {
     private final SceneryPanel[] sceneryPanel = { null };
     private JSplitPane inspector;
     private NodePropertyEditor nodePropertyEditor;
+    private ArrayList<PointLight> lights;
 
     public SciView( Context context ) {
         super( "SciView", 1280, 720, false, context );
@@ -528,14 +529,15 @@ public class SciView extends SceneryBase {
         tetrahedron[2] = new GLVector( 0.0f,1.0f,1.0f/(float)Math.sqrt(2.0) );
         tetrahedron[3] = new GLVector( 0.0f,-1.0f,1.0f/(float)Math.sqrt(2.0) );
 
-        PointLight[] lights = new PointLight[4];
+        lights = new ArrayList<PointLight>();
 
-        for( int i = 0; i < lights.length; i++ ) {
-            lights[i] = new PointLight( 150.0f );
-            lights[i].setPosition( tetrahedron[i].times(25.0f) );
-            lights[i].setEmissionColor( new GLVector( 1.0f, 1.0f, 1.0f ) );
-            lights[i].setIntensity( 100.0f );
-            getScene().addChild( lights[i] );
+        for( int i = 0; i < 4; i++ ) {// TODO allow # initial lights to be customizable?
+            PointLight light = new PointLight(150.0f);
+            light.setPosition( tetrahedron[i].times(25.0f) );
+            light.setEmissionColor( new GLVector( 1.0f, 1.0f, 1.0f ) );
+            light.setIntensity( 100.0f );
+            lights.add( light );
+            getScene().addChild( light );
         }
 
         Camera cam = new DetachedHeadCamera();
@@ -638,6 +640,10 @@ public class SciView extends SceneryBase {
 
     public Display<?> getDisplay() {
         return scijavaDisplay;
+    }
+
+    public void centerOnScene() {
+        centerOnNode(getScene());
     }
 
     public void centerOnNode( Node currentNode ) {
@@ -883,6 +889,7 @@ public class SciView extends SceneryBase {
         return addNode( box );
     }
 
+
     public Node addSphere() {
         return addSphere( new ClearGLVector3( 0.0f, 0.0f, 0.0f ), 1 );
     }
@@ -950,8 +957,24 @@ public class SciView extends SceneryBase {
         final PointLight light = new PointLight( 5.0f );
         light.setMaterial( material );
         light.setPosition( new GLVector( 0.0f, 0.0f, 0.0f ) );
+        lights.add(light);
 
         return addNode( light );
+    }
+
+    public void surroundLighting() {
+        Node.BoundingSphere boundingSphere = getScene().getMaximumBoundingBox().getBoundingSphere();
+        // Choose a good y-position, then place lights around the cross-section through this plane
+        float y = 0;
+        GLVector c = boundingSphere.getOrigin();
+        float r = boundingSphere.getRadius();
+        for( int k = 0; k < lights.size(); k++ ) {
+            PointLight light = lights.get(k);
+            float x = (float) (c.x() + r * Math.cos( k == 0 ? 0 : Math.PI * 2 * ((float)k / (float)lights.size()) ));
+            float z = (float) (c.y() + r * Math.sin( k == 0 ? 0 : Math.PI * 2 * ((float)k / (float)lights.size()) ));
+            light.setLightRadius( 2 * r );
+            light.setPosition( new GLVector( x, y, z ) );
+        }
     }
 
     public void writeSCMesh( String filename, Mesh scMesh ) {
@@ -1215,7 +1238,7 @@ public class SciView extends SceneryBase {
     }
 
     public Node[] getSceneNodes() {
-        return getSceneNodes( n -> !( n instanceof Camera ) && !( n instanceof PointLight ) );
+        return getSceneNodes( n -> !( n instanceof Camera ) && !( n instanceof PointLight  ) );
     }
 
     public Node[] getSceneNodes( Predicate<? super Node> filter ) {
@@ -1464,6 +1487,13 @@ public class SciView extends SceneryBase {
         // Lower the floor below the active node, as needed.
         final Node currentNode = getActiveNode();
         if( currentNode != null ) {
+            while( currentNode.getDirty() || currentNode.getNeedsUpdate() ) {
+                try {
+                    Thread.sleep(20);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
             final Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
             if(bb == null) {
                 getLogger().warn("Node " + currentNode.getName() + " does not have a bounding box, not adjusting floor.");
