@@ -917,6 +917,12 @@ public class SciView extends SceneryBase {
         return cyl;
     }
 
+    public Node addCone( final Vector3 position, final float radius, final float height, final int num_segments ) {
+        final Cone cone = new Cone( radius, height, num_segments );
+        cone.setPosition( ClearGLVector3.convert( position ) );
+        return cone;
+    }
+
     public Node addLine() {
         return addLine( new ClearGLVector3( 0.0f, 0.0f, 0.0f ), new ClearGLVector3( 0.0f, 0.0f, 0.0f ) );
     }
