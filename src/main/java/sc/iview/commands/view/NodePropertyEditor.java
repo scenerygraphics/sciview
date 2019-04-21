@@ -138,21 +138,21 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     @EventHandler
     private void onEvent( final NodeAddedEvent evt ) {
         final Node node = evt.getNode();
-        System.out.println( "Node added: " + node );
+        log.info( "Node added: " + node );
         rebuildTree();
     }
 
     @EventHandler
     private void onEvent( final NodeRemovedEvent evt ) {
         final Node node = evt.getNode();
-        System.out.println( "Node removed: " + node );
+        log.info( "Node removed: " + node );
         rebuildTree();
     }
 
     @EventHandler
     private void onEvent( final NodeChangedEvent evt ) {
         final Node node = evt.getNode();
-        System.out.println( "Node changed: " + node );
+        log.info( "Node changed: " + node );
         updateProperties( sciView.getActiveNode() );
     }
 
@@ -160,9 +160,9 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     private void onEvent( final NodeActivatedEvent evt ) {
         final Node node = evt.getNode();
         if(node != null) {
-            System.out.println("Node activated: " + node + " (" + node.getName() + ")");
+            log.info("Node activated: " + node + " (" + node.getName() + ")");
         } else {
-            System.out.println("Node activated: " + node);
+            log.info("Node activated: " + node);
         }
         updateProperties( sciView.getActiveNode() );
     }
