@@ -37,6 +37,7 @@ import coremem.enums.NativeTypeEnum;
 import graphics.scenery.Box;
 import graphics.scenery.*;
 import graphics.scenery.backends.Renderer;
+import graphics.scenery.backends.opengl.OpenGLRenderer;
 import graphics.scenery.backends.vulkan.VulkanRenderer;
 import graphics.scenery.controls.InputHandler;
 import graphics.scenery.controls.OpenVRHMD;
@@ -230,6 +231,13 @@ public class SciView extends SceneryBase {
 
     public InputHandler publicGetInputHandler() {
         return getInputHandler();
+    }
+
+    public void toggleRecordVideo() {
+        if( getRenderer() instanceof  OpenGLRenderer )
+            ((OpenGLRenderer)getRenderer()).recordMovie();
+        else
+            ((VulkanRenderer)getRenderer()).recordMovie();
     }
 
     public class TransparentSlider extends JSlider {
