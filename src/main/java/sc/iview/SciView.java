@@ -814,6 +814,23 @@ public class SciView extends SceneryBase {
 
         h.addBehaviour( "enable_increase", new enableIncrease() );
         h.addKeyBinding( "enable_increase", "N" );
+
+        //float veryFastSpeed = getScene().getMaximumBoundingBox().getBoundingSphere().getRadius()/50f;
+        float veryFastSpeed = 100f;
+        h.addBehaviour("move_forward_veryfast", new MovementCommand("move_forward", "forward", () -> getScene().findObserver(), veryFastSpeed));
+        h.addBehaviour("move_back_veryfast", new MovementCommand("move_back", "back", () -> getScene().findObserver(), veryFastSpeed));
+        h.addBehaviour("move_left_veryfast", new MovementCommand("move_left", "left", () -> getScene().findObserver(), veryFastSpeed));
+        h.addBehaviour("move_right_veryfast", new MovementCommand("move_right", "right", () -> getScene().findObserver(), veryFastSpeed));
+        h.addBehaviour("move_up_veryfast", new MovementCommand("move_up", "up", () -> getScene().findObserver(), veryFastSpeed));
+        h.addBehaviour("move_down_veryfast", new MovementCommand("move_down", "down", () -> getScene().findObserver(), veryFastSpeed));
+
+        h.addKeyBinding("move_forward_veryfast", "ctrl shift W");
+        h.addKeyBinding("move_back_veryfast", "ctrl shift S");
+        h.addKeyBinding("move_left_veryfast", "ctrl shift A");
+        h.addKeyBinding("move_right_veryfast", "ctrl shift D");
+        h.addKeyBinding("move_up_veryfast", "ctrl shift Z");
+        h.addKeyBinding("move_down_veryfast", "ctrl shift C");
+
     }
 
     private void enableArcBallControl() {
