@@ -43,6 +43,7 @@ public final class MenuWeights {
     public static final double PROCESS = 2;
     public static final double VIEW = 3;
     public static final double DEMO = 4;
+    public static final double HELP = 4;
 
     public static final double FILE_OPEN = 0;
     public static final double FILE_EXPORT_STL = 100;
@@ -81,4 +82,6 @@ public final class MenuWeights {
     public static final double DEMO_MESH_TEXTURE = 2;
     public static final double DEMO_VOLUME_RENDER = 3;
     public static final double DEMO_GAME_OF_LIFE = 4;
+
+    public static final double HELP_HELP = 0;
 }

@@ -99,6 +99,11 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     private JTree tree;
     private JPanel props;
 
+    public static String USAGE_TEXT =
+                    "Single-clicking a node in the tree above selects it, while double-clicking centers the 3D view on the node.<br><br>" +
+                    "Drag in the 3D view to the left to look around, hold shift while dragging to rotate around selected node. Scrolling while holding shift zooms in and out.<br><br>" +
+                    "W, A, S, D moves you around, holding shift while moving slows down the movement.";
+
     public JPanel getProps() {
         return props;
     }
@@ -261,10 +266,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         props.removeAll();
 
         if( c == null ) {
-            final JLabel usageLabel = new JLabel( "<html><em>No node selected.</em><br><br>" +
-                    "Single-clicking a node in the tree above selects it, while double-clicking centers the 3D view on the node.<br><br>" +
-                    "Drag in the 3D view to the left to look around, hold shift while dragging to rotate around selected node. Scrolling while holding shift zooms in and out.<br><br>" +
-                    "W, A, S, D moves you around, holding shift while moving slows down the movement.</html>");
+            final JLabel usageLabel = new JLabel( "<html><em>No node selected.</em><br><br>" + USAGE_TEXT + "</html>" );
             usageLabel.setPreferredSize(new Dimension(300, 100));
             props.add( usageLabel );
         } else {
