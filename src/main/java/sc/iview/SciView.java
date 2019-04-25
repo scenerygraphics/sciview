@@ -1122,18 +1122,15 @@ public class SciView extends SceneryBase {
 
         final PointCloud pointCloud = new PointCloud( getDefaultPointSize(), name );
         final Material material = new Material();
-        final FloatBuffer vBuffer = ByteBuffer.allocateDirect( flatVerts.length * 4 ) //
-                .order( ByteOrder.nativeOrder() ).asFloatBuffer();
-        final FloatBuffer nBuffer = ByteBuffer.allocateDirect( 0 ) //
-                .order( ByteOrder.nativeOrder() ).asFloatBuffer();
+        final FloatBuffer vBuffer = BufferUtils.allocateFloat( flatVerts.length * 4 );
+        final FloatBuffer nBuffer = BufferUtils.allocateFloat( 0 );
 
         vBuffer.put( flatVerts );
         vBuffer.flip();
 
         pointCloud.setVertices( vBuffer );
         pointCloud.setNormals( nBuffer );
-        pointCloud.setIndices( ByteBuffer.allocateDirect( 0 ) //
-                                       .order( ByteOrder.nativeOrder() ).asIntBuffer() );
+        pointCloud.setIndices( BufferUtils.allocateInt( 0 ) );
         pointCloud.setupPointCloud();
         material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
         material.setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );

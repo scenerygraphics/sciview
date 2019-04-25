@@ -33,6 +33,7 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
+import graphics.scenery.BufferUtils;
 import net.imagej.mesh.Meshes;
 import net.imagej.mesh.nio.BufferMesh;
 
@@ -101,7 +102,7 @@ public class MeshConverter {
 
         // Compute the triangle normals.
         final FloatBuffer tNormals = //
-                ByteBuffer.allocateDirect( indices.capacity() ).asFloatBuffer();
+                BufferUtils.allocateFloat( indices.capacity() );
         for( int i = 0; i < indices.position(); i += 3 ) {
             final int v0 = indices.get( i );
             final int v1 = indices.get( i + 1 );
