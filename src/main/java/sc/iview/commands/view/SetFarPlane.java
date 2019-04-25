@@ -39,8 +39,8 @@ import static sc.iview.commands.MenuWeights.*;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = {@Menu(label = "View", weight = VIEW), //
-                @Menu(label = "Set Supersampling Factor", weight = VIEW_SET_SUPERSAMPLING_FACTOR)})
-public class SetSupersamplingFactor implements Command {
+                @Menu(label = "Set Far Plane", weight = VIEW_SET_FAR_PLANE)})
+public class SetFarPlane implements Command {
 
     @Parameter
     private LogService logService;
@@ -49,12 +49,12 @@ public class SetSupersamplingFactor implements Command {
     private SciView sciView;
 
     @Parameter
-    private double supersamplingFactor = 1.0;
+    private float farPlane = 1000f;
 
     @Override
     public void run() {
 
-        sciView.getSceneryRenderer().getSettings().set("Renderer.SupersamplingFactor",supersamplingFactor);
+        sciView.getCamera().setFarPlaneDistance(farPlane);
 
     }
 
