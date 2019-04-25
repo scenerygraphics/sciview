@@ -87,4 +87,5 @@ public final class MenuWeights {
     public static final double DEMO_TEXT = 5;
 
     public static final double HELP_HELP = 0;
+    public static final double HELP_ABOUT = 200;
 }
