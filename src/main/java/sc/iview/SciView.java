@@ -1155,10 +1155,16 @@ public class SciView extends SceneryBase {
     }
 
     public Node addNode( final Node n ) {
+        return addNode(n,true);
+    }
+
+    public Node addNode( final Node n, final boolean active ) {
         getScene().addChild( n );
-        setActiveNode( n );
-        if( floor.getVisible() )
-            updateFloorPosition();
+        if( active ) {
+            setActiveNode(n);
+            if (floor.getVisible())
+                updateFloorPosition();
+        }
         eventService.publish( new NodeAddedEvent( n ) );
         return n;
     }
