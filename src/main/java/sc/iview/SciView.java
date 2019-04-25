@@ -91,6 +91,7 @@ import org.scijava.event.EventService;
 import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.menu.MenuService;
+import org.scijava.object.ObjectService;
 import org.scijava.plugin.Parameter;
 import org.scijava.thread.ThreadService;
 import org.scijava.ui.behaviour.ClickBehaviour;
@@ -162,6 +163,9 @@ public class SciView extends SceneryBase {
 
     @Parameter
     private ThreadService threadService;
+
+    @Parameter
+    private ObjectService objectService;
 
     /**
      * Queue keeps track of the currently running animations
@@ -1167,6 +1171,8 @@ public class SciView extends SceneryBase {
 
         scMesh.setMaterial( material );
         scMesh.setPosition( new GLVector( 0.0f, 0.0f, 0.0f ) );
+
+        objectService.addObject(scMesh);
 
         return addNode( scMesh );
     }

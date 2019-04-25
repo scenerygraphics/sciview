@@ -31,6 +31,7 @@ package sc.iview;
 import java.util.LinkedList;
 import java.util.List;
 
+import graphics.scenery.Mesh;
 import org.scijava.display.Display;
 import org.scijava.display.DisplayService;
 import org.scijava.event.EventService;
@@ -140,6 +141,7 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
     @Override
     public void initialize() {
         scriptService.addAlias(SciView.class);
+        scriptService.addAlias("Mesh", Mesh.class);
     }
 
     /* Event Handlers */
