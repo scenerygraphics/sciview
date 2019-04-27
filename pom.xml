@@ -106,7 +106,11 @@
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 
-		<scenery.version>0.7.0-beta-4-SNAPSHOT</scenery.version>
+<!--		<scenery.group-id>graphics.scenery</scenery.group-id>-->
+		<scenery.group-id>com.github.scenerygraphics</scenery.group-id>
+		<scenery.version>985d473f71</scenery.version>
+<!--		<scenery.version>0.7.0-beta-4-SNAPSHOT</scenery.version>-->
+
 		<cleargl.version>2.2.6</cleargl.version>
 		<kotlin.version>1.3.21</kotlin.version>
 		<lwjgl.version>3.2.1</lwjgl.version>
@@ -127,6 +131,10 @@
 		<repository>
 			<id>imagej.public</id>
 			<url>https://maven.imagej.net/content/groups/public</url>
+		</repository>
+		<repository>
+		    <id>jitpack.io</id>
+		    <url>https://jitpack.io</url>
 		</repository>
 		<repository>
 			<snapshots>
@@ -187,7 +195,7 @@
 
 		<!-- Graphics dependencies -->
 		<dependency>
-			<groupId>graphics.scenery</groupId>
+			<groupId>${scenery.group-id}</groupId>
 			<artifactId>scenery</artifactId>
 			<version>${scenery.version}</version>
 		</dependency>
