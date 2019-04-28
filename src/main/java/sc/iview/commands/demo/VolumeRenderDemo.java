@@ -41,6 +41,7 @@ import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.scijava.command.Command;
+import org.scijava.command.CommandService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
@@ -94,11 +95,7 @@ public class VolumeRenderDemo implements Command {
         }
 
         Volume v = (Volume) sciView.addVolume( cube, new float[] { 1, 1, 1 } );
-        //v.setScale( new GLVector(20f,20f,20f));
-        //v.setTransferFunction(TransferFunction.ramp(0.4f, 0.1f));
         v.setPixelToWorldRatio(0.1f);
-        //System.out.println("Scale is: " + v.getScale());
-        //v.setScale( new GLVector(1f,1f,1f));
         v.setName( "Volume Render Demo" );
         v.setDirty(true);
         v.setNeedsUpdate(true);
@@ -113,9 +110,8 @@ public class VolumeRenderDemo implements Command {
 
             Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
 
-            graphics.scenery.Mesh isoSurfaceMesh = MeshConverter.toScenery(m);
+            graphics.scenery.Mesh isoSurfaceMesh = MeshConverter.toScenery(m,true);
             Node scMesh = sciView.addMesh(isoSurfaceMesh);
-            scMesh.setPosition( new GLVector(-0.95f, -0.95f, -0.95f ) );
 
             isoSurfaceMesh.setName( "Volume Render Demo Isosurface" );
             isoSurfaceMesh.setScale(new GLVector(v.getPixelToWorldRatio(),
