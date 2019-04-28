@@ -1443,12 +1443,6 @@ public class SciView extends SceneryBase {
             e.printStackTrace();
         }
 
-        GLVector scaleVec = new GLVector(  dimensions[0], //
-                                           dimensions[1], //
-                                           dimensions[2] );
-
-        v.setScale( scaleVec );
-
         setActiveNode( v );
         eventService.publish( new NodeAddedEvent( v ) );
 

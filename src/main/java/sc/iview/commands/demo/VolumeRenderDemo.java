@@ -28,6 +28,8 @@
  */
 package sc.iview.commands.demo;
 
+import cleargl.GLVector;
+import graphics.scenery.Node;
 import graphics.scenery.volumes.TransferFunction;
 import graphics.scenery.volumes.Volume;
 import io.scif.services.DatasetIOService;
@@ -91,10 +93,15 @@ public class VolumeRenderDemo implements Command {
             return;
         }
 
-        Volume v = (Volume)sciView.addVolume( cube, new float[] { 1, 1, 1 } );
-        v.setTransferFunction(TransferFunction.ramp(0.4f, 0.1f));
-        v.setRenderScale(100.0f);
+        Volume v = (Volume) sciView.addVolume( cube, new float[] { 1, 1, 1 } );
+        //v.setScale( new GLVector(20f,20f,20f));
+        //v.setTransferFunction(TransferFunction.ramp(0.4f, 0.1f));
+        v.setPixelToWorldRatio(0.1f);
+        //System.out.println("Scale is: " + v.getScale());
+        //v.setScale( new GLVector(1f,1f,1f));
         v.setName( "Volume Render Demo" );
+        v.setDirty(true);
+        v.setNeedsUpdate(true);
 
         if (iso) {
             int isoLevel = 1;
@@ -107,10 +114,13 @@ public class VolumeRenderDemo implements Command {
             Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
 
             graphics.scenery.Mesh isoSurfaceMesh = MeshConverter.toScenery(m);
-            sciView.addMesh(isoSurfaceMesh);
+            Node scMesh = sciView.addMesh(isoSurfaceMesh);
+            scMesh.setPosition( new GLVector(-0.95f, -0.95f, -0.95f ) );
 
-            isoSurfaceMesh.setRenderScale(0.1f);
             isoSurfaceMesh.setName( "Volume Render Demo Isosurface" );
+            isoSurfaceMesh.setScale(new GLVector(v.getPixelToWorldRatio(),
+                    v.getPixelToWorldRatio(),
+                    v.getPixelToWorldRatio()));
         }
 
         sciView.setActiveNode(v);
