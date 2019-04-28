@@ -108,7 +108,7 @@
 
 <!--		<scenery.group-id>graphics.scenery</scenery.group-id>-->
 		<scenery.group-id>com.github.scenerygraphics</scenery.group-id>
-		<scenery.version>985d473f71</scenery.version>
+		<scenery.version>fc33023a</scenery.version>
 <!--		<scenery.version>0.7.0-beta-4-SNAPSHOT</scenery.version>-->
 
 		<cleargl.version>2.2.6</cleargl.version>
