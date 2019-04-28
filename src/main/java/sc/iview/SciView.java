@@ -1155,14 +1155,14 @@ public class SciView extends SceneryBase {
         return addNode(n,true);
     }
 
-    public Node addNode( final Node n, final boolean active ) {
+    public Node addNode( final Node n, final boolean activePublish ) {
         getScene().addChild( n );
-        if( active ) {
+        if( activePublish ) {
             setActiveNode(n);
             if (floor.getVisible())
                 updateFloorPosition();
+            eventService.publish(new NodeAddedEvent(n));
         }
-        eventService.publish( new NodeAddedEvent( n ) );
         return n;
     }
 
@@ -1295,9 +1295,15 @@ public class SciView extends SceneryBase {
     }
 
     public void deleteNode( Node node ) {
+        deleteNode( node, true );
+    }
+
+    public void deleteNode( Node node, boolean activePublish ) {
         node.getParent().removeChild( node );
-        eventService.publish( new NodeRemovedEvent( node ) );
-        if( activeNode == node ) setActiveNode( null );
+        if( activePublish ) {
+            eventService.publish(new NodeRemovedEvent(node));
+            if (activeNode == node) setActiveNode(null);
+        }
     }
 
     public void dispose() {
@@ -1437,6 +1443,11 @@ public class SciView extends SceneryBase {
             e.printStackTrace();
         }
 
+        GLVector scaleVec = new GLVector(  dimensions[0], //
+                                           dimensions[1], //
+                                           dimensions[2] );
+
+        v.setScale( scaleVec );
 
         setActiveNode( v );
         eventService.publish( new NodeAddedEvent( v ) );
