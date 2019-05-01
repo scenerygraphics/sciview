@@ -56,7 +56,7 @@ if [ ! -f fiji-nojre.zip ]
 then
   echo
   echo "--> Downloading Fiji"
-  curl -L -O http://downloads.imagej.net/fiji/latest/fiji-nojre.zip || 
+  curl -L -O https://downloads.imagej.net/fiji/latest/fiji-nojre.zip || 
       die "Could not download Fiji"
 fi
 
