@@ -15,7 +15,7 @@
 
 	<name>SciView</name>
 	<description>Scenery-backed 3D visualization package for ImageJ.</description>
-	<url>https://github.com/scenerygraphics/SciView</url>
+	<url>https://github.com/scenerygraphics/sciview</url>
 	<inceptionYear>2016</inceptionYear>
 	<organization>
 		<name>scenery</name>
@@ -83,18 +83,18 @@
 	</mailingLists>
 
 	<scm>
-		<connection>scm:git:git://github.com/scenerygraphics/SciView</connection>
-		<developerConnection>scm:git:git@github.com:scenerygraphics/SciView</developerConnection>
+		<connection>scm:git:git://github.com/scenerygraphics/sciview</connection>
+		<developerConnection>scm:git:git@github.com:scenerygraphics/sciview</developerConnection>
 		<tag>sciview-0.2.0-beta-1</tag>
-		<url>https://github.com/scenerygraphics/SciView</url>
+		<url>https://github.com/scenerygraphics/sciview</url>
 	</scm>
 	<issueManagement>
 		<system>GitHub Issues</system>
-		<url>https://github.com/scenerygraphics/SciView/issues</url>
+		<url>https://github.com/scenerygraphics/sciview/issues</url>
 	</issueManagement>
 	<ciManagement>
 		<system>Travis CI</system>
-		<url>https://travis-ci.org/scenerygraphics/SciView</url>
+		<url>https://travis-ci.org/scenerygraphics/sciview</url>
 	</ciManagement>
 
 	<properties>
