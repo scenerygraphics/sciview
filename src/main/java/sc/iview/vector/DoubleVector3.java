@@ -60,6 +60,11 @@ public class DoubleVector3 implements Vector3 {
     @Override public void setZ( double position ) { z = position; }
 
     @Override
+    public Vector3 copy() {
+        return new DoubleVector3(xd(),yd(),zd());
+    }
+
+    @Override
     public String toString() {
         return "[" + xd() + "; " + yd() + "; " + zd() + "]";
     }

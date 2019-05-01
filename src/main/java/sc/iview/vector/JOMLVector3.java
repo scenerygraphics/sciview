@@ -59,6 +59,11 @@ public class JOMLVector3 implements Vector3 {
     @Override public void setZ( float position ) { source.set( xf(), yf(), position ); }
 
     @Override
+    public Vector3 copy() {
+        return new JOMLVector3(xf(),yf(),zf());
+    }
+
+    @Override
     public String toString() {
         return "[" + xf() + "; " + yf() + "; " + zf() + "]";
     }

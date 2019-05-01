@@ -31,6 +31,7 @@ package sc.iview.commands.process;
 import static sc.iview.commands.MenuWeights.PROCESS;
 import static sc.iview.commands.MenuWeights.PROCESS_CONVEX_HULL;
 
+import graphics.scenery.Node;
 import net.imagej.ops.OpService;
 
 import org.scijava.command.Command;
@@ -59,17 +60,19 @@ public class ConvexHull implements Command {
     @Parameter
     private SciView sciView;
 
+    @Parameter
+    private Mesh mesh;
+
     @Override
     public void run() {
         if( sciView.getActiveNode() instanceof Mesh ) {
-            Mesh currentMesh = ( Mesh ) sciView.getActiveNode();
-            net.imagej.mesh.Mesh ijMesh = MeshConverter.toImageJ( currentMesh );
+            net.imagej.mesh.Mesh ijMesh = MeshConverter.toImageJ( mesh );
 
             net.imagej.mesh.Mesh smoothMesh = ( net.imagej.mesh.Mesh ) ops.geom().convexHull( ijMesh ).get( 0 );
 
-            sciView.addMesh( smoothMesh );
+            Node convexHull = sciView.addMesh(smoothMesh);
+            convexHull.setPosition(mesh.getPosition());
         }
-
     }
 
 }

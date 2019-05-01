@@ -75,11 +75,13 @@ public class MeshToImage implements Command {
     @Parameter(type = ItemIO.OUTPUT)
     private RandomAccessibleInterval<BitType> img;
 
+    @Parameter
+    private Mesh mesh;
+
     @Override
     public void run() {
         if( sciView.getActiveNode() instanceof Mesh ) {
-            Mesh currentMesh = ( Mesh ) sciView.getActiveNode();
-            net.imagej.mesh.Mesh ijMesh = MeshConverter.toImageJ( currentMesh );
+            net.imagej.mesh.Mesh ijMesh = MeshConverter.toImageJ( mesh );
 
             img = ops.geom().voxelization( ijMesh, width, height, depth );
 

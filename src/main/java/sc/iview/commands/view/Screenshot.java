@@ -31,12 +31,41 @@ package sc.iview.commands.view;
 import static sc.iview.commands.MenuWeights.VIEW;
 import static sc.iview.commands.MenuWeights.VIEW_SCREENSHOT;
 
+import graphics.scenery.backends.RenderedImage;
+import net.imagej.Dataset;
+import net.imagej.ImgPlus;
+import net.imagej.ops.OpService;
+import net.imagej.ops.Ops;
+import net.imglib2.Cursor;
+import net.imglib2.FinalInterval;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.Img;
+import net.imglib2.img.array.ArrayImg;
+import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.img.basictypeaccess.array.ByteArray;
+import net.imglib2.img.basictypeaccess.array.IntArray;
+import net.imglib2.type.numeric.ARGBType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.util.Fraction;
+import net.imglib2.util.Intervals;
+import org.scijava.ItemIO;
 import org.scijava.command.Command;
+import org.scijava.display.DisplayService;
+import org.scijava.io.IOService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
+import org.scijava.ui.UIService;
 import sc.iview.SciView;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.awt.image.DataBufferInt;
+import java.io.File;
+import java.io.IOException;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "View", weight = VIEW), //
@@ -46,8 +75,33 @@ public class Screenshot implements Command {
     @Parameter
     private SciView sciView;
 
+    @Parameter
+    private OpService opService;
+
+    @Parameter
+    private IOService ioService;
+
+    @Parameter(type = ItemIO.OUTPUT)
+    private ImgPlus img;
+
     @Override
     public void run() {
-        sciView.takeScreenshot();
+        //sciView.takeScreenshot();// This will write to a predefined file
+
+        RenderedImage screenshot = sciView.getSceneryRenderer().requestScreenshot();
+
+        BufferedImage image = new BufferedImage(screenshot.getWidth(), screenshot.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
+        byte[] imgData = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+        System.arraycopy(screenshot.getData(), 0, imgData, 0, screenshot.getData().length);
+
+        File tmpFile = null;
+        try {
+            tmpFile = File.createTempFile("sciview-", "-tmp.png");
+            ImageIO.write(image, "png", tmpFile);
+            img = new ImgPlus((Dataset)ioService.open(tmpFile.getAbsolutePath()), "sciview-" + System.nanoTime());
+            tmpFile.delete();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

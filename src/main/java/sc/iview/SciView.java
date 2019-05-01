@@ -32,11 +32,11 @@ import cleargl.GLTypeEnum;
 import cleargl.GLVector;
 import com.bulenkov.darcula.DarculaLaf;
 import com.jogamp.opengl.math.Quaternion;
-import com.sun.javafx.application.PlatformImpl;
 import coremem.enums.NativeTypeEnum;
 import graphics.scenery.Box;
 import graphics.scenery.*;
 import graphics.scenery.backends.Renderer;
+import graphics.scenery.backends.opengl.OpenGLRenderer;
 import graphics.scenery.backends.vulkan.VulkanRenderer;
 import graphics.scenery.controls.InputHandler;
 import graphics.scenery.controls.OpenVRHMD;
@@ -49,24 +49,6 @@ import graphics.scenery.utils.*;
 import graphics.scenery.volumes.TransferFunction;
 import graphics.scenery.volumes.Volume;
 import graphics.scenery.volumes.bdv.BDVVolume;
-import javafx.animation.FadeTransition;
-import javafx.animation.Interpolator;
-import javafx.application.Platform;
-import javafx.embed.swing.JFXPanel;
-import javafx.geometry.Insets;
-import javafx.geometry.*;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseButton;
-import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-import javafx.scene.text.TextAlignment;
-import javafx.util.Duration;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import net.imagej.Dataset;
@@ -90,6 +72,7 @@ import org.scijava.event.EventService;
 import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.menu.MenuService;
+import org.scijava.object.ObjectService;
 import org.scijava.plugin.Parameter;
 import org.scijava.thread.ThreadService;
 import org.scijava.ui.behaviour.ClickBehaviour;
@@ -106,7 +89,6 @@ import sc.iview.event.NodeActivatedEvent;
 import sc.iview.event.NodeAddedEvent;
 import sc.iview.event.NodeChangedEvent;
 import sc.iview.event.NodeRemovedEvent;
-import sc.iview.javafx.JavaFXMenuCreator;
 import sc.iview.process.MeshConverter;
 import sc.iview.vector.ClearGLVector3;
 import sc.iview.vector.Vector3;
@@ -121,12 +103,10 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.List;
 import java.util.Queue;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -162,6 +142,9 @@ public class SciView extends SceneryBase {
     @Parameter
     private ThreadService threadService;
 
+    @Parameter
+    private ObjectService objectService;
+
     /**
      * Queue keeps track of the currently running animations
      **/
@@ -189,11 +172,6 @@ public class SciView extends SceneryBase {
     Camera camera = null;
 
     /**
-     * JavaFX UI
-     */
-    private boolean useJavaFX = false;
-
-    /**
      * Speeds for input controls
      */
     private float fpsScrollSpeed = 3.0f;
@@ -207,16 +185,13 @@ public class SciView extends SceneryBase {
      */
     protected Node floor;
 
-    private Label statusLabel;
-    private Label loadingLabel;
     private JLabel splashLabel;
     private SceneryJPanel panel;
-    private StackPane stackPane;
-    private MenuBar menuBar;
     private JSplitPane mainSplitPane;
     private final SceneryPanel[] sceneryPanel = { null };
     private JSplitPane inspector;
     private NodePropertyEditor nodePropertyEditor;
+    private ArrayList<PointLight> lights;
 
     public SciView( Context context ) {
         super( "SciView", 1280, 720, false, context );
@@ -229,6 +204,13 @@ public class SciView extends SceneryBase {
 
     public InputHandler publicGetInputHandler() {
         return getInputHandler();
+    }
+
+    public void toggleRecordVideo() {
+        if( getRenderer() instanceof  OpenGLRenderer )
+            ((OpenGLRenderer)getRenderer()).recordMovie();
+        else
+            ((VulkanRenderer)getRenderer()).recordMovie();
     }
 
     public class TransparentSlider extends JSlider {
@@ -260,7 +242,7 @@ public class SciView extends SceneryBase {
                 BasicLookAndFeel darcula = new DarculaLaf();
                 UIManager.setLookAndFeel(darcula);
             } catch (Exception e) {
-                System.err.println("Could not load Darcula Look and Feel");
+                getLogger().info("Could not load Darcula Look and Feel");
             }
         }
 
@@ -310,212 +292,83 @@ public class SciView extends SceneryBase {
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         nodePropertyEditor = new NodePropertyEditor( this );
 
-        if( useJavaFX ) {
-            final JFXPanel fxPanel = new JFXPanel();
-            frame.add(fxPanel);
+        final JPanel p = new JPanel(new BorderLayout(0, 0));
+        panel = new SceneryJPanel();
+        JPopupMenu.setDefaultLightWeightPopupEnabled(false);
+        final JMenuBar swingMenuBar = new JMenuBar();
+        new SwingJMenuBarCreator().createMenus(menus.getMenu("SciView"), swingMenuBar);
+        frame.setJMenuBar(swingMenuBar);
 
-            CountDownLatch latch = new CountDownLatch( 1 );
-
-            PlatformImpl.startup( () -> {
-            } );
-
-            Platform.runLater( () -> {
-                stackPane = new StackPane();
-                stackPane.setBackground(
-                        new Background( new BackgroundFill( Color.TRANSPARENT, CornerRadii.EMPTY, Insets.EMPTY ) ) );
-
-                GridPane pane = new GridPane();
-                statusLabel = new Label( "SciView - press U for usage help" );
-                statusLabel.setVisible(false);
-
-                final SceneryFXPanel panel = new SceneryFXPanel(100, 100);
-
-                Image loadingImage = new Image(this.getClass().getResourceAsStream("sciview-logo.png"), 600, 200, true, true);
-                ImageView loadingImageView = new ImageView(loadingImage);
-                loadingLabel = new Label("SciView is starting.");
-                loadingLabel.setStyle(
-                        "-fx-background-color: rgb(50,48,47);" +
-                        "-fx-opacity: 1.0;" +
-                        "-fx-font-weight: 400; " +
-                        "-fx-font-size: 2.2em; " +
-                        "-fx-text-fill: white;");
-                loadingLabel.setTextFill(Paint.valueOf("white"));
-                loadingLabel.setGraphic(loadingImageView);
-                loadingLabel.setGraphicTextGap(40.0);
-                loadingLabel.setContentDisplay(ContentDisplay.TOP);
-                loadingLabel.prefHeightProperty().bind(pane.heightProperty());
-                loadingLabel.prefWidthProperty().bind(pane.widthProperty());
-                loadingLabel.setAlignment(Pos.CENTER);
-
-                GridPane.setHgrow( panel, Priority.ALWAYS );
-                GridPane.setVgrow( panel, Priority.ALWAYS );
-
-                GridPane.setFillHeight( panel, true );
-                GridPane.setFillWidth( panel, true );
-
-                GridPane.setHgrow( statusLabel, Priority.ALWAYS );
-                GridPane.setHalignment( statusLabel, HPos.CENTER );
-                GridPane.setValignment( statusLabel, VPos.BOTTOM );
-
-                statusLabel.maxWidthProperty().bind( pane.widthProperty() );
-
-                pane.setStyle( "-fx-background-color: rgb(50,48,47);" +
-                               "-fx-font-family: Helvetica Neue, Helvetica, Segoe, Proxima Nova, Arial, sans-serif;" +
-                               "-fx-font-weight: 400;" + "-fx-font-size: 1.2em;" + "-fx-text-fill: white;" +
-                               "-fx-text-alignment: center;" );
-
-                statusLabel.setStyle( "-fx-padding: 0.2em;" + "-fx-text-fill: white;" );
-
-                statusLabel.setTextAlignment( TextAlignment.CENTER );
-
-                menuBar = new MenuBar();
-                pane.add( menuBar, 1, 1 );
-                pane.add( panel, 1, 2 );
-                pane.add( statusLabel, 1, 3 );
-                stackPane.getChildren().addAll(pane, loadingLabel);
-
-                final ContextMenu contextMenu = new ContextMenu();
-                final MenuItem title = new MenuItem("Node");
-                final MenuItem position = new MenuItem("Position");
-                title.setDisable(true);
-                position.setDisable(true);
-                contextMenu.getItems().addAll(title, position);
-
-                panel.setOnContextMenuRequested(event -> {
-                    final Point2D localPosition = panel.sceneToLocal(event.getSceneX(), event.getSceneY());
-                    final List<Scene.RaycastResult> matches = camera.getNodesForScreenSpacePosition((int)localPosition.getX(), (int)localPosition.getY());
-                    if(matches.size() > 0) {
-                        final Node firstMatch = matches.get(0).getNode();
-                        title.setText("Node: " + firstMatch.getName() + " (" + firstMatch.getClass().getSimpleName() + ")");
-                        position.setText(firstMatch.getPosition().toString());
-                    } else {
-                        title.setText("(no matches)");
-                        position.setText("");
-                    }
-                    contextMenu.show(panel, event.getScreenX(), event.getScreenY());
-                });
-
-                panel.setOnMouseClicked(event -> {
-                    if(event.getButton() == MouseButton.PRIMARY) {
-                        contextMenu.hide();
-                    }
-                });
-
-                sceneryPanel[0] = panel;
-
-                javafx.scene.Scene scene = new javafx.scene.Scene( stackPane );
-                fxPanel.setScene(scene);
-//                scene.addEventHandler(MouseEvent.ANY, event -> getLogger().info("Mouse event: " + event.toString()));
-//                sceneryPanel[0].addEventHandler(MouseEvent.ANY, event -> getLogger().info("PANEL Mouse event: " + event.toString()));
-
-                frame.setVisible(true);
-//                stage.setScene( scene );
-//                stage.setOnCloseRequest( event -> {
-//                    getDisplay().close();
-//                    this.close();
-//                } );
-//                stage.focusedProperty().addListener( ( ov, t, t1 ) -> {
-//                    if( t1 )// If you just gained focus
-//                        displayService.setActiveDisplay( getDisplay() );
-//                } );
-
-                new JavaFXMenuCreator().createMenus( menus.getMenu( "SciView" ), menuBar );
-
-//                stage.show();
-
-                latch.countDown();
-            } );
-
-            try {
-                latch.await();
-            } catch( InterruptedException e1 ) {
-                e1.printStackTrace();
-            }
-
-            // window width and window height get ignored by the renderer if it is embedded.
-            // dimensions are determined from the SceneryFXPanel, then.
-            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(),
-                                                  getWindowWidth(), getWindowHeight(),
-                                                  sceneryPanel[0] ) );
-        } else {
-            final JPanel p = new JPanel(new BorderLayout(0, 0));
-            panel = new SceneryJPanel();
-            JPopupMenu.setDefaultLightWeightPopupEnabled(false);
-            final JMenuBar swingMenuBar = new JMenuBar();
-            new SwingJMenuBarCreator().createMenus(menus.getMenu("SciView"), swingMenuBar);
-            frame.setJMenuBar(swingMenuBar);
-
-            BufferedImage splashImage;
-            try {
-                splashImage = ImageIO.read(this.getClass().getResourceAsStream("sciview-logo.png"));
-            } catch (IOException e) {
-              getLogger().warn("Could not read splash image 'sciview-logo.png'");
-              splashImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
-            }
-
-            final String sceneryVersion = SceneryBase.class.getPackage().getImplementationVersion();
-            final String sciviewVersion = SciView.class.getPackage().getImplementationVersion();
-            final String versionString;
-
-            if(sceneryVersion == null || sciviewVersion == null) {
-                versionString = "";
-            } else {
-                versionString = "\n\nsciview " + sciviewVersion + " / scenery " + sceneryVersion;
-            }
-
-            splashLabel = new JLabel(versionString,
-                    new ImageIcon(splashImage.getScaledInstance(500, 200, java.awt.Image.SCALE_SMOOTH)),
-                    SwingConstants.CENTER);
-            splashLabel.setBackground(new java.awt.Color(50, 48, 47));
-            splashLabel.setForeground(new java.awt.Color(78, 76, 75));
-            splashLabel.setOpaque(true);
-            splashLabel.setVerticalTextPosition(JLabel.BOTTOM);
-            splashLabel.setHorizontalTextPosition(JLabel.CENTER);
-
-            p.setLayout(new OverlayLayout(p));
-            p.setBackground(new java.awt.Color(50, 48, 47));
-            p.add(panel, BorderLayout.CENTER);
-            panel.setVisible(true);
-
-            nodePropertyEditor.getComponent(); // Initialize node property panel
-
-            JTree inspectorTree = nodePropertyEditor.getTree();
-            JPanel inspectorProperties = nodePropertyEditor.getProps();
-
-            inspector = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
-                    new JScrollPane( inspectorTree ),
-                    new JScrollPane( inspectorProperties ));
-            inspector.setDividerLocation( getWindowHeight() / 3 );
-            inspector.setContinuousLayout(true);
-            inspector.setBorder(BorderFactory.createEmptyBorder());
-
-            mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
-                    p,
-                    inspector
-                    );
-            mainSplitPane.setDividerLocation( getWindowWidth()/3 * 2 );
-            mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
-
-            frame.add(mainSplitPane, BorderLayout.CENTER);
-
-            frame.addWindowListener(new WindowAdapter() {
-                @Override public void windowClosing(WindowEvent e) {
-                    getLogger().debug("Closing SciView window.");
-                    close();
-                }
-            });
-
-            frame.setGlassPane(splashLabel);
-            frame.getGlassPane().setVisible(true);
-//            frame.getGlassPane().setBackground(new java.awt.Color(50, 48, 47, 255));
-            frame.setVisible(true);
-
-            sceneryPanel[0] = panel;
-
-            setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(),
-                    getWindowWidth(), getWindowHeight(),
-                    sceneryPanel[0]) );
+        BufferedImage splashImage;
+        try {
+            splashImage = ImageIO.read(this.getClass().getResourceAsStream("sciview-logo.png"));
+        } catch (IOException e) {
+            getLogger().warn("Could not read splash image 'sciview-logo.png'");
+            splashImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         }
+
+        final String sceneryVersion = SceneryBase.class.getPackage().getImplementationVersion();
+        final String sciviewVersion = SciView.class.getPackage().getImplementationVersion();
+        final String versionString;
+
+        if(sceneryVersion == null || sciviewVersion == null) {
+            versionString = "";
+        } else {
+            versionString = "\n\nsciview " + sciviewVersion + " / scenery " + sceneryVersion;
+        }
+
+        splashLabel = new JLabel(versionString,
+                new ImageIcon(splashImage.getScaledInstance(500, 200, java.awt.Image.SCALE_SMOOTH)),
+                SwingConstants.CENTER);
+        splashLabel.setBackground(new java.awt.Color(50, 48, 47));
+        splashLabel.setForeground(new java.awt.Color(78, 76, 75));
+        splashLabel.setOpaque(true);
+        splashLabel.setVerticalTextPosition(JLabel.BOTTOM);
+        splashLabel.setHorizontalTextPosition(JLabel.CENTER);
+
+        p.setLayout(new OverlayLayout(p));
+        p.setBackground(new java.awt.Color(50, 48, 47));
+        p.add(panel, BorderLayout.CENTER);
+        panel.setVisible(true);
+
+        nodePropertyEditor.getComponent(); // Initialize node property panel
+
+        JTree inspectorTree = nodePropertyEditor.getTree();
+        JPanel inspectorProperties = nodePropertyEditor.getProps();
+
+        inspector = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
+                new JScrollPane( inspectorTree ),
+                new JScrollPane( inspectorProperties ));
+        inspector.setDividerLocation( getWindowHeight() / 3 );
+        inspector.setContinuousLayout(true);
+        inspector.setBorder(BorderFactory.createEmptyBorder());
+
+        mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
+                p,
+                inspector
+        );
+        mainSplitPane.setDividerLocation( getWindowWidth()/3 * 2 );
+        mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
+
+        frame.add(mainSplitPane, BorderLayout.CENTER);
+
+        frame.addWindowListener(new WindowAdapter() {
+            @Override public void windowClosing(WindowEvent e) {
+                getLogger().debug("Closing SciView window.");
+                close();
+            }
+        });
+
+        frame.setGlassPane(splashLabel);
+        frame.getGlassPane().setVisible(true);
+//            frame.getGlassPane().setBackground(new java.awt.Color(50, 48, 47, 255));
+        frame.setVisible(true);
+
+        sceneryPanel[0] = panel;
+
+        setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(),
+                getWindowWidth(), getWindowHeight(),
+                sceneryPanel[0]) );
 
         // Enable push rendering by default
         getRenderer().setPushMode( true );
@@ -528,14 +381,15 @@ public class SciView extends SceneryBase {
         tetrahedron[2] = new GLVector( 0.0f,1.0f,1.0f/(float)Math.sqrt(2.0) );
         tetrahedron[3] = new GLVector( 0.0f,-1.0f,1.0f/(float)Math.sqrt(2.0) );
 
-        PointLight[] lights = new PointLight[4];
+        lights = new ArrayList<PointLight>();
 
-        for( int i = 0; i < lights.length; i++ ) {
-            lights[i] = new PointLight( 150.0f );
-            lights[i].setPosition( tetrahedron[i].times(25.0f) );
-            lights[i].setEmissionColor( new GLVector( 1.0f, 1.0f, 1.0f ) );
-            lights[i].setIntensity( 100.0f );
-            getScene().addChild( lights[i] );
+        for( int i = 0; i < 4; i++ ) {// TODO allow # initial lights to be customizable?
+            PointLight light = new PointLight(150.0f);
+            light.setPosition( tetrahedron[i].times(25.0f) );
+            light.setEmissionColor( new GLVector( 1.0f, 1.0f, 1.0f ) );
+            light.setIntensity( 100.0f );
+            lights.add( light );
+            getScene().addChild( light );
         }
 
         Camera cam = new DetachedHeadCamera();
@@ -555,54 +409,25 @@ public class SciView extends SceneryBase {
 
         animations = new LinkedList<>();
 
-        if(useJavaFX) {
-            Platform.runLater(() -> {
-                while (!getRenderer().getFirstImageReady()) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+        SwingUtilities.invokeLater(() -> {
+            try {
+                while (!getSceneryRenderer().getFirstImageReady()) {
+                    getLogger().debug("Waiting for renderer initialisation");
+                    Thread.sleep(300);
                 }
 
-                // fade out loading screen, show status bar
-                FadeTransition ft = new FadeTransition(Duration.millis(500), loadingLabel);
-                ft.setFromValue(1.0);
-                ft.setToValue(0.0);
-                ft.setCycleCount(1);
-                ft.setInterpolator(Interpolator.EASE_OUT);
-                ft.setOnFinished(event -> {
-                    loadingLabel.setVisible(false);
-                    statusLabel.setVisible(true);
-                });
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                getLogger().error("Renderer construction interrupted.");
+            }
 
-                ft.play();
-            });
-        } else {
-            SwingUtilities.invokeLater(() -> {
-                try {
-                    while (!getSceneryRenderer().getFirstImageReady()) {
-                        getLogger().info("Waiting for renderer initialisation");
-                        Thread.sleep(300);
-                    }
-
-                    Thread.sleep(200);
-                } catch (InterruptedException e) {
-                    getLogger().error("Renderer construction interrupted.");
-                }
-
-                nodePropertyEditor.rebuildTree();
-                frame.getGlassPane().setVisible(false);
-                getLogger().info("Done initializing SciView");
-            });
-        }
+            nodePropertyEditor.rebuildTree();
+            frame.getGlassPane().setVisible(false);
+            getLogger().info("Done initializing SciView");
+        });
 
         // subscribe to Node{Added, Removed, Changed} events
         eventService.subscribe(this);
-    }
-
-    public void setStatusText(String text) {
-        statusLabel.setText(text);
     }
 
     public void setFloor( Node n ) {
@@ -640,6 +465,10 @@ public class SciView extends SceneryBase {
         return scijavaDisplay;
     }
 
+    public void centerOnScene() {
+        centerOnNode(getScene());
+    }
+
     public void centerOnNode( Node currentNode ) {
         if( currentNode == null ) return;
 
@@ -672,7 +501,7 @@ public class SciView extends SceneryBase {
         if( newspeed < 0.30f ) newspeed = 0.3f;
         else if( newspeed > 30.0f ) newspeed = 30.0f;
         fpsScrollSpeed = newspeed;
-        log.debug( "FPS scroll speed: " + fpsScrollSpeed );
+        //log.debug( "FPS scroll speed: " + fpsScrollSpeed );
     }
 
     public float getFPSSpeed() {
@@ -683,7 +512,7 @@ public class SciView extends SceneryBase {
         if( newspeed < 0.30f ) newspeed = 0.3f;
         else if( newspeed > 3.0f ) newspeed = 3.0f;
         mouseSpeedMult = newspeed;
-        log.debug( "Mouse speed: " + mouseSpeedMult );
+        //log.debug( "Mouse speed: " + mouseSpeedMult );
     }
 
     public float getMouseSpeed() {
@@ -726,7 +555,7 @@ public class SciView extends SceneryBase {
             setFPSSpeed( getFPSSpeed() + 0.5f );
             setMouseSpeed( getMouseSpeed() + 0.05f );
 
-            log.debug( "Increasing FPS scroll Speed" );
+            //log.debug( "Increasing FPS scroll Speed" );
 
             resetFPSInputs();
         }
@@ -738,7 +567,7 @@ public class SciView extends SceneryBase {
             setFPSSpeed( getFPSSpeed() - 0.1f );
             setMouseSpeed( getMouseSpeed() - 0.05f );
 
-            log.debug( "Decreasing FPS scroll Speed" );
+            //log.debug( "Decreasing FPS scroll Speed" );
 
             resetFPSInputs();
         }
@@ -762,7 +591,7 @@ public class SciView extends SceneryBase {
             if( !nearest.isEmpty() ) {
                 setActiveNode( nearest.get( 0 ).getNode() );
                 nodePropertyEditor.trySelectNode( getActiveNode() );
-                log.debug( "Selected node: " + getActiveNode().getName() );
+                //log.debug( "Selected node: " + getActiveNode().getName() );
             }
             return Unit.INSTANCE;
         };
@@ -800,6 +629,23 @@ public class SciView extends SceneryBase {
 
         h.addBehaviour( "enable_increase", new enableIncrease() );
         h.addKeyBinding( "enable_increase", "N" );
+
+        //float veryFastSpeed = getScene().getMaximumBoundingBox().getBoundingSphere().getRadius()/50f;
+        float veryFastSpeed = 100f;
+        h.addBehaviour("move_forward_veryfast", new MovementCommand("move_forward", "forward", () -> getScene().findObserver(), veryFastSpeed));
+        h.addBehaviour("move_back_veryfast", new MovementCommand("move_back", "back", () -> getScene().findObserver(), veryFastSpeed));
+        h.addBehaviour("move_left_veryfast", new MovementCommand("move_left", "left", () -> getScene().findObserver(), veryFastSpeed));
+        h.addBehaviour("move_right_veryfast", new MovementCommand("move_right", "right", () -> getScene().findObserver(), veryFastSpeed));
+        h.addBehaviour("move_up_veryfast", new MovementCommand("move_up", "up", () -> getScene().findObserver(), veryFastSpeed));
+        h.addBehaviour("move_down_veryfast", new MovementCommand("move_down", "down", () -> getScene().findObserver(), veryFastSpeed));
+
+        h.addKeyBinding("move_forward_veryfast", "ctrl shift W");
+        h.addKeyBinding("move_back_veryfast", "ctrl shift S");
+        h.addKeyBinding("move_left_veryfast", "ctrl shift A");
+        h.addKeyBinding("move_right_veryfast", "ctrl shift D");
+        h.addKeyBinding("move_up_veryfast", "ctrl shift Z");
+        h.addKeyBinding("move_down_veryfast", "ctrl shift C");
+
     }
 
     private void enableArcBallControl() {
@@ -883,6 +729,7 @@ public class SciView extends SceneryBase {
         return addNode( box );
     }
 
+
     public Node addSphere() {
         return addSphere( new ClearGLVector3( 0.0f, 0.0f, 0.0f ), 1 );
     }
@@ -902,6 +749,18 @@ public class SciView extends SceneryBase {
         sphere.setPosition( ClearGLVector3.convert( position ) );
 
         return addNode( sphere );
+    }
+
+    public Node addCylinder( final Vector3 position, final float radius, final float height, final int num_segments ) {
+        final Cylinder cyl = new Cylinder( radius, height, num_segments );
+        cyl.setPosition( ClearGLVector3.convert( position ) );
+        return addNode( cyl );
+    }
+
+    public Node addCone( final Vector3 position, final float radius, final float height, final int num_segments ) {
+        final Cone cone = new Cone( radius, height, num_segments );
+        cone.setPosition( ClearGLVector3.convert( position ) );
+        return addNode( cone );
     }
 
     public Node addLine() {
@@ -944,8 +803,24 @@ public class SciView extends SceneryBase {
         final PointLight light = new PointLight( 5.0f );
         light.setMaterial( material );
         light.setPosition( new GLVector( 0.0f, 0.0f, 0.0f ) );
+        lights.add(light);
 
         return addNode( light );
+    }
+
+    public void surroundLighting() {
+        Node.BoundingSphere boundingSphere = getScene().getMaximumBoundingBox().getBoundingSphere();
+        // Choose a good y-position, then place lights around the cross-section through this plane
+        float y = 0;
+        GLVector c = boundingSphere.getOrigin();
+        float r = boundingSphere.getRadius();
+        for( int k = 0; k < lights.size(); k++ ) {
+            PointLight light = lights.get(k);
+            float x = (float) (c.x() + r * Math.cos( k == 0 ? 0 : Math.PI * 2 * ((float)k / (float)lights.size()) ));
+            float z = (float) (c.y() + r * Math.sin( k == 0 ? 0 : Math.PI * 2 * ((float)k / (float)lights.size()) ));
+            light.setLightRadius( 2 * r );
+            light.setPosition( new GLVector( x, y, z ) );
+        }
     }
 
     public void writeSCMesh( String filename, Mesh scMesh ) {
@@ -1058,18 +933,15 @@ public class SciView extends SceneryBase {
 
         final PointCloud pointCloud = new PointCloud( getDefaultPointSize(), name );
         final Material material = new Material();
-        final FloatBuffer vBuffer = ByteBuffer.allocateDirect( flatVerts.length * 4 ) //
-                .order( ByteOrder.nativeOrder() ).asFloatBuffer();
-        final FloatBuffer nBuffer = ByteBuffer.allocateDirect( 0 ) //
-                .order( ByteOrder.nativeOrder() ).asFloatBuffer();
+        final FloatBuffer vBuffer = BufferUtils.allocateFloat( flatVerts.length * 4 );
+        final FloatBuffer nBuffer = BufferUtils.allocateFloat( 0 );
 
         vBuffer.put( flatVerts );
         vBuffer.flip();
 
         pointCloud.setVertices( vBuffer );
         pointCloud.setNormals( nBuffer );
-        pointCloud.setIndices( ByteBuffer.allocateDirect( 0 ) //
-                                       .order( ByteOrder.nativeOrder() ).asIntBuffer() );
+        pointCloud.setIndices( BufferUtils.allocateInt( 0 ) );
         pointCloud.setupPointCloud();
         material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
         material.setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
@@ -1091,10 +963,17 @@ public class SciView extends SceneryBase {
     }
 
     public Node addNode( final Node n ) {
+        return addNode(n,true);
+    }
+
+    public Node addNode( final Node n, final boolean activePublish ) {
         getScene().addChild( n );
-        setActiveNode( n );
-        updateFloorPosition();
-        eventService.publish( new NodeAddedEvent( n ) );
+        if( activePublish ) {
+            setActiveNode(n);
+            if (floor.getVisible())
+                updateFloorPosition();
+            eventService.publish(new NodeAddedEvent(n));
+        }
         return n;
     }
 
@@ -1106,6 +985,8 @@ public class SciView extends SceneryBase {
 
         scMesh.setMaterial( material );
         scMesh.setPosition( new GLVector( 0.0f, 0.0f, 0.0f ) );
+
+        objectService.addObject(scMesh);
 
         return addNode( scMesh );
     }
@@ -1209,7 +1090,7 @@ public class SciView extends SceneryBase {
     }
 
     public Node[] getSceneNodes() {
-        return getSceneNodes( n -> !( n instanceof Camera ) && !( n instanceof PointLight ) );
+        return getSceneNodes( n -> !( n instanceof Camera ) && !( n instanceof PointLight  ) );
     }
 
     public Node[] getSceneNodes( Predicate<? super Node> filter ) {
@@ -1225,9 +1106,15 @@ public class SciView extends SceneryBase {
     }
 
     public void deleteNode( Node node ) {
+        deleteNode( node, true );
+    }
+
+    public void deleteNode( Node node, boolean activePublish ) {
         node.getParent().removeChild( node );
-        eventService.publish( new NodeRemovedEvent( node ) );
-        if( activeNode == node ) setActiveNode( null );
+        if( activePublish ) {
+            eventService.publish(new NodeRemovedEvent(node));
+            if (activeNode == node) setActiveNode(null);
+        }
     }
 
     public void dispose() {
@@ -1259,10 +1146,13 @@ public class SciView extends SceneryBase {
     }
 
     public Node addBDVVolume( String source ) {
+        //getSettings().set("Renderer.HDR.Exposure", 20.0f);
+
         final VolumeViewerOptions opts = new VolumeViewerOptions();
         opts.maxCacheSizeInMB(Integer.parseInt(System.getProperty("scenery.BDVVolume.maxCacheSize", "512")));
         final BDVVolume v = new BDVVolume(source, opts);
         v.setScale(new GLVector(0.01f, 0.01f, 0.01f));
+        v.setBoundingBox(v.generateBoundingBox());
 
         getScene().addChild(v);
         setActiveNode(v);
@@ -1325,7 +1215,7 @@ public class SciView extends SceneryBase {
 
     public <T extends RealType<T>> Node addVolume( IterableInterval<T> image, String name,
                                                                     float... voxelDimensions ) {
-        log.debug( "Add Volume" );
+        //log.debug( "Add Volume" );
 
         long[] dimensions = new long[3];
         image.dimensions( dimensions );
@@ -1364,7 +1254,6 @@ public class SciView extends SceneryBase {
             e.printStackTrace();
         }
 
-
         setActiveNode( v );
         eventService.publish( new NodeAddedEvent( v ) );
 
@@ -1373,7 +1262,7 @@ public class SciView extends SceneryBase {
 
     public <T extends RealType<T>> Node updateVolume( IterableInterval<T> image, String name,
                                                                        float[] voxelDimensions, Volume v ) {
-        log.debug( "Update Volume" );
+        //log.debug( "Update Volume" );
 
         long[] dimensions = new long[3];
         image.dimensions( dimensions );
@@ -1455,6 +1344,13 @@ public class SciView extends SceneryBase {
         // Lower the floor below the active node, as needed.
         final Node currentNode = getActiveNode();
         if( currentNode != null ) {
+            while( currentNode.getDirty() || currentNode.getNeedsUpdate() ) {
+                try {
+                    Thread.sleep(20);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
             final Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
             if(bb == null) {
                 getLogger().warn("Node " + currentNode.getName() + " does not have a bounding box, not adjusting floor.");
@@ -1524,7 +1420,7 @@ public class SciView extends SceneryBase {
             getRenderer().toggleVR();
 
             while(!getRenderer().getInitialized() || !getRenderer().getFirstImageReady()) {
-                getLogger().info("Waiting for renderer reinitialisation");
+                getLogger().debug("Waiting for renderer reinitialisation");
                 try {
                     Thread.sleep(200);
                 } catch (InterruptedException e) {

@@ -33,6 +33,7 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
+import graphics.scenery.BufferUtils;
 import net.imagej.mesh.Meshes;
 import net.imagej.mesh.nio.BufferMesh;
 
@@ -45,6 +46,10 @@ import net.imagej.mesh.nio.BufferMesh;
 public class MeshConverter {
 
     public static graphics.scenery.Mesh toScenery( final net.imagej.mesh.Mesh mesh ) {
+        return toScenery( mesh, false );
+    }
+
+    public static graphics.scenery.Mesh toScenery( final net.imagej.mesh.Mesh mesh, final boolean center ) {
         final int vCount = //
                 ( int ) Math.min( Integer.MAX_VALUE, mesh.vertices().size() );
         final int tCount = //
@@ -74,6 +79,30 @@ public class MeshConverter {
         // Prepare the buffers for Scenery to ingest them.
         // Sets capacity to equal position, then resets position to 0.
         verts.flip();
+        if( center ) {// Do 2 passes, 1 to find center, and the other to shift
+            double[] v = new double[] {0.0,0.0,0.0};// used for tally of coords and mean
+            int coord = 0;// coordinate index
+            int n = 0;// num verts
+            while( verts.hasRemaining() ) {
+                v[coord] += verts.get();
+                if( coord == 0 ) n++;
+                coord = ( coord + 1 ) % 3;
+            }
+            verts.flip();
+            // Take average
+            for( int k = 0; k < 3; k++ ) v[k] /= n;
+            // Center shift
+            coord = 0;
+            float val;
+            while( verts.hasRemaining() ) {
+                val = verts.get();
+                // Write
+                verts.put(verts.position()-1,val-(float)v[coord]);
+                coord = ( coord + 1 ) % 3;
+            }
+            verts.flip();
+        }
+
         vNormals.flip();
         texCoords.flip();
         indices.flip();
@@ -101,7 +130,7 @@ public class MeshConverter {
 
         // Compute the triangle normals.
         final FloatBuffer tNormals = //
-                ByteBuffer.allocateDirect( indices.capacity() ).asFloatBuffer();
+                BufferUtils.allocateFloat( indices.capacity() );
         for( int i = 0; i < indices.position(); i += 3 ) {
             final int v0 = indices.get( i );
             final int v1 = indices.get( i + 1 );

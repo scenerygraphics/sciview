@@ -99,6 +99,11 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     private JTree tree;
     private JPanel props;
 
+    public static String USAGE_TEXT =
+                    "Single-clicking a node in the tree above selects it, while double-clicking centers the 3D view on the node.<br><br>" +
+                    "Drag in the 3D view to the left to look around, hold shift while dragging to rotate around selected node. Scrolling while holding shift zooms in and out.<br><br>" +
+                    "W, A, S, D moves you around, holding shift while moving slows down the movement.";
+
     public JPanel getProps() {
         return props;
     }
@@ -138,21 +143,21 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     @EventHandler
     private void onEvent( final NodeAddedEvent evt ) {
         final Node node = evt.getNode();
-        System.out.println( "Node added: " + node );
+        log.info( "Node added: " + node );
         rebuildTree();
     }
 
     @EventHandler
     private void onEvent( final NodeRemovedEvent evt ) {
         final Node node = evt.getNode();
-        System.out.println( "Node removed: " + node );
+        log.info( "Node removed: " + node );
         rebuildTree();
     }
 
     @EventHandler
     private void onEvent( final NodeChangedEvent evt ) {
         final Node node = evt.getNode();
-        System.out.println( "Node changed: " + node );
+        log.info( "Node changed: " + node );
         updateProperties( sciView.getActiveNode() );
     }
 
@@ -160,9 +165,9 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     private void onEvent( final NodeActivatedEvent evt ) {
         final Node node = evt.getNode();
         if(node != null) {
-            System.out.println("Node activated: " + node + " (" + node.getName() + ")");
+            log.info("Node activated: " + node + " (" + node.getName() + ")");
         } else {
-            System.out.println("Node activated: " + node);
+            log.info("Node activated: " + node);
         }
         updateProperties( sciView.getActiveNode() );
     }
@@ -261,10 +266,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         props.removeAll();
 
         if( c == null ) {
-            final JLabel usageLabel = new JLabel( "<html><em>No node selected.</em><br><br>" +
-                    "Single-clicking a node in the tree above selects it, while double-clicking centers the 3D view on the node.<br><br>" +
-                    "Drag in the 3D view to the left to look around, hold shift while dragging to rotate around selected node. Scrolling while holding shift zooms in and out.<br><br>" +
-                    "W, A, S, D moves you around, holding shift while moving slows down the movement.</html>");
+            final JLabel usageLabel = new JLabel( "<html><em>No node selected.</em><br><br>" + USAGE_TEXT + "</html>" );
             usageLabel.setPreferredSize(new Dimension(300, 100));
             props.add( usageLabel );
         } else {

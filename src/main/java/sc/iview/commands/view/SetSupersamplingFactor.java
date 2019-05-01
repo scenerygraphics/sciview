@@ -6,13 +6,13 @@
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -26,38 +26,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.vector;
+package sc.iview.commands.view;
 
-/**
- * {@link Vector3} backed by three {@code float}s.
- * 
- * @author Curtis Rueden
- */
-public class FloatVector3 implements Vector3 {
+import org.scijava.command.Command;
+import org.scijava.log.LogService;
+import org.scijava.plugin.Menu;
+import org.scijava.plugin.Parameter;
+import org.scijava.plugin.Plugin;
+import sc.iview.SciView;
 
-    private float x, y, z;
+import static sc.iview.commands.MenuWeights.*;
 
-    public FloatVector3( float x, float y, float z ) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
+@Plugin(type = Command.class, menuRoot = "SciView", //
+        menu = {@Menu(label = "View", weight = VIEW), //
+                @Menu(label = "Set Supersampling Factor", weight = VIEW_SET_SUPERSAMPLING_FACTOR)})
+public class SetSupersamplingFactor implements Command {
 
-    @Override public float xf() { return x; }
-    @Override public float yf() { return y; }
-    @Override public float zf() { return z; }
+    @Parameter
+    private LogService logService;
 
-    @Override public void setX( float position ) { x = position; }
-    @Override public void setY( float position ) { y = position; }
-    @Override public void setZ( float position ) { z = position; }
+    @Parameter
+    private SciView sciView;
 
-    @Override
-    public Vector3 copy() {
-        return new FloatVector3(xf(),yf(),zf());
-    }
+    @Parameter
+    private double supersamplingFactor = 1.0;
 
     @Override
-    public String toString() {
-        return "[" + xf() + "; " + yf() + "; " + zf() + "]";
+    public void run() {
+
+        sciView.getSceneryRenderer().getSettings().set("Renderer.SupersamplingFactor",supersamplingFactor);
+
     }
+
 }

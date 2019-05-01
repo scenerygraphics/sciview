@@ -29,97 +29,104 @@
 package sc.iview.commands.demo;
 
 import cleargl.GLVector;
+import graphics.scenery.Material;
 import graphics.scenery.Node;
-import graphics.scenery.volumes.TransferFunction;
-import graphics.scenery.volumes.Volume;
-import io.scif.services.DatasetIOService;
-import net.imagej.Dataset;
 import net.imagej.mesh.Mesh;
-import net.imagej.ops.OpService;
-import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
-import net.imglib2.img.Img;
-import net.imglib2.type.logic.BitType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
+import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
-import sc.iview.process.MeshConverter;
 
+import javax.naming.directory.BasicAttribute;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Random;
 
 import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_VOLUME_RENDER;
+import static sc.iview.commands.MenuWeights.DEMO_MESH;
 
 /**
- * A demo of volume rendering.
+ * A demo of meshes.
  *
  * @author Kyle Harrington
  * @author Curtis Rueden
  */
-@Plugin(type = Command.class, label = "Volume Render/Isosurface Demo", menuRoot = "SciView", //
+@Plugin(type = Command.class, label = "Multi Mesh Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Volume Render/Isosurface", weight = DEMO_VOLUME_RENDER) })
-public class VolumeRenderDemo implements Command {
+                 @Menu(label = "MultiMesh", weight = DEMO_MESH) })
+public class MultiMeshDemo implements Command {
 
     @Parameter
-    private DatasetIOService datasetIO;
+    private int numMeshes;
+
+    @Parameter
+    private IOService io;
 
     @Parameter
     private LogService log;
 
     @Parameter
-    private OpService ops;
-
-    @Parameter
     private SciView sciView;
 
-    @Parameter(label = "Show isosurface")
-    private boolean iso = true;
+    @Parameter
+    private CommandService commandService;
 
     @Override
     public void run() {
-        final Dataset cube;
+        final Mesh m;
         try {
-            File cubeFile = ResourceLoader.createFile( getClass(), "/cored_cube_var2_8bit.tif" );
-
-            cube = datasetIO.open( cubeFile.getAbsolutePath() );
+            File meshFile = ResourceLoader.createFile( getClass(), "/WieseRobert_simplified_Cip1.stl" );
+            m = (Mesh) io.open( meshFile.getAbsolutePath() );
         }
         catch (IOException exc) {
             log.error( exc );
             return;
         }
 
-        Volume v = (Volume) sciView.addVolume( cube, new float[] { 1, 1, 1 } );
-        v.setPixelToWorldRatio(0.1f);
-        v.setName( "Volume Render Demo" );
-        v.setDirty(true);
-        v.setNeedsUpdate(true);
+        Material mat = new Material();
+        mat.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
+        mat.setDiffuse( new GLVector( 0.8f, 0.5f, 0.4f ) );
+        mat.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        //mat.setDoubleSided( true );
 
-        if (iso) {
-            int isoLevel = 1;
+        Random RNG = new Random();
 
-            @SuppressWarnings("unchecked")
-            Img<UnsignedByteType> cubeImg = ( Img<UnsignedByteType> ) cube.getImgPlus().getImg();
+        float shellR = 100;
 
-            Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( cubeImg, new UnsignedByteType( isoLevel ) );
+        ArrayList<Node> meshes = new ArrayList<>();
 
-            Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
+        for( int k = 0; k < numMeshes; k++ ) {
 
-            graphics.scenery.Mesh isoSurfaceMesh = MeshConverter.toScenery(m,true);
-            Node scMesh = sciView.addMesh(isoSurfaceMesh);
+            Node msh = sciView.addMesh(m);
+            msh.setName("Mesh_" + k);
 
-            isoSurfaceMesh.setName( "Volume Render Demo Isosurface" );
-            isoSurfaceMesh.setScale(new GLVector(v.getPixelToWorldRatio(),
-                    v.getPixelToWorldRatio(),
-                    v.getPixelToWorldRatio()));
+            msh.setPosition( new GLVector( ( RNG.nextFloat() * shellR - shellR ), ( RNG.nextFloat() * shellR - shellR ), ( RNG.nextFloat() * shellR - shellR ) ) );
+
+            //msh.fitInto( 15.0f, true );
+
+            msh.setMaterial(mat);
+
+            msh.setNeedsUpdate(true);
+            msh.setDirty(true);
+
+            meshes.add(msh);
         }
 
-        sciView.setActiveNode(v);
-        sciView.centerOnNode( sciView.getActiveNode() );
+        // Wait for everything to settle before framing the view
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        sciView.getFloor().setVisible(false);
+        sciView.surroundLighting();
+
+        sciView.centerOnScene();
     }
 }

@@ -26,38 +26,26 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.vector;
+package sc.iview.commands.view;
 
-/**
- * {@link Vector3} backed by three {@code float}s.
- * 
- * @author Curtis Rueden
- */
-public class FloatVector3 implements Vector3 {
+import org.scijava.command.Command;
+import org.scijava.plugin.Menu;
+import org.scijava.plugin.Parameter;
+import org.scijava.plugin.Plugin;
+import sc.iview.SciView;
 
-    private float x, y, z;
+import static sc.iview.commands.MenuWeights.*;
 
-    public FloatVector3( float x, float y, float z ) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
+@Plugin(type = Command.class, menuRoot = "SciView", //
+        menu = { @Menu(label = "View", weight = VIEW), //
+                 @Menu(label = "Toggle Record Video", weight = VIEW_RECORD_VIDEO) })
+public class ToggleRecordVideo implements Command {
 
-    @Override public float xf() { return x; }
-    @Override public float yf() { return y; }
-    @Override public float zf() { return z; }
-
-    @Override public void setX( float position ) { x = position; }
-    @Override public void setY( float position ) { y = position; }
-    @Override public void setZ( float position ) { z = position; }
+    @Parameter
+    private SciView sciView;
 
     @Override
-    public Vector3 copy() {
-        return new FloatVector3(xf(),yf(),zf());
-    }
-
-    @Override
-    public String toString() {
-        return "[" + xf() + "; " + yf() + "; " + zf() + "]";
+    public void run() {
+        sciView.toggleRecordVideo();
     }
 }
