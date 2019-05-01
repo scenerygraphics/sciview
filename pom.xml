@@ -113,32 +113,9 @@
 	</properties>
 
 	<repositories>
-		<!--
-		NB: The sonatype.public repository group, while proxied by scijava.public,
-		is here so that SNAPSHOT couplings to graphics.scenery:scenery can resolve
-		to the latest snapshot versions when -U is given. Otherwise, it seems the
-		scijava.public repository only pulls from upstream every so often, and can
-		thus fall out of date even when -U is given.
-		-->
-		<repository>
-			<id>sonatype.public</id>
-			<url>https://oss.sonatype.org/content/groups/public</url>
-		</repository>
 		<repository>
 			<id>scijava.public</id>
 			<url>https://maven.scijava.org/content/groups/public</url>
-		</repository>
-		<repository>
-		    <id>jitpack.io</id>
-		    <url>https://jitpack.io</url>
-		</repository>
-		<repository>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<id>bintray-ice1000-ice1000</id>
-			<name>bintray</name>
-			<url>https://dl.bintray.com/ice1000/ice1000</url>
 		</repository>
 	</repositories>
 
