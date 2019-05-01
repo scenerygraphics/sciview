@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>25.0.0</version>
+		<version>26.0.0</version>
 		<relativePath />
 	</parent>
 
@@ -103,8 +103,8 @@
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>SciView developers.</license.copyrightOwners>
 
-		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
-		<releaseProfiles>deploy-to-imagej</releaseProfiles>
+		<!-- NB: Deploy releases to the SciJava Maven repository. -->
+		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
 		<scenery.version>69c57496</scenery.version>
 		<cleargl.version>2.2.6</cleargl.version>
@@ -114,10 +114,10 @@
 
 	<repositories>
 		<!--
-		NB: The sonatype.public repository group, while proxied by imagej.public,
+		NB: The sonatype.public repository group, while proxied by scijava.public,
 		is here so that SNAPSHOT couplings to graphics.scenery:scenery can resolve
 		to the latest snapshot versions when -U is given. Otherwise, it seems the
-		imagej.public repository only pulls from upstream every so often, and can
+		scijava.public repository only pulls from upstream every so often, and can
 		thus fall out of date even when -U is given.
 		-->
 		<repository>
@@ -125,8 +125,8 @@
 			<url>https://oss.sonatype.org/content/groups/public</url>
 		</repository>
 		<repository>
-			<id>imagej.public</id>
-			<url>https://maven.imagej.net/content/groups/public</url>
+			<id>scijava.public</id>
+			<url>https://maven.scijava.org/content/groups/public</url>
 		</repository>
 		<repository>
 		    <id>jitpack.io</id>
