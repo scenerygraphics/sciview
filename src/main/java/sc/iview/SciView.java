@@ -424,10 +424,11 @@ public class SciView extends SceneryBase {
             nodePropertyEditor.rebuildTree();
             frame.getGlassPane().setVisible(false);
             getLogger().info("Done initializing SciView");
+
+            // subscribe to Node{Added, Removed, Changed} events
+            eventService.subscribe(this);
         });
 
-        // subscribe to Node{Added, Removed, Changed} events
-        eventService.subscribe(this);
     }
 
     public void setFloor( Node n ) {
