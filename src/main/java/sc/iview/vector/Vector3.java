@@ -275,6 +275,14 @@ public interface Vector3 extends RealLocalizable, RealPositionable {
         return Math.sqrt( getDoublePosition(0) * getDoublePosition(0) + getDoublePosition(1) * getDoublePosition(1) + getDoublePosition(2) * getDoublePosition(2) );
     }
 
+    default Vector3 add(Vector3 p2) {
+        Vector3 result = this.copy();
+        result.moveX(p2.getDoublePosition(0));
+        result.moveY(p2.getDoublePosition(1));
+        result.moveZ(p2.getDoublePosition(2));
+        return result;
+    }
+
     default Vector3 minus(Vector3 p2) {
         Vector3 result = this.copy();
         result.moveX(-p2.getDoublePosition(0));
