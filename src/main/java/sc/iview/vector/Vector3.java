@@ -312,5 +312,26 @@ public interface Vector3 extends RealLocalizable, RealPositionable {
         return v.cross(v2);
     }
 
+    default Vector3 elmul(Vector3 v2) {
+        Vector3 r = this.copy();
+        r.setX( r.xf() * v2.xf() );
+        r.setY( r.yf() * v2.yf() );
+        r.setZ( r.zf() * v2.zf() );
+        return r;
+    }
+
+    default float dot(Vector3 v2) {
+        return ( this.xf() * v2.xf() + this.yf() * v2.yf() + this.zf() * v2.zf() );
+    }
+
+    default Vector3 normalize() {
+        Vector3 r = this.copy();
+        double f = 1 / this.getLength();
+        r.setX(r.xf() * f);
+        r.setY(r.yf() * f);
+        r.setZ(r.zf() * f);
+        return r;
+    }
+
     Vector3 copy();
 }
