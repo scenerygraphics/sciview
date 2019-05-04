@@ -291,5 +291,21 @@ public interface Vector3 extends RealLocalizable, RealPositionable {
         return result;
     }
 
+    default float[] asFloatArray() {
+        float[] a = new float[3];
+        a[0] = xf();
+        a[1] = yf();
+        a[2] = zf();
+        return a;
+    }
+
+    default double[] asDoubleArray() {
+        double[] a = new double[3];
+        a[0] = xd();
+        a[1] = yd();
+        a[2] = zd();
+        return a;
+    }
+
     Vector3 copy();
 }
