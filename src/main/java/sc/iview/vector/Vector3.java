@@ -307,5 +307,10 @@ public interface Vector3 extends RealLocalizable, RealPositionable {
         return a;
     }
 
+    default Vector3 cross(Vector3 v2) {
+        ClearGLVector3 v = new ClearGLVector3(ClearGLVector3.convert(this));
+        return v.cross(v2);
+    }
+
     Vector3 copy();
 }
