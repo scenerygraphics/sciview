@@ -283,5 +283,13 @@ public interface Vector3 extends RealLocalizable, RealPositionable {
         return result;
     }
 
+    default Vector3 multiply(float s) {
+        Vector3 result = this.copy();
+        result.setPosition( result.getDoublePosition(0) * s, 0 );
+        result.setPosition( result.getDoublePosition(1) * s, 1 );
+        result.setPosition( result.getDoublePosition(2) * s, 2 );
+        return result;
+    }
+
     Vector3 copy();
 }
