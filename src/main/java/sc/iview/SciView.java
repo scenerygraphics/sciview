@@ -759,7 +759,7 @@ public class SciView extends SceneryBase {
     }
 
     public Node addCone( final Vector3 position, final float radius, final float height, final int num_segments ) {
-        final Cone cone = new Cone( radius, height, num_segments );
+        final Cone cone = new Cone( radius, height, num_segments, new GLVector(0,0,1) );
         cone.setPosition( ClearGLVector3.convert( position ) );
         return addNode( cone );
     }

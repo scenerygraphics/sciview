@@ -31,6 +31,7 @@ package sc.iview.commands.demo;
 import cleargl.GLVector;
 import com.jogamp.opengl.math.Quaternion;
 import graphics.scenery.Cone;
+import graphics.scenery.Line;
 import graphics.scenery.Material;
 import graphics.scenery.Node;
 import net.imagej.mesh.Mesh;
@@ -75,7 +76,7 @@ public class ParticleDemo implements Command {
     private CommandService commandService;
 
     @Parameter
-    private int numAgents=1;
+    private int numAgents=10;
 
     @Override
     public void run() {
@@ -89,10 +90,12 @@ public class ParticleDemo implements Command {
         float maxY = 10;
         float maxZ = 10;
 
+        int tailLength = 5;
+
         float maxL2 = maxX * maxX + maxY * maxY + maxZ * maxZ;
 
         for( int k = 0; k < numAgents; k++ ) {
-            Node n = new Cone(5, 10, 25);
+            Node n = new Cone(5, 10, 25, new GLVector(0,0,1));
 
             float x = rng.nextFloat()*maxX;
             float y = rng.nextFloat()*maxY;
@@ -100,15 +103,20 @@ public class ParticleDemo implements Command {
 
             GLVector vel = new GLVector(rng.nextFloat(),rng.nextFloat(),rng.nextFloat());
 
+            Line tail = new Line();
+
             n.setPosition(new GLVector(x,y,z));
             n.getMetadata().put("velocity",vel);
+            n.getMetadata().put("tailPoints",new ArrayList<GLVector>());
+            n.getMetadata().put("tail",tail);
+            sciView.addNode(tail);
 
             Quaternion newRot = new Quaternion();
             float[] dir = new float[]{vel.x(), vel.y(), vel.z()};
-            float[] up = new float[]{1f, 0f, 0f};
+            float[] up = new float[]{0f, 1f, 0f};
             newRot.setLookAt(dir, up,
-                    new float[3], new float[3], new float[3]);
-            System.out.println("Quaternion: " + newRot);
+                    new float[3], new float[3], new float[3]).normalize();
+            //newRot.rotateByAngleX((float) (Math.PI*0.5));
             n.setRotation(newRot);
 
             sciView.addNode(n);
@@ -117,6 +125,8 @@ public class ParticleDemo implements Command {
 
         sciView.animate(10, new Thread(() -> {
             GLVector vel;
+            Line tail;
+            List<GLVector> tailPoints;
             Random threadRng = new Random();
             for( Node agent : agents ) {
                 GLVector pos = agent.getPosition();
@@ -127,14 +137,26 @@ public class ParticleDemo implements Command {
                     agent.getMetadata().put("velocity",vel);
                     Quaternion newRot = new Quaternion();
                     float[] dir = new float[]{vel.x(), vel.y(), vel.z()};
-                    float[] up = new float[]{1f, 0f, 0f};
-                    newRot.setLookAt(dir, up,
-                            new float[3], new float[3], new float[3]);
-                    System.out.println("Quaternion: " + newRot);
+                    float[] up = new float[]{0f, 1f, 0f};
+                    newRot.setLookAt(dir, up, new float[3], new float[3], new float[3]).normalize();
+                    //newRot.rotateByAngleX((float) (Math.PI*0.5));
                     agent.setRotation(newRot);
+
                 } else {
                     vel = (GLVector) agent.getMetadata().get("velocity");
                 }
+
+                // Tail code
+                tailPoints = (List<GLVector>) agent.getMetadata().get("tailPoints");
+                System.out.println("Tail points: " + tailPoints.size());
+                if( tailPoints.size() >= tailLength ) {
+                    tail = (Line) agent.getMetadata().get("tail");
+                    tail.clearPoints();
+                    tail.addPoints( tailPoints );
+                    tailPoints.remove(0);
+                }
+                tailPoints.add(pos);
+
                 agent.setPosition(pos.plus(vel.times(dt)));
             }
         }));
