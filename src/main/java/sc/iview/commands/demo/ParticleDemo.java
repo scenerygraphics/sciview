@@ -90,8 +90,6 @@ public class ParticleDemo implements Command {
         float maxY = 10;
         float maxZ = 10;
 
-        int tailLength = 5;
-
         float maxL2 = maxX * maxX + maxY * maxY + maxZ * maxZ;
 
         for( int k = 0; k < numAgents; k++ ) {
@@ -103,20 +101,14 @@ public class ParticleDemo implements Command {
 
             GLVector vel = new GLVector(rng.nextFloat(),rng.nextFloat(),rng.nextFloat());
 
-            Line tail = new Line();
-
             n.setPosition(new GLVector(x,y,z));
             n.getMetadata().put("velocity",vel);
-            n.getMetadata().put("tailPoints",new ArrayList<GLVector>());
-            n.getMetadata().put("tail",tail);
-            sciView.addNode(tail);
 
             Quaternion newRot = new Quaternion();
             float[] dir = new float[]{vel.x(), vel.y(), vel.z()};
             float[] up = new float[]{0f, 1f, 0f};
             newRot.setLookAt(dir, up,
                     new float[3], new float[3], new float[3]).normalize();
-            //newRot.rotateByAngleX((float) (Math.PI*0.5));
             n.setRotation(newRot);
 
             sciView.addNode(n);
@@ -125,8 +117,7 @@ public class ParticleDemo implements Command {
 
         sciView.animate(10, new Thread(() -> {
             GLVector vel;
-            Line tail;
-            List<GLVector> tailPoints;
+
             Random threadRng = new Random();
             for( Node agent : agents ) {
                 GLVector pos = agent.getPosition();
@@ -139,23 +130,11 @@ public class ParticleDemo implements Command {
                     float[] dir = new float[]{vel.x(), vel.y(), vel.z()};
                     float[] up = new float[]{0f, 1f, 0f};
                     newRot.setLookAt(dir, up, new float[3], new float[3], new float[3]).normalize();
-                    //newRot.rotateByAngleX((float) (Math.PI*0.5));
                     agent.setRotation(newRot);
 
                 } else {
                     vel = (GLVector) agent.getMetadata().get("velocity");
                 }
-
-                // Tail code
-                tailPoints = (List<GLVector>) agent.getMetadata().get("tailPoints");
-                System.out.println("Tail points: " + tailPoints.size());
-                if( tailPoints.size() >= tailLength ) {
-                    tail = (Line) agent.getMetadata().get("tail");
-                    tail.clearPoints();
-                    tail.addPoints( tailPoints );
-                    tailPoints.remove(0);
-                }
-                tailPoints.add(pos);
 
                 agent.setPosition(pos.plus(vel.times(dt)));
             }
