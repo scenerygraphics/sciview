@@ -34,12 +34,13 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
-import static sc.iview.commands.MenuWeights.*;
+import static sc.iview.commands.MenuWeights.VIEW;
+import static sc.iview.commands.MenuWeights.VIEW_STOP_RECORDING_VIDEO;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "View", weight = VIEW), //
-                 @Menu(label = "Toggle Record Video", weight = VIEW_RECORD_VIDEO) })
-public class ToggleRecordVideo implements Command {
+                 @Menu(label = "Stop recording video", weight = VIEW_STOP_RECORDING_VIDEO) })
+public class StopRecordingVideo implements Command {
 
     @Parameter
     private SciView sciView;
