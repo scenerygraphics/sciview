@@ -610,6 +610,7 @@ public class SciView extends SceneryBase {
             return;
         }
 
+        // TODO: Maybe get rid of this?
         h.useDefaultBindings( "" );
 
         // Mouse controls
@@ -625,13 +626,13 @@ public class SciView extends SceneryBase {
         h.addBehaviour( "scroll_nodetranslate", nodeTranslate );
         h.addKeyBinding( "scroll_nodetranslate", "ctrl scroll" );
 
-        h.addBehaviour("move_up", new MovementCommand("move_up", "up", () -> getScene().findObserver(), fpsScrollSpeed ) );
-        h.addBehaviour("move_down", new MovementCommand("move_down", "down", () -> getScene().findObserver(), fpsScrollSpeed ) );
+        h.addBehaviour("move_up_slow", new MovementCommand("move_up", "up", () -> getScene().findObserver(), fpsScrollSpeed ) );
+        h.addBehaviour("move_down_slow", new MovementCommand("move_down", "down", () -> getScene().findObserver(), fpsScrollSpeed ) );
         h.addBehaviour("move_up_fast", new MovementCommand("move_up", "up", () -> getScene().findObserver(), 1.0f ) );
         h.addBehaviour("move_down_fast", new MovementCommand("move_down", "down", () -> getScene().findObserver(), 1.0f ) );
 
-        h.addKeyBinding("move_up", "X");
-        h.addKeyBinding("move_down", "C");
+        h.addKeyBinding("move_up_slow", "X");
+        h.addKeyBinding("move_down_slow", "C");
         h.addKeyBinding("move_up_fast", "shift X");
         h.addKeyBinding("move_down_fast", "shift C");
 
