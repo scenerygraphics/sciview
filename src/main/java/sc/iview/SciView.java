@@ -470,6 +470,10 @@ public class SciView extends SceneryBase {
         centerOnNode(getScene());
     }
 
+    public InputHandler getSceneryInputHandler() {
+        return getInputHandler();
+    }
+
     public void centerOnNode( Node currentNode ) {
         if( currentNode == null ) return;
 
@@ -621,6 +625,16 @@ public class SciView extends SceneryBase {
         h.addBehaviour( "scroll_nodetranslate", nodeTranslate );
         h.addKeyBinding( "scroll_nodetranslate", "ctrl scroll" );
 
+        h.addBehaviour("move_up", new MovementCommand("move_up", "up", () -> getScene().findObserver(), fpsScrollSpeed ) );
+        h.addBehaviour("move_down", new MovementCommand("move_down", "down", () -> getScene().findObserver(), fpsScrollSpeed ) );
+        h.addBehaviour("move_up_fast", new MovementCommand("move_up", "up", () -> getScene().findObserver(), 1.0f ) );
+        h.addBehaviour("move_down_fast", new MovementCommand("move_down", "down", () -> getScene().findObserver(), 1.0f ) );
+
+        h.addKeyBinding("move_up", "X");
+        h.addKeyBinding("move_down", "C");
+        h.addKeyBinding("move_up_fast", "shift X");
+        h.addKeyBinding("move_down_fast", "shift C");
+
         enableArcBallControl();
         enableFPSControl();
 
@@ -647,7 +661,7 @@ public class SciView extends SceneryBase {
         h.addKeyBinding("move_back_veryfast", "ctrl shift S");
         h.addKeyBinding("move_left_veryfast", "ctrl shift A");
         h.addKeyBinding("move_right_veryfast", "ctrl shift D");
-        h.addKeyBinding("move_up_veryfast", "ctrl shift Z");
+        h.addKeyBinding("move_up_veryfast", "ctrl shift X");
         h.addKeyBinding("move_down_veryfast", "ctrl shift C");
 
     }
