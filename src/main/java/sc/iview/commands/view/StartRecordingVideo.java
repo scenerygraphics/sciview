@@ -28,18 +28,24 @@
  */
 package sc.iview.commands.view;
 
-import org.scijava.command.Command;
+import graphics.scenery.utils.*;
+import org.scijava.command.*;
+import org.scijava.module.*;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
+import java.util.*;
+import java.util.stream.*;
+
+import static org.scijava.widget.ChoiceWidget.LIST_BOX_STYLE;
 import static sc.iview.commands.MenuWeights.*;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "View", weight = VIEW), //
                  @Menu(label = "Start recording video", weight = VIEW_START_RECORDING_VIDEO) })
-public class StartRecordingVideo implements Command {
+public class StartRecordingVideo extends InteractiveCommand {
 
     @Parameter
     private SciView sciView;
@@ -47,11 +53,19 @@ public class StartRecordingVideo implements Command {
     @Parameter(min = "0.1", max = "100.0", label = "Bitrate (MBit)")
     private float bitrate = 5.0f;// 5 MBit
 
-    @Parameter(choices={"VeryLow", "Low", "Medium", "High", "Ultra", "Insane"}, style="listBox", label = "Video Encoding Quality")
-    private String videoEncodingQuality = "Medium";// listed as an enum here, cant access from java https://github.com/scenerygraphics/scenery/blob/1a451c2864e5a48e47622d9313fe1681e47d7958/src/main/kotlin/graphics/scenery/utils/H264Encoder.kt#L65
+    @Parameter(style = LIST_BOX_STYLE, label = "Video Encoding Quality", initializer = "initializeQualities")
+    private String videoEncodingQuality = "Medium";
+
+    private void initializeQualities() {
+        System.out.println("initializing fields");
+        final MutableModuleItem<String> qualityInput = getInfo().getMutableInput( "videoEncodingQuality", String.class );
+        final List<String> qualities = Arrays.stream(VideoEncodingQuality.values()).map(Enum::name).collect(Collectors.toList());
+        qualityInput.setChoices(qualities);
+    }
 
     @Override
     public void run() {
+
         bitrate = Math.max(0,bitrate);
         sciView.getScenerySettings().set("VideoEncoder.Bitrate", Math.round(bitrate * 1024.0f * 1024.0f));
         sciView.getScenerySettings().set("VideoEncoder.Quality", videoEncodingQuality);
