@@ -592,7 +592,7 @@ public class SciView extends SceneryBase {
             if( !nearest.isEmpty() ) {
                 setActiveNode( nearest.get( 0 ).getNode() );
                 nodePropertyEditor.trySelectNode( getActiveNode() );
-                //log.debug( "Selected node: " + getActiveNode().getName() );
+                log.debug( "Selected node: " + getActiveNode().getName() );
             }
             return Unit.INSTANCE;
         };
@@ -615,11 +615,11 @@ public class SciView extends SceneryBase {
                                                            selectAction ) );
         h.addKeyBinding( "object_selection_mode", "double-click button1" );
 
+        h.addBehaviour( "mouse_control_nodetranslate", new NodeTranslateControl( this, 0.0002f ) );
+        h.addKeyBinding( "mouse_control_nodetranslate", "ctrl button1" );
+
         enableArcBallControl();
         enableFPSControl();
-
-        h.addBehaviour( "mouse_control_nodetranslate", new NodeTranslateControl( this, 0.002f ) );
-        h.addKeyBinding( "mouse_control_nodetranslate", "shift button2" );
 
         // Extra keyboard controls
         h.addBehaviour( "show_help", new showHelpDisplay() );
