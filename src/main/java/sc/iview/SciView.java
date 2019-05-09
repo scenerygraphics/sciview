@@ -615,8 +615,11 @@ public class SciView extends SceneryBase {
                                                            selectAction ) );
         h.addKeyBinding( "object_selection_mode", "double-click button1" );
 
-        h.addBehaviour( "mouse_control_nodetranslate", new NodeTranslateControl( this, 0.0002f ) );
+        NodeTranslateControl nodeTranslate = new NodeTranslateControl(this, 0.0005f);
+        h.addBehaviour( "mouse_control_nodetranslate", nodeTranslate );
         h.addKeyBinding( "mouse_control_nodetranslate", "ctrl button1" );
+        h.addBehaviour( "scroll_nodetranslate", nodeTranslate );
+        h.addKeyBinding( "scroll_nodetranslate", "ctrl scroll" );
 
         enableArcBallControl();
         enableFPSControl();
