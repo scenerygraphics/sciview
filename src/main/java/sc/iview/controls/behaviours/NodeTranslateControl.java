@@ -13,7 +13,7 @@ import sc.iview.SciView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NodeTranslateControl implements DragBehaviour {
+public class NodeTranslateControl implements DragBehaviour, ScrollBehaviour {
 
     protected SciView sciView;
     private boolean firstEntered = true;
@@ -41,6 +41,21 @@ public class NodeTranslateControl implements DragBehaviour {
         return sciView.getCamera();
     }
 
+    public GLVector getLRAxis() {
+        // Object mode
+        return getCamera().getForward().cross(getCamera().getUp()).normalize();
+    }
+
+    public GLVector getUDAxis() {
+        // Object mode
+        return getCamera().getUp();
+    }
+
+    public GLVector getFBAxis() {
+        // Object mode
+        return getCamera().getForward();
+    }
+
     /**
      * This function is called upon mouse down and initializes the camera control
      * with the current window size.
@@ -62,9 +77,8 @@ public class NodeTranslateControl implements DragBehaviour {
             int lineLengths = 50;// Should be proportional to something about the view?
 
             // Axis orthogonal to camera lookAt (along viewplane)
-            GLVector lrAxis = getCamera().getForward().cross(getCamera().getUp()).normalize();
-            GLVector leftPoint = getCamera().getTarget().plus(lrAxis.times(lineLengths));
-            GLVector rightPoint = getCamera().getTarget().plus(lrAxis.times(-1 * lineLengths));
+            GLVector leftPoint = getCamera().getTarget().plus(getLRAxis().times(lineLengths));
+            GLVector rightPoint = getCamera().getTarget().plus(getLRAxis().times(-1 * lineLengths));
             Cylinder cylinder = new Cylinder(1, lineLengths * 2, 20);
             cylinder.orientBetweenPoints(leftPoint,rightPoint);
             cylinder.setName("L-R axis");
@@ -72,15 +86,13 @@ public class NodeTranslateControl implements DragBehaviour {
             mat.setDiffuse(new GLVector(1,0,0));
             mat.setAmbient(new GLVector(1,0,0));
             cylinder.setMaterial(mat);
-            GLVector cylCenter = cylinder.getPosition().plus(lrAxis.times(lineLengths)).plus(getCamera().getForward().times(sciView.getActiveNode().getMaximumBoundingBox().getBoundingSphere().getRadius()*0.5f));
-            cylinder.setPosition(cylCenter);
+            cylinder.setPosition(sciView.getActiveNode().getMaximumBoundingBox().getBoundingSphere().getOrigin().plus(getLRAxis().times(lineLengths)));
             sciView.addNode(cylinder, false);
             axes.add(cylinder);
 
             // Axis orthogonal to camera lookAt (along viewplane)
-            GLVector udAxis = getCamera().getUp();
-            GLVector upPoint = getCamera().getTarget().plus(udAxis.times(lineLengths));
-            GLVector downPoint = getCamera().getTarget().plus(udAxis.times(-1 * lineLengths));
+            GLVector upPoint = getCamera().getTarget().plus(getUDAxis().times(lineLengths));
+            GLVector downPoint = getCamera().getTarget().plus(getUDAxis().times(-1 * lineLengths));
             cylinder = new Cylinder(1, lineLengths * 2, 20);
             cylinder.orientBetweenPoints(upPoint,downPoint);
             cylinder.setName("U-D axis");
@@ -88,15 +100,13 @@ public class NodeTranslateControl implements DragBehaviour {
             mat.setDiffuse(new GLVector(0.25f,1f,0.25f));
             mat.setAmbient(new GLVector(0.25f,1f,0.25f));
             cylinder.setMaterial(mat);
-            cylCenter = cylinder.getPosition().plus(udAxis.times(lineLengths)).plus(getCamera().getForward().times(sciView.getActiveNode().getMaximumBoundingBox().getBoundingSphere().getRadius()*0.5f));
-            cylinder.setPosition(cylCenter);
+            cylinder.setPosition(sciView.getActiveNode().getMaximumBoundingBox().getBoundingSphere().getOrigin().plus(getUDAxis().times(lineLengths)));
             sciView.addNode(cylinder, false);
             axes.add(cylinder);
 
             // Axis orthogonal to camera lookAt (along viewplane)
-            GLVector fbAxis = getCamera().getForward();
-            GLVector frontPoint = getCamera().getTarget().plus(fbAxis.times(lineLengths));
-            GLVector backPoint = getCamera().getTarget().plus(fbAxis.times(-1 * lineLengths));
+            GLVector frontPoint = getCamera().getTarget().plus(getFBAxis().times(lineLengths));
+            GLVector backPoint = getCamera().getTarget().plus(getFBAxis().times(-1 * lineLengths));
             cylinder = new Cylinder(1, lineLengths * 2, 20);
             cylinder.orientBetweenPoints(frontPoint,backPoint);
             cylinder.setName("F-B axis");
@@ -104,24 +114,20 @@ public class NodeTranslateControl implements DragBehaviour {
             mat.setDiffuse(new GLVector(0f,0.5f,1f));
             mat.setAmbient(new GLVector(0f,0.5f,1f));
             cylinder.setMaterial(mat);
-            cylCenter = cylinder.getPosition().plus(fbAxis.times(lineLengths)).plus(getCamera().getForward().times(sciView.getActiveNode().getMaximumBoundingBox().getBoundingSphere().getRadius()*0.5f));
-            cylinder.setPosition(cylCenter);
+            cylinder.setPosition(sciView.getActiveNode().getMaximumBoundingBox().getBoundingSphere().getOrigin().plus(getFBAxis().times(lineLengths)));
             sciView.addNode(cylinder, false);
             axes.add(cylinder);
         }
     }
 
     @Override public void drag( int x, int y ) {
-
         if( sciView.getActiveNode() == null || sciView.getActiveNode().getLock().tryLock() != true) {
             return;
         }
 
-        float[] translationVector = new float[]{ ( x - lastX ) * getDragSpeed(), ( y - lastY ) * getDragSpeed(), 0};
-
-        ( new Quaternion( sciView.getCamera().getRotation() ) ).conjugate().rotateVector( translationVector, 0, translationVector, 0 );
-        translationVector[1] *= -1;
-        sciView.getActiveNode().setPosition( sciView.getActiveNode().getPosition().plus( new GLVector( translationVector ) ) );
+        sciView.getActiveNode().setPosition(sciView.getActiveNode().getPosition().plus(
+                getLRAxis().times(( x - lastX ) * getDragSpeed())).plus(
+                        getUDAxis().times(-1 * ( y - lastY ) * getDragSpeed())));
 
         sciView.getActiveNode().getLock().unlock();
     }
@@ -132,5 +138,17 @@ public class NodeTranslateControl implements DragBehaviour {
         for( Node n : axes ) {
             sciView.deleteNode( n, false );
         }
+    }
+
+    @Override
+    public void scroll(double wheelRotation, boolean isHorizontal, int x, int y) {
+        if( sciView.getActiveNode() == null || sciView.getActiveNode().getLock().tryLock() != true) {
+            return;
+        }
+
+        sciView.getActiveNode().setPosition(sciView.getActiveNode().getPosition().plus(
+                getFBAxis().times((float) wheelRotation * getDragSpeed())));
+
+        sciView.getActiveNode().getLock().unlock();
     }
 }
