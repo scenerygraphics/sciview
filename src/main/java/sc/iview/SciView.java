@@ -424,10 +424,11 @@ public class SciView extends SceneryBase {
             nodePropertyEditor.rebuildTree();
             frame.getGlassPane().setVisible(false);
             getLogger().info("Done initializing SciView");
+
+            // subscribe to Node{Added, Removed, Changed} events
+            eventService.subscribe(this);
         });
 
-        // subscribe to Node{Added, Removed, Changed} events
-        eventService.subscribe(this);
     }
 
     public void setFloor( Node n ) {
@@ -758,7 +759,7 @@ public class SciView extends SceneryBase {
     }
 
     public Node addCone( final Vector3 position, final float radius, final float height, final int num_segments ) {
-        final Cone cone = new Cone( radius, height, num_segments );
+        final Cone cone = new Cone( radius, height, num_segments, new GLVector(0,0,1) );
         cone.setPosition( ClearGLVector3.convert( position ) );
         return addNode( cone );
     }

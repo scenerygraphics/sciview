@@ -275,12 +275,70 @@ public interface Vector3 extends RealLocalizable, RealPositionable {
         return Math.sqrt( getDoublePosition(0) * getDoublePosition(0) + getDoublePosition(1) * getDoublePosition(1) + getDoublePosition(2) * getDoublePosition(2) );
     }
 
+    default Vector3 add(Vector3 p2) {
+        Vector3 result = this.copy();
+        result.moveX(p2.getDoublePosition(0));
+        result.moveY(p2.getDoublePosition(1));
+        result.moveZ(p2.getDoublePosition(2));
+        return result;
+    }
+
     default Vector3 minus(Vector3 p2) {
         Vector3 result = this.copy();
         result.moveX(-p2.getDoublePosition(0));
         result.moveY(-p2.getDoublePosition(1));
         result.moveZ(-p2.getDoublePosition(2));
         return result;
+    }
+
+    default Vector3 multiply(float s) {
+        Vector3 result = this.copy();
+        result.setPosition( result.getDoublePosition(0) * s, 0 );
+        result.setPosition( result.getDoublePosition(1) * s, 1 );
+        result.setPosition( result.getDoublePosition(2) * s, 2 );
+        return result;
+    }
+
+    default float[] asFloatArray() {
+        float[] a = new float[3];
+        a[0] = xf();
+        a[1] = yf();
+        a[2] = zf();
+        return a;
+    }
+
+    default double[] asDoubleArray() {
+        double[] a = new double[3];
+        a[0] = xd();
+        a[1] = yd();
+        a[2] = zd();
+        return a;
+    }
+
+    default Vector3 cross(Vector3 v2) {
+        ClearGLVector3 v = new ClearGLVector3(ClearGLVector3.convert(this));
+        return v.cross(v2);
+    }
+
+    default Vector3 elmul(Vector3 v2) {
+        Vector3 r = this.copy();
+        r.setX( r.xf() * v2.xf() );
+        r.setY( r.yf() * v2.yf() );
+        r.setZ( r.zf() * v2.zf() );
+        return r;
+    }
+
+    default float dot(Vector3 v2) {
+        return ( this.xf() * v2.xf() + this.yf() * v2.yf() + this.zf() * v2.zf() );
+    }
+
+    default Vector3 normalize() {
+        Vector3 r = this.copy();
+        double f = 1 / this.getLength();
+        r.setX(r.xf() * f);
+        r.setY(r.yf() * f);
+        r.setZ(r.zf() * f);
+        return r;
     }
 
     Vector3 copy();

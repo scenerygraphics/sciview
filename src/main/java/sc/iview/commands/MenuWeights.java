@@ -67,7 +67,8 @@ public final class MenuWeights {
     public static final double VIEW_TOGGLE_UNLIMITED_FRAMERATE = 2;
     public static final double VIEW_SET_SUPERSAMPLING_FACTOR = 3;
     public static final double VIEW_SET_FAR_PLANE = 4;
-    public static final double VIEW_RECORD_VIDEO = 99;
+    public static final double VIEW_START_RECORDING_VIDEO = 98;
+    public static final double VIEW_STOP_RECORDING_VIDEO = 99;
     public static final double VIEW_SCREENSHOT = 100;
     public static final double VIEW_SET_LUT = 101;
     public static final double VIEW_TOGGLE_BOUNDING_GRID = 102;
