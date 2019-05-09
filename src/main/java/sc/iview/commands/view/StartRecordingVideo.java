@@ -44,16 +44,16 @@ public class StartRecordingVideo implements Command {
     @Parameter
     private SciView sciView;
 
-    @Parameter
-    private int bitrate = 10000000;// 10 MBit
+    @Parameter(min = "0.1", max = "100.0", label = "Bitrate (MBit)")
+    private float bitrate = 5.0f;// 5 MBit
 
-    @Parameter(choices={"VeryLow", "Low", "Medium", "High", "Ultra", "Insane"}, style="listBox")
-    private String videoEncodingQuality;// listed as an enum here, cant access from java https://github.com/scenerygraphics/scenery/blob/1a451c2864e5a48e47622d9313fe1681e47d7958/src/main/kotlin/graphics/scenery/utils/H264Encoder.kt#L65
+    @Parameter(choices={"VeryLow", "Low", "Medium", "High", "Ultra", "Insane"}, style="listBox", label = "Video Encoding Quality")
+    private String videoEncodingQuality = "Medium";// listed as an enum here, cant access from java https://github.com/scenerygraphics/scenery/blob/1a451c2864e5a48e47622d9313fe1681e47d7958/src/main/kotlin/graphics/scenery/utils/H264Encoder.kt#L65
 
     @Override
     public void run() {
         bitrate = Math.max(0,bitrate);
-        sciView.getScenerySettings().set("VideoEncoder.Bitrate", bitrate);
+        sciView.getScenerySettings().set("VideoEncoder.Bitrate", Math.round(bitrate * 1024.0f * 1024.0f));
         sciView.getScenerySettings().set("VideoEncoder.Quality", videoEncodingQuality);
         sciView.toggleRecordVideo();
     }
