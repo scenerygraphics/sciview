@@ -33,10 +33,9 @@ import net.imglib2.RealLocalizable;
 import net.imglib2.RealPositionable;
 
 /**
- * Interface for 3D vectors.
+ * Interface for 4D vectors.
  * 
  * @author Kyle Harrington
- * @author Curtis Rueden
  */
 public interface Vector4 extends RealLocalizable, RealPositionable {
 
@@ -302,10 +301,10 @@ public interface Vector4 extends RealLocalizable, RealPositionable {
 
     // Extra convenience methods
     default double getLength() {
-        return Math.sqrt( getDoublePosition(0) * getDoublePosition(0) +
-                getDoublePosition(1) * getDoublePosition(1) +
-                getDoublePosition(2) * getDoublePosition(2) +
-                getDoublePosition(3) * getDoublePosition(3) );
+        return Math.sqrt( getDoublePosition(0) * getDoublePosition(0) + //
+                          getDoublePosition(1) * getDoublePosition(1) + //
+                          getDoublePosition(2) * getDoublePosition(2) + //
+                          getDoublePosition(3) * getDoublePosition(3) );
     }
 
     default Vector4 add(Vector4 p2) {
