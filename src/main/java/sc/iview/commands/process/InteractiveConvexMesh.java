@@ -75,15 +75,6 @@ public class InteractiveConvexMesh extends InteractiveCommand {
     @Parameter(callback = "createMesh")
     private Button createMesh;
 
-    @Parameter(callback = "savePoints")
-    private Button savePoints;
-
-    @Parameter(callback = "loadPoints")
-    private Button loadPoints;
-
-    @Parameter(callback = "clearPoints")
-    private Button clearPoints;
-
     private Node targetPoint;
     private ControlPoints controlPoints;
 
