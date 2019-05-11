@@ -1,7 +1,6 @@
 package sc.iview.controls.behaviours;
 
 import cleargl.GLVector;
-import com.jogamp.opengl.math.Quaternion;
 import graphics.scenery.Camera;
 import graphics.scenery.Cylinder;
 import graphics.scenery.Material;
