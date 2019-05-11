@@ -188,6 +188,6 @@ public class InteractiveConvexMesh extends InteractiveCommand {
         for( Node n : controlPoints.getNodes() ) {
             sciView.deleteNode(n,false);
         }
-        sciView.getCamera().removeChild(targetPoint);
+        sciView.deleteNode(targetPoint,false);
     }
 }
