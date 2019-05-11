@@ -222,7 +222,10 @@ public class SciView extends SceneryBase {
     public void restoreControls() {
         // This pops/restores the previously stashed controls. Emits a warning if there are no stashed controlls
         HashMap<String, Object> controlState = controlStack.pop();
-        setObjectSelectionMode();// This isnt how it should work
+
+        // This isnt how it should work
+        setObjectSelectionMode();
+        resetFPSInputs();
     }
 
     public class TransparentSlider extends JSlider {
@@ -565,6 +568,8 @@ public class SciView extends SceneryBase {
         h.addBehaviour( "move_down",
                                         new MovementCommand( "move_down", "down", () -> getScene().findObserver(),
                                                              getFPSSpeed() ) );
+
+        h.addKeyBinding( "move_forward_scroll", "scroll" );
     }
 
     class enableIncrease implements ClickBehaviour {
@@ -741,8 +746,6 @@ public class SciView extends SceneryBase {
         h.addKeyBinding( "mouse_control_cameratranslate", "button2" );
 
         resetFPSInputs();
-
-        h.addKeyBinding( "move_forward_scroll", "scroll" );
     }
 
     public Node addBox() {

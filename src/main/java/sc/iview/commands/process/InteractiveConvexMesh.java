@@ -44,6 +44,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.behaviour.Behaviour;
 import org.scijava.ui.behaviour.ClickBehaviour;
+import org.scijava.ui.behaviour.ScrollBehaviour;
 import org.scijava.widget.Button;
 import sc.iview.SciView;
 import sc.iview.Utils;
@@ -98,8 +99,10 @@ public class InteractiveConvexMesh extends InteractiveCommand {
                 placeControlPointBehaviour() );
         sciView.getSceneryInputHandler().addKeyBinding( "place_control_point", "double-click button1" );
 
-        // TODO: Setup the scrolling behavior to adjust the control point distance
-
+        // Setup the scrolling behavior to adjust the control point distance
+        sciView.getSceneryInputHandler().addBehaviour( "change_control_point_distance",
+                distanceControlPointBehaviour() );
+        sciView.getSceneryInputHandler().addKeyBinding( "change_control_point_distance", "scroll" );
     }
 
     private Behaviour placeControlPointBehaviour() {
@@ -107,6 +110,17 @@ public class InteractiveConvexMesh extends InteractiveCommand {
             @Override
             public void click(int x, int y) {
                 placeControlPoint( sciView.getCamera(), x, y, controlPointDistance );
+            }
+        };
+        return b;
+    }
+
+    private Behaviour distanceControlPointBehaviour() {
+        ScrollBehaviour b = new ScrollBehaviour() {
+            @Override
+            public void scroll(double wheelRotation, boolean isHorizontal, int x, int y) {
+                controlPointDistance += wheelRotation;
+                // If we had a target control point that showed where the control point would go it should be updated
             }
         };
         return b;
