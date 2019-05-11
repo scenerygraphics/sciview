@@ -13,6 +13,7 @@ public class ControlPoints {
     static public float DEFAULT_RADIUS = 0.5f;
     static public int DEFAULT_SEGMENTS = 18;
     static public ColorRGB DEFAULT_COLOR = ColorRGB.fromHSVColor(0.5,0.5,0.25);
+    static public ColorRGB TARGET_COLOR = ColorRGB.fromHSVColor(0.5,0.75,0.75);
 
     protected List<Node> nodes;
 

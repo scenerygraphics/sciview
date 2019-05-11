@@ -84,6 +84,7 @@ public class InteractiveConvexMesh extends InteractiveCommand {
     @Parameter(callback = "clearPoints")
     private Button clearPoints;
 
+    private Node targetPoint;
     private ControlPoints controlPoints;
 
     protected float controlPointDistance = 10;
@@ -103,6 +104,17 @@ public class InteractiveConvexMesh extends InteractiveCommand {
         sciView.getSceneryInputHandler().addBehaviour( "change_control_point_distance",
                 distanceControlPointBehaviour() );
         sciView.getSceneryInputHandler().addKeyBinding( "change_control_point_distance", "scroll" );
+
+        // Create target point
+        targetPoint = new Sphere(ControlPoints.DEFAULT_RADIUS, ControlPoints.DEFAULT_SEGMENTS);
+        Material mat = new Material();
+        mat.setAmbient(Utils.convertToGLVector(ControlPoints.TARGET_COLOR));
+        mat.setDiffuse(Utils.convertToGLVector(ControlPoints.TARGET_COLOR));
+        targetPoint.setMaterial(mat);
+
+        targetPoint.setPosition( sciView.getCamera().getPosition().plus(sciView.getCamera().getForward().times(controlPointDistance) ) );
+
+        sciView.getCamera().addChild(targetPoint);
     }
 
     private Behaviour placeControlPointBehaviour() {
@@ -120,7 +132,7 @@ public class InteractiveConvexMesh extends InteractiveCommand {
             @Override
             public void scroll(double wheelRotation, boolean isHorizontal, int x, int y) {
                 controlPointDistance += wheelRotation;
-                // If we had a target control point that showed where the control point would go it should be updated
+                targetPoint.setPosition( sciView.getCamera().getPosition().plus(sciView.getCamera().getForward().times(controlPointDistance) ) );
             }
         };
         return b;
@@ -176,5 +188,6 @@ public class InteractiveConvexMesh extends InteractiveCommand {
         for( Node n : controlPoints.getNodes() ) {
             sciView.deleteNode(n,false);
         }
+        sciView.getCamera().removeChild(targetPoint);
     }
 }
