@@ -46,12 +46,18 @@ public class RotateView implements Command {
     @Parameter
     private SciView sciView;
 
+    @Parameter
+    private int xSpeed = 3;
+
+    @Parameter
+    private int ySpeed = 0;
+
     @Override
     public void run() {
         sciView.animate( 30, () -> {
-            sciView.getTargetArcball().init( 1, 0 );
-            sciView.getTargetArcball().drag( 3, 0 );
-            sciView.getTargetArcball().end( 5, 0 );
+            sciView.getTargetArcball().init( 1, 1 );
+            sciView.getTargetArcball().drag( 1+xSpeed, 1+ySpeed );
+            sciView.getTargetArcball().end( 1+xSpeed, 1+ySpeed );
         } );
     }
 
