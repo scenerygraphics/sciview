@@ -28,3 +28,7 @@ In Fiji, go to `Help -> Update` and activate the `SciView` update site. In case 
 * Robert Haase (MPI-CBG)
 * Jan Eglinger (FMI Basel)
 * Stephan Saalfeld (HHMI Janelia Farm)
+
+## Resources
+
+- [Media/videos created with SciView](https://github.com/scenerygraphics/sciview/wiki/Links-to-media-created-with-SciView)

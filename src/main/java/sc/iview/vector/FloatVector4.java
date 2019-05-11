@@ -26,39 +26,41 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.vector;
 
-import static sc.iview.commands.MenuWeights.VIEW;
-import static sc.iview.commands.MenuWeights.VIEW_ROTATE;
+/**
+ * {@link Vector4} backed by three {@code float}s.
+ * 
+ * @author Kyle Harrington
+ */
+public class FloatVector4 implements Vector4 {
 
-import org.scijava.command.Command;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
+    private float x, y, z, w;
 
-import sc.iview.SciView;
-
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "View", weight = VIEW), //
-                 @Menu(label = "Circle camera around current object", weight = VIEW_ROTATE) })
-public class RotateView implements Command {
-
-    @Parameter
-    private SciView sciView;
-
-    @Parameter
-    private int xSpeed = 3;
-
-    @Parameter
-    private int ySpeed = 0;
-
-    @Override
-    public void run() {
-        sciView.animate( 30, () -> {
-            sciView.getTargetArcball().init( 1, 1 );
-            sciView.getTargetArcball().drag( 1+xSpeed, 1+ySpeed );
-            sciView.getTargetArcball().end( 1+xSpeed, 1+ySpeed );
-        } );
+    public FloatVector4(float x, float y, float z, float w ) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.w = w;
     }
 
+    @Override public float xf() { return x; }
+    @Override public float yf() { return y; }
+    @Override public float zf() { return z; }
+    @Override public float wf() { return w; }
+
+    @Override public void setX( float position ) { x = position; }
+    @Override public void setY( float position ) { y = position; }
+    @Override public void setZ( float position ) { z = position; }
+    @Override public void setW( float position ) { w = position; }
+
+    @Override
+    public Vector4 copy() {
+        return new FloatVector4(xf(),yf(),zf(),wf());
+    }
+
+    @Override
+    public String toString() {
+        return "[" + xf() + "; " + yf() + "; " + zf() + "; " + wf() + "]";
+    }
 }

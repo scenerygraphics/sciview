@@ -79,7 +79,6 @@ import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.InputTrigger;
 import org.scijava.ui.swing.menu.SwingJMenuBarCreator;
 import org.scijava.util.ColorRGB;
-import org.scijava.util.ColorRGBA;
 import org.scijava.util.Colors;
 import org.scijava.util.VersionUtils;
 import sc.iview.commands.view.NodePropertyEditor;
@@ -192,6 +191,7 @@ public class SciView extends SceneryBase {
     private JSplitPane inspector;
     private NodePropertyEditor nodePropertyEditor;
     private ArrayList<PointLight> lights;
+    private Stack<HashMap<String, Object>> controlStack;
 
     public SciView( Context context ) {
         super( "SciView", 1280, 720, false, context );
@@ -211,6 +211,21 @@ public class SciView extends SceneryBase {
             ((OpenGLRenderer)getRenderer()).recordMovie();
         else
             ((VulkanRenderer)getRenderer()).recordMovie();
+    }
+
+    public void stashControls() {
+        // This pushes the current input setup onto a stack that allows them to be restored with restoreControls
+        HashMap<String, Object> controlState = new HashMap<String, Object>();
+        controlStack.push(controlState);
+    }
+
+    public void restoreControls() {
+        // This pops/restores the previously stashed controls. Emits a warning if there are no stashed controlls
+        HashMap<String, Object> controlState = controlStack.pop();
+
+        // This isnt how it should work
+        setObjectSelectionMode();
+        resetFPSInputs();
     }
 
     public class TransparentSlider extends JSlider {
@@ -408,6 +423,7 @@ public class SciView extends SceneryBase {
         getScene().addChild( floor );
 
         animations = new LinkedList<>();
+        controlStack = new Stack<>();
 
         SwingUtilities.invokeLater(() -> {
             try {
@@ -468,6 +484,10 @@ public class SciView extends SceneryBase {
 
     public void centerOnScene() {
         centerOnNode(getScene());
+    }
+
+    public InputHandler getSceneryInputHandler() {
+        return getInputHandler();
     }
 
     public void centerOnNode( Node currentNode ) {
@@ -548,6 +568,8 @@ public class SciView extends SceneryBase {
         h.addBehaviour( "move_down",
                                         new MovementCommand( "move_down", "down", () -> getScene().findObserver(),
                                                              getFPSSpeed() ) );
+
+        h.addKeyBinding( "move_forward_scroll", "scroll" );
     }
 
     class enableIncrease implements ClickBehaviour {
@@ -587,39 +609,64 @@ public class SciView extends SceneryBase {
         }
     }
 
-    @Override public void inputSetup() {
+    public void setObjectSelectionMode() {
         Function1<? super List<Scene.RaycastResult>, Unit> selectAction = nearest -> {
             if( !nearest.isEmpty() ) {
                 setActiveNode( nearest.get( 0 ).getNode() );
                 nodePropertyEditor.trySelectNode( getActiveNode() );
-                //log.debug( "Selected node: " + getActiveNode().getName() );
+                log.debug( "Selected node: " + getActiveNode().getName() );
             }
             return Unit.INSTANCE;
         };
+        setObjectSelectionMode(selectAction);
+    }
 
+    public void setObjectSelectionMode(Function1<? super List<Scene.RaycastResult>, Unit> selectAction) {
+        final InputHandler h = getInputHandler();
         List<Class<?>> ignoredObjects = new ArrayList<>();
         ignoredObjects.add( BoundingGrid.class );
 
+        if(h == null) {
+            getLogger().error("InputHandler is null, cannot change object selection mode.");
+            return;
+        }
+        h.addBehaviour( "object_selection_mode",
+                                        new SelectCommand( "objectSelector", getRenderer(), getScene(),
+                                                           () -> getScene().findObserver(), false, ignoredObjects,
+                                                           selectAction ) );
+        h.addKeyBinding( "object_selection_mode", "double-click button1" );
+    }
+
+    @Override public void inputSetup() {
         final InputHandler h = getInputHandler();
         if(h == null) {
             getLogger().error("InputHandler is null, cannot run input setup.");
             return;
         }
 
+        // TODO: Maybe get rid of this?
         h.useDefaultBindings( "" );
 
         // Mouse controls
-        h.addBehaviour( "object_selection_mode",
-                                        new SelectCommand( "objectSelector", getRenderer(), getScene(),
-                                                           () -> getScene().findObserver(), false, ignoredObjects,
-                                                           selectAction ) );
-        h.addKeyBinding( "object_selection_mode", "double-click button1" );
+        setObjectSelectionMode();
+        NodeTranslateControl nodeTranslate = new NodeTranslateControl(this, 0.0005f);
+        h.addBehaviour( "mouse_control_nodetranslate", nodeTranslate );
+        h.addKeyBinding( "mouse_control_nodetranslate", "ctrl button1" );
+        h.addBehaviour( "scroll_nodetranslate", nodeTranslate );
+        h.addKeyBinding( "scroll_nodetranslate", "ctrl scroll" );
+
+        h.addBehaviour("move_up_slow", new MovementCommand("move_up", "up", () -> getScene().findObserver(), fpsScrollSpeed ) );
+        h.addBehaviour("move_down_slow", new MovementCommand("move_down", "down", () -> getScene().findObserver(), fpsScrollSpeed ) );
+        h.addBehaviour("move_up_fast", new MovementCommand("move_up", "up", () -> getScene().findObserver(), 1.0f ) );
+        h.addBehaviour("move_down_fast", new MovementCommand("move_down", "down", () -> getScene().findObserver(), 1.0f ) );
+
+        h.addKeyBinding("move_up_slow", "X");
+        h.addKeyBinding("move_down_slow", "C");
+        h.addKeyBinding("move_up_fast", "shift X");
+        h.addKeyBinding("move_down_fast", "shift C");
 
         enableArcBallControl();
         enableFPSControl();
-
-        h.addBehaviour( "mouse_control_nodetranslate", new NodeTranslateControl( this, 0.002f ) );
-        h.addKeyBinding( "mouse_control_nodetranslate", "shift button2" );
 
         // Extra keyboard controls
         h.addBehaviour( "show_help", new showHelpDisplay() );
@@ -644,7 +691,7 @@ public class SciView extends SceneryBase {
         h.addKeyBinding("move_back_veryfast", "ctrl shift S");
         h.addKeyBinding("move_left_veryfast", "ctrl shift A");
         h.addKeyBinding("move_right_veryfast", "ctrl shift D");
-        h.addKeyBinding("move_up_veryfast", "ctrl shift Z");
+        h.addKeyBinding("move_up_veryfast", "ctrl shift X");
         h.addKeyBinding("move_down_veryfast", "ctrl shift C");
 
     }
@@ -699,8 +746,6 @@ public class SciView extends SceneryBase {
         h.addKeyBinding( "mouse_control_cameratranslate", "button2" );
 
         resetFPSInputs();
-
-        h.addKeyBinding( "move_forward_scroll", "scroll" );
     }
 
     public Node addBox() {
@@ -720,7 +765,7 @@ public class SciView extends SceneryBase {
         // TODO: use a material from the current palate by default
         final Material boxmaterial = new Material();
         boxmaterial.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        boxmaterial.setDiffuse( vector( color ) );
+        boxmaterial.setDiffuse( Utils.convertToGLVector( color ) );
         boxmaterial.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
 
         final Box box = new Box( ClearGLVector3.convert( size ), inside );
@@ -742,7 +787,7 @@ public class SciView extends SceneryBase {
     public Node addSphere( final Vector3 position, final float radius, final ColorRGB color ) {
         final Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        material.setDiffuse( vector( color ) );
+        material.setDiffuse( Utils.convertToGLVector( color ) );
         material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
 
         final Sphere sphere = new Sphere( radius, 20 );
@@ -779,7 +824,7 @@ public class SciView extends SceneryBase {
     public Node addLine( final Vector3[] points, final ColorRGB color, final double edgeWidth ) {
         final Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        material.setDiffuse( vector( color ) );
+        material.setDiffuse( Utils.convertToGLVector( color ) );
         material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
 
         final Line line = new Line( points.length );
@@ -1309,18 +1354,6 @@ public class SciView extends SceneryBase {
         v.setNeedsUpdateWorld( true );
 
         return v;
-    }
-
-    private static GLVector vector( ColorRGB color ) {
-        if( color instanceof ColorRGBA ) {
-            return new GLVector( color.getRed() / 255f, //
-                                 color.getGreen() / 255f, //
-                                 color.getBlue() / 255f, //
-                                 color.getAlpha() / 255f );
-        }
-        return new GLVector( color.getRed() / 255f, //
-                             color.getGreen() / 255f, //
-                             color.getBlue() / 255f );
     }
 
     public boolean getPushMode() {
