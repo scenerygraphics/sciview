@@ -44,10 +44,8 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.behaviour.Behaviour;
 import org.scijava.ui.behaviour.ClickBehaviour;
-import org.scijava.util.ColorRGB;
 import org.scijava.widget.Button;
 import sc.iview.SciView;
-import sc.iview.ops.DefaultConvexHullSciview;
 import sc.iview.process.ControlPoints;
 import sc.iview.vector.Vector3;
 
