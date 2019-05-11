@@ -183,6 +183,15 @@ public class InteractiveConvexMesh extends InteractiveCommand {
 
         sciView.addMesh(hull);
 
+        cleanup();
+    }
+
+    @Override
+    public void cancel() {
+        cleanup();
+    }
+
+    public void cleanup() {
         sciView.restoreControls();
         // Remove all control points
         for( Node n : controlPoints.getNodes() ) {
