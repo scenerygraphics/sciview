@@ -79,7 +79,6 @@ import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.InputTrigger;
 import org.scijava.ui.swing.menu.SwingJMenuBarCreator;
 import org.scijava.util.ColorRGB;
-import org.scijava.util.ColorRGBA;
 import org.scijava.util.Colors;
 import org.scijava.util.VersionUtils;
 import sc.iview.commands.view.NodePropertyEditor;
@@ -763,7 +762,7 @@ public class SciView extends SceneryBase {
         // TODO: use a material from the current palate by default
         final Material boxmaterial = new Material();
         boxmaterial.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        boxmaterial.setDiffuse( vector( color ) );
+        boxmaterial.setDiffuse( Utils.convertToGLVector( color ) );
         boxmaterial.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
 
         final Box box = new Box( ClearGLVector3.convert( size ), inside );
@@ -785,7 +784,7 @@ public class SciView extends SceneryBase {
     public Node addSphere( final Vector3 position, final float radius, final ColorRGB color ) {
         final Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        material.setDiffuse( vector( color ) );
+        material.setDiffuse( Utils.convertToGLVector( color ) );
         material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
 
         final Sphere sphere = new Sphere( radius, 20 );
@@ -822,7 +821,7 @@ public class SciView extends SceneryBase {
     public Node addLine( final Vector3[] points, final ColorRGB color, final double edgeWidth ) {
         final Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        material.setDiffuse( vector( color ) );
+        material.setDiffuse( Utils.convertToGLVector( color ) );
         material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
 
         final Line line = new Line( points.length );
@@ -1352,18 +1351,6 @@ public class SciView extends SceneryBase {
         v.setNeedsUpdateWorld( true );
 
         return v;
-    }
-
-    private static GLVector vector( ColorRGB color ) {
-        if( color instanceof ColorRGBA ) {
-            return new GLVector( color.getRed() / 255f, //
-                                 color.getGreen() / 255f, //
-                                 color.getBlue() / 255f, //
-                                 color.getAlpha() / 255f );
-        }
-        return new GLVector( color.getRed() / 255f, //
-                             color.getGreen() / 255f, //
-                             color.getBlue() / 255f );
     }
 
     public boolean getPushMode() {
