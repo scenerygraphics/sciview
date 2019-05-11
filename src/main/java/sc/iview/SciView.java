@@ -192,6 +192,7 @@ public class SciView extends SceneryBase {
     private JSplitPane inspector;
     private NodePropertyEditor nodePropertyEditor;
     private ArrayList<PointLight> lights;
+    private Stack<HashMap<String, Object>> controlStack;
 
     public SciView( Context context ) {
         super( "SciView", 1280, 720, false, context );
@@ -211,6 +212,18 @@ public class SciView extends SceneryBase {
             ((OpenGLRenderer)getRenderer()).recordMovie();
         else
             ((VulkanRenderer)getRenderer()).recordMovie();
+    }
+
+    public void stashControls() {
+        // This pushes the current input setup onto a stack that allows them to be restored with restoreControls
+        HashMap<String, Object> controlState = new HashMap<String, Object>();
+        controlStack.push(controlState);
+    }
+
+    public void restoreControls() {
+        // This pops/restores the previously stashed controls. Emits a warning if there are no stashed controlls
+        HashMap<String, Object> controlState = controlStack.pop();
+        setObjectSelectionMode();// This isnt how it should work
     }
 
     public class TransparentSlider extends JSlider {
@@ -408,6 +421,7 @@ public class SciView extends SceneryBase {
         getScene().addChild( floor );
 
         animations = new LinkedList<>();
+        controlStack = new Stack<>();
 
         SwingUtilities.invokeLater(() -> {
             try {
@@ -591,7 +605,7 @@ public class SciView extends SceneryBase {
         }
     }
 
-    @Override public void inputSetup() {
+    public void setObjectSelectionMode() {
         Function1<? super List<Scene.RaycastResult>, Unit> selectAction = nearest -> {
             if( !nearest.isEmpty() ) {
                 setActiveNode( nearest.get( 0 ).getNode() );
@@ -600,10 +614,26 @@ public class SciView extends SceneryBase {
             }
             return Unit.INSTANCE;
         };
+        setObjectSelectionMode(selectAction);
+    }
 
+    public void setObjectSelectionMode(Function1<? super List<Scene.RaycastResult>, Unit> selectAction) {
+        final InputHandler h = getInputHandler();
         List<Class<?>> ignoredObjects = new ArrayList<>();
         ignoredObjects.add( BoundingGrid.class );
 
+        if(h == null) {
+            getLogger().error("InputHandler is null, cannot change object selection mode.");
+            return;
+        }
+        h.addBehaviour( "object_selection_mode",
+                                        new SelectCommand( "objectSelector", getRenderer(), getScene(),
+                                                           () -> getScene().findObserver(), false, ignoredObjects,
+                                                           selectAction ) );
+        h.addKeyBinding( "object_selection_mode", "double-click button1" );
+    }
+
+    @Override public void inputSetup() {
         final InputHandler h = getInputHandler();
         if(h == null) {
             getLogger().error("InputHandler is null, cannot run input setup.");
@@ -614,12 +644,7 @@ public class SciView extends SceneryBase {
         h.useDefaultBindings( "" );
 
         // Mouse controls
-        h.addBehaviour( "object_selection_mode",
-                                        new SelectCommand( "objectSelector", getRenderer(), getScene(),
-                                                           () -> getScene().findObserver(), false, ignoredObjects,
-                                                           selectAction ) );
-        h.addKeyBinding( "object_selection_mode", "double-click button1" );
-
+        setObjectSelectionMode();
         NodeTranslateControl nodeTranslate = new NodeTranslateControl(this, 0.0005f);
         h.addBehaviour( "mouse_control_nodetranslate", nodeTranslate );
         h.addKeyBinding( "mouse_control_nodetranslate", "ctrl button1" );
