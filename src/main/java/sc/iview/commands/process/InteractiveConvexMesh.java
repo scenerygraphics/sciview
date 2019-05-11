@@ -46,6 +46,7 @@ import org.scijava.ui.behaviour.Behaviour;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.widget.Button;
 import sc.iview.SciView;
+import sc.iview.Utils;
 import sc.iview.process.ControlPoints;
 import sc.iview.vector.Vector3;
 
@@ -134,24 +135,13 @@ public class InteractiveConvexMesh extends InteractiveCommand {
 
         Sphere controlPoint = new Sphere(ControlPoints.DEFAULT_RADIUS, ControlPoints.DEFAULT_SEGMENTS);
         Material mat = new Material();
-        // TODO: Set to the control point color here
+        mat.setAmbient(Utils.convertToGLVector(ControlPoints.DEFAULT_COLOR));
+        mat.setDiffuse(Utils.convertToGLVector(ControlPoints.DEFAULT_COLOR));
         controlPoint.setMaterial(mat);
 
         controlPoint.setPosition( worldPos.plus(worldDir.times(distance) ) );
         controlPoints.addPoint( controlPoint );
         sciView.addNode( controlPoint, false );
-    }
-
-    public void loadPoints() {
-        // TODO: Load control points from a file.
-    }
-
-    public void savePoints() {
-        // TODO: Save the current control points, perhaps as a point cloud xyz
-    }
-
-    public void clearPoints() {
-        // TODO: Clear all curreent control points
     }
 
     /* Create a ConvexHulls of controlPoints */

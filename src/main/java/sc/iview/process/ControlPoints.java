@@ -12,7 +12,7 @@ import java.util.List;
 public class ControlPoints {
     static public float DEFAULT_RADIUS = 0.5f;
     static public int DEFAULT_SEGMENTS = 18;
-    static public ColorRGB controlPointColor = ColorRGB.fromHSVColor(0.5,0.5,0.25);
+    static public ColorRGB DEFAULT_COLOR = ColorRGB.fromHSVColor(0.5,0.5,0.25);
 
     protected List<Node> nodes;
 
