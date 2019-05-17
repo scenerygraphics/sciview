@@ -30,73 +30,84 @@ installWithGroupId() {
 
 # Deletes the natives JAR with the given artifactId and classifier.
 deleteNative() {
-  (set -x; rm -f Fiji.app/jars/$1-[0-9]*-$2.jar Fiji.app/jars/*/$1-[0-9]*-$2.jar) ||
+  (set -x; rm -f $FijiDirectory/jars/$1-[0-9]*-$2.jar $FijiDirectory/jars/*/$1-[0-9]*-$2.jar) ||
     die "Delete failed"
 }
 
 # Deletes all natives JARs with the given artifactId.
 deleteNatives() {
-  (set -x; rm -f Fiji.app/jars/$1-[0-9]*-natives-*.jar Fiji.app/jars/*/$1-[0-9]*-natives-*.jar) ||
+  (set -x; rm -f $FijiDirectory/jars/$1-[0-9]*-natives-*.jar $FijiDirectory/jars/*/$1-[0-9]*-natives-*.jar) ||
     die "Delete failed"
 }
 
-# -- Determine correct ImageJ launcher executable --
-
-case "$(uname -s),$(uname -m)" in
-  Linux,x86_64) launcher=ImageJ-linux64 ;;
-  Linux,*) launcher=ImageJ-linux32 ;;
-  Darwin,*) launcher=Contents/MacOS/ImageJ-macosx ;;
-  MING*,*) launcher=ImageJ-win32.exe ;;
-  *) die "Unknown platform" ;;
-esac
-
-# -- Roll out a fresh Fiji --
-
-if [ ! -f fiji-nojre.zip ]
+# -- Check if we have a path given, in that case we do not download a new Fiji, but use the path given --
+if [ -z "$1" ]
 then
-  echo
-  echo "--> Downloading Fiji"
-  curl -L -O https://downloads.imagej.net/fiji/latest/fiji-nojre.zip || 
-      die "Could not download Fiji"
+    echo "--> Installing into pristine Fiji installation"
+    echo "--> If you want to install into a pre-existing Fiji installation, run as"
+    echo "     $0 path/to/Fiji.app"
+    # -- Determine correct ImageJ launcher executable --
+    
+    case "$(uname -s),$(uname -m)" in
+      Linux,x86_64) launcher=ImageJ-linux64 ;;
+      Linux,*) launcher=ImageJ-linux32 ;;
+      Darwin,*) launcher=Contents/MacOS/ImageJ-macosx ;;
+      MING*,*) launcher=ImageJ-win32.exe ;;
+      *) die "Unknown platform" ;;
+    esac
+    
+    # -- Roll out a fresh Fiji --
+    
+    if [ ! -f fiji-nojre.zip ]
+    then
+      echo
+      echo "--> Downloading Fiji"
+      curl -L -O https://downloads.imagej.net/fiji/latest/fiji-nojre.zip || 
+          die "Could not download Fiji"
+    fi
+    
+    echo "--> Unpacking Fiji"
+    rm -rf Fiji.app
+    unzip fiji-nojre.zip || die "Could not unpack Fiji"
+    
+    echo
+    echo "--> Updating Fiji"
+    Fiji.app/$launcher --update update-force-pristine
+    FijiDirectory=Fiji.app
+else
+    echo "--> Installing into Fiji installation at $1"
+    FijiDirectory=$1
 fi
-
-echo "--> Unpacking Fiji"
-rm -rf Fiji.app
-unzip fiji-nojre.zip || die "Could not unpack Fiji"
-
-echo
-echo "--> Updating Fiji"
-Fiji.app/$launcher --update update-force-pristine
 
 echo
 echo "--> Copying dependencies into Fiji installation"
-(set -x; mvn -Dimagej.app.directory=Fiji.app)
+(set -x; mvn -Dimagej.app.directory=$FijiDirectory)
 
 echo "--> Removing slf4j bindings"
-(set -x; rm -f Fiji.app/jars/slf4j-simple-*.jar)
-# -- Put back jar/gluegen-rt and jar/jogl-all --
+(set -x; rm -f $FijiDirectory/jars/slf4j-simple-*.jar)
 
+# -- Put back jar/gluegen-rt and jar/jogl-all --
 echo
 echo "--> Reinstalling gluegen-rt, jogl-all, jocl, jinput, and ffmpeg"
-gluegenJar=$(echo Fiji.app/jars/gluegen-rt-main-*.jar)
+gluegenJar=$(echo $FijiDirectory/jars/gluegen-rt-main-*.jar)
 gluegenVersion=$(mid "$gluegenJar" "-" ".jar")
-install "org.jogamp.gluegen:gluegen-rt:$gluegenVersion" Fiji.app/jars
+install "org.jogamp.gluegen:gluegen-rt:$gluegenVersion" $FijiDirectory/jars
 
-joglJar=$(echo Fiji.app/jars/jogl-all-main-*.jar)
+joglJar=$(echo $FijiDirectory/jars/jogl-all-main-*.jar)
 joglVersion=$(mid "$joglJar" "-" ".jar")
-install "org.jogamp.jogl:jogl-all:$joglVersion" Fiji.app/jars
+install "org.jogamp.jogl:jogl-all:$joglVersion" $FijiDirectory/jars
 
 joclGAV=$(mvn dependency:tree | grep jocl | awk -e '{print $NF}' | cut -d: -f1-4 | sed 's/:jar//g')
-installWithGroupId "$joclGAV" Fiji.app/jars
+installWithGroupId "$joclGAV" $FijiDirectory/jars
 
 jinputGAV=$(mvn dependency:tree | grep jinput | head -n1 | awk -e '{print $NF}' | cut -d: -f1-4 | sed 's/:jar//g' | sed 's/:compile//g')
-install "$jinputGAV" Fiji.app/jars
+install "$jinputGAV" $FijiDirectory/jars
 
 ffmpegGAV=$(mvn dependency:tree | grep 'ffmpeg:jar' | head -n1 | awk -e '{print $NF}' | cut -d: -f1-4 | sed 's/:jar//g' | sed 's/:compile//g')
-installWithGroupId "$ffmpegGAV" Fiji.app/jars
-installWithGroupId "$ffmpegGAV:jar:windows-x86_64" Fiji.app/jars/win64
-installWithGroupId "$ffmpegGAV:jar:linux-x86_64" Fiji.app/jars/linux64
-installWithGroupId "$ffmpegGAV:jar:macosx-x86_64" Fiji.app/jars/macosx
+installWithGroupId "$ffmpegGAV" $FijiDirectory/jars
+installWithGroupId "$ffmpegGAV:jar:windows-x86_64" $FijiDirectory/jars/win64
+installWithGroupId "$ffmpegGAV:jar:linux-x86_64" $FijiDirectory/jars/linux64
+installWithGroupId "$ffmpegGAV:jar:macosx-x86_64" $FijiDirectory/jars/macosx
 
 # -- Get the list of native libraries --
 
@@ -124,9 +135,9 @@ do
     org.lwjgl|graphics.scenery)
       deleteNatives "$a"
       # [NB] Install all architectures manually; only one is a dependency.
-      install "$gavp:natives-windows" Fiji.app/jars/win64
-      install "$gavp:natives-macos" Fiji.app/jars/macosx
-      install "$gavp:natives-linux" Fiji.app/jars/linux64
+      install "$gavp:natives-windows" $FijiDirectory/jars/win64
+      install "$gavp:natives-macos" $FijiDirectory/jars/macosx
+      install "$gavp:natives-linux" $FijiDirectory/jars/linux64
       ;;
     *)
       deleteNative "$a" "$c"
@@ -139,7 +150,7 @@ do
         natives-all*) platform="" ;;
         *) die "Unsupported platform: $c" ;;
       esac
-      install "$gavpc" "Fiji.app/jars/$platform"
+      install "$gavpc" "$FijiDirectory/jars/$platform"
       ;;
   esac
 done
