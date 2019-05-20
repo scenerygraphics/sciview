@@ -33,6 +33,8 @@ import graphics.scenery.Camera;
 import graphics.scenery.Material;
 import graphics.scenery.Node;
 import graphics.scenery.Sphere;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 import net.imagej.mesh.Mesh;
 import net.imagej.mesh.naive.NaiveDoubleMesh;
 import net.imagej.ops.OpService;
@@ -105,14 +107,22 @@ public class InteractiveConvexMesh extends InteractiveCommand {
 
         targetPoint.setPosition( sciView.getCamera().getPosition().plus(sciView.getCamera().getForward().times(controlPointDistance) ) );
 
-        sciView.getCamera().addChild(targetPoint);
+        sciView.addNode(targetPoint,true);
+        //sciView.getCamera().addChild(targetPoint);
+
+        targetPoint.getUpdate().add(() -> {
+            //targetPoint.getRotation().set(sciView.getCamera().getRotation().conjugate().rotateByAngleY((float) Math.PI));
+            // Set rotation before setting position
+            targetPoint.setPosition( sciView.getCamera().getPosition().plus(sciView.getCamera().getForward().times(controlPointDistance) ) );
+            return null;
+        });
     }
 
     private Behaviour placeControlPointBehaviour() {
         ClickBehaviour b = new ClickBehaviour() {
             @Override
             public void click(int x, int y) {
-                placeControlPoint( sciView.getCamera(), x, y, controlPointDistance );
+                placeControlPoint();
             }
         };
         return b;
@@ -129,26 +139,7 @@ public class InteractiveConvexMesh extends InteractiveCommand {
         return b;
     }
 
-    private void placeControlPoint(Camera camera, int x, int y, float distance) {
-        GLVector target = camera.getTarget();
-        GLVector position = camera.getPosition();
-
-        GLVector view = target.minus(position).normalize();
-        GLVector h = view.cross(camera.getUp()).normalize();
-        GLVector v = h.cross(view);
-
-        double fov = camera.getFov() * Math.PI / 180.0f;
-        double lengthV = Math.tan(fov / 2.0) * camera.getNearPlaneDistance();
-        double lengthH = lengthV * (camera.getWidth() / camera.getHeight());
-
-        v = v.times((float) lengthV);
-        h = h.times((float) lengthH);
-
-        float posX = (x - camera.getWidth() / 2.0f) / (camera.getWidth() / 2.0f);
-        float posY = -1.0f * (y - camera.getHeight() / 2.0f) / (camera.getHeight() / 2.0f);
-
-        GLVector worldPos = position.plus(view.times(camera.getNearPlaneDistance())).plus(h.times(posX)).plus(v.times(posY));
-        GLVector worldDir = (worldPos.minus(position)).getNormalized();
+    private void placeControlPoint() {
 
         Sphere controlPoint = new Sphere(ControlPoints.DEFAULT_RADIUS, ControlPoints.DEFAULT_SEGMENTS);
         Material mat = new Material();
@@ -156,7 +147,9 @@ public class InteractiveConvexMesh extends InteractiveCommand {
         mat.setDiffuse(Utils.convertToGLVector(ControlPoints.DEFAULT_COLOR));
         controlPoint.setMaterial(mat);
 
-        controlPoint.setPosition( worldPos.plus(worldDir.times(distance) ) );
+        //controlPoint.setPosition( sciView.getCamera().getTransformation().mult(targetPoint.getPosition().xyzw()) );
+        controlPoint.setPosition( targetPoint.getPosition() );
+
         controlPoints.addPoint( controlPoint );
         sciView.addNode( controlPoint, false );
     }
