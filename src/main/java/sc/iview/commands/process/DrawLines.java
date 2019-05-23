@@ -46,6 +46,7 @@ import org.scijava.widget.Button;
 import sc.iview.SciView;
 import sc.iview.Utils;
 import sc.iview.process.ControlPoints;
+import sc.iview.shape.Line3D;
 import sc.iview.vector.ClearGLVector3;
 import sc.iview.vector.DoubleVector3;
 import sc.iview.vector.Vector3;
@@ -100,21 +101,18 @@ public class DrawLines extends InteractiveCommand {
         float h;
         int s = 15;
         GLVector p1,p2;
+
+        // Add Group Node for lines, or make a Line3D
+        Line3D line = new Line3D();
         for( int k = 0; k < points.size()-1; k++ ) {
             p1 = points.get(k);
             p2 = points.get(k+1);
             Cylinder c = Cylinder.betweenPoints(p1,p2,r,1,s);
-            sciView.addNode(c,false);
+            //sciView.addNode(c,false);
+            line.addLine(c);
         }
-
-        //points.add(0, points.get(0).clone());
-        //points.add(points.size(), points.get(points.size()-1));
-
-        //line.addPoints(points);
-        //line.setNeedsUpdate(true);
-        //line.setDirty(true);
-
-        //sciView.addNode(line, true);
+        line.setName("Line3D");
+        sciView.addNode(line, false);
 
         controlPoints.cleanup(sciView);
     }
