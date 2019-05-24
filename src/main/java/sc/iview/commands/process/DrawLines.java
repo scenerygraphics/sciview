@@ -54,7 +54,7 @@ import static sc.iview.commands.MenuWeights.*;
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Process", weight = PROCESS), //
-                 @Menu(label = "Draw Lines", weight = PROCESS_DRAW_LINES+1) })
+                 @Menu(label = "Draw Lines", weight = PROCESS_DRAW_LINES) })
 public class DrawLines extends InteractiveCommand {
 
     @Parameter
