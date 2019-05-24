@@ -29,33 +29,23 @@
 package sc.iview.commands.process;
 
 import cleargl.GLVector;
-import graphics.scenery.*;
-import net.imagej.mesh.Mesh;
-import net.imagej.mesh.naive.NaiveDoubleMesh;
+import graphics.scenery.Cylinder;
+import graphics.scenery.Node;
 import net.imagej.ops.OpService;
-import net.imagej.ops.geom.geom3d.DefaultConvexHull3D;
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.ui.behaviour.Behaviour;
-import org.scijava.ui.behaviour.ClickBehaviour;
-import org.scijava.ui.behaviour.ScrollBehaviour;
 import org.scijava.widget.Button;
 import sc.iview.SciView;
-import sc.iview.Utils;
 import sc.iview.process.ControlPoints;
 import sc.iview.shape.Line3D;
-import sc.iview.vector.ClearGLVector3;
-import sc.iview.vector.DoubleVector3;
 import sc.iview.vector.Vector3;
 
 import java.util.ArrayList;
-import java.util.List;
 
-import static sc.iview.commands.MenuWeights.PROCESS;
-import static sc.iview.commands.MenuWeights.PROCESS_INTERACTIVE_CONVEX_MESH;
+import static sc.iview.commands.MenuWeights.*;
 
 /*
  * Interactively place points that are used to seed a convex hull
@@ -64,7 +54,7 @@ import static sc.iview.commands.MenuWeights.PROCESS_INTERACTIVE_CONVEX_MESH;
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Process", weight = PROCESS), //
-                 @Menu(label = "Draw Lines", weight = PROCESS_INTERACTIVE_CONVEX_MESH+1) })
+                 @Menu(label = "Draw Lines", weight = PROCESS_DRAW_LINES+1) })
 public class DrawLines extends InteractiveCommand {
 
     @Parameter

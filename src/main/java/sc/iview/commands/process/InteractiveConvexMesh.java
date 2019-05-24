@@ -28,13 +28,7 @@
  */
 package sc.iview.commands.process;
 
-import cleargl.GLVector;
-import graphics.scenery.Camera;
-import graphics.scenery.Material;
 import graphics.scenery.Node;
-import graphics.scenery.Sphere;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function0;
 import net.imagej.mesh.Mesh;
 import net.imagej.mesh.naive.NaiveDoubleMesh;
 import net.imagej.ops.OpService;
@@ -44,12 +38,8 @@ import org.scijava.command.InteractiveCommand;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.ui.behaviour.Behaviour;
-import org.scijava.ui.behaviour.ClickBehaviour;
-import org.scijava.ui.behaviour.ScrollBehaviour;
 import org.scijava.widget.Button;
 import sc.iview.SciView;
-import sc.iview.Utils;
 import sc.iview.process.ControlPoints;
 import sc.iview.vector.Vector3;
 
