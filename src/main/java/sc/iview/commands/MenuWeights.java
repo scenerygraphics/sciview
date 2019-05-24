@@ -62,6 +62,7 @@ public final class MenuWeights {
     public static final double PROCESS_CONVEX_HULL = 1;
     public static final double PROCESS_MESH_TO_IMAGE = 2;
     public static final double PROCESS_INTERACTIVE_CONVEX_MESH = 3;
+    public static final double PROCESS_DRAW_LINES = 4;
 
     public static final double VIEW_ROTATE = 0;
     public static final double VIEW_STOP_ANIMATION = 1;
