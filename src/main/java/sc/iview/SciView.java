@@ -402,7 +402,7 @@ public class SciView extends SceneryBase {
             PointLight light = new PointLight(150.0f);
             light.setPosition( tetrahedron[i].times(25.0f) );
             light.setEmissionColor( new GLVector( 1.0f, 1.0f, 1.0f ) );
-            light.setIntensity( 1.0f );
+            light.setIntensity( 10.0f );
             lights.add( light );
             getScene().addChild( light );
         }
