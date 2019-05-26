@@ -32,6 +32,7 @@ import org.scijava.command.Command;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.util.ColorRGB;
 import org.scijava.util.Colors;
 import sc.iview.SciView;
 import sc.iview.shape.Line3D;
@@ -61,16 +62,19 @@ public class Line3DDemo implements Command {
     public void run() {
         int numPoints = 25;
         List<Vector3> points = new ArrayList<>();
+        List<ColorRGB> colors = new ArrayList<>();
 
         for( int k = 0; k < numPoints; k++ ) {
             points.add( new ClearGLVector3( ( float ) ( 10.0f * Math.random() - 5.0f ), //
                                             ( float ) ( 10.0f * Math.random() - 5.0f ), //
                                             ( float ) ( 10.0f * Math.random() - 5.0f ) ) );
+            colors.add(new ColorRGB((int) (Math.random()*255), (int) (Math.random()*255), (int) (Math.random()*255)));
         }
 
         double edgeWidth = 0.1;
 
-        Line3D line = new Line3D(points, Colors.LIGHTSALMON, edgeWidth);
+        //Line3D line = new Line3D(points, Colors.LIGHTSALMON, edgeWidth);
+        Line3D line = new Line3D(points, colors, edgeWidth);
         line.setName( "Line3D Demo" );
 
         sciView.addNode(line, true);
