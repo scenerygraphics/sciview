@@ -73,7 +73,7 @@ public class Line3DDemo implements Command {
         Line3D line = new Line3D(points, Colors.LIGHTSALMON, edgeWidth);
         line.setName( "Line3D Demo" );
 
-        sciView.addNode(line);
+        sciView.addNode(line, true);
 
         //sciView.addLine( points, Colors.LIGHTSALMON, edgeWidth ).setName( "Lines Demo" );
 

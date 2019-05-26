@@ -1016,8 +1016,8 @@ public class SciView extends SceneryBase {
         getScene().addChild( n );
         if( activePublish ) {
             setActiveNode(n);
-            if (floor.getVisible())
-                updateFloorPosition();
+//            if (floor.getVisible())
+//                updateFloorPosition();
             eventService.publish(new NodeAddedEvent(n));
         }
         return n;
@@ -1385,17 +1385,8 @@ public class SciView extends SceneryBase {
                     e.printStackTrace();
                 }
             }
-            final Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
-            if(bb == null) {
-                getLogger().warn("Node " + currentNode.getName() + " does not have a bounding box, not adjusting floor.");
-                return;
-            }
-            final Node.BoundingSphere bs = bb.getBoundingSphere();
-            final float neededFloor = bb.getMin().y() - Math.max( bs.getRadius(), 1 );
-            if( neededFloor < getFloorY() ) setFloorY( neededFloor );
+            floor.setPosition( new GLVector( 0f, java.lang.Math.min(getFloor().getPosition().y(),getActiveNode().getMaximumBoundingBox().getMin().y()), 0f ) );
         }
-
-        floor.setPosition( new GLVector( 0f, getFloorY(), 0f ) );
     }
 
     public Settings getScenerySettings() {
