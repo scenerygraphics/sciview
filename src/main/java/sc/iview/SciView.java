@@ -515,7 +515,10 @@ public class SciView extends SceneryBase {
 
         List<Node> branches = branchFunction.apply(n);
         if( branches.size() == 0 ) {
-            return n.getBoundingBox().asWorld();
+            if( n.getBoundingBox() == null )
+                return null;
+            else
+                return n.getBoundingBox().asWorld();
         }
 
         OrientedBoundingBox bb = n.getMaximumBoundingBox();
