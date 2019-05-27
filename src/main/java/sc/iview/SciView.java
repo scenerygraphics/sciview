@@ -107,8 +107,10 @@ import java.util.List;
 import java.util.Queue;
 import java.util.*;
 import java.util.concurrent.Future;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 // we suppress unused warnings here because @Parameter-annotated fields
 // get updated automatically by SciJava.
@@ -193,6 +195,13 @@ public class SciView extends SceneryBase {
     private ArrayList<PointLight> lights;
     private Stack<HashMap<String, Object>> controlStack;
 
+    private Predicate<? super Node> notAbstractNode = new Predicate<Node>() {
+        @Override
+        public boolean test(Node node) {
+            return !( (node instanceof Camera) || (node instanceof Light) || (node==getFloor()));
+        }
+    };
+
     public SciView( Context context ) {
         super( "SciView", 1280, 720, false, context );
         context.inject( this );
@@ -226,6 +235,10 @@ public class SciView extends SceneryBase {
         // This isnt how it should work
         setObjectSelectionMode();
         resetFPSInputs();
+    }
+
+    public void fitCameraToScene() {
+        centerOnNode(getScene());
     }
 
     public class TransparentSlider extends JSlider {
@@ -402,7 +415,7 @@ public class SciView extends SceneryBase {
             PointLight light = new PointLight(150.0f);
             light.setPosition( tetrahedron[i].times(25.0f) );
             light.setEmissionColor( new GLVector( 1.0f, 1.0f, 1.0f ) );
-            light.setIntensity( 1.0f );
+            light.setIntensity( 10.0f );
             lights.add( light );
             getScene().addChild( light );
         }
@@ -490,10 +503,45 @@ public class SciView extends SceneryBase {
         return getInputHandler();
     }
 
+    public OrientedBoundingBox getSubgraphBoundingBox( Node n ) {
+        Function<Node,List<Node>> predicate = node -> node.getChildren();
+        return getSubgraphBoundingBox(n,predicate);
+    }
+
+    public OrientedBoundingBox getSubgraphBoundingBox( Node n, Function<Node,List<Node>> branchFunction ) {
+        if(n.getBoundingBox() == null && n.getChildren().size() == 0) {
+            return n.getMaximumBoundingBox().asWorld();
+        }
+
+        List<Node> branches = branchFunction.apply(n);
+        if( branches.size() == 0 ) {
+            if( n.getBoundingBox() == null )
+                return null;
+            else
+                return n.getBoundingBox().asWorld();
+        }
+
+        OrientedBoundingBox bb = n.getMaximumBoundingBox();
+        for( Node c : branches ){
+            OrientedBoundingBox cBB = getSubgraphBoundingBox(c, branchFunction);
+            if( cBB != null )
+                bb = bb.expand(bb, cBB);
+        }
+        return bb;
+    }
+
+
+    private Function<Node,List<Node>> notAbstractBranchingFunction = node -> node.getChildren().stream().filter(notAbstractNode).collect(Collectors.toList());
+
     public void centerOnNode( Node currentNode ) {
+        centerOnNode(currentNode,notAbstractBranchingFunction);
+    }
+
+    public void centerOnNode( Node currentNode, Function<Node,List<Node>> branchFunction ) {
         if( currentNode == null ) return;
 
-        Node.OrientedBoundingBox bb = currentNode.getBoundingBox();
+        OrientedBoundingBox bb = getSubgraphBoundingBox(currentNode, branchFunction);
+        //System.out.println("Centering on: " + currentNode + " bb: " + bb.getMin() + " to " + bb.getMax());
         if( bb == null ) return;
 
         getCamera().setTarget( bb.getBoundingSphere().getOrigin() );
@@ -855,7 +903,8 @@ public class SciView extends SceneryBase {
     }
 
     public void surroundLighting() {
-        Node.BoundingSphere boundingSphere = getScene().getMaximumBoundingBox().getBoundingSphere();
+        OrientedBoundingBox bb = getSubgraphBoundingBox(getScene(), notAbstractBranchingFunction);
+        OrientedBoundingBox.BoundingSphere boundingSphere = bb.getBoundingSphere();
         // Choose a good y-position, then place lights around the cross-section through this plane
         float y = 0;
         GLVector c = boundingSphere.getOrigin();
@@ -1016,8 +1065,8 @@ public class SciView extends SceneryBase {
         getScene().addChild( n );
         if( activePublish ) {
             setActiveNode(n);
-            if (floor.getVisible())
-                updateFloorPosition();
+//            if (floor.getVisible())
+//                updateFloorPosition();
             eventService.publish(new NodeAddedEvent(n));
         }
         return n;
@@ -1054,7 +1103,7 @@ public class SciView extends SceneryBase {
     public Node setActiveNode( Node n ) {
         if( activeNode == n ) return activeNode;
         activeNode = n;
-        targetArcball.setTarget( n == null ? () -> new GLVector( 0, 0, 0 ) : () -> n.getBoundingBox().getBoundingSphere().getOrigin());
+        targetArcball.setTarget( n == null ? () -> new GLVector( 0, 0, 0 ) : () -> n.getMaximumBoundingBox().getBoundingSphere().getOrigin());
         eventService.publish( new NodeActivatedEvent( activeNode ) );
         // TODO: Is this necessary here?
         getScene().getOnNodePropertiesChanged().put("updateInspector",
@@ -1385,17 +1434,8 @@ public class SciView extends SceneryBase {
                     e.printStackTrace();
                 }
             }
-            final Node.OrientedBoundingBox bb = currentNode.generateBoundingBox();
-            if(bb == null) {
-                getLogger().warn("Node " + currentNode.getName() + " does not have a bounding box, not adjusting floor.");
-                return;
-            }
-            final Node.BoundingSphere bs = bb.getBoundingSphere();
-            final float neededFloor = bb.getMin().y() - Math.max( bs.getRadius(), 1 );
-            if( neededFloor < getFloorY() ) setFloorY( neededFloor );
+            floor.setPosition( new GLVector( 0f, java.lang.Math.min(getFloor().getPosition().y(),getActiveNode().getMaximumBoundingBox().getMin().y()), 0f ) );
         }
-
-        floor.setPosition( new GLVector( 0f, getFloorY(), 0f ) );
     }
 
     public Settings getScenerySettings() {
