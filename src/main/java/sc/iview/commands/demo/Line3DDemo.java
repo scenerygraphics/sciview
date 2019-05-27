@@ -73,14 +73,12 @@ public class Line3DDemo implements Command {
 
         double edgeWidth = 0.1;
 
-        //Line3D line = new Line3D(points, Colors.LIGHTSALMON, edgeWidth);
         Line3D line = new Line3D(points, colors, edgeWidth);
         line.setName( "Line3D Demo" );
 
         sciView.addNode(line, true);
+        sciView.getFloor().setVisible(false);
 
-        //sciView.addLine( points, Colors.LIGHTSALMON, edgeWidth ).setName( "Lines Demo" );
-
-        sciView.centerOnNode( sciView.getActiveNode() );
+        sciView.centerOnNode( line );
     }
 }

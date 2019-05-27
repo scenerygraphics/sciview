@@ -107,8 +107,10 @@ import java.util.List;
 import java.util.Queue;
 import java.util.*;
 import java.util.concurrent.Future;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 // we suppress unused warnings here because @Parameter-annotated fields
 // get updated automatically by SciJava.
@@ -192,6 +194,13 @@ public class SciView extends SceneryBase {
     private NodePropertyEditor nodePropertyEditor;
     private ArrayList<PointLight> lights;
     private Stack<HashMap<String, Object>> controlStack;
+
+    private Predicate<? super Node> notAbstractNode = new Predicate<Node>() {
+        @Override
+        public boolean test(Node node) {
+            return !( (node instanceof Camera) || (node instanceof Light) || (node==getFloor()));
+        }
+    };
 
     public SciView( Context context ) {
         super( "SciView", 1280, 720, false, context );
@@ -494,10 +503,42 @@ public class SciView extends SceneryBase {
         return getInputHandler();
     }
 
+    public OrientedBoundingBox getSubgraphBoundingBox( Node n ) {
+        Function<Node,List<Node>> predicate = node -> node.getChildren();
+        return getSubgraphBoundingBox(n,predicate);
+    }
+
+    public OrientedBoundingBox getSubgraphBoundingBox( Node n, Function<Node,List<Node>> branchFunction ) {
+        if(n.getBoundingBox() == null && n.getChildren().size() == 0) {
+            return n.getMaximumBoundingBox().asWorld();
+        }
+
+        List<Node> branches = branchFunction.apply(n);
+        if( branches.size() == 0 ) {
+            return n.getBoundingBox().asWorld();
+        }
+
+        OrientedBoundingBox bb = n.getMaximumBoundingBox();
+        for( Node c : branches ){
+            OrientedBoundingBox cBB = getSubgraphBoundingBox(c, branchFunction);
+            if( cBB != null )
+                bb = bb.expand(bb, cBB);
+        }
+        return bb;
+    }
+
+
+    private Function<Node,List<Node>> notAbstractBranchingFunction = node -> node.getChildren().stream().filter(notAbstractNode).collect(Collectors.toList());
+
     public void centerOnNode( Node currentNode ) {
+        centerOnNode(currentNode,notAbstractBranchingFunction);
+    }
+
+    public void centerOnNode( Node currentNode, Function<Node,List<Node>> branchFunction ) {
         if( currentNode == null ) return;
 
-        Node.OrientedBoundingBox bb = currentNode.getMaximumBoundingBox();
+        OrientedBoundingBox bb = getSubgraphBoundingBox(currentNode, branchFunction);
+        //System.out.println("Centering on: " + currentNode + " bb: " + bb.getMin() + " to " + bb.getMax());
         if( bb == null ) return;
 
         getCamera().setTarget( bb.getBoundingSphere().getOrigin() );
@@ -859,7 +900,8 @@ public class SciView extends SceneryBase {
     }
 
     public void surroundLighting() {
-        Node.BoundingSphere boundingSphere = getScene().getMaximumBoundingBox().getBoundingSphere();
+        OrientedBoundingBox bb = getSubgraphBoundingBox(getScene(), notAbstractBranchingFunction);
+        OrientedBoundingBox.BoundingSphere boundingSphere = bb.getBoundingSphere();
         // Choose a good y-position, then place lights around the cross-section through this plane
         float y = 0;
         GLVector c = boundingSphere.getOrigin();

@@ -1,10 +1,7 @@
 package sc.iview.shape;
 
 import cleargl.GLVector;
-import graphics.scenery.Cylinder;
-import graphics.scenery.Material;
-import graphics.scenery.Node;
-import graphics.scenery.Sphere;
+import graphics.scenery.*;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.Colors;
 import sc.iview.Utils;
@@ -98,5 +95,21 @@ public class Line3D extends Node {
 
     public List<Node> getEdges() {
         return edges;
+    }
+
+    /**
+     * Generates an [OrientedBoundingBox] for this [Node]. This will take
+     * geometry information into consideration if this Node implements [HasGeometry].
+     * In case a bounding box cannot be determined, the function will return null.
+     */
+    public OrientedBoundingBox generateBoundingBox() {
+        OrientedBoundingBox bb = new OrientedBoundingBox(this, 0.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 0.0f);
+        for( Node n : getChildren() ) {
+            OrientedBoundingBox cBB = n.generateBoundingBox();
+            if( cBB != null )
+                bb = bb.expand(bb, cBB);
+        }
+        return bb;
     }
 }
