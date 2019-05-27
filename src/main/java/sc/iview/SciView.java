@@ -228,6 +228,10 @@ public class SciView extends SceneryBase {
         resetFPSInputs();
     }
 
+    public void fitCameraToScene() {
+        centerOnNode(getScene());
+    }
+
     public class TransparentSlider extends JSlider {
 
         public TransparentSlider() {
@@ -493,7 +497,7 @@ public class SciView extends SceneryBase {
     public void centerOnNode( Node currentNode ) {
         if( currentNode == null ) return;
 
-        Node.OrientedBoundingBox bb = currentNode.getBoundingBox();
+        Node.OrientedBoundingBox bb = currentNode.getMaximumBoundingBox();
         if( bb == null ) return;
 
         getCamera().setTarget( bb.getBoundingSphere().getOrigin() );
