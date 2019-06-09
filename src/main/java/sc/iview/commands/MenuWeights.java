@@ -88,6 +88,7 @@ public final class MenuWeights {
     public static final double DEMO_VOLUME_RENDER = 3;
     public static final double DEMO_GAME_OF_LIFE = 4;
     public static final double DEMO_TEXT = 5;
+    public static final double DEMO_EMBRYO = 6;
 
     public static final double HELP_HELP = 0;
     public static final double HELP_ABOUT = 200;
