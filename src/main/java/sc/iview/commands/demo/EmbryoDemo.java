@@ -31,6 +31,8 @@ package sc.iview.commands.demo;
 import cleargl.GLVector;
 import graphics.scenery.Material;
 import graphics.scenery.Node;
+import graphics.scenery.volumes.TransferFunction;
+import graphics.scenery.volumes.bdv.BDVVolume;
 import net.imagej.mesh.Mesh;
 import org.apache.commons.io.FileUtils;
 import org.scijava.command.Command;
@@ -45,6 +47,7 @@ import sc.iview.SciView;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static sc.iview.commands.MenuWeights.*;
 
@@ -76,10 +79,31 @@ public class EmbryoDemo implements Command {
     public void run() {
         fetchEmbryoImage(localDirectory);
 
-        Node vol = sciView.addBDVVolume(localDirectory + File.separator + "drosophila.xml");
-        vol.setName( "Embryo Demo" );
+        BDVVolume v = (BDVVolume) sciView.addBDVVolume(localDirectory + File.separator + "drosophila.xml");
+        v.setName( "Embryo Demo" );
+        v.setPixelToWorldRatio(0.1f);
+        v.setNeedsUpdate(true);
+        v.setDirty(true);
+
+        // Set the initial volume transfer function
+        AtomicReference<Float> rampMax = new AtomicReference<>(0.007f);
+        float rampStep = 0.01f;
+        AtomicReference<Double> dRampSign = new AtomicReference<>(1.);
+        if( rampMax.get() < 0 ) {
+            dRampSign.updateAndGet(v1 -> v1 * -1);
+        }
+        if( rampMax.get() > 0.3 ) {
+            dRampSign.updateAndGet(v1 -> v1 * -1);
+        }
+        rampMax.updateAndGet(v1 -> (float) (v1 + dRampSign.get() * rampStep));
+        //System.out.println("RampMax: " + rampMax.get());
+        v.setTransferFunction(TransferFunction.ramp(0.0f, rampMax.get()));
+        v.setNeedsUpdate(true);
+        v.setDirty(true);
 
         sciView.centerOnNode( sciView.getActiveNode() );
+
+        //sciView.addSphere();
     }
 
     public void fetchEmbryoImage(String localDestination) {
