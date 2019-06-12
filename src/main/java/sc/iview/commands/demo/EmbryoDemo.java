@@ -111,7 +111,7 @@ public class EmbryoDemo implements Command {
     }
 
     public void fetchEmbryoImage(String localDestination) {
-        String remoteLocation = "http://fly.mpi-cbg.de/~pietzsch/bdv-examples/";
+        String remoteLocation = "https://fly.mpi-cbg.de/~pietzsch/bdv-examples/";
         String xmlFilename = "drosophila.xml";
         String h5Filename = "drosophila.h5";
 
