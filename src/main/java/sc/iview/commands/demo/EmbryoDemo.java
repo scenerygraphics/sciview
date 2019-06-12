@@ -86,6 +86,7 @@ public class EmbryoDemo implements Command {
         v.setDirty(true);
 
         // Set the initial volume transfer function
+		/* TODO: TransferFunction behaviour is not yet implemeneted for BDVVolumes
         AtomicReference<Float> rampMax = new AtomicReference<>(0.007f);
         float rampStep = 0.01f;
         AtomicReference<Double> dRampSign = new AtomicReference<>(1.);
@@ -100,6 +101,9 @@ public class EmbryoDemo implements Command {
         v.setTransferFunction(TransferFunction.ramp(0.0f, rampMax.get()));
         v.setNeedsUpdate(true);
         v.setDirty(true);
+		*/
+		// use ConverterSetups instead:
+		v.getConverterSetups().forEach( s -> s.setDisplayRange( 500.0, 1500.0 ) );
 
         sciView.centerOnNode( sciView.getActiveNode() );
 
