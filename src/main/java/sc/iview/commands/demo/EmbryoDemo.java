@@ -267,9 +267,14 @@ public class EmbryoDemo implements Command {
 //                        v.getSizeY() * v.getVoxelSizeY() * v.getPixelToWorldRatio() * 0.5f,
 //                        v.getSizeZ() * v.getVoxelSizeZ() * v.getPixelToWorldRatio() * 0.5f);
 
-        GLVector vHalf = new GLVector(v.getSizeX() * v.getVoxelSizeX() * v.getPixelToWorldRatio() * 0.5f,
-                        v.getSizeY() * v.getVoxelSizeY() * v.getPixelToWorldRatio() * 0.5f,
-                        v.getSizeZ() * v.getVoxelSizeZ() * v.getPixelToWorldRatio() * 0.5f);
+
+        float xscale = v.getVoxelSizeX() * v.getPixelToWorldRatio() * 0.36f;
+        float yscale =  v.getVoxelSizeY() * v.getPixelToWorldRatio() * 0.3f;
+        float zscale = v.getVoxelSizeZ() * v.getPixelToWorldRatio() * 0.25f;
+
+        GLVector vHalf = new GLVector(v.getSizeX() * xscale,
+                        v.getSizeY() * yscale,
+                        v.getSizeZ() * zscale);
 
         GLVector vOffset = new GLVector(0,0,0);
 
@@ -341,9 +346,9 @@ public class EmbryoDemo implements Command {
                     isoSurfaceMesh.recalculateNormals();
 
                     Node scMesh = sciView.addMesh(isoSurfaceMesh);
-                    scMesh.setPosition(scMesh.getPosition().minus(vOffset).plus(new GLVector( -vHalf.x() + xmin* v.getVoxelSizeX() * v.getPixelToWorldRatio() * 0.5f,
-                            ymin* v.getVoxelSizeX() * v.getPixelToWorldRatio() * 0.5f,
-                            zmin* v.getVoxelSizeX() * v.getPixelToWorldRatio() * 0.5f)));
+                    scMesh.setPosition(scMesh.getPosition().minus(vOffset).plus(new GLVector( -vHalf.x() + xmin* xscale,
+                            ymin* yscale,
+                            zmin* zscale)));
                     scMesh.setScale(new GLVector(v.getPixelToWorldRatio(),
                             v.getPixelToWorldRatio(),
                             v.getPixelToWorldRatio()));
