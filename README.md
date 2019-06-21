@@ -29,6 +29,12 @@ In Fiji, go to `Help -> Update` and activate the `SciView` update site. In case 
 * Jan Eglinger (FMI Basel)
 * Stephan Saalfeld (HHMI Janelia Farm)
 
+## Citation
+
+In case you use sciview or scenery in a scientific publication, please cite this preprint:
+
+* Ulrik Günther, Tobias Pietzsch, Aryaman Gupta, Kyle I.S. Harrington, Pavel Tomancak, Stefan Gumhold, and Ivo F. Sbalzarini: scenery — Flexible Virtual Reality Visualisation on the Java VM. _[arXiv:1906.06726](https://arxiv.org/abs/1906.06726)_, 2019.
+
 ## Resources
 
 - [Media/videos created with SciView](https://github.com/scenerygraphics/sciview/wiki/Links-to-media-created-with-SciView)
