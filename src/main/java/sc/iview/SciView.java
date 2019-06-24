@@ -1253,6 +1253,8 @@ public class SciView extends SceneryBase {
         setActiveNode(v);
         v.goToTimePoint(0);
 
+		eventService.publish( new NodeAddedEvent( v ) );
+
         return v;
     }
 
