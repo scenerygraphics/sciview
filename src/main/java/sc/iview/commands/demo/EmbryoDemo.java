@@ -28,15 +28,11 @@
  */
 package sc.iview.commands.demo;
 
-import bdv.util.Bdv;
-import bdv.util.BdvSource;
 import cleargl.GLVector;
-import graphics.scenery.Material;
 import graphics.scenery.Node;
 import graphics.scenery.PointLight;
-import graphics.scenery.volumes.TransferFunction;
 import graphics.scenery.volumes.bdv.BDVVolume;
-import net.imagej.Dataset;
+import java.io.FileNotFoundException;
 import net.imagej.mesh.Mesh;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
@@ -44,17 +40,12 @@ import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.algorithm.labeling.ConnectedComponents;
-import net.imglib2.algorithm.morphology.StructuringElements;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.roi.labeling.ImgLabeling;
 import net.imglib2.type.logic.BitType;
-import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.type.volatiles.VolatileUnsignedShortType;
-import net.imglib2.util.Intervals;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 import org.apache.commons.io.FileUtils;
@@ -78,7 +69,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static sc.iview.commands.MenuWeights.*;
 
@@ -89,7 +79,7 @@ import static sc.iview.commands.MenuWeights.*;
  */
 @Plugin(type = Command.class, label = "Embryo Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Embryo", weight = DEMO_EMBRYO) })
+                 @Menu(label = "BDV Embryo Segmentation Demo", weight = DEMO_EMBRYO) })
 public class EmbryoDemo implements Command {
 
     @Parameter
@@ -116,11 +106,15 @@ public class EmbryoDemo implements Command {
     private String localDirectory = System.getProperty("user.home") + File.separator + "Desktop";
     private BDVVolume v;
 
+	private final String xmlFilename = "drosophila.xml";
+	private final String h5Filename = "drosophila.h5";
+	private final String remoteLocation = "https://fly.mpi-cbg.de/~pietzsch/bdv-examples/";
+
     @Override
     public void run() {
         fetchEmbryoImage(localDirectory);
 
-        v = (BDVVolume) sciView.addBDVVolume(localDirectory + File.separator + "drosophila_filtered.xml");
+        v = (BDVVolume) sciView.addBDVVolume(localDirectory + File.separator + xmlFilename);
         v.setName( "Embryo Demo" );
         v.setPixelToWorldRatio(0.1f);
         v.setNeedsUpdate(true);
@@ -380,10 +374,6 @@ public class EmbryoDemo implements Command {
     }
 
     public void fetchEmbryoImage(String localDestination) {
-        String remoteLocation = "https://fly.mpi-cbg.de/~pietzsch/bdv-examples/";
-        String xmlFilename = "drosophila_filtered.xml";
-        String h5Filename = "drosophila_filtered.h5";
-
         if( !(new File(localDirectory + File.separator + xmlFilename).exists()) ) {
             // File doesnt exist, so fetch
             System.out.println("Fetching data. This may take a moment...");
@@ -392,10 +382,12 @@ public class EmbryoDemo implements Command {
                         new File(localDestination + File.separator + xmlFilename));
                 FileUtils.copyURLToFile(new URL(remoteLocation + "/" + h5Filename),
                         new File(localDestination + File.separator + h5Filename));
-            } catch (IOException e) {
+            } catch (FileNotFoundException e) {
+				System.out.println("Could not download file, " + xmlFilename + " not found on host.");
+			} catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+		}
 
     }
 }
