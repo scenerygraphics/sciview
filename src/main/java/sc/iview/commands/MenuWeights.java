@@ -54,6 +54,7 @@ public final class MenuWeights {
     public static final double EDIT_ADD_POINT_LIGHT = 3;
     public static final double EDIT_ADD_LABEL_IMAGE = 4;
     public static final double EDIT_ADD_VOLUME = 5;
+	public static final double EDIT_ADD_CAMERA = 6;
     public static final double EDIT_TOGGLE_FLOOR = 50;
     public static final double EDIT_DELETE_OBJECT = 100;
     public static final double EDIT_PROPERTIES = 200;
@@ -80,6 +81,7 @@ public final class MenuWeights {
     public static final double VIEW_SAVE_CAMERA_CONFIGURATION = 204;
     public static final double VIEW_TOGGLE_INSPECTOR = 302;
     public static final double VIEW_RENDER_TO_OPENVR = 303;
+    public static final double VIEW_SET_TRANSFER_FUNCTION = 400;
 
 
     public static final double DEMO_LINES = 0;
@@ -88,6 +90,7 @@ public final class MenuWeights {
     public static final double DEMO_VOLUME_RENDER = 3;
     public static final double DEMO_GAME_OF_LIFE = 4;
     public static final double DEMO_TEXT = 5;
+    public static final double DEMO_EMBRYO = 6;
 
     public static final double HELP_HELP = 0;
     public static final double HELP_ABOUT = 200;
