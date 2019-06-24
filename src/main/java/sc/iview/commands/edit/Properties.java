@@ -96,6 +96,9 @@ public class Properties extends InteractiveCommand {
     @Parameter(required = false, callback = "updateNodeProperties")
     private ColorRGB colour;
 
+	@Parameter(required = false, callback = "updateNodeProperties")
+	private boolean active;
+
     @Parameter(label = "Name", callback = "updateNodeProperties")
     private String name;
 
@@ -130,9 +133,9 @@ public class Properties extends InteractiveCommand {
             stepSize = "0.1", callback = "updateNodeProperties")
     private float scaleZ = 1;
 
-    @Parameter(label = "Global Renderscale", style = NumberWidget.SPINNER_STYLE, //
-            stepSize = "0.1", callback = "updateNodeProperties")
-    private float renderscale = 1;
+//    @Parameter(label = "Global Renderscale", style = NumberWidget.SPINNER_STYLE, //
+//            stepSize = "0.1", callback = "updateNodeProperties")
+//    private float renderscale = 1;
 
     @Parameter(label = "Rotation Phi", style = NumberWidget.SPINNER_STYLE, //
             min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
@@ -294,7 +297,7 @@ public class Properties extends InteractiveCommand {
         scaleY = scale.y();
         scaleZ = scale.z();
 
-        renderscale = currentSceneNode.getRenderScale();
+//        renderscale = currentSceneNode.getRenderScale();
 
         name = currentSceneNode.getName();
 
@@ -305,6 +308,7 @@ public class Properties extends InteractiveCommand {
             renderingMode = (String)renderingModeChoices.get(((Volume)currentSceneNode).getRenderingMethod());
             occlusionSteps = ((Volume)currentSceneNode).getOcclusionSteps();
         } else {
+			getInfo().removeInput(getInfo().getMutableInput( "occlusionSteps", Integer.class ));
             getInfo().removeInput(getInfo().getMutableInput( "renderingMode", String.class ));
         }
 
@@ -313,6 +317,20 @@ public class Properties extends InteractiveCommand {
         } else {
             getInfo().removeInput(getInfo().getMutableInput( "intensity", Float.class ));
         }
+
+        if(currentSceneNode instanceof Camera) {
+        	getInfo().removeInput(getInfo().getMutableInput( "colour", ColorRGB.class ));
+			getInfo().removeInput(getInfo().getMutableInput( "visible", Boolean.class ));
+			final Scene scene = currentSceneNode.getScene();
+
+			if(scene != null) {
+				active = ( ( Camera ) currentSceneNode ).getActive() && scene.findObserver() == currentSceneNode;
+			} else {
+				active = ( ( Camera ) currentSceneNode ).getActive();
+			}
+		} else {
+        	getInfo().removeInput(getInfo().getMutableInput( "active", Boolean.class ) );
+		}
 
         if(currentSceneNode instanceof BoundingGrid) {
             gridColor = new ColorRGB((int)((BoundingGrid)currentSceneNode).getGridColor().x() * 255,
@@ -390,7 +408,7 @@ public class Properties extends InteractiveCommand {
         currentSceneNode.setScale(scale);
 
         // update render scale
-        currentSceneNode.setRenderScale(renderscale);
+//        currentSceneNode.setRenderScale(renderscale);
 
         currentSceneNode.setName(name);
 
@@ -407,6 +425,15 @@ public class Properties extends InteractiveCommand {
 
             ((Volume)currentSceneNode).setOcclusionSteps(occlusionSteps);
         }
+
+        if(currentSceneNode instanceof Camera) {
+        	final Scene scene = currentSceneNode.getScene();
+
+        	if(active && scene != null) {
+				scene.setActiveObserver( ( Camera ) currentSceneNode );
+				( ( Camera ) currentSceneNode ).setActive( true );
+			}
+		}
 
         if(currentSceneNode instanceof BoundingGrid) {
             int ticks;
