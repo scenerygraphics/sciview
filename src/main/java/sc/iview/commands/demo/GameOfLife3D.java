@@ -41,7 +41,6 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
 import org.scijava.event.EventHandler;
-import org.scijava.event.EventService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -284,5 +283,12 @@ public class GameOfLife3D extends InteractiveCommand {
         if(event.getNode() == volume) {
             sciView.stopAnimation();
         }
+    }
+
+    /**
+     * Returns the current Img
+     */
+    public Img<UnsignedByteType> getImg() {
+        return field;
     }
 }
