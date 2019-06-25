@@ -4,6 +4,7 @@ import cleargl.GLVector;
 import graphics.scenery.*;
 import graphics.scenery.volumes.Volume;
 
+import java.util.Collections;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -12,6 +13,7 @@ import java.awt.*;
 import java.awt.font.TextAttribute;
 import java.io.IOException;
 import java.util.Map;
+import javax.xml.soap.Text;
 
 /**
  * Class to render Node Property Tree with custom icons, depending on node type.
@@ -118,6 +120,7 @@ class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
                 tree, value, selected, expanded, leaf, row, hasFocus);
 
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
+        boolean active = false;
 
         Node n = (Node)node.getUserObject();
         overrideColor = false;
@@ -126,6 +129,13 @@ class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
             setIcon(cameraIcon);
             setOpenIcon(cameraIcon);
             setClosedIcon(cameraIcon);
+
+            active = ( ( Camera ) n ).getActive();
+            if(active && n.getScene().findObserver() == n) {
+            	setText( n.getName() + " (active)" );
+			} else {
+            	setText( n.getName() );
+			}
         } else if(n instanceof Light) {
             setIcon(lightIcon);
             setOpenIcon(lightIcon);
@@ -184,13 +194,17 @@ class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
         Font font = component.getFont();
         Map map = font.getAttributes();
 
+		map.put(TextAttribute.FONT, font);
+		map.put(TextAttribute.UNDERLINE, -1);
+
         if(selected) {
             map.put(TextAttribute.FONT, font);
             map.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_LOW_DOTTED);
-        } else {
-            map.put(TextAttribute.FONT, font);
-            map.put(TextAttribute.UNDERLINE, -1);
         }
+        if(active) {
+        	map.put(TextAttribute.FONT, font);
+			map.put(TextAttribute.WEIGHT, TextAttribute.WEIGHT_BOLD);
+		}
 
         font = Font.getFont(map);
         component.setFont(font);

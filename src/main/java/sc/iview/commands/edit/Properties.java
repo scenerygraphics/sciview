@@ -43,6 +43,7 @@ import graphics.scenery.volumes.Volume;
 import graphics.scenery.volumes.bdv.BDVVolume;
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
+import org.scijava.event.EventService;
 import org.scijava.module.MutableModuleItem;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
@@ -54,6 +55,7 @@ import org.scijava.widget.NumberWidget;
 import sc.iview.SciView;
 
 import cleargl.GLVector;
+import sc.iview.event.NodeChangedEvent;
 
 /**
  * A command for interactively editing a node's properties.
@@ -86,6 +88,9 @@ public class Properties extends InteractiveCommand {
 
     @Parameter
     private SciView sciView;
+
+    @Parameter
+	private EventService events;
 
     @Parameter(required = false, style = LIST_BOX_STYLE, callback = "refreshSceneNodeInDialog")
     private String sceneNode;
@@ -467,6 +472,8 @@ public class Properties extends InteractiveCommand {
         if(currentSceneNode instanceof BDVVolume) {
             ((BDVVolume) currentSceneNode).goToTimePoint(timepoint);
         }
+
+        events.publish( new NodeChangedEvent( currentSceneNode ) );
     }
 
     private String makeIdentifier( final Node node, final int count ) {

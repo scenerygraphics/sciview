@@ -1127,7 +1127,7 @@ public class SciView extends SceneryBase {
 
     @EventHandler
     protected void onNodeChanged(NodeChangedEvent event) {
-        // TODO: add listener code for node changes, if necessary
+    	nodePropertyEditor.rebuildTree();
     }
 
     @EventHandler
