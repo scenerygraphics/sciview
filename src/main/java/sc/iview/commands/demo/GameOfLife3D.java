@@ -291,4 +291,11 @@ public class GameOfLife3D extends InteractiveCommand {
     public Img<UnsignedByteType> getImg() {
         return field;
     }
+
+    /**
+     * Returns the scenery volume node.
+     */
+    public Volume getVolume() {
+        return volume;
+    }
 }
