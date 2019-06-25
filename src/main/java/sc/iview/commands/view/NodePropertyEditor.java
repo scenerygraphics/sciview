@@ -149,8 +149,9 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     @EventHandler
     private void onEvent( final NodeChangedEvent evt ) {
         final Node node = evt.getNode();
-//        log.info( "Node changed: " + node );
-        updateProperties( sciView.getActiveNode() );
+        if( node == sciView.getActiveNode() ) {
+            updateProperties(sciView.getActiveNode());
+        }
     }
 
     @EventHandler
@@ -161,7 +162,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         } else {
             log.info("Node activated: " + node);
         }
-        updateProperties( sciView.getActiveNode() );
+        updateProperties( node );
     }
 
     /** Initializes {@link #panel}. */
@@ -219,20 +220,30 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
 
     private Node currentNode = null;
     private Properties currentProperties = null;
+
+    public Node getCurrentNode() {
+        return currentNode;
+    }
+
     /** Generates a properties panel for the given node. */
     public void updateProperties( final Node sceneNode ) {
-        if(sceneNode == null) {
+        updateProperties( sceneNode, false );
+    }
+
+    /** Generates a properties panel for the given node. */
+    public void updateProperties( final Node sceneNode, final boolean force ) {
+        if(sceneNode == null && !force) {
             return;
-        }
-        if(currentNode == sceneNode && currentProperties != null) {
-            System.out.println("Current node is sceneNode, not updating panel");
-            currentProperties.updateCommandFields();
-            return;
-        }
-        if(currentNode != null && sceneNode != null) {
-            System.out.println("Updating panel bc " + sceneNode.getName() + "!=" + currentNode.getName());
         }
 
+        if(currentNode == sceneNode && currentProperties != null && !force) {
+            System.out.println("Current node is sceneNode, not updating panel");
+            currentProperties.updateCommandFields();
+            props.repaint();
+            return;
+        }
+
+        currentNode = sceneNode;
         // Prepare the Properties command module instance.
         final CommandInfo info = commandService.getCommand( Properties.class );
         final Module module = moduleService.createModule( info );
@@ -242,6 +253,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         module.resolveInput( "sciView" );
         module.resolveInput( "sceneNode" );
         final Properties p = (Properties) module.getDelegateObject();
+        currentProperties = p;
         p.setSceneNode( sceneNode );
 
         // Prepare the SwingInputHarvester.
@@ -262,8 +274,6 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
             updatePropertiesPanel( textArea );
         }
 
-        currentProperties = (Properties)module;
-        currentNode = sceneNode;
     }
 
     private void updatePropertiesPanel( final Component c ) {
