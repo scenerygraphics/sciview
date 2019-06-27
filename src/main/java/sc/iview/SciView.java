@@ -458,6 +458,14 @@ public class SciView extends SceneryBase {
             eventService.subscribe(this);
         });
 
+        // install hook to keep inspector updated on external changes (scripting, etc)
+//        getScene().getOnNodePropertiesChanged().put("updateInspector",
+//                node -> {
+//                    if( node == nodePropertyEditor.getCurrentNode() ) {
+//                        nodePropertyEditor.updateProperties(node, true);
+//                    }
+//                    return null;
+//                });
     }
 
     public void setFloor( Node n ) {
@@ -1058,13 +1066,13 @@ public class SciView extends SceneryBase {
     }
 
     public Node addNode( final Node n ) {
-        return addNode(n,true);
+        return addNode(n, true);
     }
 
     public Node addNode( final Node n, final boolean activePublish ) {
         getScene().addChild( n );
         if( activePublish ) {
-            setActiveNode(n);
+//            setActiveNode(n);
 //            if (floor.getVisible())
 //                updateFloorPosition();
             eventService.publish(new NodeAddedEvent(n));
@@ -1105,13 +1113,7 @@ public class SciView extends SceneryBase {
         activeNode = n;
         targetArcball.setTarget( n == null ? () -> new GLVector( 0, 0, 0 ) : () -> n.getMaximumBoundingBox().getBoundingSphere().getOrigin());
         eventService.publish( new NodeActivatedEvent( activeNode ) );
-        // TODO: Is this necessary here?
-        getScene().getOnNodePropertiesChanged().put("updateInspector",
-                node -> { if(node == activeNode) {
-                    nodePropertyEditor.updateProperties(activeNode);
-                }
-                return null;
-        });
+
         return activeNode;
     }
 
@@ -1127,7 +1129,7 @@ public class SciView extends SceneryBase {
 
     @EventHandler
     protected void onNodeChanged(NodeChangedEvent event) {
-        // TODO: add listener code for node changes, if necessary
+    	nodePropertyEditor.rebuildTree();
     }
 
     @EventHandler

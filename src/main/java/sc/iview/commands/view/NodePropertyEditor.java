@@ -28,23 +28,8 @@
  */
 package sc.iview.commands.view;
 
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.Enumeration;
-
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTextArea;
-import javax.swing.JTree;
-import javax.swing.WindowConstants;
-import javax.swing.tree.*;
-
+import graphics.scenery.Node;
 import net.miginfocom.swing.MigLayout;
-
 import org.scijava.Context;
 import org.scijava.command.CommandInfo;
 import org.scijava.command.CommandService;
@@ -63,7 +48,6 @@ import org.scijava.ui.swing.widget.SwingInputHarvester;
 import org.scijava.ui.swing.widget.SwingInputPanel;
 import org.scijava.util.DebugUtils;
 import org.scijava.widget.UIComponent;
-
 import sc.iview.SciView;
 import sc.iview.commands.edit.Properties;
 import sc.iview.event.NodeActivatedEvent;
@@ -71,7 +55,15 @@ import sc.iview.event.NodeAddedEvent;
 import sc.iview.event.NodeChangedEvent;
 import sc.iview.event.NodeRemovedEvent;
 
-import graphics.scenery.Node;
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
+import javax.swing.tree.TreeSelectionModel;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Enumeration;
 
 /**
  * Interactive UI for visualizing and editing the scene graph.
@@ -157,8 +149,9 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     @EventHandler
     private void onEvent( final NodeChangedEvent evt ) {
         final Node node = evt.getNode();
-        log.info( "Node changed: " + node );
-        updateProperties( sciView.getActiveNode() );
+        if( node == sciView.getActiveNode() ) {
+            updateProperties(sciView.getActiveNode());
+        }
     }
 
     @EventHandler
@@ -169,7 +162,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         } else {
             log.info("Node activated: " + node);
         }
-        updateProperties( sciView.getActiveNode() );
+        updateProperties( node );
     }
 
     /** Initializes {@link #panel}. */
@@ -225,13 +218,32 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         });
     }
 
+    private Node currentNode = null;
+    private Properties currentProperties = null;
+
+    public Node getCurrentNode() {
+        return currentNode;
+    }
+
     /** Generates a properties panel for the given node. */
     public void updateProperties( final Node sceneNode ) {
-        if( sceneNode == null ) {
-            updatePropertiesPanel( null );
+        updateProperties( sceneNode, false );
+    }
+
+    /** Generates a properties panel for the given node. */
+    public void updateProperties( final Node sceneNode, final boolean force ) {
+        if(sceneNode == null && !force) {
             return;
         }
 
+        if(currentNode == sceneNode && currentProperties != null && !force) {
+            System.out.println("Current node is sceneNode, not updating panel");
+            currentProperties.updateCommandFields();
+            props.repaint();
+            return;
+        }
+
+        currentNode = sceneNode;
         // Prepare the Properties command module instance.
         final CommandInfo info = commandService.getCommand( Properties.class );
         final Module module = moduleService.createModule( info );
@@ -241,6 +253,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         module.resolveInput( "sciView" );
         module.resolveInput( "sceneNode" );
         final Properties p = (Properties) module.getDelegateObject();
+        currentProperties = p;
         p.setSceneNode( sceneNode );
 
         // Prepare the SwingInputHarvester.
@@ -260,6 +273,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
             textArea.setText( "<html><pre>" + stackTrace + "</pre>" );
             updatePropertiesPanel( textArea );
         }
+
     }
 
     private void updatePropertiesPanel( final Component c ) {
@@ -300,7 +314,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
 //        for( int i = 0; i < tree.getRowCount(); i++ ) {
 //            tree.expandRow( i );
 //        }
-        updateProperties( sciView.getActiveNode() );
+//        updateProperties( sciView.getActiveNode() );
 
         if(currentPath != null) {
             final Node selectedNode = ((SceneryTreeNode)currentPath.getLastPathComponent()).node;
@@ -312,6 +326,9 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         final TreePath newPath = find((DefaultMutableTreeNode) treeModel.getRoot(), node);
         if(newPath != null) {
             tree.setSelectionPath(newPath);
+            if(node != sciView.getActiveNode()) {
+                updateProperties(node);
+            }
         }
     }
 

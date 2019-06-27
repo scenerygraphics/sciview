@@ -28,21 +28,14 @@
  */
 package sc.iview.commands.edit;
 
-import static org.scijava.widget.ChoiceWidget.LIST_BOX_STYLE;
-import static sc.iview.commands.MenuWeights.EDIT;
-import static sc.iview.commands.MenuWeights.EDIT_PROPERTIES;
-
+import cleargl.GLVector;
 import com.jogamp.opengl.math.Quaternion;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import graphics.scenery.*;
 import graphics.scenery.volumes.Volume;
 import graphics.scenery.volumes.bdv.BDVVolume;
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
+import org.scijava.event.EventService;
 import org.scijava.module.MutableModuleItem;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
@@ -50,10 +43,16 @@ import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
 import org.scijava.util.ColorRGB;
 import org.scijava.widget.NumberWidget;
-
 import sc.iview.SciView;
+import sc.iview.event.NodeChangedEvent;
 
-import cleargl.GLVector;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.scijava.widget.ChoiceWidget.LIST_BOX_STYLE;
+import static sc.iview.commands.MenuWeights.EDIT;
+import static sc.iview.commands.MenuWeights.EDIT_PROPERTIES;
 
 /**
  * A command for interactively editing a node's properties.
@@ -86,6 +85,9 @@ public class Properties extends InteractiveCommand {
 
     @Parameter
     private SciView sciView;
+
+    @Parameter
+	private EventService events;
 
     @Parameter(required = false, style = LIST_BOX_STYLE, callback = "refreshSceneNodeInDialog")
     private String sceneNode;
@@ -256,8 +258,21 @@ public class Properties extends InteractiveCommand {
         }
     }
 
+    private <T> void maybeRemoveInput(final String name, final Class<T> type) {
+        try {
+            final MutableModuleItem item = getInfo().getMutableInput(name, type);
+            if(item == null) {
+                return;
+            }
+
+            getInfo().removeInput(item);
+        } catch(NullPointerException npe) {
+            return;
+        }
+    }
+
     /** Updates command fields to match current scene node properties. */
-    private void updateCommandFields() {
+    public void updateCommandFields() {
         if( currentSceneNode == null ) return;
 
         fieldsUpdating = true;
@@ -308,29 +323,29 @@ public class Properties extends InteractiveCommand {
             renderingMode = (String)renderingModeChoices.get(((Volume)currentSceneNode).getRenderingMethod());
             occlusionSteps = ((Volume)currentSceneNode).getOcclusionSteps();
         } else {
-			getInfo().removeInput(getInfo().getMutableInput( "occlusionSteps", Integer.class ));
-            getInfo().removeInput(getInfo().getMutableInput( "renderingMode", String.class ));
+            maybeRemoveInput( "occlusionSteps", Integer.class );
+            maybeRemoveInput( "renderingMode", String.class );
         }
 
         if(currentSceneNode instanceof PointLight) {
             intensity = ((PointLight)currentSceneNode).getIntensity();
         } else {
-            getInfo().removeInput(getInfo().getMutableInput( "intensity", Float.class ));
+            maybeRemoveInput( "intensity", Float.class );
         }
 
         if(currentSceneNode instanceof Camera) {
-        	getInfo().removeInput(getInfo().getMutableInput( "colour", ColorRGB.class ));
-			getInfo().removeInput(getInfo().getMutableInput( "visible", Boolean.class ));
-			final Scene scene = currentSceneNode.getScene();
+            maybeRemoveInput( "colour", ColorRGB.class );
+            maybeRemoveInput( "visible", Boolean.class );
+            final Scene scene = currentSceneNode.getScene();
 
-			if(scene != null) {
-				active = ( ( Camera ) currentSceneNode ).getActive() && scene.findObserver() == currentSceneNode;
-			} else {
-				active = ( ( Camera ) currentSceneNode ).getActive();
-			}
-		} else {
-        	getInfo().removeInput(getInfo().getMutableInput( "active", Boolean.class ) );
-		}
+            if(scene != null) {
+                active = ( ( Camera ) currentSceneNode ).getActive() && scene.findObserver() == currentSceneNode;
+            } else {
+                active = ( ( Camera ) currentSceneNode ).getActive();
+            }
+        } else {
+            maybeRemoveInput( "active", Boolean.class );
+        }
 
         if(currentSceneNode instanceof BoundingGrid) {
             gridColor = new ColorRGB((int)((BoundingGrid)currentSceneNode).getGridColor().x() * 255,
@@ -339,8 +354,8 @@ public class Properties extends InteractiveCommand {
 
             ticksOnly = ((BoundingGrid)currentSceneNode).getTicksOnly() > 0;
         } else {
-           getInfo().removeInput(getInfo().getMutableInput( "gridColor", ColorRGB.class ));
-            getInfo().removeInput(getInfo().getMutableInput( "ticksOnly", Boolean.class ));
+            maybeRemoveInput( "gridColor", ColorRGB.class );
+            maybeRemoveInput( "ticksOnly", Boolean.class );
         }
 
         if(currentSceneNode instanceof TextBoard) {
@@ -353,10 +368,10 @@ public class Properties extends InteractiveCommand {
                     (int)((TextBoard)currentSceneNode).getBackgroundColor().z() * 255);
             transparentBackground = ((TextBoard)currentSceneNode).getTransparent() > 0;
         } else {
-            getInfo().removeInput(getInfo().getMutableInput( "fontColor", ColorRGB.class ));
-            getInfo().removeInput(getInfo().getMutableInput( "backgroundColor", ColorRGB.class ));
-            getInfo().removeInput(getInfo().getMutableInput( "transparentBackground", Boolean.class ));
-            getInfo().removeInput(getInfo().getMutableInput( "text", String.class ));
+            maybeRemoveInput( "fontColor", ColorRGB.class );
+            maybeRemoveInput( "backgroundColor", ColorRGB.class );
+            maybeRemoveInput( "transparentBackground", Boolean.class );
+            maybeRemoveInput( "text", String.class );
         }
 
         if(currentSceneNode instanceof BDVVolume) {
@@ -364,7 +379,7 @@ public class Properties extends InteractiveCommand {
             getInfo().getMutableInput("timepoint", Integer.class).setMinimumValue(0);
             getInfo().getMutableInput("timepoint", Integer.class).setMaximumValue(((BDVVolume) currentSceneNode).getMaxTimepoint());
         } else {
-            getInfo().removeInput(getInfo().getMutableInput("timepoint", Integer.class));
+            maybeRemoveInput("timepoint", Integer.class);
         }
 
         fieldsUpdating = false;
@@ -467,6 +482,8 @@ public class Properties extends InteractiveCommand {
         if(currentSceneNode instanceof BDVVolume) {
             ((BDVVolume) currentSceneNode).goToTimePoint(timepoint);
         }
+
+        events.publish( new NodeChangedEvent( currentSceneNode ) );
     }
 
     private String makeIdentifier( final Node node, final int count ) {
