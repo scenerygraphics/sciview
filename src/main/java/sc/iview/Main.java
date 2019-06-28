@@ -34,11 +34,13 @@ import io.scif.SCIFIOService;
 import net.imagej.ImageJService;
 
 import org.scijava.Context;
+import org.scijava.command.CommandService;
 import org.scijava.service.SciJavaService;
 import org.scijava.thread.ThreadService;
 import org.scijava.ui.UIService;
 
 import cleargl.GLVector;
+import sc.iview.commands.view.AddOrthoplane;
 
 /**
  * Entry point for testing SciView functionality.
@@ -57,5 +59,9 @@ public class Main {
 
         SciViewService sciViewService = context.service( SciViewService.class );
         SciView sciView = sciViewService.getOrCreateActiveSciView();
+
+        CommandService command = context.service(CommandService.class);
+
+        command.run(AddOrthoplane.class, true, "sciView", sciView);
     }
 }
