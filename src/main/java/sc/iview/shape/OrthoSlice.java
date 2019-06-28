@@ -143,11 +143,10 @@ public class OrthoSlice
 		else {
 			throw new IllegalArgumentException("Not implemented for data buffer type: " + dataBuffer.getClass());
 		}
-		byteBuffer.flip();
 		return byteBuffer;
 	}
 
-	private void paint()
+	public void paint()
 	{
 		synchronized ( this.sciView )
 		{

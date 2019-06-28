@@ -60,6 +60,7 @@ public class AddOrthoplane implements Command {
         sciView.centerOnNode( sciView.getActiveNode() );
 
         OrthoSlice os = new OrthoSlice(sciView, cube);
+        os.paint();
 
 //        if( sciView.getActiveNode() instanceof Volume) {
 //            Volume v = ((Volume) sciView.getActiveNode());
