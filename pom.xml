@@ -99,6 +99,7 @@
 
 	<properties>
 		<main-class>sc.iview.Main</main-class>
+		<package-name>sciview</package-name>
 
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>SciView developers.</license.copyrightOwners>
