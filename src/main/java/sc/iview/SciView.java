@@ -778,10 +778,12 @@ public class SciView extends SceneryBase {
         targetArcball.setScrollSpeedMultiplier( 0.05f );
         targetArcball.setDistance( getCamera().getPosition().minus( target ).magnitude() );
 
+        // FIXME: Swing seems to have issues with shift-scroll actions, so we change
+		//  this to alt-scroll here for the moment.
         h.addBehaviour( "mouse_control_arcball", targetArcball );
-        h.addKeyBinding( "mouse_control_arcball", "shift button1" );
+        h.addKeyBinding( "mouse_control_arcball", "alt button1" );
         h.addBehaviour( "scroll_arcball", targetArcball );
-        h.addKeyBinding( "scroll_arcball", "shift scroll" );
+        h.addKeyBinding( "scroll_arcball", "alt scroll" );
     }
 
     private void enableFPSControl() {
