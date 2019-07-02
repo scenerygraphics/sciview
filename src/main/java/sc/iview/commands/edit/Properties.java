@@ -37,7 +37,6 @@ import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
 import org.scijava.event.EventService;
 import org.scijava.module.MutableModuleItem;
-import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
@@ -51,8 +50,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.scijava.widget.ChoiceWidget.LIST_BOX_STYLE;
-import static sc.iview.commands.MenuWeights.EDIT;
-import static sc.iview.commands.MenuWeights.EDIT_PROPERTIES;
 
 /**
  * A command for interactively editing a node's properties.
@@ -71,10 +68,7 @@ import static sc.iview.commands.MenuWeights.EDIT_PROPERTIES;
  * @author Kyle Harrington
  * @author Ulrik Guenther
  */
-@Plugin(type = Command.class, initializer = "initValues", menuRoot = "SciView", //
-        menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Properties...", weight = EDIT_PROPERTIES) },
-        visible = false)
+@Plugin(type = Command.class, initializer = "initValues", visible = false)
 public class Properties extends InteractiveCommand {
 
     private static final String PI_NEG = "-3.142";

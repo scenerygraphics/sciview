@@ -225,21 +225,17 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         return currentNode;
     }
 
-    /** Generates a properties panel for the given node. */
-    public void updateProperties( final Node sceneNode ) {
-        updateProperties( sceneNode, false );
-    }
+    private SwingInputPanel inputPanel = null;
 
     /** Generates a properties panel for the given node. */
-    public void updateProperties( final Node sceneNode, final boolean force ) {
-        if(sceneNode == null && !force) {
+    public void updateProperties( final Node sceneNode ) {
+        if(sceneNode == null) {
             return;
         }
 
-        if(currentNode == sceneNode && currentProperties != null && !force) {
-            System.out.println("Current node is sceneNode, not updating panel");
+        if(currentNode == sceneNode && currentProperties != null && inputPanel != null) {
             currentProperties.updateCommandFields();
-            props.repaint();
+            inputPanel.refresh();
             return;
         }
 
@@ -260,7 +256,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         final PluginInfo<SciJavaPlugin> pluginInfo = pluginService.getPlugin( SwingInputHarvester.class );
         final SciJavaPlugin pluginInstance = pluginService.createInstance( pluginInfo );
         final SwingInputHarvester harvester = ( SwingInputHarvester ) pluginInstance;
-        final SwingInputPanel inputPanel = harvester.createInputPanel();
+        inputPanel = harvester.createInputPanel();
 
         // Build the panel.
         try {

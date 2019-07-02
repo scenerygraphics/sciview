@@ -459,13 +459,13 @@ public class SciView extends SceneryBase {
         });
 
         // install hook to keep inspector updated on external changes (scripting, etc)
-//        getScene().getOnNodePropertiesChanged().put("updateInspector",
-//                node -> {
-//                    if( node == nodePropertyEditor.getCurrentNode() ) {
-//                        nodePropertyEditor.updateProperties(node, true);
-//                    }
-//                    return null;
-//                });
+        getScene().getOnNodePropertiesChanged().put("updateInspector",
+                node -> {
+                    if( node == nodePropertyEditor.getCurrentNode() ) {
+                        nodePropertyEditor.updateProperties(node);
+                    }
+                    return null;
+                });
     }
 
     public void setFloor( Node n ) {
