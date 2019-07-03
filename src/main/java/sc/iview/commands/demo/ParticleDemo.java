@@ -30,10 +30,7 @@ package sc.iview.commands.demo;
 
 import cleargl.GLVector;
 import com.jogamp.opengl.math.Quaternion;
-import graphics.scenery.Cone;
-import graphics.scenery.Line;
-import graphics.scenery.Material;
-import graphics.scenery.Node;
+import graphics.scenery.*;
 import net.imagej.mesh.Mesh;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
@@ -92,8 +89,23 @@ public class ParticleDemo implements Command {
 
         float maxL2 = maxX * maxX + maxY * maxY + maxZ * maxZ;
 
+        Node master = new Cone(5, 10, 25, new GLVector(0,0,1));
+        Material mat = ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag");
+        mat.setAmbient(new GLVector(0.1f, 0f, 0f));
+        mat.setDiffuse(new GLVector(0.8f, 0.7f, 0.7f));
+        mat.setDiffuse(new GLVector(0.05f, 0f, 0f));
+        mat.setMetallic(0.01f);
+        mat.setRoughness(0.5f);
+        master.setMaterial(mat);
+        master.setName("Agent_Master");
+        master.getInstancedProperties().put("ModelMatrix", master::getModel);
+        sciView.addNode(master);
+
         for( int k = 0; k < numAgents; k++ ) {
-            Node n = new Cone(5, 10, 25, new GLVector(0,0,1));
+            //Node n = new Cone(5, 10, 25, new GLVector(0,0,1));
+            Node n = new graphics.scenery.Mesh();
+            n.setName("agent_" + k);
+            n.getInstancedProperties().put("ModelMatrix", n::getWorld);
 
             float x = rng.nextFloat()*maxX;
             float y = rng.nextFloat()*maxY;
@@ -111,7 +123,8 @@ public class ParticleDemo implements Command {
                     new float[3], new float[3], new float[3]).normalize();
             n.setRotation(newRot);
 
-            sciView.addNode(n);
+            master.getInstances().add(n);
+            //sciView.addNode(n);
             agents.add(n);
         }
 
@@ -137,6 +150,7 @@ public class ParticleDemo implements Command {
                 }
 
                 agent.setPosition(pos.plus(vel.times(dt)));
+                agent.setNeedsUpdate(true);
             }
         }));
 
