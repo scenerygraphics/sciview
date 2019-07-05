@@ -107,9 +107,9 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
-		<scenery.version>f3fefde7</scenery.version>
+		<scenery.version>5b86e130</scenery.version>
 		<cleargl.version>2.2.6</cleargl.version>
-		<kotlin.version>1.3.40</kotlin.version>
+		<kotlin.version>1.3.41</kotlin.version>
 		<lwjgl.version>3.2.1</lwjgl.version>
 	</properties>
 
