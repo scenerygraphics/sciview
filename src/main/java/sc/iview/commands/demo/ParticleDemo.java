@@ -128,7 +128,7 @@ public class ParticleDemo implements Command {
             agents.add(n);
         }
 
-        sciView.animate(10, new Thread(() -> {
+        sciView.animate(30, new Thread(() -> {
             GLVector vel;
 
             Random threadRng = new Random();
