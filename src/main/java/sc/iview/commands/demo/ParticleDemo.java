@@ -129,7 +129,7 @@ public class ParticleDemo implements Command {
 
             GLVector vel = new GLVector(rng.nextFloat(),rng.nextFloat(),rng.nextFloat());
 
-            final GLVector col = new GLVector(rng.nextFloat(),rng.nextFloat(), ((float) k) / ((float) numAgents));
+            final GLVector col = new GLVector(rng.nextFloat(),rng.nextFloat(), ((float) k) / ((float) numAgents), 1.0f);
 
             master.getInstancedProperties().put("Color", () -> col);
             n.setMaterial(master.getMaterial());
