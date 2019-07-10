@@ -5,12 +5,13 @@ layout(location = 0) in vec3 vertexPosition;
 layout(location = 1) in vec3 vertexNormal;
 layout(location = 2) in vec2 vertexTexCoord;
 layout(location = 3) in mat4 iModelMatrix;
-layout(location = 4) in vec3 vertexColor;
+layout(location = 7) in vec4 vertexColor;
 
 layout(location = 0) out VertexData {
     vec3 FragPosition;
     vec3 Normal;
     vec2 TexCoord;
+	vec4 Color;
 } Vertex;
 
 layout(set = 2, binding = 0) uniform Matrices {

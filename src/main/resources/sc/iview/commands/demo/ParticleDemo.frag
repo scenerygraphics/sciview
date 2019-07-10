@@ -140,7 +140,7 @@ void main() {
     DiffuseAlbedo.rgb = vec3(0.0f, 0.0f, 0.0f);
 
     //DiffuseAlbedo.rgb = Material.Kd;
-    DiffuseAlbedo.rgb = Color.xyz;
+    DiffuseAlbedo.rgb = Vertex.Color.rgb;
     DiffuseAlbedo.a = 0.0f;
 
     NormalsMaterial.ba = vec2(Material.Roughness, Material.Metallic);

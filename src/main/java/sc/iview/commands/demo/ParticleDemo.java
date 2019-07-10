@@ -44,6 +44,7 @@ import sc.iview.SciView;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -96,6 +97,10 @@ public class ParticleDemo implements Command {
         List<ShaderType> sList = new ArrayList<>();
         sList.add(ShaderType.VertexShader);
         sList.add(ShaderType.FragmentShader);
+        //Material mat = ShaderMaterial.fromClass(ParticleDemo.class, sList);
+
+        InputStream test = ParticleDemo.class.getResourceAsStream("ParticleDemo.frag");
+
         Material mat = ShaderMaterial.fromClass(ParticleDemo.class, sList);
 
         mat.setAmbient(new GLVector(0.1f, 0f, 0f));
