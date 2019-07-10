@@ -93,13 +93,10 @@ public class ParticleDemo implements Command {
 
         Node master = new Cone(5, 10, 25, new GLVector(0,0,1));
         //Material mat = ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag");
-        //Material mat = ShaderMaterial.fromFiles("/home/kharrington/git/sciview/src/main/resources/sc/iview/shaders/DefaultColorInstance.vert", "/home/kharrington/git/sciview/src/main/resources/sc/iview/shaders/DefaultColorInstance.frag");
         List<ShaderType> sList = new ArrayList<>();
         sList.add(ShaderType.VertexShader);
         sList.add(ShaderType.FragmentShader);
         //Material mat = ShaderMaterial.fromClass(ParticleDemo.class, sList);
-
-        InputStream test = ParticleDemo.class.getResourceAsStream("ParticleDemo.frag");
 
         Material mat = ShaderMaterial.fromClass(ParticleDemo.class, sList);
 
