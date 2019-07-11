@@ -31,6 +31,7 @@ package sc.iview.commands.demo;
 import cleargl.GLVector;
 import com.jogamp.opengl.math.Quaternion;
 import graphics.scenery.*;
+import graphics.scenery.backends.ShaderType;
 import net.imagej.mesh.Mesh;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
@@ -43,6 +44,7 @@ import sc.iview.SciView;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -90,7 +92,14 @@ public class ParticleDemo implements Command {
         float maxL2 = maxX * maxX + maxY * maxY + maxZ * maxZ;
 
         Node master = new Cone(5, 10, 25, new GLVector(0,0,1));
-        Material mat = ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag");
+        //Material mat = ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag");
+        List<ShaderType> sList = new ArrayList<>();
+        sList.add(ShaderType.VertexShader);
+        sList.add(ShaderType.FragmentShader);
+        //Material mat = ShaderMaterial.fromClass(ParticleDemo.class, sList);
+
+        Material mat = ShaderMaterial.fromClass(ParticleDemo.class, sList);
+
         mat.setAmbient(new GLVector(0.1f, 0f, 0f));
         mat.setDiffuse(new GLVector(0.8f, 0.7f, 0.7f));
         mat.setDiffuse(new GLVector(0.05f, 0f, 0f));
@@ -99,6 +108,8 @@ public class ParticleDemo implements Command {
         master.setMaterial(mat);
         master.setName("Agent_Master");
         master.getInstancedProperties().put("ModelMatrix", master::getModel);
+        master.getInstancedProperties().put("Color", () -> new GLVector(0.5f, 0.5f, 0.5f, 1.0f));
+        //master.getInstancedProperties().put("Material", master::getMaterial);
         sciView.addNode(master);
 
         for( int k = 0; k < numAgents; k++ ) {
@@ -107,11 +118,18 @@ public class ParticleDemo implements Command {
             n.setName("agent_" + k);
             n.getInstancedProperties().put("ModelMatrix", n::getWorld);
 
+            //n.getInstancedProperties().put("Material", n::getMaterial);
+
             float x = rng.nextFloat()*maxX;
             float y = rng.nextFloat()*maxY;
             float z = rng.nextFloat()*maxZ;
 
             GLVector vel = new GLVector(rng.nextFloat(),rng.nextFloat(),rng.nextFloat());
+
+            final GLVector col = new GLVector(rng.nextFloat(),rng.nextFloat(), ((float) k) / ((float) numAgents), 1.0f);
+
+            n.getInstancedProperties().put("Color", () -> col);
+            n.setMaterial(master.getMaterial());
 
             n.setPosition(new GLVector(x,y,z));
             n.getMetadata().put("velocity",vel);
