@@ -97,6 +97,8 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicLookAndFeel;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -326,6 +328,14 @@ public class SciView extends SceneryBase {
         final JMenuBar swingMenuBar = new JMenuBar();
         new SwingJMenuBarCreator().createMenus(menus.getMenu("SciView"), swingMenuBar);
         frame.setJMenuBar(swingMenuBar);
+
+//        frame.addComponentListener(new ComponentAdapter() {
+//            @Override
+//            public void componentResized(ComponentEvent componentEvent) {
+//                super.componentResized(componentEvent);
+//                panel.setSize(componentEvent.getComponent().getWidth(), componentEvent.getComponent().getHeight());
+//            }
+//        });
 
         BufferedImage splashImage;
         try {
@@ -1511,5 +1521,9 @@ public class SciView extends SceneryBase {
             getRenderer().toggleVR();
         }
 
+    }
+
+    public void setPosition(Node n, float x, float y, float z) {
+        n.setPosition(new GLVector(x,y,z));
     }
 }
