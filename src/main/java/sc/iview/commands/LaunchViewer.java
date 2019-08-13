@@ -28,12 +28,15 @@
  */
 package sc.iview.commands;
 
+import net.imglib2.type.logic.BitType;
+import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.display.DisplayService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
 
+import sc.iview.SciView;
 import sc.iview.SciViewService;
 import sc.iview.display.SciViewDisplay;
 
@@ -52,11 +55,14 @@ public class LaunchViewer implements Command {
     @Parameter(required = false)
     private UIService uiService;
 
+    @Parameter(type = ItemIO.OUTPUT)
+    private SciView sciView = null;
+
     @Override
     public void run() {
         final SciViewDisplay display = displayService.getActiveDisplay(SciViewDisplay.class);
         if (display == null)
-            sciViewService.getOrCreateActiveSciView();
+            sciView = sciViewService.getOrCreateActiveSciView();
         else
             sciViewService.createSciView();
 
