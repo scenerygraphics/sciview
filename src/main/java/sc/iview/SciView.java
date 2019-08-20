@@ -1526,4 +1526,8 @@ public class SciView extends SceneryBase {
     public void setPosition(Node n, float x, float y, float z) {
         n.setPosition(new GLVector(x,y,z));
     }
+
+    static public GLVector getGLVector(float x, float y, float z) {
+        return new GLVector(x, y, z);
+    }
 }
