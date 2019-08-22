@@ -202,6 +202,12 @@ public class SciView extends SceneryBase {
         }
     };
 
+    public boolean isClosed() {
+        return isClosed;
+    }
+
+    private boolean isClosed = false;
+
     public SciView( Context context ) {
         super( "SciView", 1280, 720, false, context );
         context.inject( this );
@@ -392,6 +398,7 @@ public class SciView extends SceneryBase {
             @Override public void windowClosing(WindowEvent e) {
                 getLogger().debug("Closing SciView window.");
                 close();
+                isClosed = true;
             }
         });
 
