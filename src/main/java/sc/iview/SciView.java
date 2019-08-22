@@ -97,10 +97,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicLookAndFeel;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -196,6 +193,7 @@ public class SciView extends SceneryBase {
     private NodePropertyEditor nodePropertyEditor;
     private ArrayList<PointLight> lights;
     private Stack<HashMap<String, Object>> controlStack;
+    private JFrame frame;
 
     private Predicate<? super Node> notAbstractNode = new Predicate<Node>() {
         @Override
@@ -315,7 +313,7 @@ public class SciView extends SceneryBase {
             y = 10;
         }
 
-        JFrame frame = new JFrame("SciView");
+        frame = new JFrame("SciView");
         frame.setLayout(new BorderLayout(0, 0));
         frame.setSize(getWindowWidth(), getWindowHeight());
         frame.setLocation(x, y);
@@ -1529,5 +1527,9 @@ public class SciView extends SceneryBase {
 
     static public GLVector getGLVector(float x, float y, float z) {
         return new GLVector(x, y, z);
+    }
+
+    public void addWindowListener(WindowListener wl) {
+        frame.addWindowListener(wl);
     }
 }
