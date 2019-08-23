@@ -1234,6 +1234,7 @@ public class SciView extends SceneryBase {
     }
 
     public void dispose() {
+        // Close the Scenery renderer, hub, and other scenery things
         this.close();
     }
 
