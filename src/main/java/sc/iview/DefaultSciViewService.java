@@ -143,7 +143,7 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
         sceneryViewers.remove(sciView);
         SciViewDisplay d = displayService.getActiveDisplay( SciViewDisplay.class );
         if( d != null ) {
-            dispose();
+            d.close();
         }
     }
 
