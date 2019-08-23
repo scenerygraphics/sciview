@@ -394,10 +394,12 @@ public class SciView extends SceneryBase {
 
         frame.add(mainSplitPane, BorderLayout.CENTER);
 
+        SciView sciView = this;
         frame.addWindowListener(new WindowAdapter() {
             @Override public void windowClosing(WindowEvent e) {
                 getLogger().debug("Closing SciView window.");
                 close();
+                getScijavaContext().service(SciViewService.class).close(sciView);
                 isClosed = true;
             }
         });
