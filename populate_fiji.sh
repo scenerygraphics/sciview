@@ -81,7 +81,7 @@ fi
 
 echo
 echo "--> Copying dependencies into Fiji installation"
-(set -x; mvn -Dimagej.app.directory=$FijiDirectory)
+(set -x; mvn -Dscijava.app.directory=$FijiDirectory)
 
 echo "--> Removing slf4j bindings"
 (set -x; rm -f $FijiDirectory/jars/slf4j-simple-*.jar)
