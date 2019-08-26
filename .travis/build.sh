@@ -28,5 +28,5 @@ if [ "$UPLOAD_TO_UNSTABLE_UPDATE_SITE" ]
 then
   sh sciview_deploy_unstable.sh
 else
-  echo '--> Not releasing to unstable."
+  echo '--> Not releasing to unstable.'
 fi
