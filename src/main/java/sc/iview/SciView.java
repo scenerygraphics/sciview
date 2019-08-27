@@ -376,6 +376,7 @@ public class SciView extends SceneryBase {
         nodePropertyEditor.getComponent(); // Initialize node property panel
 
         JTree inspectorTree = nodePropertyEditor.getTree();
+        inspectorTree.setToggleClickCount(0);// This disables expanding menus on double click
         JPanel inspectorProperties = nodePropertyEditor.getProps();
 
         inspector = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
