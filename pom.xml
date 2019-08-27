@@ -97,6 +97,7 @@
 		<url>https://travis-ci.org/scenerygraphics/sciview</url>
 	</ciManagement>
 
+
 	<properties>
 		<main-class>sc.iview.Main</main-class>
 		<package-name>sciview</package-name>
@@ -107,7 +108,7 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
-		<scenery.version>60eb16d73e</scenery.version>
+		<scenery.version>3888cef</scenery.version>
 		<cleargl.version>2.2.6</cleargl.version>
 		<kotlin.version>1.3.41</kotlin.version>
 		<lwjgl.version>3.2.1</lwjgl.version>
