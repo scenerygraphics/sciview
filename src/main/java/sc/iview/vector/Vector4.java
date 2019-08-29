@@ -354,7 +354,7 @@ public interface Vector4 extends RealLocalizable, RealPositionable {
 
     default Vector4 cross(Vector4 v2) {
         JOMLVector4 v = new JOMLVector4(JOMLVector4.convert(this));
-        return v.cross(v2);
+        return v.cross(new JOMLVector4(JOMLVector4.convert(v2)));
     }
 
     default Vector4 elmul(Vector4 v2) {
