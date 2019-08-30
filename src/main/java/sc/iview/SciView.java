@@ -35,6 +35,7 @@ import com.jogamp.opengl.math.Quaternion;
 import coremem.enums.NativeTypeEnum;
 import graphics.scenery.Box;
 import graphics.scenery.*;
+import graphics.scenery.backends.RenderedImage;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.backends.opengl.OpenGLRenderer;
 import graphics.scenery.backends.vulkan.VulkanRenderer;
@@ -52,6 +53,7 @@ import graphics.scenery.volumes.bdv.BDVVolume;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import net.imagej.Dataset;
+import net.imagej.ImgPlus;
 import net.imagej.lut.LUTService;
 import net.imagej.ops.OpService;
 import net.imglib2.Cursor;
@@ -59,6 +61,7 @@ import net.imglib2.IterableInterval;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
 import net.imglib2.display.ColorTable;
+import net.imglib2.img.Img;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
@@ -99,6 +102,7 @@ import javax.swing.plaf.basic.BasicLookAndFeel;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -567,7 +571,7 @@ public class SciView extends SceneryBase {
         if( currentNode == null ) return;
 
         OrientedBoundingBox bb = getSubgraphBoundingBox(currentNode, branchFunction);
-        //System.out.println("Centering on: " + currentNode + " bb: " + bb.getMin() + " to " + bb.getMax());
+        log.debug("Centering on: " + currentNode + " bb: " + bb.getMin() + " to " + bb.getMax());
         if( bb == null ) return;
 
         getCamera().setTarget( bb.getBoundingSphere().getOrigin() );
@@ -1204,6 +1208,26 @@ public class SciView extends SceneryBase {
 
     public void takeScreenshot( String path ) {
         getRenderer().screenshot( path, false );
+    }
+
+    public Img<UnsignedByteType> getScreenshot() {
+        RenderedImage screenshot = getSceneryRenderer().requestScreenshot();
+
+        BufferedImage image = new BufferedImage(screenshot.getWidth(), screenshot.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
+        byte[] imgData = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+        System.arraycopy(screenshot.getData(), 0, imgData, 0, screenshot.getData().length);
+
+        Img<UnsignedByteType> img = null;
+        File tmpFile = null;
+        try {
+            tmpFile = File.createTempFile("sciview-", "-tmp.png");
+            ImageIO.write(image, "png", tmpFile);
+            img = (Img<UnsignedByteType>)io.open(tmpFile.getAbsolutePath());
+            tmpFile.delete();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return img;
     }
 
     public Node[] getSceneNodes() {
