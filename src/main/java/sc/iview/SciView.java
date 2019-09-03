@@ -1461,21 +1461,6 @@ public class SciView extends SceneryBase {
         stopAnimation();
     }
 
-    private void updateFloorPosition() {
-        // Lower the floor below the active node, as needed.
-        final Node currentNode = getActiveNode();
-        if( currentNode != null ) {
-            while( currentNode.getDirty() || currentNode.getNeedsUpdate() ) {
-                try {
-                    Thread.sleep(20);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            floor.setPosition( new GLVector( 0f, java.lang.Math.min(getFloor().getPosition().y(),getActiveNode().getMaximumBoundingBox().getMin().y()), 0f ) );
-        }
-    }
-
     public Settings getScenerySettings() {
         return this.getSettings();
     }
