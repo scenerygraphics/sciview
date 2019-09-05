@@ -113,6 +113,7 @@
 		<kotlin.version>1.3.41</kotlin.version>
 		<lwjgl.version>3.2.1</lwjgl.version>
 		<imagej-updater.version>9b64bc7</imagej-updater.version>
+		<scijava-common.version>2.79.0</scijava-common.version>
 	</properties>
 
 	<repositories>
@@ -127,24 +128,13 @@
 	</repositories>
 
 	<dependencies>
-		<!-- Temporarily using custom imagej-updater -->
-		<dependency>
-			<groupId>com.github.kephale</groupId>
-			<artifactId>imagej-updater</artifactId>
-			<version>${imagej-updater.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>imagej-updater</artifactId>
-			<version>${imagej-updater.version}</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/misc/empty.jar</systemPath>
-		</dependency>
+
 
 		<!-- SciJava dependencies -->
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-common</artifactId>
+			<version>${scijava-common.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
