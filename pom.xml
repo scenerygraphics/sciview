@@ -113,7 +113,7 @@
 		<kotlin.version>1.3.41</kotlin.version>
 		<lwjgl.version>3.2.1</lwjgl.version>
 		<scijava-common.version>2.79.0</scijava-common.version>
-		<imagej-launcher.version>5.0.1-SNAPSHOT</imagej-launcher.version>
+		<imagej-launcher.version>5.0.2</imagej-launcher.version>
 	</properties>
 
 	<repositories>
