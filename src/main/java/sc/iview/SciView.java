@@ -72,6 +72,7 @@ import org.scijava.display.DisplayService;
 import org.scijava.event.EventHandler;
 import org.scijava.event.EventService;
 import org.scijava.io.IOService;
+import org.scijava.log.LogLevel;
 import org.scijava.log.LogService;
 import org.scijava.menu.MenuService;
 import org.scijava.object.ObjectService;
@@ -299,6 +300,8 @@ public class SciView extends SceneryBase {
                 getLogger().info("Could not load Darcula Look and Feel");
             }
         }
+
+        log.setLevel(LogLevel.WARN);
 
         LogbackUtils.setLogLevel(null, System.getProperty("scenery.LogLevel", "info"));
 
@@ -579,7 +582,7 @@ public class SciView extends SceneryBase {
         if( currentNode == null ) return;
 
         OrientedBoundingBox bb = getSubgraphBoundingBox(currentNode, branchFunction);
-        log.debug("Centering on: " + currentNode + " bb: " + bb.getMin() + " to " + bb.getMax());
+        //log.debug("Centering on: " + currentNode + " bb: " + bb.getMin() + " to " + bb.getMax());
         if( bb == null ) return;
 
         getCamera().setTarget( bb.getBoundingSphere().getOrigin() );
