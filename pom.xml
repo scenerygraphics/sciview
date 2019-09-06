@@ -257,4 +257,21 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<sourceDirectory>src/main/java</sourceDirectory>
+        <testSourceDirectory>src/test/tests</testSourceDirectory>
+		<plugins>
+			<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>@{argLine} -Xmx8192m</argLine>
+                    <forkCount>1</forkCount>
+                    <reuseForks>true</reuseForks>
+                </configuration>
+            </plugin>
+		</plugins>
+	</build>
+
 </project>
