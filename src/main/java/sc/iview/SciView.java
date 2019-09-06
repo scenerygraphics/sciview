@@ -480,6 +480,13 @@ public class SciView extends SceneryBase {
     }
 
     /*
+     * Completely close the SciView window + cleanup
+     */
+    public void closeWindow() {
+        frame.dispose();
+    }
+
+    /*
      * Return the default floor object
      */
     public Node getFloor() {
@@ -1246,6 +1253,7 @@ public class SciView extends SceneryBase {
         for( Node child : node.getChildren() ) {
             deleteNode(child, activePublish);
         }
+
         node.getParent().removeChild( node );
         if( activePublish ) {
             eventService.publish(new NodeRemovedEvent(node));
@@ -1601,4 +1609,6 @@ public class SciView extends SceneryBase {
             log.warn( helpString );
         }
     }
+
+
 }
