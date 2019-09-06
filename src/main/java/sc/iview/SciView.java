@@ -171,7 +171,7 @@ public class SciView extends SceneryBase {
     /**
      * Speeds for input controls
      */
-    private float fpsScrollSpeed = 3.0f;
+    private float fpsScrollSpeed = 0.05f;
     private float mouseSpeedMult = 0.25f;
     private Display<?> scijavaDisplay;
     private JLabel splashLabel;
@@ -1243,6 +1243,9 @@ public class SciView extends SceneryBase {
     }
 
     public void deleteNode( Node node, boolean activePublish ) {
+        for( Node child : node.getChildren() ) {
+            deleteNode(child, activePublish);
+        }
         node.getParent().removeChild( node );
         if( activePublish ) {
             eventService.publish(new NodeRemovedEvent(node));
