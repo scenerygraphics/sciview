@@ -17,7 +17,7 @@ import sc.iview.vector.ClearGLVector3;
 
 public class SciViewTest {
 
-    @Test
+    //@Test
     public void nodeDeletionTest() {
         SceneryBase.xinitThreads();
 
@@ -38,7 +38,7 @@ public class SciViewTest {
         sciView.closeWindow();
     }
 
-    @Test
+    //@Test
     public void nestedNodeDeletionTest() {
         SceneryBase.xinitThreads();
 
