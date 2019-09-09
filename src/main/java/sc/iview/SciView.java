@@ -248,7 +248,7 @@ public class SciView extends SceneryBase {
         // Remove everything except camera
         Node[] toRemove = getSceneNodes( n -> !( n instanceof Camera ) );
         for( Node n : toRemove ) {
-            deleteNode(n);
+            deleteNode(n, false);
         }
 
         // Add initial objects
