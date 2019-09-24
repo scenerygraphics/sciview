@@ -1610,5 +1610,7 @@ public class SciView extends SceneryBase {
         }
     }
 
-
+    public String nodeInfoString(Node n) {
+        return "Node name: " + n.getName() + " Node type: " + n.getNodeType() + " To String: " + n;
+    }
 }
