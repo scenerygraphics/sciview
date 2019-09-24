@@ -51,22 +51,26 @@ import graphics.scenery.volumes.TransferFunction;
 import graphics.scenery.volumes.Volume;
 import graphics.scenery.volumes.bdv.BDVVolume;
 import kotlin.Unit;
+import kotlin.jvm.Volatile;
 import kotlin.jvm.functions.Function1;
 import net.imagej.Dataset;
 import net.imagej.lut.LUTService;
 import net.imagej.ops.OpService;
+import net.imglib2.*;
 import net.imglib2.Cursor;
-import net.imglib2.IterableInterval;
-import net.imglib2.RealLocalizable;
-import net.imglib2.RealPoint;
+import net.imglib2.RandomAccess;
 import net.imglib2.display.ColorTable;
 import net.imglib2.img.Img;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.type.volatiles.VolatileFloatType;
+import net.imglib2.type.volatiles.VolatileUnsignedByteType;
+import net.imglib2.type.volatiles.VolatileUnsignedShortType;
 import net.imglib2.view.Views;
 import org.scijava.Context;
+import org.scijava.command.CommandService;
 import org.scijava.display.Display;
 import org.scijava.display.DisplayService;
 import org.scijava.event.EventHandler;
@@ -84,6 +88,7 @@ import org.scijava.ui.swing.menu.SwingJMenuBarCreator;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.Colors;
 import org.scijava.util.VersionUtils;
+import sc.iview.commands.help.Alert;
 import sc.iview.commands.view.NodePropertyEditor;
 import sc.iview.controls.behaviours.CameraTranslateControl;
 import sc.iview.controls.behaviours.NodeTranslateControl;
@@ -1283,6 +1288,7 @@ public class SciView extends SceneryBase {
     }
 
     public Node addVolume( Dataset image ) {
+
         float[] voxelDims = new float[image.numDimensions()];
         for( int d = 0; d < voxelDims.length; d++ ) {
             voxelDims[d] = ( float ) image.axis( d ).averageScale( 0, 1 );
@@ -1312,6 +1318,12 @@ public class SciView extends SceneryBase {
                                                                                            float[] voxelDimensions ) {
         return addVolume( ( IterableInterval ) Views.flatIterable( image.getImgPlus() ), image.getName(),
                           voxelDimensions );
+    }
+
+    public <T extends RealType<T>> Node addVolume( RandomAccessibleInterval<T> image, String name, String extra ) {
+        long[] pos = new long[]{10, 10, 10};
+
+        return addVolume( Views.flatIterable(image), name, 1, 1, 1 );
     }
 
     public <T extends RealType<T>> Node addVolume( IterableInterval<T> image ) {
@@ -1362,7 +1374,7 @@ public class SciView extends SceneryBase {
 
     public <T extends RealType<T>> Node addVolume( IterableInterval<T> image, String name,
                                                                     float... voxelDimensions ) {
-        log.debug( "Add Volume " + name + " image: " + image );
+        //log.debug( "Add Volume " + name + " image: " + image );
 
         long[] dimensions = new long[3];
         image.dimensions( dimensions );
@@ -1381,6 +1393,15 @@ public class SciView extends SceneryBase {
             minVal = 0;
             maxVal = 65535;
         } else if( voxelType == FloatType.class ) {
+            minVal = 0;
+            maxVal = 1;
+        } else if( voxelType == VolatileUnsignedByteType.class ) {
+            minVal = 0;
+            maxVal = 255;
+        } else if( voxelType == VolatileUnsignedShortType.class ) {
+            minVal = 0;
+            maxVal = 65535;
+        } else if( voxelType == VolatileFloatType.class ) {
             minVal = 0;
             maxVal = 1;
         } else {
@@ -1404,6 +1425,13 @@ public class SciView extends SceneryBase {
         setActiveNode( v );
         eventService.publish( new NodeAddedEvent( v ) );
 
+        Cursor<T> cur = image.cursor();
+
+        //getLogger().info("SciView addVolume:" + cur.get().getRealDouble() + " " + cur.next().getRealDouble());
+
+        //getScijavaContext().service(CommandService.class).run(Alert.class, true, new Object[]{"SciView addVolume:" + cur.get().getRealDouble() + " " + cur.next().getRealDouble()});
+
+
         return v;
     }
 
@@ -1418,11 +1446,11 @@ public class SciView extends SceneryBase {
         int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
         NativeTypeEnum nType;
 
-        if( voxelType == UnsignedByteType.class ) {
+        if( voxelType == UnsignedByteType.class || voxelType == VolatileUnsignedByteType.class ) {
             nType = NativeTypeEnum.UnsignedByte;
-        } else if( voxelType == UnsignedShortType.class ) {
+        } else if( voxelType == UnsignedShortType.class || voxelType == VolatileUnsignedShortType.class ) {
             nType = NativeTypeEnum.UnsignedShort;
-        } else if( voxelType == FloatType.class ) {
+        } else if( voxelType == FloatType.class || voxelType == VolatileFloatType.class ) {
             nType = NativeTypeEnum.Float;
         } else {
             log.debug( "Type: " + voxelType +
@@ -1437,12 +1465,19 @@ public class SciView extends SceneryBase {
 
         while( cursor.hasNext() ) {
             cursor.fwd();
+            // TODO should we check if volatiles are valid
             if( voxelType == UnsignedByteType.class ) {
                 byteBuffer.put( ( byte ) ( ( ( UnsignedByteType ) cursor.get() ).get() ) );
+            } else if( voxelType == VolatileUnsignedByteType.class ) {
+                byteBuffer.put( ( byte ) ( ( ( VolatileUnsignedByteType ) cursor.get() ).get().get() ) );
             } else if( voxelType == UnsignedShortType.class ) {
                 byteBuffer.putShort( ( short ) Math.abs( ( ( UnsignedShortType ) cursor.get() ).getShort() ) );
+            } else if( voxelType == VolatileUnsignedShortType.class ) {
+                byteBuffer.putShort( ( short ) Math.abs( ( ( VolatileUnsignedShortType ) cursor.get() ).get().getShort() ) );
             } else if( voxelType == FloatType.class ) {
                 byteBuffer.putFloat( ( ( FloatType ) cursor.get() ).get() );
+            } else if( voxelType == VolatileFloatType.class ) {
+                byteBuffer.putFloat( ( ( VolatileFloatType ) cursor.get() ).get().get() );
             }
         }
         byteBuffer.flip();
@@ -1612,5 +1647,9 @@ public class SciView extends SceneryBase {
 
     public String nodeInfoString(Node n) {
         return "Node name: " + n.getName() + " Node type: " + n.getNodeType() + " To String: " + n;
+    }
+
+    public void setNodeScale( Node n, double x, double y, double z ) {
+        n.setScale( new GLVector((float)x,(float)y,(float)z) );
     }
 }
