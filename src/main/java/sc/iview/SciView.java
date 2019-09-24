@@ -1362,7 +1362,7 @@ public class SciView extends SceneryBase {
 
     public <T extends RealType<T>> Node addVolume( IterableInterval<T> image, String name,
                                                                     float... voxelDimensions ) {
-        //log.debug( "Add Volume" );
+        log.debug( "Add Volume " + name + " image: " + image );
 
         long[] dimensions = new long[3];
         image.dimensions( dimensions );
