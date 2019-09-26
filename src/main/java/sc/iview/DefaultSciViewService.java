@@ -139,6 +139,15 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
     }
 
     @Override
+    public void close(SciView sciView) {
+        sceneryViewers.remove(sciView);
+        SciViewDisplay d = displayService.getActiveDisplay( SciViewDisplay.class );
+        if( d != null ) {
+            d.close();
+        }
+    }
+
+    @Override
     public void initialize() {
         scriptService.addAlias(SciView.class);
         scriptService.addAlias("Mesh", Mesh.class);

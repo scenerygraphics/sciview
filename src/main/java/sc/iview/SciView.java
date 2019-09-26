@@ -35,6 +35,7 @@ import com.jogamp.opengl.math.Quaternion;
 import coremem.enums.NativeTypeEnum;
 import graphics.scenery.Box;
 import graphics.scenery.*;
+import graphics.scenery.backends.RenderedImage;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.backends.opengl.OpenGLRenderer;
 import graphics.scenery.backends.vulkan.VulkanRenderer;
@@ -55,14 +56,16 @@ import net.imagej.Dataset;
 import net.imagej.lut.LUTService;
 import net.imagej.ops.OpService;
 import net.imglib2.Cursor;
-import net.imglib2.IterableInterval;
-import net.imglib2.RealLocalizable;
-import net.imglib2.RealPoint;
+import net.imglib2.*;
 import net.imglib2.display.ColorTable;
+import net.imglib2.img.Img;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.type.volatiles.VolatileFloatType;
+import net.imglib2.type.volatiles.VolatileUnsignedByteType;
+import net.imglib2.type.volatiles.VolatileUnsignedShortType;
 import net.imglib2.view.Views;
 import org.scijava.Context;
 import org.scijava.display.Display;
@@ -70,6 +73,7 @@ import org.scijava.display.DisplayService;
 import org.scijava.event.EventHandler;
 import org.scijava.event.EventService;
 import org.scijava.io.IOService;
+import org.scijava.log.LogLevel;
 import org.scijava.log.LogService;
 import org.scijava.menu.MenuService;
 import org.scijava.object.ObjectService;
@@ -99,7 +103,9 @@ import javax.swing.plaf.basic.BasicLookAndFeel;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -118,89 +124,73 @@ import java.util.stream.Collectors;
 public class SciView extends SceneryBase {
 
     public static final ColorRGB DEFAULT_COLOR = Colors.LIGHTGRAY;
-
-    @Parameter
-    private LogService log;
-
-    @Parameter
-    private MenuService menus;
-
-    @Parameter
-    private IOService io;
-
-    @Parameter
-    private OpService ops;
-
-    @Parameter
-    private EventService eventService;
-
-    @Parameter
-    private DisplayService displayService;
-
-    @Parameter
-    private LUTService lutService;
-
-    @Parameter
-    private ThreadService threadService;
-
-    @Parameter
-    private ObjectService objectService;
-
-    /**
-     * Queue keeps track of the currently running animations
-     **/
-    private Queue<Future> animations;
-
-    /**
-     * Animation pause tracking
-     **/
-    private boolean animating;
-
-    /**
-     * This tracks the actively selected Node in the scene
-     */
-    private Node activeNode = null;
-
+    private final SceneryPanel[] sceneryPanel = { null };
     /**
      * Mouse controls for FPS movement and Arcball rotation
      */
     protected ArcballCameraControl targetArcball;
     protected FPSCameraControl fpsControl;
-
-    /**
-     * The primary camera/observer in the scene
-     */
-    Camera camera = null;
-
-    /**
-     * Speeds for input controls
-     */
-    private float fpsScrollSpeed = 3.0f;
-
-    private float mouseSpeedMult = 0.25f;
-
-    private Display<?> scijavaDisplay;
-
     /**
      * The floor that orients the user in the scene
      */
     protected Node floor;
-
+    protected boolean vrActive = false;
+    /**
+     * The primary camera/observer in the scene
+     */
+    Camera camera = null;
+    @Parameter
+    private LogService log;
+    @Parameter
+    private MenuService menus;
+    @Parameter
+    private IOService io;
+    @Parameter
+    private OpService ops;
+    @Parameter
+    private EventService eventService;
+    @Parameter
+    private DisplayService displayService;
+    @Parameter
+    private LUTService lutService;
+    @Parameter
+    private ThreadService threadService;
+    @Parameter
+    private ObjectService objectService;
+    /**
+     * Queue keeps track of the currently running animations
+     **/
+    private Queue<Future> animations;
+    /**
+     * Animation pause tracking
+     **/
+    private boolean animating;
+    /**
+     * This tracks the actively selected Node in the scene
+     */
+    private Node activeNode = null;
+    /**
+     * Speeds for input controls
+     */
+    private float fpsScrollSpeed = 0.05f;
+    private float mouseSpeedMult = 0.25f;
+    private Display<?> scijavaDisplay;
     private JLabel splashLabel;
     private SceneryJPanel panel;
     private JSplitPane mainSplitPane;
-    private final SceneryPanel[] sceneryPanel = { null };
     private JSplitPane inspector;
     private NodePropertyEditor nodePropertyEditor;
     private ArrayList<PointLight> lights;
     private Stack<HashMap<String, Object>> controlStack;
-
+    private JFrame frame;
     private Predicate<? super Node> notAbstractNode = new Predicate<Node>() {
         @Override
         public boolean test(Node node) {
             return !( (node instanceof Camera) || (node instanceof Light) || (node==getFloor()));
         }
     };
+    private boolean isClosed = false;
+    private Function<Node,List<Node>> notAbstractBranchingFunction = node -> node.getChildren().stream().filter(notAbstractNode).collect(Collectors.toList());
 
     public SciView( Context context ) {
         super( "SciView", 1280, 720, false, context );
@@ -209,6 +199,14 @@ public class SciView extends SceneryBase {
 
     public SciView( String applicationName, int windowWidth, int windowHeight ) {
         super( applicationName, windowWidth, windowHeight, false );
+    }
+
+    static public GLVector getGLVector(float x, float y, float z) {
+        return new GLVector(x, y, z);
+    }
+
+    public boolean isClosed() {
+        return isClosed;
     }
 
     public InputHandler publicGetInputHandler() {
@@ -237,33 +235,63 @@ public class SciView extends SceneryBase {
         resetFPSInputs();
     }
 
+    /*
+     * Place the camera such that all objects in the scene are within the field of view
+     */
     public void fitCameraToScene() {
         centerOnNode(getScene());
     }
 
-    public class TransparentSlider extends JSlider {
-
-        public TransparentSlider() {
-            // Important, we taking over the filling of the
-            // component...
-            setOpaque(false);
-            setBackground(java.awt.Color.DARK_GRAY);
-            setForeground(java.awt.Color.LIGHT_GRAY);
+    /*
+     * Reset the scene to initial conditions
+     */
+    public void reset() {
+        // Remove everything except camera
+        Node[] toRemove = getSceneNodes( n -> !( n instanceof Camera ) );
+        for( Node n : toRemove ) {
+            deleteNode(n, false);
         }
 
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2d = (Graphics2D) g.create();
-            g2d.setColor(getBackground());
-            g2d.setComposite(AlphaComposite.SrcOver.derive(0.9f));
-            g2d.fillRect(0, 0, getWidth(), getHeight());
-            g2d.dispose();
+        // Add initial objects
+        GLVector[] tetrahedron = new GLVector[4];
+        tetrahedron[0] = new GLVector( 1.0f, 0f, -1.0f/(float)Math.sqrt(2.0f) );
+        tetrahedron[1] = new GLVector( -1.0f,0f,-1.0f/(float)Math.sqrt(2.0) );
+        tetrahedron[2] = new GLVector( 0.0f,1.0f,1.0f/(float)Math.sqrt(2.0) );
+        tetrahedron[3] = new GLVector( 0.0f,-1.0f,1.0f/(float)Math.sqrt(2.0) );
 
-            super.paintComponent(g);
+        lights = new ArrayList<PointLight>();
+
+        for( int i = 0; i < 4; i++ ) {// TODO allow # initial lights to be customizable?
+            PointLight light = new PointLight(150.0f);
+            light.setPosition( tetrahedron[i].times(25.0f) );
+            light.setEmissionColor( new GLVector( 1.0f, 1.0f, 1.0f ) );
+            light.setIntensity( 1.0f );
+            lights.add( light );
+            getScene().addChild( light );
         }
 
+        Camera cam;
+        if( getCamera() == null ) {
+            cam = new DetachedHeadCamera();
+            this.camera = cam;
+            getScene().addChild( cam );
+        } else {
+            cam = getCamera();
+        }
+        cam.setPosition( new GLVector( 0.0f, 5.0f, 5.0f ) );
+        cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 1000.0f );
+        cam.setActive( true );
+
+        floor = new Box( new GLVector( 500f, 0.2f, 500f ) );
+        floor.setName( "Floor" );
+        floor.setPosition( new GLVector( 0f, -1f, 0f ) );
+        floor.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        getScene().addChild( floor );
     }
 
+    /*
+     * Initialization of SWING and scenery. Also triggers an initial population of lights/camera in the scene
+     */
     @SuppressWarnings("restriction") @Override public void init() {
         if(Boolean.parseBoolean(System.getProperty("sciview.useDarcula", "false"))) {
             try {
@@ -273,6 +301,8 @@ public class SciView extends SceneryBase {
                 getLogger().info("Could not load Darcula Look and Feel");
             }
         }
+
+        log.setLevel(LogLevel.WARN);
 
         LogbackUtils.setLogLevel(null, System.getProperty("scenery.LogLevel", "info"));
 
@@ -313,7 +343,7 @@ public class SciView extends SceneryBase {
             y = 10;
         }
 
-        JFrame frame = new JFrame("SciView");
+        frame = new JFrame("SciView");
         frame.setLayout(new BorderLayout(0, 0));
         frame.setSize(getWindowWidth(), getWindowHeight());
         frame.setLocation(x, y);
@@ -326,6 +356,14 @@ public class SciView extends SceneryBase {
         final JMenuBar swingMenuBar = new JMenuBar();
         new SwingJMenuBarCreator().createMenus(menus.getMenu("SciView"), swingMenuBar);
         frame.setJMenuBar(swingMenuBar);
+
+//        frame.addComponentListener(new ComponentAdapter() {
+//            @Override
+//            public void componentResized(ComponentEvent componentEvent) {
+//                super.componentResized(componentEvent);
+//                panel.setSize(componentEvent.getComponent().getWidth(), componentEvent.getComponent().getHeight());
+//            }
+//        });
 
         BufferedImage splashImage;
         try {
@@ -362,6 +400,7 @@ public class SciView extends SceneryBase {
         nodePropertyEditor.getComponent(); // Initialize node property panel
 
         JTree inspectorTree = nodePropertyEditor.getTree();
+        inspectorTree.setToggleClickCount(0);// This disables expanding menus on double click
         JPanel inspectorProperties = nodePropertyEditor.getProps();
 
         inspector = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
@@ -380,10 +419,13 @@ public class SciView extends SceneryBase {
 
         frame.add(mainSplitPane, BorderLayout.CENTER);
 
+        SciView sciView = this;
         frame.addWindowListener(new WindowAdapter() {
             @Override public void windowClosing(WindowEvent e) {
                 getLogger().debug("Closing SciView window.");
                 close();
+                getScijavaContext().service(SciViewService.class).close(sciView);
+                isClosed = true;
             }
         });
 
@@ -403,37 +445,7 @@ public class SciView extends SceneryBase {
 
         getHub().add( SceneryElement.Renderer, getRenderer() );
 
-        GLVector[] tetrahedron = new GLVector[4];
-        tetrahedron[0] = new GLVector( 1.0f, 0f, -1.0f/(float)Math.sqrt(2.0f) );
-        tetrahedron[1] = new GLVector( -1.0f,0f,-1.0f/(float)Math.sqrt(2.0) );
-        tetrahedron[2] = new GLVector( 0.0f,1.0f,1.0f/(float)Math.sqrt(2.0) );
-        tetrahedron[3] = new GLVector( 0.0f,-1.0f,1.0f/(float)Math.sqrt(2.0) );
-
-        lights = new ArrayList<PointLight>();
-
-        for( int i = 0; i < 4; i++ ) {// TODO allow # initial lights to be customizable?
-            PointLight light = new PointLight(150.0f);
-            light.setPosition( tetrahedron[i].times(25.0f) );
-            light.setEmissionColor( new GLVector( 1.0f, 1.0f, 1.0f ) );
-            light.setIntensity( 1.0f );
-            lights.add( light );
-            getScene().addChild( light );
-        }
-
-        Camera cam = new DetachedHeadCamera();
-        cam.setPosition( new GLVector( 0.0f, 5.0f, 5.0f ) );
-        cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 1000.0f );
-        //cam.setTarget( new GLVector( 0, 0, 0 ) );
-        //cam.setTargeted( true );
-        cam.setActive( true );
-        getScene().addChild( cam );
-        this.camera = cam;
-
-        floor = new Box( new GLVector( 500f, 0.2f, 500f ) );
-        floor.setName( "Floor" );
-        floor.setPosition( new GLVector( 0f, -1f, 0f ) );
-        floor.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        getScene().addChild( floor );
+        reset();
 
         animations = new LinkedList<>();
         controlStack = new Stack<>();
@@ -468,54 +480,80 @@ public class SciView extends SceneryBase {
                 });
     }
 
-    public void setFloor( Node n ) {
-        floor = n;
+    /*
+     * Completely close the SciView window + cleanup
+     */
+    public void closeWindow() {
+        frame.dispose();
     }
 
+    /*
+     * Return the default floor object
+     */
     public Node getFloor() {
         return floor;
     }
 
-    private float getFloorY() {
-        return floor.getPosition().y();
+    /*
+     * Set the default floor object
+     */
+    public void setFloor( Node n ) {
+        floor = n;
     }
 
-    private void setFloorY(float new_pos ) {
-        float temp_pos = new_pos;
-        if( temp_pos < -100f ) temp_pos = -100f;
-        else if( new_pos > 5f ) temp_pos = 5f;
-        floor.getPosition().set( 1, temp_pos );
-    }
-
+    /*
+     * Return true if the scene has been initialized
+     */
     public boolean isInitialized() {
         return sceneInitialized();
     }
 
+    /*
+     * Return the current camera that is rendering the scene
+     */
     public Camera getCamera() {
         return camera;
     }
 
-    public void setDisplay( Display<?> display ) {
-        scijavaDisplay = display;
-    }
-
+    /*
+     * Return the SciJava Display that contains SciView
+     */
     public Display<?> getDisplay() {
         return scijavaDisplay;
     }
 
+    /*
+     * Set the SciJava Display
+     */
+    public void setDisplay( Display<?> display ) {
+        scijavaDisplay = display;
+    }
+
+    /*
+     * Center the camera on the scene such that all objects are within the field of view
+     */
     public void centerOnScene() {
         centerOnNode(getScene());
     }
 
+    /*
+     * Get the InputHandler that is managing mouse, input, VR controls, etc.
+     */
     public InputHandler getSceneryInputHandler() {
         return getInputHandler();
     }
 
+    /*
+     * Return a bounding box around a subgraph of the scenegraph
+     */
     public OrientedBoundingBox getSubgraphBoundingBox( Node n ) {
         Function<Node,List<Node>> predicate = node -> node.getChildren();
         return getSubgraphBoundingBox(n,predicate);
     }
 
+    /*
+     * Return a bounding box around a subgraph of the scenegraph
+     */
     public OrientedBoundingBox getSubgraphBoundingBox( Node n, Function<Node,List<Node>> branchFunction ) {
         if(n.getBoundingBox() == null && n.getChildren().size() == 0) {
             return n.getMaximumBoundingBox().asWorld();
@@ -538,18 +576,21 @@ public class SciView extends SceneryBase {
         return bb;
     }
 
-
-    private Function<Node,List<Node>> notAbstractBranchingFunction = node -> node.getChildren().stream().filter(notAbstractNode).collect(Collectors.toList());
-
+    /*
+     * Center the camera on the specified Node
+     */
     public void centerOnNode( Node currentNode ) {
         centerOnNode(currentNode,notAbstractBranchingFunction);
     }
 
+    /*
+     * Center the camera on the specified Node
+     */
     public void centerOnNode( Node currentNode, Function<Node,List<Node>> branchFunction ) {
         if( currentNode == null ) return;
 
         OrientedBoundingBox bb = getSubgraphBoundingBox(currentNode, branchFunction);
-        //System.out.println("Centering on: " + currentNode + " bb: " + bb.getMin() + " to " + bb.getMax());
+        //log.debug("Centering on: " + currentNode + " bb: " + bb.getMin() + " to " + bb.getMax());
         if( bb == null ) return;
 
         getCamera().setTarget( bb.getBoundingSphere().getOrigin() );
@@ -574,6 +615,10 @@ public class SciView extends SceneryBase {
         getCamera().setNeedsUpdate(true);
     }
 
+    public float getFPSSpeed() {
+        return fpsScrollSpeed;
+    }
+
     public void setFPSSpeed( float newspeed ) {
         if( newspeed < 0.30f ) newspeed = 0.3f;
         else if( newspeed > 30.0f ) newspeed = 30.0f;
@@ -581,8 +626,8 @@ public class SciView extends SceneryBase {
         //log.debug( "FPS scroll speed: " + fpsScrollSpeed );
     }
 
-    public float getFPSSpeed() {
-        return fpsScrollSpeed;
+    public float getMouseSpeed() {
+        return mouseSpeedMult;
     }
 
     public void setMouseSpeed( float newspeed ) {
@@ -592,10 +637,9 @@ public class SciView extends SceneryBase {
         //log.debug( "Mouse speed: " + mouseSpeedMult );
     }
 
-    public float getMouseSpeed() {
-        return mouseSpeedMult;
-    }
-
+    /*
+     * Reset the input handler to first-person-shooter (FPS) style controls
+     */
     public void resetFPSInputs() {
         InputHandler h = getInputHandler();
         if(h == null) {
@@ -628,43 +672,6 @@ public class SciView extends SceneryBase {
         h.addKeyBinding( "move_forward_scroll", "scroll" );
     }
 
-    class enableIncrease implements ClickBehaviour {
-
-        @Override public void click( int x, int y ) {
-            setFPSSpeed( getFPSSpeed() + 0.5f );
-            setMouseSpeed( getMouseSpeed() + 0.05f );
-
-            //log.debug( "Increasing FPS scroll Speed" );
-
-            resetFPSInputs();
-        }
-    }
-
-    class enableDecrease implements ClickBehaviour {
-
-        @Override public void click( int x, int y ) {
-            setFPSSpeed( getFPSSpeed() - 0.1f );
-            setMouseSpeed( getMouseSpeed() - 0.05f );
-
-            //log.debug( "Decreasing FPS scroll Speed" );
-
-            resetFPSInputs();
-        }
-    }
-
-    class showHelpDisplay implements ClickBehaviour {
-
-        @Override public void click( int x, int y ) {
-            String helpString = "SciView help:\n\n";
-            for( InputTrigger trigger : getInputHandler().getAllBindings().keySet() ) {
-                helpString += trigger + "\t-\t" + getInputHandler().getAllBindings().get( trigger ) + "\n";
-            }
-            // HACK: Make the console pop via stderr.
-            // Later, we will use a nicer dialog box or some such.
-            log.warn( helpString );
-        }
-    }
-
     public void setObjectSelectionMode() {
         Function1<? super List<Scene.RaycastResult>, Unit> selectAction = nearest -> {
             if( !nearest.isEmpty() ) {
@@ -677,6 +684,9 @@ public class SciView extends SceneryBase {
         setObjectSelectionMode(selectAction);
     }
 
+    /*
+     * Set the action used during object selection
+     */
     public void setObjectSelectionMode(Function1<? super List<Scene.RaycastResult>, Unit> selectAction) {
         final InputHandler h = getInputHandler();
         List<Class<?>> ignoredObjects = new ArrayList<>();
@@ -693,6 +703,10 @@ public class SciView extends SceneryBase {
         h.addKeyBinding( "object_selection_mode", "double-click button1" );
     }
 
+    /*
+     * Initial configuration of the scenery InputHandler
+     * This is automatically called and should not be used directly
+     */
     @Override public void inputSetup() {
         final InputHandler h = getInputHandler();
         if(h == null) {
@@ -752,6 +766,9 @@ public class SciView extends SceneryBase {
 
     }
 
+    /*
+     * Change the control mode to circle around the active object in an arcball
+     */
     private void enableArcBallControl() {
         final InputHandler h = getInputHandler();
         if(h == null) {
@@ -786,6 +803,9 @@ public class SciView extends SceneryBase {
         h.addKeyBinding( "scroll_arcball", "shift scroll" );
     }
 
+    /*
+     * Enable FPS style controls
+     */
     private void enableFPSControl() {
         final InputHandler h = getInputHandler();
         if(h == null) {
@@ -832,7 +852,6 @@ public class SciView extends SceneryBase {
 
         return addNode( box );
     }
-
 
     public Node addSphere() {
         return addSphere( new ClearGLVector3( 0.0f, 0.0f, 0.0f ), 1 );
@@ -963,6 +982,9 @@ public class SciView extends SceneryBase {
         return 0.025f;
     }
 
+    /*
+     * Create an array of normal vectors from a set of vertices corresponding to triangles
+     */
     public float[] makeNormalsFromVertices( ArrayList<RealPoint> verts ) {
         float[] normals = new float[verts.size()];// div3 * 3coords
 
@@ -1188,6 +1210,26 @@ public class SciView extends SceneryBase {
         getRenderer().screenshot( path, false );
     }
 
+    public Img<UnsignedByteType> getScreenshot() {
+        RenderedImage screenshot = getSceneryRenderer().requestScreenshot();
+
+        BufferedImage image = new BufferedImage(screenshot.getWidth(), screenshot.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
+        byte[] imgData = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+        System.arraycopy(screenshot.getData(), 0, imgData, 0, screenshot.getData().length);
+
+        Img<UnsignedByteType> img = null;
+        File tmpFile = null;
+        try {
+            tmpFile = File.createTempFile("sciview-", "-tmp.png");
+            ImageIO.write(image, "png", tmpFile);
+            img = (Img<UnsignedByteType>)io.open(tmpFile.getAbsolutePath());
+            tmpFile.delete();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return img;
+    }
+
     public Node[] getSceneNodes() {
         return getSceneNodes( n -> !( n instanceof Camera ) && !( n instanceof PointLight  ) );
     }
@@ -1209,6 +1251,10 @@ public class SciView extends SceneryBase {
     }
 
     public void deleteNode( Node node, boolean activePublish ) {
+        for( Node child : node.getChildren() ) {
+            deleteNode(child, activePublish);
+        }
+
         node.getParent().removeChild( node );
         if( activePublish ) {
             eventService.publish(new NodeRemovedEvent(node));
@@ -1217,6 +1263,7 @@ public class SciView extends SceneryBase {
     }
 
     public void dispose() {
+        // Close the Scenery renderer, hub, and other scenery things
         this.close();
     }
 
@@ -1237,6 +1284,7 @@ public class SciView extends SceneryBase {
     }
 
     public Node addVolume( Dataset image ) {
+
         float[] voxelDims = new float[image.numDimensions()];
         for( int d = 0; d < voxelDims.length; d++ ) {
             voxelDims[d] = ( float ) image.axis( d ).averageScale( 0, 1 );
@@ -1266,6 +1314,12 @@ public class SciView extends SceneryBase {
                                                                                            float[] voxelDimensions ) {
         return addVolume( ( IterableInterval ) Views.flatIterable( image.getImgPlus() ), image.getName(),
                           voxelDimensions );
+    }
+
+    public <T extends RealType<T>> Node addVolume( RandomAccessibleInterval<T> image, String name, String extra ) {
+        long[] pos = new long[]{10, 10, 10};
+
+        return addVolume( Views.flatIterable(image), name, 1, 1, 1 );
     }
 
     public <T extends RealType<T>> Node addVolume( IterableInterval<T> image ) {
@@ -1316,7 +1370,7 @@ public class SciView extends SceneryBase {
 
     public <T extends RealType<T>> Node addVolume( IterableInterval<T> image, String name,
                                                                     float... voxelDimensions ) {
-        //log.debug( "Add Volume" );
+        //log.debug( "Add Volume " + name + " image: " + image );
 
         long[] dimensions = new long[3];
         image.dimensions( dimensions );
@@ -1335,6 +1389,15 @@ public class SciView extends SceneryBase {
             minVal = 0;
             maxVal = 65535;
         } else if( voxelType == FloatType.class ) {
+            minVal = 0;
+            maxVal = 1;
+        } else if( voxelType == VolatileUnsignedByteType.class ) {
+            minVal = 0;
+            maxVal = 255;
+        } else if( voxelType == VolatileUnsignedShortType.class ) {
+            minVal = 0;
+            maxVal = 65535;
+        } else if( voxelType == VolatileFloatType.class ) {
             minVal = 0;
             maxVal = 1;
         } else {
@@ -1372,11 +1435,11 @@ public class SciView extends SceneryBase {
         int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
         NativeTypeEnum nType;
 
-        if( voxelType == UnsignedByteType.class ) {
+        if( voxelType == UnsignedByteType.class || voxelType == VolatileUnsignedByteType.class ) {
             nType = NativeTypeEnum.UnsignedByte;
-        } else if( voxelType == UnsignedShortType.class ) {
+        } else if( voxelType == UnsignedShortType.class || voxelType == VolatileUnsignedShortType.class ) {
             nType = NativeTypeEnum.UnsignedShort;
-        } else if( voxelType == FloatType.class ) {
+        } else if( voxelType == FloatType.class || voxelType == VolatileFloatType.class ) {
             nType = NativeTypeEnum.Float;
         } else {
             log.debug( "Type: " + voxelType +
@@ -1391,12 +1454,19 @@ public class SciView extends SceneryBase {
 
         while( cursor.hasNext() ) {
             cursor.fwd();
+            // TODO should we check if volatiles are valid
             if( voxelType == UnsignedByteType.class ) {
                 byteBuffer.put( ( byte ) ( ( ( UnsignedByteType ) cursor.get() ).get() ) );
+            } else if( voxelType == VolatileUnsignedByteType.class ) {
+                byteBuffer.put( ( byte ) ( ( ( VolatileUnsignedByteType ) cursor.get() ).get().get() ) );
             } else if( voxelType == UnsignedShortType.class ) {
                 byteBuffer.putShort( ( short ) Math.abs( ( ( UnsignedShortType ) cursor.get() ).getShort() ) );
+            } else if( voxelType == VolatileUnsignedShortType.class ) {
+                byteBuffer.putShort( ( short ) Math.abs( ( ( VolatileUnsignedShortType ) cursor.get() ).get().getShort() ) );
             } else if( voxelType == FloatType.class ) {
                 byteBuffer.putFloat( ( ( FloatType ) cursor.get() ).get() );
+            } else if( voxelType == VolatileFloatType.class ) {
+                byteBuffer.putFloat( ( ( VolatileFloatType ) cursor.get() ).get().get() );
             }
         }
         byteBuffer.flip();
@@ -1429,21 +1499,6 @@ public class SciView extends SceneryBase {
         stopAnimation();
     }
 
-    private void updateFloorPosition() {
-        // Lower the floor below the active node, as needed.
-        final Node currentNode = getActiveNode();
-        if( currentNode != null ) {
-            while( currentNode.getDirty() || currentNode.getNeedsUpdate() ) {
-                try {
-                    Thread.sleep(20);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            floor.setPosition( new GLVector( 0f, java.lang.Math.min(getFloor().getPosition().y(),getActiveNode().getMaximumBoundingBox().getMin().y()), 0f ) );
-        }
-    }
-
     public Settings getScenerySettings() {
         return this.getSettings();
     }
@@ -1455,8 +1510,6 @@ public class SciView extends SceneryBase {
     public Renderer getSceneryRenderer() {
         return this.getRenderer();
     }
-
-    protected boolean vrActive = false;
 
     public void toggleVRRendering() {
         vrActive = !vrActive;
@@ -1511,5 +1564,99 @@ public class SciView extends SceneryBase {
             getRenderer().toggleVR();
         }
 
+    }
+
+    /*
+     * Set the rotation of a Node using the 4D inputs as a quaternion
+     */
+    public void setRotation(Node n, float x, float y, float z, float w) {
+        n.setRotation(new Quaternion(x,y,z,w));
+    }
+
+    public void setScale(Node n, float x, float y, float z) {
+        n.setScale(new GLVector(x,y,z));
+    }
+
+    public void setColor(Node n, float x, float y, float z, float w) {
+        GLVector col = new GLVector(x, y, z, w);
+        n.getMaterial().setAmbient(col);
+        n.getMaterial().setDiffuse(col);
+        n.getMaterial().setSpecular(col);
+    }
+
+    public void setPosition(Node n, float x, float y, float z) {
+        n.setPosition(new GLVector(x,y,z));
+    }
+
+    public void addWindowListener(WindowListener wl) {
+        frame.addWindowListener(wl);
+    }
+
+    public class TransparentSlider extends JSlider {
+
+        public TransparentSlider() {
+            // Important, we taking over the filling of the
+            // component...
+            setOpaque(false);
+            setBackground(java.awt.Color.DARK_GRAY);
+            setForeground(java.awt.Color.LIGHT_GRAY);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2d = (Graphics2D) g.create();
+            g2d.setColor(getBackground());
+            g2d.setComposite(AlphaComposite.SrcOver.derive(0.9f));
+            g2d.fillRect(0, 0, getWidth(), getHeight());
+            g2d.dispose();
+
+            super.paintComponent(g);
+        }
+
+    }
+
+    class enableIncrease implements ClickBehaviour {
+
+        @Override public void click( int x, int y ) {
+            setFPSSpeed( getFPSSpeed() + 0.5f );
+            setMouseSpeed( getMouseSpeed() + 0.05f );
+
+            //log.debug( "Increasing FPS scroll Speed" );
+
+            resetFPSInputs();
+        }
+    }
+
+    class enableDecrease implements ClickBehaviour {
+
+        @Override public void click( int x, int y ) {
+            setFPSSpeed( getFPSSpeed() - 0.1f );
+            setMouseSpeed( getMouseSpeed() - 0.05f );
+
+            //log.debug( "Decreasing FPS scroll Speed" );
+
+            resetFPSInputs();
+        }
+    }
+
+    class showHelpDisplay implements ClickBehaviour {
+
+        @Override public void click( int x, int y ) {
+            String helpString = "SciView help:\n\n";
+            for( InputTrigger trigger : getInputHandler().getAllBindings().keySet() ) {
+                helpString += trigger + "\t-\t" + getInputHandler().getAllBindings().get( trigger ) + "\n";
+            }
+            // HACK: Make the console pop via stderr.
+            // Later, we will use a nicer dialog box or some such.
+            log.warn( helpString );
+        }
+    }
+
+    public String nodeInfoString(Node n) {
+        return "Node name: " + n.getName() + " Node type: " + n.getNodeType() + " To String: " + n;
+    }
+
+    public void setNodeScale( Node n, double x, double y, double z ) {
+        n.setScale( new GLVector((float)x,(float)y,(float)z) );
     }
 }

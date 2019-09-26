@@ -46,4 +46,6 @@ public interface SciViewService extends ImageJService {
     public void createSciView();
 
     public int numSciView();
+
+    void close(SciView sciView);
 }
