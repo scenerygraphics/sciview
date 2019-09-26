@@ -1425,13 +1425,6 @@ public class SciView extends SceneryBase {
         setActiveNode( v );
         eventService.publish( new NodeAddedEvent( v ) );
 
-        Cursor<T> cur = image.cursor();
-
-        //getLogger().info("SciView addVolume:" + cur.get().getRealDouble() + " " + cur.next().getRealDouble());
-
-        //getScijavaContext().service(CommandService.class).run(Alert.class, true, new Object[]{"SciView addVolume:" + cur.get().getRealDouble() + " " + cur.next().getRealDouble()});
-
-
         return v;
     }
 
@@ -1575,6 +1568,24 @@ public class SciView extends SceneryBase {
             getRenderer().toggleVR();
         }
 
+    }
+
+    /*
+     * Set the rotation of a Node using the 4D inputs as a quaternion
+     */
+    public void setRotation(Node n, float x, float y, float z, float w) {
+        n.setRotation(new Quaternion(x,y,z,w));
+    }
+
+    public void setScale(Node n, float x, float y, float z) {
+        n.setScale(new GLVector(x,y,z));
+    }
+
+    public void setColor(Node n, float x, float y, float z, float w) {
+        GLVector col = new GLVector(x, y, z, w);
+        n.getMaterial().setAmbient(col);
+        n.getMaterial().setDiffuse(col);
+        n.getMaterial().setSpecular(col);
     }
 
     public void setPosition(Node n, float x, float y, float z) {
