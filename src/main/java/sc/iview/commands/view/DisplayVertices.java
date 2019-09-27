@@ -1,21 +1,16 @@
 package sc.iview.commands.view;
 
 import graphics.scenery.Mesh;
-import graphics.scenery.volumes.TransferFunction;
-import graphics.scenery.volumes.Volume;
 import net.imagej.mesh.Vertex;
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
-import org.scijava.command.InteractiveCommand;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.table.*;
-import org.scijava.widget.NumberWidget;
 import sc.iview.SciView;
 import sc.iview.process.MeshConverter;
-import sun.net.www.content.text.Generic;
 
 import static sc.iview.commands.MenuWeights.VIEW;
 import static sc.iview.commands.MenuWeights.VIEW_SET_TRANSFER_FUNCTION;
