@@ -29,6 +29,9 @@
 package sc.iview.commands.view;
 
 import graphics.scenery.Node;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
+import kotlin.jvm.Synchronized;
 import net.miginfocom.swing.MigLayout;
 import org.scijava.Context;
 import org.scijava.command.CommandInfo;
@@ -227,50 +230,62 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
 
     private SwingInputPanel inputPanel = null;
 
+    private ReentrantLock updateLock = new ReentrantLock();
+
     /** Generates a properties panel for the given node. */
-    public void updateProperties( final Node sceneNode ) {
-        if(sceneNode == null) {
-            return;
-        }
+	public void updateProperties( final Node sceneNode ) {
+		if(sceneNode == null) {
+			return;
+		}
 
-        if(currentNode == sceneNode && currentProperties != null && inputPanel != null) {
-            currentProperties.updateCommandFields();
-            inputPanel.refresh();
-            return;
-        }
+		try {
+			if(updateLock.tryLock() || updateLock.tryLock( 200, TimeUnit.MILLISECONDS )) {
 
-        currentNode = sceneNode;
-        // Prepare the Properties command module instance.
-        final CommandInfo info = commandService.getCommand( Properties.class );
-        final Module module = moduleService.createModule( info );
-        resolveInjectedInputs( module );
-        module.setInput( "sciView", sciView );
-        module.setInput( "sceneNode", sceneNode );
-        module.resolveInput( "sciView" );
-        module.resolveInput( "sceneNode" );
-        final Properties p = (Properties) module.getDelegateObject();
-        currentProperties = p;
-        p.setSceneNode( sceneNode );
+				if(currentNode == sceneNode && currentProperties != null && inputPanel != null) {
+					currentProperties.updateCommandFields();
+					inputPanel.refresh();
 
-        // Prepare the SwingInputHarvester.
-        final PluginInfo<SciJavaPlugin> pluginInfo = pluginService.getPlugin( SwingInputHarvester.class );
-        final SciJavaPlugin pluginInstance = pluginService.createInstance( pluginInfo );
-        final SwingInputHarvester harvester = ( SwingInputHarvester ) pluginInstance;
-        inputPanel = harvester.createInputPanel();
+					updateLock.unlock();
+					return;
+				}
 
-        // Build the panel.
-        try {
-            harvester.buildPanel( inputPanel, module );
-            updatePropertiesPanel( inputPanel.getComponent() );
-        } catch( final ModuleException exc ) {
-            log.error( exc );
-            final String stackTrace = DebugUtils.getStackTrace( exc );
-            final JTextArea textArea = new JTextArea();
-            textArea.setText( "<html><pre>" + stackTrace + "</pre>" );
-            updatePropertiesPanel( textArea );
-        }
+				currentNode = sceneNode;
+				// Prepare the Properties command module instance.
+				final CommandInfo info = commandService.getCommand( Properties.class );
+				final Module module = moduleService.createModule( info );
+				resolveInjectedInputs( module );
+				module.setInput( "sciView", sciView );
+				module.setInput( "sceneNode", sceneNode );
+				module.resolveInput( "sciView" );
+				module.resolveInput( "sceneNode" );
+				final Properties p = (Properties) module.getDelegateObject();
+				currentProperties = p;
+				p.setSceneNode( sceneNode );
 
-    }
+				// Prepare the SwingInputHarvester.
+				final PluginInfo<SciJavaPlugin> pluginInfo = pluginService.getPlugin( SwingInputHarvester.class );
+				final SciJavaPlugin pluginInstance = pluginService.createInstance( pluginInfo );
+				final SwingInputHarvester harvester = ( SwingInputHarvester ) pluginInstance;
+				inputPanel = harvester.createInputPanel();
+
+				// Build the panel.
+				try {
+					harvester.buildPanel( inputPanel, module );
+					updatePropertiesPanel( inputPanel.getComponent() );
+				} catch( final ModuleException exc ) {
+					log.error( exc );
+					final String stackTrace = DebugUtils.getStackTrace( exc );
+					final JTextArea textArea = new JTextArea();
+					textArea.setText( "<html><pre>" + stackTrace + "</pre>" );
+					updatePropertiesPanel( textArea );
+				}
+
+				updateLock.unlock();
+			}
+		} catch ( InterruptedException e ) {
+			e.printStackTrace();
+		}
+	}
 
     private void updatePropertiesPanel( final Component c ) {
         props.removeAll();
