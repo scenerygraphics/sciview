@@ -114,6 +114,8 @@
 		<lwjgl.version>3.2.1</lwjgl.version>
 		<scijava-common.version>2.79.0</scijava-common.version>
 		<imagej-launcher.version>5.0.2</imagej-launcher.version>
+
+		<custom-imagej-updater.version>a580040</custom-imagej-updater.version>
 	</properties>
 
 	<repositories>
@@ -129,12 +131,20 @@
 
 	<dependencies>
 
-		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>imagej-launcher</artifactId>
-			<version>${imagej-launcher.version}</version>
+		<!-- Hack for current issue with jinput and imagej-update handler -->
+        <dependency>
+			<groupId>com.github.kephale</groupId>
+			<artifactId>imagej-updater</artifactId>
+			<version>${custom-imagej-updater.version}</version>
 		</dependency>
 
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-updater</artifactId>
+			<version>${imagej-updater.version}</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/misc/empty.jar</systemPath>
+		</dependency>
 
 		<!-- SciJava dependencies -->
 		<dependency>
