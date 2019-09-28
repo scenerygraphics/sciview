@@ -9,7 +9,7 @@ echo "====== Generating Fiji installation ======"
 sh populate_fiji.sh
 
 echo
-echo "====== Uploading to Kharrington update site ======"
+echo "====== Uploading to SciView update site ======"
 cd Fiji.app
 curl -O https://raw.githubusercontent.com/fiji/fiji/7f13f66968a9d4622e519c8aae04786db6601314/bin/upload-site-simple.sh
 chmod a+x upload-site-simple.sh
