@@ -10,6 +10,8 @@ SciView is an ImageJ/FIJI plugin for 3D visualization of images and meshes. It u
 
 sciview running the [Game of Life 3D](https://en.wikipedia.org/wiki/Game_of_Life) demo (see `Demo > Game of Life 3D`).
 
+[Documentation](https://docs.scenery.graphics/sciview/) is being developed.
+
 ## Adding to Fiji
 
 In Fiji, go to `Help -> Update` and activate the `SciView` update site. In case you need to add it manually, the address is `https://sites.imagej.net/SciView`.
