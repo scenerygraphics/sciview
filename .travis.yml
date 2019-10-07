@@ -21,3 +21,7 @@ deploy:
   file: SciView_Fiji.zip
   on:
     repo: scenerygraphics/sciview
+    branches:
+      only:
+        - master
+        - release-ci
