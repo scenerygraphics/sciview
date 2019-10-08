@@ -26,6 +26,9 @@ public class SetTransferFunction extends InteractiveCommand {
     @Parameter
     private SciView sciView;
 
+    @Parameter(label = "Target Volume")
+    private Volume volume;
+
     @Parameter(label = "TF Ramp Min", style = NumberWidget.SLIDER_STYLE, //
             min = "0", max = "1.0", stepSize = "0.001", callback = "updateTransferFunction")
     private float rampMin = 0;
@@ -33,9 +36,6 @@ public class SetTransferFunction extends InteractiveCommand {
     @Parameter(label = "TF Ramp Max", style = NumberWidget.SLIDER_STYLE, //
             min = "0", max = "1.0", stepSize = "0.001", callback = "updateTransferFunction")
     private float rampMax = 1.0f;
-
-    @Parameter(label = "Target Volume")
-    private Volume volume;
 
     /**
      * Nothing happens here, as cancelling the dialog is not possible.
