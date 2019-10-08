@@ -61,17 +61,17 @@ public class ConvexHull implements Command {
     private SciView sciView;
 
     @Parameter
-    private Mesh mesh;
+    private Node node;
 
     @Override
     public void run() {
-        if( sciView.getActiveNode() instanceof Mesh ) {
-            net.imagej.mesh.Mesh ijMesh = MeshConverter.toImageJ( mesh );
+        if( node instanceof Mesh ) {
+            net.imagej.mesh.Mesh ijMesh = MeshConverter.toImageJ((Mesh) node);
 
             net.imagej.mesh.Mesh smoothMesh = ( net.imagej.mesh.Mesh ) ops.geom().convexHull( ijMesh ).get( 0 );
 
             Node convexHull = sciView.addMesh(smoothMesh);
-            convexHull.setPosition(mesh.getPosition());
+            convexHull.setPosition(node.getPosition());
         }
     }
 
