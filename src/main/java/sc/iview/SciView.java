@@ -1368,6 +1368,8 @@ public class SciView extends SceneryBase {
                     // don't repeat the color map
                     false, false, false)));
             ((Volume) n).setColormap("sciviewColormap");
+            n.setDirty(true);
+            n.setNeedsUpdate(true);
         }
     }
 
