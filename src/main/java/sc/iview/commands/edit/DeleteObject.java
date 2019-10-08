@@ -46,6 +46,10 @@ public class DeleteObject implements Command {
     @Parameter
     private SciView sciView;
 
+// TODO it would be good if this could continue to use active node but also use an @Parameter by using a callback or sth
+//    @Parameter
+//    private Node node;
+
     @Override
     public void run() {
         if( sciView.getActiveNode() != null ) {
