@@ -182,6 +182,11 @@
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-ops</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-launcher</artifactId>
+			<version>${imagej-launcher.version}</version>
+		</dependency>
 
 		<!-- ImgLib2 dependencies -->
 		<dependency>
