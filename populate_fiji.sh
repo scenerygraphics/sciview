@@ -102,6 +102,11 @@ installWithGroupId "$joclGAV" $FijiDirectory/jars
 
 jinputGAV=$(mvn dependency:tree | grep jinput | head -n1 | awk -e '{print $NF}' | cut -d: -f1-4 | sed 's/:jar//g' | sed 's/:compile//g')
 install "$jinputGAV" $FijiDirectory/jars
+installWithGroupId "$jinputGAV:jar:natives-all" $FijiDirectory/jars/win64
+installWithGroupId "$jinputGAV:jar:natives-all" $FijiDirectory/jars/linux64
+installWithGroupId "$jinputGAV:jar:natives-all" $FijiDirectory/jars/macosx
+echo "--> Removing jinput natives from JAR root"
+(set -x; rm -f $FijiDirectory/jars/jinput-*-natives-all.jar)
 
 ffmpegGAV=$(mvn dependency:tree | grep 'ffmpeg:jar' | head -n1 | awk -e '{print $NF}' | cut -d: -f1-4 | sed 's/:jar//g' | sed 's/:compile//g')
 installWithGroupId "$ffmpegGAV" $FijiDirectory/jars
@@ -158,7 +163,7 @@ do
         natives-linux*-i586) continue ;;
         natives-linux*) platform=linux64 ;;
         natives-osx|natives-mac*) platform=macosx ;;
-        natives-all*) platform="" ;;
+        natives-all*) continue ;;
         *) die "Unsupported platform: $c" ;;
       esac
       install "$gavpc" "$FijiDirectory/jars/$platform"
