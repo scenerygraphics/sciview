@@ -53,21 +53,23 @@ public class ToggleBoundingGrid implements Command {
     @Parameter
     private SciView sciView;
 
+    @Parameter
+    private Node node;
+
     @Override
     public void run() {
-        if( sciView.getActiveNode() instanceof Mesh ) {
-            Node currentNode = sciView.getActiveNode();
+        if( node instanceof Mesh ) {
 
-            if( currentNode.getMetadata().containsKey("BoundingGrid") ) {
-                BoundingGrid bg = (BoundingGrid) currentNode.getMetadata().get("BoundingGrid");
+            if( node.getMetadata().containsKey("BoundingGrid") ) {
+                BoundingGrid bg = (BoundingGrid) node.getMetadata().get("BoundingGrid");
                 bg.setNode( null );
-                currentNode.getMetadata().remove("BoundingGrid");
+                node.getMetadata().remove("BoundingGrid");
                 bg.getScene().removeChild(bg);
             } else {
                 BoundingGrid bg = new BoundingGrid();
-                bg.setNode(currentNode);
+                bg.setNode(node);
 
-                currentNode.getMetadata().put("BoundingGrid", bg);
+                node.getMetadata().put("BoundingGrid", bg);
             }
         }
 
