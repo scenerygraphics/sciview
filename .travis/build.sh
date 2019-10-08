@@ -21,7 +21,7 @@ then
   sh sciview_deploy.sh
 else
   echo '--> Not a release build; skippin upload to update site.'
-fi
+fi &&
 
 # Upload release version to the ImageJ update site.
 if [ "$UPLOAD_TO_UNSTABLE_UPDATE_SITE" ]
