@@ -31,6 +31,7 @@ package sc.iview.commands.process;
 import static sc.iview.commands.MenuWeights.PROCESS;
 import static sc.iview.commands.MenuWeights.PROCESS_MESH_TO_IMAGE;
 
+import graphics.scenery.Node;
 import net.imagej.ops.OpService;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.logic.BitType;
@@ -80,15 +81,9 @@ public class MeshToImage implements Command {
 
     @Override
     public void run() {
-        if( sciView.getActiveNode() instanceof Mesh ) {
-            net.imagej.mesh.Mesh ijMesh = MeshConverter.toImageJ( mesh );
+        net.imagej.mesh.Mesh ijMesh = MeshConverter.toImageJ( mesh );
 
-            img = ops.geom().voxelization( ijMesh, width, height, depth );
-
-        } else {
-            log.error( "No active node. Add a mesh to the scene and select it." );
-        }
-
+        img = ops.geom().voxelization( ijMesh, width, height, depth );
     }
 
 }

@@ -1095,6 +1095,9 @@ public class SciView extends SceneryBase {
 
     public Node addNode( final Node n, final boolean activePublish ) {
         getScene().addChild( n );
+
+        objectService.addObject(n);
+
         if( activePublish ) {
 //            setActiveNode(n);
 //            if (floor.getVisible())
@@ -1365,6 +1368,8 @@ public class SciView extends SceneryBase {
                     // don't repeat the color map
                     false, false, false)));
             ((Volume) n).setColormap("sciviewColormap");
+            n.setDirty(true);
+            n.setNeedsUpdate(true);
         }
     }
 
@@ -1420,6 +1425,8 @@ public class SciView extends SceneryBase {
 
         setActiveNode( v );
         eventService.publish( new NodeAddedEvent( v ) );
+
+        objectService.addObject( v );
 
         return v;
     }

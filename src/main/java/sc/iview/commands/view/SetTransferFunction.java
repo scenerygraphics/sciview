@@ -1,5 +1,6 @@
 package sc.iview.commands.view;
 
+import graphics.scenery.Node;
 import graphics.scenery.volumes.TransferFunction;
 import graphics.scenery.volumes.Volume;
 import org.scijava.command.Command;
@@ -24,6 +25,9 @@ public class SetTransferFunction extends InteractiveCommand {
 
     @Parameter
     private SciView sciView;
+
+    @Parameter(label = "Target Volume")
+    private Volume volume;
 
     @Parameter(label = "TF Ramp Min", style = NumberWidget.SLIDER_STYLE, //
             min = "0", max = "1.0", stepSize = "0.001", callback = "updateTransferFunction")
@@ -51,14 +55,12 @@ public class SetTransferFunction extends InteractiveCommand {
     }
 
     protected void updateTransferFunction() {
-        if( sciView.getActiveNode() instanceof Volume) {
-            TransferFunction tf = ((Volume) sciView.getActiveNode()).getTransferFunction();
-            //float currentOffset = tf.getControlPoint$scenery(1).getValue();
-            //float currentFactor = tf.getControlPoint$scenery(2).getFactor();
-            tf.clear();
-            tf.addControlPoint(0.0f, 0.0f);
-            tf.addControlPoint(rampMin, 0.0f);
-            tf.addControlPoint(1.0f, rampMax);
-        }
+        TransferFunction tf = volume.getTransferFunction();
+        //float currentOffset = tf.getControlPoint$scenery(1).getValue();
+        //float currentFactor = tf.getControlPoint$scenery(2).getFactor();
+        tf.clear();
+        tf.addControlPoint(0.0f, 0.0f);
+        tf.addControlPoint(rampMin, 0.0f);
+        tf.addControlPoint(1.0f, rampMax);
     }
 }
