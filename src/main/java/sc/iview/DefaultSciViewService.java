@@ -32,6 +32,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import graphics.scenery.Mesh;
+import graphics.scenery.Node;
+import graphics.scenery.volumes.Volume;
 import org.scijava.display.Display;
 import org.scijava.display.DisplayService;
 import org.scijava.event.EventService;
@@ -151,6 +153,8 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
     public void initialize() {
         scriptService.addAlias(SciView.class);
         scriptService.addAlias("Mesh", Mesh.class);
+        scriptService.addAlias("Node", Node.class);
+        scriptService.addAlias("Volume", Volume.class);
     }
 
     /* Event Handlers */
