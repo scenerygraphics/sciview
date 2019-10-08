@@ -28,6 +28,7 @@
  */
 package sc.iview.commands.view;
 
+import graphics.scenery.Node;
 import net.imagej.lut.LUTService;
 import net.imglib2.display.AbstractArrayColorTable;
 import net.imglib2.display.ColorTable;
@@ -57,6 +58,9 @@ public class SetLUT extends DynamicCommand {
     @Parameter
     private LUTService lutService;
 
+    @Parameter(label = "Node")
+    private Node node;
+
     @Parameter(label = "Selected LUT", choices = {}, callback = "lutNameChanged")
     private String lutName;
 
@@ -85,8 +89,6 @@ public class SetLUT extends DynamicCommand {
 
     @Override
     public void run() {
-        if( sciView.getActiveNode() != null ) {
-            sciView.setColormap( sciView.getActiveNode(), (AbstractArrayColorTable) colorTable);
-        }
+        sciView.setColormap( node, (AbstractArrayColorTable) colorTable);
     }
 }
