@@ -3,7 +3,6 @@ jdk: openjdk8
 branches:
   only:
   - master
-  - imagej-updater
   - "/.*-[0-9]+\\..*/"
 install: true
 script:
