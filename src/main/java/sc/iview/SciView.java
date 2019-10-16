@@ -53,13 +53,13 @@ import graphics.scenery.volumes.bdv.BDVVolume;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import net.imagej.Dataset;
-import net.imagej.axis.AbstractCalibratedAxis;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultAxisType;
 import net.imagej.axis.DefaultLinearAxis;
 import net.imagej.interval.CalibratedRealInterval;
 import net.imagej.lut.LUTService;
 import net.imagej.ops.OpService;
+import net.imagej.units.UnitService;
 import net.imglib2.Cursor;
 import net.imglib2.*;
 import net.imglib2.display.ColorTable;
@@ -167,6 +167,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     private ThreadService threadService;
     @Parameter
     private ObjectService objectService;
+    @Parameter
+    private UnitService unitService;
     /**
      * Queue keeps track of the currently running animations
      **/
@@ -1306,7 +1308,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         float[] voxelDims = new float[image.numDimensions()];
         for( int d = 0; d < voxelDims.length; d++ ) {
-            voxelDims[d] = ( float ) image.axis( d ).averageScale( 0, 1 );
+            double inValue = image.axis(d).averageScale(0, 1);
+            voxelDims[d] = (float) unitService.value( inValue, image.axis(d).unit(), axis(d).unit() );
         }
         return addVolume( image, voxelDims );
     }
@@ -1317,6 +1320,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         final VolumeViewerOptions opts = new VolumeViewerOptions();
         opts.maxCacheSizeInMB(Integer.parseInt(System.getProperty("scenery.BDVVolume.maxCacheSize", "512")));
         final BDVVolume v = new BDVVolume(source, opts);
+
+        // TODO: use unitService to set scale
         v.setScale(new GLVector(0.01f, 0.01f, 0.01f));
         v.setBoundingBox(v.generateBoundingBox());
 
