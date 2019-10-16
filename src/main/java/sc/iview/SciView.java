@@ -53,8 +53,13 @@ import graphics.scenery.volumes.bdv.BDVVolume;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import net.imagej.Dataset;
+import net.imagej.axis.CalibratedAxis;
+import net.imagej.axis.DefaultAxisType;
+import net.imagej.axis.DefaultLinearAxis;
+import net.imagej.interval.CalibratedRealInterval;
 import net.imagej.lut.LUTService;
 import net.imagej.ops.OpService;
+import net.imagej.units.UnitService;
 import net.imglib2.Cursor;
 import net.imglib2.*;
 import net.imglib2.display.ColorTable;
@@ -121,7 +126,7 @@ import java.util.stream.Collectors;
 // we suppress unused warnings here because @Parameter-annotated fields
 // get updated automatically by SciJava.
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class SciView extends SceneryBase {
+public class SciView extends SceneryBase implements CalibratedRealInterval<CalibratedAxis> {
 
     public static final ColorRGB DEFAULT_COLOR = Colors.LIGHTGRAY;
     private final SceneryPanel[] sceneryPanel = { null };
@@ -139,6 +144,11 @@ public class SciView extends SceneryBase {
      * The primary camera/observer in the scene
      */
     Camera camera = null;
+    /**
+     * Geometry/Image information of scene
+     */
+    private CalibratedAxis[] axes;
+
     @Parameter
     private LogService log;
     @Parameter
@@ -157,6 +167,8 @@ public class SciView extends SceneryBase {
     private ThreadService threadService;
     @Parameter
     private ObjectService objectService;
+    @Parameter
+    private UnitService unitService;
     /**
      * Queue keeps track of the currently running animations
      **/
@@ -183,12 +195,7 @@ public class SciView extends SceneryBase {
     private ArrayList<PointLight> lights;
     private Stack<HashMap<String, Object>> controlStack;
     private JFrame frame;
-    private Predicate<? super Node> notAbstractNode = new Predicate<Node>() {
-        @Override
-        public boolean test(Node node) {
-            return !( (node instanceof Camera) || (node instanceof Light) || (node==getFloor()));
-        }
-    };
+    private Predicate<? super Node> notAbstractNode = (Predicate<Node>) node -> !( (node instanceof Camera) || (node instanceof Light) || (node==getFloor()));
     private boolean isClosed = false;
     private Function<Node,List<Node>> notAbstractBranchingFunction = node -> node.getChildren().stream().filter(notAbstractNode).collect(Collectors.toList());
 
@@ -201,10 +208,6 @@ public class SciView extends SceneryBase {
         super( applicationName, windowWidth, windowHeight, false );
     }
 
-    static public GLVector getGLVector(float x, float y, float z) {
-        return new GLVector(x, y, z);
-    }
-
     public boolean isClosed() {
         return isClosed;
     }
@@ -213,6 +216,10 @@ public class SciView extends SceneryBase {
         return getInputHandler();
     }
 
+    /**
+     * Toggle video recording with scenery's video recording mechanism
+     * Note: this video recording may skip frames because it is asynchronous
+     */
     public void toggleRecordVideo() {
         if( getRenderer() instanceof  OpenGLRenderer )
             ((OpenGLRenderer)getRenderer()).recordMovie();
@@ -220,14 +227,18 @@ public class SciView extends SceneryBase {
             ((VulkanRenderer)getRenderer()).recordMovie();
     }
 
+    /**
+     * This pushes the current input setup onto a stack that allows them to be restored with restoreControls
+     */
     public void stashControls() {
-        // This pushes the current input setup onto a stack that allows them to be restored with restoreControls
         HashMap<String, Object> controlState = new HashMap<String, Object>();
         controlStack.push(controlState);
     }
 
+    /**
+     * This pops/restores the previously stashed controls. Emits a warning if there are no stashed controls
+     */
     public void restoreControls() {
-        // This pops/restores the previously stashed controls. Emits a warning if there are no stashed controlls
         HashMap<String, Object> controlState = controlStack.pop();
 
         // This isnt how it should work
@@ -235,17 +246,24 @@ public class SciView extends SceneryBase {
         resetFPSInputs();
     }
 
-    /*
+    /**
      * Place the camera such that all objects in the scene are within the field of view
      */
     public void fitCameraToScene() {
         centerOnNode(getScene());
     }
 
-    /*
+    /**
      * Reset the scene to initial conditions
      */
     public void reset() {
+        // Initialize the 3D axes
+        axes = new CalibratedAxis[3];
+
+        axes[0] = new DefaultLinearAxis(new DefaultAxisType("X", true), "um", 1);
+        axes[1] = new DefaultLinearAxis(new DefaultAxisType("Y", true), "um", 1);
+        axes[2] = new DefaultLinearAxis(new DefaultAxisType("Z", true), "um", 1);
+
         // Remove everything except camera
         Node[] toRemove = getSceneNodes( n -> !( n instanceof Camera ) );
         for( Node n : toRemove ) {
@@ -289,7 +307,7 @@ public class SciView extends SceneryBase {
         getScene().addChild( floor );
     }
 
-    /*
+    /**
      * Initialization of SWING and scenery. Also triggers an initial population of lights/camera in the scene
      */
     @SuppressWarnings("restriction") @Override public void init() {
@@ -826,18 +844,41 @@ public class SciView extends SceneryBase {
         resetFPSInputs();
     }
 
+    /**
+     * Add a box to the scene with default parameters
+     * @return the Node corresponding to the box
+     */
     public Node addBox() {
         return addBox( new ClearGLVector3( 0.0f, 0.0f, 0.0f ) );
     }
 
+    /**
+     * Add a box at the specific position and unit size
+     * @param position
+     * @return the Node corresponding to the box
+     */
     public Node addBox( Vector3 position ) {
         return addBox( position, new ClearGLVector3( 1.0f, 1.0f, 1.0f ) );
     }
 
+    /**
+     * Add a box at the specified position and with the specified size
+     * @param position
+     * @param size
+     * @return the Node corresponding to the box
+     */
     public Node addBox( Vector3 position, Vector3 size ) {
         return addBox( position, size, DEFAULT_COLOR, false );
     }
 
+    /**
+     * Add a box at the specified position with specified size, color, and normals on the inside/outside
+     * @param position
+     * @param size
+     * @param color
+     * @param inside
+     * @return the Node corresponding to the box
+     */
     public Node addBox( final Vector3 position, final Vector3 size, final ColorRGB color,
                                          final boolean inside ) {
         // TODO: use a material from the current palate by default
@@ -853,14 +894,31 @@ public class SciView extends SceneryBase {
         return addNode( box );
     }
 
+    /**
+     * Add a unit sphere at the origin
+     * @return the Node corresponding to the sphere
+     */
     public Node addSphere() {
         return addSphere( new ClearGLVector3( 0.0f, 0.0f, 0.0f ), 1 );
     }
 
+    /**
+     * Add a sphere at the specified position with a given radius
+     * @param position
+     * @param radius
+     * @return the Node corresponding to the sphere
+     */
     public Node addSphere( Vector3 position, float radius ) {
         return addSphere( position, radius, DEFAULT_COLOR );
     }
 
+    /**
+     * Add a sphere at the specified positoin with a given radius and color
+     * @param position
+     * @param radius
+     * @param color
+     * @return  the Node corresponding to the sphere
+     */
     public Node addSphere( final Vector3 position, final float radius, final ColorRGB color ) {
         final Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
@@ -874,30 +932,70 @@ public class SciView extends SceneryBase {
         return addNode( sphere );
     }
 
+    /**
+     * Add a Cylinder at the given position with radius, height, and number of faces/segments
+     * @param position
+     * @param radius
+     * @param height
+     * @param num_segments
+     * @return  the Node corresponding to the cylinder
+     */
     public Node addCylinder( final Vector3 position, final float radius, final float height, final int num_segments ) {
         final Cylinder cyl = new Cylinder( radius, height, num_segments );
         cyl.setPosition( ClearGLVector3.convert( position ) );
         return addNode( cyl );
     }
 
+    /**
+     * Add a Cone at the given position with radius, height, and number of faces/segments
+     * @param position
+     * @param radius
+     * @param height
+     * @param num_segments
+     * @return  the Node corresponding to the cone
+     */
     public Node addCone( final Vector3 position, final float radius, final float height, final int num_segments ) {
         final Cone cone = new Cone( radius, height, num_segments, new GLVector(0,0,1) );
         cone.setPosition( ClearGLVector3.convert( position ) );
         return addNode( cone );
     }
 
+    /**
+     * Add a Line from 0,0,0 to 1,1,1
+     * @return  the Node corresponding to the line
+     */
     public Node addLine() {
-        return addLine( new ClearGLVector3( 0.0f, 0.0f, 0.0f ), new ClearGLVector3( 0.0f, 0.0f, 0.0f ) );
+        return addLine( new ClearGLVector3( 0.0f, 0.0f, 0.0f ), new ClearGLVector3( 1.0f, 1.0f, 1.0f ) );
     }
 
+    /**
+     * Add a line from start to stop
+     * @param start
+     * @param stop
+     * @return  the Node corresponding to the line
+     */
     public Node addLine( Vector3 start, Vector3 stop ) {
         return addLine( start, stop, DEFAULT_COLOR );
     }
 
+    /**
+     * Add a line from start to stop with the given color
+     * @param start
+     * @param stop
+     * @param color
+     * @return the Node corresponding to the line
+     */
     public Node addLine( Vector3 start, Vector3 stop, ColorRGB color ) {
         return addLine( new Vector3[] { start, stop }, color, 0.1f );
     }
 
+    /**
+     * Add a multi-segment line that goes through the supplied points with a single color and edge width
+     * @param points
+     * @param color
+     * @param edgeWidth
+     * @return the Node corresponding to the line
+     */
     public Node addLine( final Vector3[] points, final ColorRGB color, final double edgeWidth ) {
         final Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
@@ -917,6 +1015,10 @@ public class SciView extends SceneryBase {
         return addNode( line );
     }
 
+    /**
+     * Add a PointLight source at the origin
+     * @return a Node corresponding to the PointLight
+     */
     public Node addPointLight() {
         final Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
@@ -931,6 +1033,9 @@ public class SciView extends SceneryBase {
         return addNode( light );
     }
 
+    /**
+     * Position all lights that were initialized by default around the scene in a circle at Y=0
+     */
     public void surroundLighting() {
         OrientedBoundingBox bb = getSubgraphBoundingBox(getScene(), notAbstractBranchingFunction);
         OrientedBoundingBox.BoundingSphere boundingSphere = bb.getBoundingSphere();
@@ -947,6 +1052,11 @@ public class SciView extends SceneryBase {
         }
     }
 
+    /**
+     * Write a scenery mesh as an stl to the given file
+     * @param filename
+     * @param scMesh
+     */
     public void writeSCMesh( String filename, Mesh scMesh ) {
         File f = new File( filename );
         BufferedOutputStream out;
@@ -978,11 +1088,15 @@ public class SciView extends SceneryBase {
 
     }
 
+    /**
+     * Return the default point size to use for point clouds
+     * @return
+     */
     public float getDefaultPointSize() {
         return 0.025f;
     }
 
-    /*
+    /**
      * Create an array of normal vectors from a set of vertices corresponding to triangles
      */
     public float[] makeNormalsFromVertices( ArrayList<RealPoint> verts ) {
@@ -1008,6 +1122,11 @@ public class SciView extends SceneryBase {
         return normals;
     }
 
+    /**
+     * Open a file specified by the source path. The file can be anything that SciView knows about: mesh, volume, point cloud
+     * @param source
+     * @throws IOException
+     */
     public void open( final String source ) throws IOException {
         if(source.endsWith(".xml")) {
             addBDVVolume(source);
@@ -1043,10 +1162,21 @@ public class SciView extends SceneryBase {
         }
     }
 
+    /**
+     * Add the given points to the scene as a PointCloud
+     * @param points
+     * @return a Node corresponding to the PointCloud
+     */
     public Node addPointCloud( Collection<? extends RealLocalizable> points ) {
         return addPointCloud( points, "PointCloud" );
     }
 
+    /**
+     * Add the given points to the scene as a PointCloud with a given name
+     * @param points
+     * @param name
+     * @return
+     */
     public Node addPointCloud( final Collection<? extends RealLocalizable> points,
                                                 final String name ) {
         final float[] flatVerts = new float[points.size() * 3];
@@ -1079,6 +1209,11 @@ public class SciView extends SceneryBase {
         return addNode( pointCloud );
     }
 
+    /**
+     * Add a PointCloud to the scene
+     * @param pointCloud
+     * @return a Node corresponding to the PointCloud
+     */
     public Node addPointCloud( final PointCloud pointCloud ) {
         pointCloud.setupPointCloud();
         pointCloud.getMaterial().setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
@@ -1089,10 +1224,21 @@ public class SciView extends SceneryBase {
         return addNode( pointCloud );
     }
 
+    /**
+     * Add a Node to the scene and publish it to the eventservice
+     * @param n
+     * @return a Node corresponding to the Node
+     */
     public Node addNode( final Node n ) {
         return addNode(n, true);
     }
 
+    /**
+     * Add Node n to the scene and set it as the active node/publish it to the event service if activePublish is true
+     * @param n
+     * @param activePublish
+     * @return a Node corresponding to the Node
+     */
     public Node addNode( final Node n, final boolean activePublish ) {
         getScene().addChild( n );
 
@@ -1107,6 +1253,11 @@ public class SciView extends SceneryBase {
         return n;
     }
 
+    /**
+     * Add a scenery Mesh to the scene
+     * @param scMesh
+     * @return a Node corresponding to the mesh
+     */
     public Node addMesh( final Mesh scMesh ) {
         final Material material = new Material();
         material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
@@ -1121,20 +1272,38 @@ public class SciView extends SceneryBase {
         return addNode( scMesh );
     }
 
+    /**
+     * Add an ImageJ mesh to the scene
+     * @param mesh
+     * @return a Node corresponding to the mesh
+     */
     public Node addMesh( net.imagej.mesh.Mesh mesh ) {
         Mesh scMesh = MeshConverter.toScenery( mesh );
 
         return addMesh( scMesh );
     }
 
+    /**
+     * [Deprecated: use deleteNode]
+     * Remove a Mesh from the scene
+     * @param scMesh
+     */
     public void removeMesh( Mesh scMesh ) {
         getScene().removeChild( scMesh );
     }
 
+    /**
+     * @return a Node corresponding to the currently active node
+     */
     public Node getActiveNode() {
         return activeNode;
     }
 
+    /**
+     * Set the currently active node
+     * @param n
+     * @return the currently active node
+     */
     public Node setActiveNode( Node n ) {
         if( activeNode == n ) return activeNode;
         activeNode = n;
@@ -1179,6 +1348,12 @@ public class SciView extends SceneryBase {
 
     }
 
+    /**
+     * Create an animation thread with the given fps speed and the specified action
+     * @param fps
+     * @param action
+     * @return a Future corresponding to the thread
+     */
     public synchronized Future<?> animate(int fps, Runnable action ) {
         // TODO: Make animation speed less laggy and more accurate.
         final int delay = 1000 / fps;
@@ -1197,6 +1372,9 @@ public class SciView extends SceneryBase {
         return thread;
     }
 
+    /**
+     * Stop all animations
+     */
     public synchronized void stopAnimation() {
         animating = false;
         while( !animations.isEmpty() ) {
@@ -1205,14 +1383,25 @@ public class SciView extends SceneryBase {
         }
     }
 
+    /**
+     * Take a screenshot and save it to the default scenery location
+     */
     public void takeScreenshot() {
         getRenderer().screenshot();
     }
 
+    /**
+     * Take a screenshot and save it to the specified path
+     * @param path
+     */
     public void takeScreenshot( String path ) {
         getRenderer().screenshot( path, false );
     }
 
+    /**
+     * Take a screenshot and return it as an Img
+     * @return an Img of type UnsignedByteType
+     */
     public Img<UnsignedByteType> getScreenshot() {
         RenderedImage screenshot = getSceneryRenderer().requestScreenshot();
 
@@ -1233,26 +1422,49 @@ public class SciView extends SceneryBase {
         return img;
     }
 
+    /**
+     * @return an array of all nodes in the scene except Cameras and PointLights
+     */
     public Node[] getSceneNodes() {
         return getSceneNodes( n -> !( n instanceof Camera ) && !( n instanceof PointLight  ) );
     }
 
+    /**
+     * Get a list of nodes filtered by filter predicate
+     * @param filter, a predicate that filters the candidate nodes
+     * @return all nodes that match the predicate
+     */
     public Node[] getSceneNodes( Predicate<? super Node> filter ) {
         return getScene().getChildren().stream().filter( filter ).toArray( Node[]::new );
     }
 
+    /**
+     * @return an array of all Node's in the scene
+     */
     public Node[] getAllSceneNodes() {
         return getSceneNodes( n -> true );
     }
 
+    /**
+     * Delete the current active node
+     */
     public void deleteActiveNode() {
         deleteNode( getActiveNode() );
     }
 
+    /**
+     * Delete the specified node, this event is published
+     * @param node
+     */
     public void deleteNode( Node node ) {
         deleteNode( node, true );
     }
 
+    /**
+     * Delete a specified node and control whether the event is published
+     * @param node
+     * @param activePublish
+     */
     public void deleteNode( Node node, boolean activePublish ) {
         for( Node child : node.getChildren() ) {
             deleteNode(child, activePublish);
@@ -1265,42 +1477,85 @@ public class SciView extends SceneryBase {
         }
     }
 
+    /**
+     * Dispose the current scenery renderer, hub, and other scenery things
+     */
     public void dispose() {
-        // Close the Scenery renderer, hub, and other scenery things
         this.close();
     }
 
+    /**
+     * Move the current active camera to the specified position
+     * @param position
+     */
     public void moveCamera( float[] position ) {
         getCamera().setPosition( new GLVector( position[0], position[1], position[2] ) );
     }
 
+    /**
+     * Move the current active camera to the specified position
+     * @param position
+     */
     public void moveCamera( double[] position ) {
         getCamera().setPosition( new GLVector( ( float ) position[0], ( float ) position[1], ( float ) position[2] ) );
     }
 
+    /**
+     * Get the current application name
+     * @return a String of the application name
+     */
     public String getName() {
         return getApplicationName();
     }
 
+    /**
+     * Add a child to the scene. you probably want addNode
+     * @param node
+     */
     public void addChild( Node node ) {
         getScene().addChild( node );
     }
 
+    /**
+     * Clean a unit string. This just converts the symbol 'mu' into 'u'
+     * @param inString
+     * @return a string with mu replaced by u
+     */
+    private String sanitizeUnitString( String inString ) {
+        return inString.replace("\\u00B5", "u");
+    }
+
+    /**
+     * Add a Dataset to the scene as a volume. Voxel resolution and name are extracted from the Dataset itself
+     * @param image
+     * @return a Node corresponding to the Volume
+     */
     public Node addVolume( Dataset image ) {
 
         float[] voxelDims = new float[image.numDimensions()];
         for( int d = 0; d < voxelDims.length; d++ ) {
-            voxelDims[d] = ( float ) image.axis( d ).averageScale( 0, 1 );
+            double inValue = image.axis(d).averageScale(0, 1);
+            voxelDims[d] = (float) unitService.value( inValue,
+                    sanitizeUnitString(image.axis(d).unit()),
+                    sanitizeUnitString(axis(d).unit()) );
         }
+
         return addVolume( image, voxelDims );
     }
 
+    /**
+     * Add a BigDataViewer volume to the scene.
+     * @param source, the path to an XML file for BDV style XML/Hdf5
+     * @return a Node corresponding to the BDVNode
+     */
     public Node addBDVVolume( String source ) {
         //getSettings().set("Renderer.HDR.Exposure", 20.0f);
 
         final VolumeViewerOptions opts = new VolumeViewerOptions();
         opts.maxCacheSizeInMB(Integer.parseInt(System.getProperty("scenery.BDVVolume.maxCacheSize", "512")));
         final BDVVolume v = new BDVVolume(source, opts);
+
+        // TODO: use unitService to set scale
         v.setScale(new GLVector(0.01f, 0.01f, 0.01f));
         v.setBoundingBox(v.generateBoundingBox());
 
@@ -1313,26 +1568,57 @@ public class SciView extends SceneryBase {
         return v;
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" }) public Node addVolume( Dataset image,
-                                                                                           float[] voxelDimensions ) {
+    /**
+     * Add a Dataset as a Volume with the specified voxel dimensions
+     * @param image
+     * @param voxelDimensions
+     * @return a Node corresponding to the Volume
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" }) public Node addVolume( Dataset image, float[] voxelDimensions ) {
         return addVolume( ( IterableInterval ) Views.flatIterable( image.getImgPlus() ), image.getName(),
                           voxelDimensions );
     }
 
+    /**
+     * Add a RandomAccessibleInterval to the image
+     * @param image
+     * @param name
+     * @param extra, kludge argument to prevent matching issues
+     * @param <T>
+     * @return a Node corresponding to the volume
+     */
     public <T extends RealType<T>> Node addVolume( RandomAccessibleInterval<T> image, String name, String extra ) {
         long[] pos = new long[]{10, 10, 10};
 
         return addVolume( Views.flatIterable(image), name, 1, 1, 1 );
     }
 
+    /**
+     * Add an IterableInterval as a Volume
+     * @param image
+     * @param <T>
+     * @return a Node corresponding to the Volume
+     */
     public <T extends RealType<T>> Node addVolume( IterableInterval<T> image ) {
         return addVolume( image, "Volume" );
     }
 
+    /**
+     * Add an IterableInterval as a Volume
+     * @param image
+     * @param name
+     * @param <T>
+     * @return a Node corresponding to the Volume
+     */
     public <T extends RealType<T>> Node addVolume( IterableInterval<T> image, String name ) {
         return addVolume( image, name, 1, 1, 1 );
     }
 
+    /**
+     * Set the ColorMap of node n to the supplied colorTable
+     * @param n
+     * @param colorTable
+     */
     public void setColormap( Node n, ColorTable colorTable ) {
         final int copies = 16;
 
@@ -1373,6 +1659,15 @@ public class SciView extends SceneryBase {
         }
     }
 
+    /**
+     * Add an IterableInterval to the image with the specified voxelDimensions and name
+     * This version of addVolume does most of the work
+     * @param image
+     * @param name
+     * @param voxelDimensions
+     * @param <T>
+     * @return a Node corresponding to the Volume
+     */
     public <T extends RealType<T>> Node addVolume( IterableInterval<T> image, String name,
                                                                     float... voxelDimensions ) {
         //log.debug( "Add Volume " + name + " image: " + image );
@@ -1431,6 +1726,16 @@ public class SciView extends SceneryBase {
         return v;
     }
 
+    /**
+     * Update a volume with the given IterableInterval.
+     * This method actually populates the volume
+     * @param image
+     * @param name
+     * @param voxelDimensions
+     * @param v
+     * @param <T>
+     * @return a Node corresponding to the input volume
+     */
     public <T extends RealType<T>> Node updateVolume( IterableInterval<T> image, String name,
                                                                        float[] voxelDimensions, Volume v ) {
         //log.debug( "Update Volume" );
@@ -1488,15 +1793,24 @@ public class SciView extends SceneryBase {
         return v;
     }
 
+    /**
+     *
+     * @return whether PushMode is currently active
+     */
     public boolean getPushMode() {
         return getRenderer().getPushMode();
     }
 
+    /**
+     * Set the status of PushMode, which only updates the render panel when there is a change in the scene
+     * @param push
+     * @return current PushMode status
+     */
     public boolean setPushMode( boolean push ) {
         getRenderer().setPushMode( push );
         return getRenderer().getPushMode();
     }
-
+    
     public ArcballCameraControl getTargetArcball() {
         return targetArcball;
     }
@@ -1518,6 +1832,9 @@ public class SciView extends SceneryBase {
         return this.getRenderer();
     }
 
+    /**
+     * Enable VR rendering
+     */
     public void toggleVRRendering() {
         vrActive = !vrActive;
         Camera cam = getScene().getActiveObserver();
@@ -1573,8 +1890,24 @@ public class SciView extends SceneryBase {
 
     }
 
-    /*
-     * Set the rotation of a Node using the 4D inputs as a quaternion
+    /**
+     * Utility function to generate GLVector in cases like usage from Python
+     * @param x
+     * @param y
+     * @param z
+     * @return a GLVector of x,y,z
+     */
+    static public GLVector getGLVector(float x, float y, float z) {
+        return new GLVector(x, y, z);
+    }
+
+    /**
+     * Set the rotation of Node N by generating a quaternion from the supplied arguments
+     * @param n
+     * @param x
+     * @param y
+     * @param z
+     * @param w
      */
     public void setRotation(Node n, float x, float y, float z, float w) {
         n.setRotation(new Quaternion(x,y,z,w));
@@ -1597,6 +1930,64 @@ public class SciView extends SceneryBase {
 
     public void addWindowListener(WindowListener wl) {
         frame.addWindowListener(wl);
+    }
+
+    @Override
+    public CalibratedAxis axis(int i) {
+        return axes[i];
+    }
+
+    @Override
+    public void axes(CalibratedAxis[] calibratedAxes) {
+        axes = calibratedAxes;
+    }
+
+    @Override
+    public void setAxis(CalibratedAxis calibratedAxis, int i) {
+        axes[i] = calibratedAxis;
+    }
+
+    @Override
+    public double realMin(int i) {
+        return Double.NEGATIVE_INFINITY;
+    }
+
+    @Override
+    public void realMin(double[] doubles) {
+        for( int i = 0; i < doubles.length; i++ ) {
+            doubles[i] = Double.NEGATIVE_INFINITY;
+        }
+    }
+
+    @Override
+    public void realMin(RealPositionable realPositionable) {
+        for( int i = 0; i < realPositionable.numDimensions(); i++ ) {
+            realPositionable.move(Double.NEGATIVE_INFINITY, i);
+        }
+    }
+
+    @Override
+    public double realMax(int i) {
+        return Double.POSITIVE_INFINITY;
+    }
+
+    @Override
+    public void realMax(double[] doubles) {
+        for( int i = 0; i < doubles.length; i++ ) {
+            doubles[i] = Double.POSITIVE_INFINITY;
+        }
+    }
+
+    @Override
+    public void realMax(RealPositionable realPositionable) {
+        for( int i = 0; i < realPositionable.numDimensions(); i++ ) {
+            realPositionable.move(Double.POSITIVE_INFINITY, i);
+        }
+    }
+
+    @Override
+    public int numDimensions() {
+        return axes.length;
     }
 
     public class TransparentSlider extends JSlider {
@@ -1659,11 +2050,10 @@ public class SciView extends SceneryBase {
         }
     }
 
+    /*
+     * Convenience function for getting a string of info about a Node
+     */
     public String nodeInfoString(Node n) {
         return "Node name: " + n.getName() + " Node type: " + n.getNodeType() + " To String: " + n;
-    }
-
-    public void setNodeScale( Node n, double x, double y, double z ) {
-        n.setScale( new GLVector((float)x,(float)y,(float)z) );
     }
 }
