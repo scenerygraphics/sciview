@@ -1304,12 +1304,19 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         getScene().addChild( node );
     }
 
+    private String sanitizeUnitString( String inString ) {
+        String outString = inString.replace("\\u00B5", "u");
+        return outString;
+    }
+
     public Node addVolume( Dataset image ) {
 
         float[] voxelDims = new float[image.numDimensions()];
         for( int d = 0; d < voxelDims.length; d++ ) {
             double inValue = image.axis(d).averageScale(0, 1);
-            voxelDims[d] = (float) unitService.value( inValue, image.axis(d).unit(), axis(d).unit() );
+            voxelDims[d] = (float) unitService.value( inValue,
+                    sanitizeUnitString(image.axis(d).unit()),
+                    sanitizeUnitString(axis(d).unit()) );
         }
         return addVolume( image, voxelDims );
     }
