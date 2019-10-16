@@ -195,12 +195,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     private ArrayList<PointLight> lights;
     private Stack<HashMap<String, Object>> controlStack;
     private JFrame frame;
-    private Predicate<? super Node> notAbstractNode = new Predicate<Node>() {
-        @Override
-        public boolean test(Node node) {
-            return !( (node instanceof Camera) || (node instanceof Light) || (node==getFloor()));
-        }
-    };
+    private Predicate<? super Node> notAbstractNode = (Predicate<Node>) node -> !( (node instanceof Camera) || (node instanceof Light) || (node==getFloor()));
     private boolean isClosed = false;
     private Function<Node,List<Node>> notAbstractBranchingFunction = node -> node.getChildren().stream().filter(notAbstractNode).collect(Collectors.toList());
 
@@ -213,10 +208,6 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         super( applicationName, windowWidth, windowHeight, false );
     }
 
-    static public GLVector getGLVector(float x, float y, float z) {
-        return new GLVector(x, y, z);
-    }
-
     public boolean isClosed() {
         return isClosed;
     }
@@ -225,6 +216,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         return getInputHandler();
     }
 
+    /**
+     * Toggle video recording with scenery's video recording mechanism
+     * Note: this video recording may skip frames because it is asynchronous
+     */
     public void toggleRecordVideo() {
         if( getRenderer() instanceof  OpenGLRenderer )
             ((OpenGLRenderer)getRenderer()).recordMovie();
@@ -232,14 +227,18 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             ((VulkanRenderer)getRenderer()).recordMovie();
     }
 
+    /**
+     * This pushes the current input setup onto a stack that allows them to be restored with restoreControls
+     */
     public void stashControls() {
-        // This pushes the current input setup onto a stack that allows them to be restored with restoreControls
         HashMap<String, Object> controlState = new HashMap<String, Object>();
         controlStack.push(controlState);
     }
 
+    /**
+     * This pops/restores the previously stashed controls. Emits a warning if there are no stashed controls
+     */
     public void restoreControls() {
-        // This pops/restores the previously stashed controls. Emits a warning if there are no stashed controlls
         HashMap<String, Object> controlState = controlStack.pop();
 
         // This isnt how it should work
@@ -247,22 +246,23 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         resetFPSInputs();
     }
 
-    /*
+    /**
      * Place the camera such that all objects in the scene are within the field of view
      */
     public void fitCameraToScene() {
         centerOnNode(getScene());
     }
 
-    /*
+    /**
      * Reset the scene to initial conditions
      */
     public void reset() {
         // Initialize the 3D axes
         axes = new CalibratedAxis[3];
-        axes[0] = new DefaultLinearAxis(new DefaultAxisType("X", true), "micron", 1);
-        axes[1] = new DefaultLinearAxis(new DefaultAxisType("Y", true), "micron", 1);
-        axes[2] = new DefaultLinearAxis(new DefaultAxisType("Z", true), "micron", 1);
+
+        axes[0] = new DefaultLinearAxis(new DefaultAxisType("X", true), "um", 1);
+        axes[1] = new DefaultLinearAxis(new DefaultAxisType("Y", true), "um", 1);
+        axes[2] = new DefaultLinearAxis(new DefaultAxisType("Z", true), "um", 1);
 
         // Remove everything except camera
         Node[] toRemove = getSceneNodes( n -> !( n instanceof Camera ) );
@@ -307,7 +307,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         getScene().addChild( floor );
     }
 
-    /*
+    /**
      * Initialization of SWING and scenery. Also triggers an initial population of lights/camera in the scene
      */
     @SuppressWarnings("restriction") @Override public void init() {
@@ -1305,8 +1305,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     private String sanitizeUnitString( String inString ) {
-        String outString = inString.replace("\\u00B5", "u");
-        return outString;
+        return inString.replace("\\u00B5", "u");
     }
 
     public Node addVolume( Dataset image ) {
@@ -1318,6 +1317,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
                     sanitizeUnitString(image.axis(d).unit()),
                     sanitizeUnitString(axis(d).unit()) );
         }
+
         return addVolume( image, voxelDims );
     }
 
@@ -1341,8 +1341,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         return v;
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" }) public Node addVolume( Dataset image,
-                                                                                           float[] voxelDimensions ) {
+    @SuppressWarnings({ "rawtypes", "unchecked" }) public Node addVolume( Dataset image, float[] voxelDimensions ) {
         return addVolume( ( IterableInterval ) Views.flatIterable( image.getImgPlus() ), image.getName(),
                           voxelDimensions );
     }
@@ -1516,10 +1515,19 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         return v;
     }
 
+    /**
+     *
+     * @return whether PushMode is currently active
+     */
     public boolean getPushMode() {
         return getRenderer().getPushMode();
     }
 
+    /**
+     * Set the status of PushMode, which only updates the render panel when there is a change in the scene
+     * @param push
+     * @return current PushMode status
+     */
     public boolean setPushMode( boolean push ) {
         getRenderer().setPushMode( push );
         return getRenderer().getPushMode();
@@ -1546,6 +1554,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         return this.getRenderer();
     }
 
+    /**
+     * Enable VR rendering
+     */
     public void toggleVRRendering() {
         vrActive = !vrActive;
         Camera cam = getScene().getActiveObserver();
@@ -1601,8 +1612,24 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     }
 
-    /*
-     * Set the rotation of a Node using the 4D inputs as a quaternion
+    /**
+     * Utility function to generate GLVector in cases like usage from Python
+     * @param x
+     * @param y
+     * @param z
+     * @return a GLVector of x,y,z
+     */
+    static public GLVector getGLVector(float x, float y, float z) {
+        return new GLVector(x, y, z);
+    }
+
+    /**
+     * Set the rotation of Node N by generating a quaternion from the supplied arguments
+     * @param n
+     * @param x
+     * @param y
+     * @param z
+     * @param w
      */
     public void setRotation(Node n, float x, float y, float z, float w) {
         n.setRotation(new Quaternion(x,y,z,w));
