@@ -53,6 +53,11 @@ import graphics.scenery.volumes.bdv.BDVVolume;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import net.imagej.Dataset;
+import net.imagej.axis.AbstractCalibratedAxis;
+import net.imagej.axis.CalibratedAxis;
+import net.imagej.axis.DefaultAxisType;
+import net.imagej.axis.DefaultLinearAxis;
+import net.imagej.interval.CalibratedRealInterval;
 import net.imagej.lut.LUTService;
 import net.imagej.ops.OpService;
 import net.imglib2.Cursor;
@@ -121,7 +126,7 @@ import java.util.stream.Collectors;
 // we suppress unused warnings here because @Parameter-annotated fields
 // get updated automatically by SciJava.
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class SciView extends SceneryBase {
+public class SciView extends SceneryBase implements CalibratedRealInterval<CalibratedAxis> {
 
     public static final ColorRGB DEFAULT_COLOR = Colors.LIGHTGRAY;
     private final SceneryPanel[] sceneryPanel = { null };
@@ -139,6 +144,11 @@ public class SciView extends SceneryBase {
      * The primary camera/observer in the scene
      */
     Camera camera = null;
+    /**
+     * Geometry/Image information of scene
+     */
+    private CalibratedAxis[] axes;
+
     @Parameter
     private LogService log;
     @Parameter
@@ -246,6 +256,12 @@ public class SciView extends SceneryBase {
      * Reset the scene to initial conditions
      */
     public void reset() {
+        // Initialize the 3D axes
+        axes = new CalibratedAxis[3];
+        axes[0] = new DefaultLinearAxis(new DefaultAxisType("X", true), "micron", 1);
+        axes[1] = new DefaultLinearAxis(new DefaultAxisType("Y", true), "micron", 1);
+        axes[2] = new DefaultLinearAxis(new DefaultAxisType("Z", true), "micron", 1);
+
         // Remove everything except camera
         Node[] toRemove = getSceneNodes( n -> !( n instanceof Camera ) );
         for( Node n : toRemove ) {
@@ -1599,6 +1615,64 @@ public class SciView extends SceneryBase {
         frame.addWindowListener(wl);
     }
 
+    @Override
+    public CalibratedAxis axis(int i) {
+        return axes[i];
+    }
+
+    @Override
+    public void axes(CalibratedAxis[] calibratedAxes) {
+        axes = calibratedAxes;
+    }
+
+    @Override
+    public void setAxis(CalibratedAxis calibratedAxis, int i) {
+        axes[i] = calibratedAxis;
+    }
+
+    @Override
+    public double realMin(int i) {
+        return Double.NEGATIVE_INFINITY;
+    }
+
+    @Override
+    public void realMin(double[] doubles) {
+        for( int i = 0; i < doubles.length; i++ ) {
+            doubles[i] = Double.NEGATIVE_INFINITY;
+        }
+    }
+
+    @Override
+    public void realMin(RealPositionable realPositionable) {
+        for( int i = 0; i < realPositionable.numDimensions(); i++ ) {
+            realPositionable.move(Double.NEGATIVE_INFINITY, i);
+        }
+    }
+
+    @Override
+    public double realMax(int i) {
+        return Double.POSITIVE_INFINITY;
+    }
+
+    @Override
+    public void realMax(double[] doubles) {
+        for( int i = 0; i < doubles.length; i++ ) {
+            doubles[i] = Double.POSITIVE_INFINITY;
+        }
+    }
+
+    @Override
+    public void realMax(RealPositionable realPositionable) {
+        for( int i = 0; i < realPositionable.numDimensions(); i++ ) {
+            realPositionable.move(Double.POSITIVE_INFINITY, i);
+        }
+    }
+
+    @Override
+    public int numDimensions() {
+        return axes.length;
+    }
+
     public class TransparentSlider extends JSlider {
 
         public TransparentSlider() {
@@ -1659,11 +1733,10 @@ public class SciView extends SceneryBase {
         }
     }
 
+    /*
+     * Convenience function for getting a string of info about a Node
+     */
     public String nodeInfoString(Node n) {
         return "Node name: " + n.getName() + " Node type: " + n.getNodeType() + " To String: " + n;
-    }
-
-    public void setNodeScale( Node n, double x, double y, double z ) {
-        n.setScale( new GLVector((float)x,(float)y,(float)z) );
     }
 }
