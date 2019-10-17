@@ -115,6 +115,7 @@
 		<scijava-common.version>2.79.0</scijava-common.version>
 		<imagej-launcher.version>5.0.2</imagej-launcher.version>
 		<imagej-updater.version>0.10.3</imagej-updater.version>
+		<imagej-common.version>43590c8</imagej-common.version>
 
 <!--		<custom-imagej-updater.version>a580040</custom-imagej-updater.version>-->
 	</properties>

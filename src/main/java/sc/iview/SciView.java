@@ -1517,15 +1517,6 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
-     * Clean a unit string. This just converts the symbol 'mu' into 'u'
-     * @param inString
-     * @return a string with mu replaced by u
-     */
-    private String sanitizeUnitString( String inString ) {
-        return inString.replace("\\u00B5", "u");
-    }
-
-    /**
      * Add a Dataset to the scene as a volume. Voxel resolution and name are extracted from the Dataset itself
      * @param image
      * @return a Node corresponding to the Volume
@@ -1535,9 +1526,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         float[] voxelDims = new float[image.numDimensions()];
         for( int d = 0; d < voxelDims.length; d++ ) {
             double inValue = image.axis(d).averageScale(0, 1);
-            voxelDims[d] = (float) unitService.value( inValue,
-                    sanitizeUnitString(image.axis(d).unit()),
-                    sanitizeUnitString(axis(d).unit()) );
+            voxelDims[d] = (float) unitService.value( inValue, image.axis(d).unit(), axis(d).unit() );
         }
 
         return addVolume( image, voxelDims );
