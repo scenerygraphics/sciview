@@ -32,6 +32,8 @@ import cleargl.GLTypeEnum;
 import cleargl.GLVector;
 import graphics.scenery.*;
 import ij.ImagePlus;
+import net.imglib2.Cursor;
+import net.imglib2.RandomAccess;
 import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -72,12 +74,17 @@ public class ImagePlaneDemo implements Command {
         // Load the 2D image
         Img<UnsignedByteType> img = sciView.getScreenshot();
 
-        ImagePlus imp = ImageJFunctions.wrap(img, "screenshot");
-        imp.show();
-        BufferedImage bi = imp.getBufferedImage();
-        byte[] data = ((DataBufferByte) bi.getData().getDataBuffer()).getData();
+        ByteBuffer bb = imgToByteBuffer(img);
 
-        ByteBuffer bb = BufferUtils.allocateByteAndPut(data);
+//        ImagePlus imp = ImageJFunctions.wrap(img, "screenshot");
+//        imp.show();
+//        BufferedImage bi = imp.getBufferedImage();
+//
+//        byte[] data = ((DataBufferByte) bi.getData().getDataBuffer()).getData();
+//
+//        ByteBuffer bb = BufferUtils.allocateByteAndPut(data);
+
+        //System.out.println("bi: " + bi.getType() + " dl: " + data.length + " " + imp);
 
         Box imgPlane = new Box( new GLVector( 10f, 10f, 0.01f ) );
         imgPlane.setPosition(new GLVector(0,10,0));
@@ -120,7 +127,11 @@ public class ImagePlaneDemo implements Command {
         mat.setSpecular(new GLVector(1,1,1));
         mat.setDiffuse(new GLVector(1,1,1));
         mat.setAmbient(new GLVector(1,1,1));
-        GenericTexture tex = new GenericTexture("imgPlane", new GLVector(imp.getWidth(), imp.getHeight(),1),4, GLTypeEnum.UnsignedByte,bb);
+
+        GenericTexture tex = new GenericTexture("imgPlane", new GLVector(img.dimension(0), img.dimension(1),1),3, GLTypeEnum.UnsignedByte,bb);
+        tex.setChannels(3);
+        tex.setType(GLTypeEnum.UnsignedByte);
+
         mat.getTransferTextures().put("imgPlane",tex);
         mat.getTextures().put("diffuse","fromBuffer:imgPlane");
         mat.setNeedsTextureReload(true);
@@ -130,5 +141,51 @@ public class ImagePlaneDemo implements Command {
 
         sciView.addNode(imgPlane);
         sciView.centerOnNode(imgPlane);
+
+
+    }
+
+    // This should interleave channels, but the coloring doesnt seem to happen
+//    private static ByteBuffer imgToByteBuffer(Img<UnsignedByteType> img) {
+//        int numBytes = (int) (img.dimension(0) * img.dimension(1) * 3);
+//        ByteBuffer bb = BufferUtils.allocateByte(numBytes);
+//        //byte[] rgba = new byte[]{0, 0, 0, (byte) 255};
+//        byte[] rgb = new byte[]{0, 0, 0};
+//
+//        RandomAccess<UnsignedByteType> ra = img.randomAccess();
+//
+//        long[] pos = new long[3];
+//
+//        System.out.println(img.dimension(0) + " " + img.dimension(1) + " " + img.dimension(2));
+//
+//        for( int x = 0; x < img.dimension(0); x++ ) {
+//            for( int y = 0; y < img.dimension(1); y++ ) {
+//                for( int c = 0; c < img.dimension(2) - 1; c++ ) {// hard coded dropping of alpha
+//                    pos[0] = x; pos[1] = y; pos[2] = c;
+//                    ra.setPosition(pos);
+//                    //rgba[c] = ra.get().getByte();
+//                    rgb[c] = ra.get().getByte();
+//                }
+//                bb.put(rgb);
+//            }
+//        }
+//        bb.flip();
+//
+//        return bb;
+//    }
+
+// This stacks channels along y-axis
+    private static ByteBuffer imgToByteBuffer(Img<UnsignedByteType> img) {
+        int numBytes = (int) (img.dimension(0) * img.dimension(1) * img.dimension(2));
+        ByteBuffer bb = BufferUtils.allocateByte(numBytes);
+
+        Cursor<UnsignedByteType> cur = img.cursor();
+        while( cur.hasNext() ) {
+            UnsignedByteType v = cur.next();
+            bb.put(v.getByte());
+        }
+        bb.flip();
+
+        return bb;
     }
 }
