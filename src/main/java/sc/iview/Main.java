@@ -47,15 +47,6 @@ import cleargl.GLVector;
  */
 public class Main {
     public static void main( String... args ) {
-        SceneryBase.xinitThreads();
-
-        System.setProperty( "scijava.log.level:sc.iview", "debug" );
-        Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
-
-        UIService ui = context.service( UIService.class );
-        if( !ui.isVisible() ) ui.showUI();
-
-        SciViewService sciViewService = context.service( SciViewService.class );
-        SciView sciView = sciViewService.getOrCreateActiveSciView();
+        SciView.createSciView();
     }
 }

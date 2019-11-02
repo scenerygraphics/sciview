@@ -50,9 +50,11 @@ import graphics.scenery.utils.*;
 import graphics.scenery.volumes.TransferFunction;
 import graphics.scenery.volumes.Volume;
 import graphics.scenery.volumes.bdv.BDVVolume;
+import io.scif.SCIFIOService;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import net.imagej.Dataset;
+import net.imagej.ImageJService;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultAxisType;
 import net.imagej.axis.DefaultLinearAxis;
@@ -83,7 +85,9 @@ import org.scijava.log.LogService;
 import org.scijava.menu.MenuService;
 import org.scijava.object.ObjectService;
 import org.scijava.plugin.Parameter;
+import org.scijava.service.SciJavaService;
 import org.scijava.thread.ThreadService;
+import org.scijava.ui.UIService;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.InputTrigger;
 import org.scijava.ui.swing.menu.SwingJMenuBarCreator;
@@ -2044,5 +2048,20 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      */
     public String nodeInfoString(Node n) {
         return "Node name: " + n.getName() + " Node type: " + n.getNodeType() + " To String: " + n;
+    }
+
+    /**
+     * Static launching method
+     */
+    public static SciView createSciView() {
+        SceneryBase.xinitThreads();
+
+        System.setProperty( "scijava.log.level:sc.iview", "debug" );
+        Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
+
+        SciViewService sciViewService = context.service( SciViewService.class );
+        SciView sciView = sciViewService.getOrCreateActiveSciView();
+
+        return sciView;
     }
 }
