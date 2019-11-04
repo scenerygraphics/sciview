@@ -40,7 +40,7 @@ import org.scijava.plugin.Plugin;
 import org.scijava.widget.Button;
 import sc.iview.SciView;
 import sc.iview.process.ControlPoints;
-import sc.iview.shape.Line3D;
+import sc.iview.node.Line3D;
 import sc.iview.vector.Vector3;
 
 import java.util.ArrayList;
