@@ -38,6 +38,7 @@ import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.scijava.command.Command;
+import org.scijava.io.IOService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -49,6 +50,7 @@ import sc.iview.vector.Vector3;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
@@ -68,6 +70,9 @@ public class ImagePlaneDemo implements Command {
     @Parameter
     private SciView sciView;
 
+    @Parameter
+    private IOService ioService;
+
     @Override
     public void run() {
 
@@ -75,16 +80,6 @@ public class ImagePlaneDemo implements Command {
         Img<UnsignedByteType> img = sciView.getScreenshot();
 
         ByteBuffer bb = imgToByteBuffer(img);
-
-//        ImagePlus imp = ImageJFunctions.wrap(img, "screenshot");
-//        imp.show();
-//        BufferedImage bi = imp.getBufferedImage();
-//
-//        byte[] data = ((DataBufferByte) bi.getData().getDataBuffer()).getData();
-//
-//        ByteBuffer bb = BufferUtils.allocateByteAndPut(data);
-
-        //System.out.println("bi: " + bi.getType() + " dl: " + data.length + " " + imp);
 
         Box imgPlane = new Box( new GLVector( 10f, 10f, 0.01f ) );
         imgPlane.setPosition(new GLVector(0,10,0));
@@ -128,9 +123,7 @@ public class ImagePlaneDemo implements Command {
         mat.setDiffuse(new GLVector(1,1,1));
         mat.setAmbient(new GLVector(1,1,1));
 
-        GenericTexture tex = new GenericTexture("imgPlane", new GLVector(img.dimension(0), img.dimension(1),1),3, GLTypeEnum.UnsignedByte,bb);
-        tex.setChannels(3);
-        tex.setType(GLTypeEnum.UnsignedByte);
+        GenericTexture tex = new GenericTexture("imgPlane", new GLVector(img.dimension(0), img.dimension(1),1),3, GLTypeEnum.UnsignedByte, bb);
 
         mat.getTransferTextures().put("imgPlane",tex);
         mat.getTextures().put("diffuse","fromBuffer:imgPlane");
@@ -146,46 +139,30 @@ public class ImagePlaneDemo implements Command {
     }
 
     // This should interleave channels, but the coloring doesnt seem to happen
-//    private static ByteBuffer imgToByteBuffer(Img<UnsignedByteType> img) {
-//        int numBytes = (int) (img.dimension(0) * img.dimension(1) * 3);
-//        ByteBuffer bb = BufferUtils.allocateByte(numBytes);
-//        //byte[] rgba = new byte[]{0, 0, 0, (byte) 255};
-//        byte[] rgb = new byte[]{0, 0, 0};
-//
-//        RandomAccess<UnsignedByteType> ra = img.randomAccess();
-//
-//        long[] pos = new long[3];
-//
-//        System.out.println(img.dimension(0) + " " + img.dimension(1) + " " + img.dimension(2));
-//
-//        for( int x = 0; x < img.dimension(0); x++ ) {
-//            for( int y = 0; y < img.dimension(1); y++ ) {
-//                for( int c = 0; c < img.dimension(2) - 1; c++ ) {// hard coded dropping of alpha
-//                    pos[0] = x; pos[1] = y; pos[2] = c;
-//                    ra.setPosition(pos);
-//                    //rgba[c] = ra.get().getByte();
-//                    rgb[c] = ra.get().getByte();
-//                }
-//                bb.put(rgb);
-//            }
-//        }
-//        bb.flip();
-//
-//        return bb;
-//    }
-
-// This stacks channels along y-axis
     private static ByteBuffer imgToByteBuffer(Img<UnsignedByteType> img) {
-        int numBytes = (int) (img.dimension(0) * img.dimension(1) * img.dimension(2));
+        int numBytes = (int) (img.dimension(0) * img.dimension(1) * 3);
         ByteBuffer bb = BufferUtils.allocateByte(numBytes);
+        byte[] rgb = new byte[]{0, 0, 0};
 
-        Cursor<UnsignedByteType> cur = img.cursor();
-        while( cur.hasNext() ) {
-            UnsignedByteType v = cur.next();
-            bb.put(v.getByte());
+        RandomAccess<UnsignedByteType> ra = img.randomAccess();
+
+        long[] pos = new long[3];
+
+        for( int y = 0; y < img.dimension(1); y++ ) {
+            for( int x = 0; x < img.dimension(0); x++ ) {
+                for( int c = 0; c < img.dimension(2) - 1; c++ ) {// hard coded dropping of alpha
+                    pos[0] = x; pos[1] = img.dimension(1) - y - 1; pos[2] = c;
+                    ra.setPosition(pos);
+                    rgb[c] = ra.get().getByte();
+                }
+                bb.put(rgb);
+            }
         }
         bb.flip();
 
         return bb;
     }
+
+
+
 }
