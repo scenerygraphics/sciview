@@ -23,6 +23,7 @@ public class Line3D extends Node {
     }
 
     public Line3D(List<Vector3> points, ColorRGB colorRGB, double edgeWidth) {
+        this.setName("Line3D");
         this.defaultColor = colorRGB;
         this.edgeWidth = edgeWidth;
 
