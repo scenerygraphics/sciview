@@ -18,6 +18,8 @@ import net.imglib2.view.Views;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
+import static sc.iview.Utils.convertGLMatrixToAffineTransform3D;
+
 /**
  * An ImgPlane is a plane that corresponds to a slice of an Img
  *
@@ -30,13 +32,15 @@ public class SlicingPlane<T extends GenericByteType> extends Node {
     private ByteBuffer bb;
     private Box imgPlane;
     private RandomAccessibleInterval<T> img;
+    private Volume v;
 
     public SlicingPlane(Volume v, RandomAccessibleInterval<T> img) {
         this.setName("SlicingPlane");
 
         this.img = img;
+        this.v = v;
 
-        imgPlane = new Box( new GLVector( 10f, 10f, 0.01f ) );
+        imgPlane = new Box( new GLVector( 10f, 10f, 0.001f ) );
         imgPlane.setPosition(v.getPosition());
 
         FloatBuffer tc = BufferUtils.allocateFloatAndPut(new float[]{
@@ -109,20 +113,12 @@ public class SlicingPlane<T extends GenericByteType> extends Node {
     }
 
     public void rotate(float i) {
-        imgPlane.setRotation(imgPlane.getRotation().rotateByAngleX(i));
+        imgPlane.setRotation(imgPlane.getRotation().rotateByAngleY(i));
 
-        GLMatrix tmat = imgPlane.getTransformation();
-        AffineTransform3D tform = new AffineTransform3D();
-        double[] ds = new double[16];
-        int k=0;
-        for( int r=0; r<4; r++ ) {
-            for (int c = 0; c < 4; c++) {
-                ds[k] = tmat.get(r, c);
-                k++;
-            }
-        }
-                //tform.set(tmat.get(r,c),r,c);
-        tform.set(ds);
+        AffineTransform3D imgPlaneTform = convertGLMatrixToAffineTransform3D(imgPlane.getTransformation());
+        AffineTransform3D volumeTform = convertGLMatrixToAffineTransform3D(v.getTransformation());
+
+        AffineTransform3D tform = volumeTform.concatenate(imgPlaneTform);
 
         RealRandomAccessible<T> realImg = Views.interpolate(Views.extendZero(img), new NearestNeighborInterpolatorFactory<T>());
         RealTransformRandomAccessible transformedSlice = RealViews.transform(realImg, tform);
