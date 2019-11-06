@@ -97,7 +97,8 @@ public class SlicingPlaneDemo implements Command {
         v.setNeedsUpdate(true);
 
         SlicingPlane p = new SlicingPlane( v, cube );
-        sciView.animate( 10, () -> p.rotate(0.05f) );
+        sciView.animate( 10, () -> p.rotate(0.01f) );
+        //p.rotate(0);
         sciView.addNode(p);
 
         sciView.setActiveNode(v);
