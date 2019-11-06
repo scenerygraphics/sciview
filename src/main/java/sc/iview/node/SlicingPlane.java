@@ -115,8 +115,8 @@ public class SlicingPlane<T extends GenericByteType> extends Node {
     public void rotate(float i) {
         imgPlane.setRotation(imgPlane.getRotation().rotateByAngleY(i));
 
-        AffineTransform3D imgPlaneTform = convertGLMatrixToAffineTransform3D(imgPlane.getTransformation());
-        AffineTransform3D volumeTform = convertGLMatrixToAffineTransform3D(v.getTransformation());
+        AffineTransform3D imgPlaneTform = convertGLMatrixToAffineTransform3D(imgPlane.getWorld());
+        AffineTransform3D volumeTform = convertGLMatrixToAffineTransform3D(v.getWorld());
 
         AffineTransform3D tform = volumeTform.concatenate(imgPlaneTform);
 
@@ -126,7 +126,8 @@ public class SlicingPlane<T extends GenericByteType> extends Node {
         long width = img.dimension(0);
         long height = img.dimension(1);
 
-        MixedTransformView slice = Views.hyperSlice(Views.raster(transformedSlice), 0, 10);
+        // TODO the slice position is not correct
+        MixedTransformView slice = Views.hyperSlice(Views.raster(transformedSlice), 1, 10);
 
         bb = imgToByteBuffer(slice, Intervals.createMinMax(0,0,width,height));
 
