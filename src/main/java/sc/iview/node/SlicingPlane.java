@@ -124,11 +124,12 @@ public class SlicingPlane<T extends GenericByteType> extends Node {
         long height = img.dimension(1);
 
         // TODO the slice position is not correct
-        MixedTransformView slice = Views.hyperSlice(Views.raster(transformedSlice), 2, 0);
+        MixedTransformView slice = Views.hyperSlice(Views.raster(transformedSlice), 1, 10);
 
         bb = imgToByteBuffer(slice, Intervals.createMinMax(0,0,width,height));
 
         //bb = BufferUtils.allocateByte((int) (width*height*3));
+
 
         GenericTexture tex = new GenericTexture("imgPlane", new GLVector(width, height,1),1, GLTypeEnum.UnsignedByte, bb);
 
