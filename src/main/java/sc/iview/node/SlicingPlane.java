@@ -115,10 +115,7 @@ public class SlicingPlane<T extends GenericByteType> extends Node {
     public void rotate(float i) {
         imgPlane.setRotation(imgPlane.getRotation().rotateByAngleY(i));
 
-        AffineTransform3D imgPlaneTform = convertGLMatrixToAffineTransform3D(imgPlane.getWorld());
-        AffineTransform3D volumeTform = convertGLMatrixToAffineTransform3D(v.getWorld());
-
-        AffineTransform3D tform = volumeTform.concatenate(imgPlaneTform);
+        AffineTransform3D tform = convertGLMatrixToAffineTransform3D(imgPlane.getWorld());
 
         RealRandomAccessible<T> realImg = Views.interpolate(Views.extendZero(img), new NearestNeighborInterpolatorFactory<T>());
         RealTransformRandomAccessible transformedSlice = RealViews.transform(realImg, tform);
@@ -127,12 +124,11 @@ public class SlicingPlane<T extends GenericByteType> extends Node {
         long height = img.dimension(1);
 
         // TODO the slice position is not correct
-        MixedTransformView slice = Views.hyperSlice(Views.raster(transformedSlice), 1, 10);
+        MixedTransformView slice = Views.hyperSlice(Views.raster(transformedSlice), 2, 0);
 
         bb = imgToByteBuffer(slice, Intervals.createMinMax(0,0,width,height));
 
         //bb = BufferUtils.allocateByte((int) (width*height*3));
-
 
         GenericTexture tex = new GenericTexture("imgPlane", new GLVector(width, height,1),1, GLTypeEnum.UnsignedByte, bb);
 
