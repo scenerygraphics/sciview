@@ -97,9 +97,11 @@ public class SlicingPlaneDemo implements Command {
         v.setNeedsUpdate(true);
 
         SlicingPlane p = new SlicingPlane( v, cube );
-        sciView.animate( 10, () -> p.rotate(0.01f) );
-        //p.rotate(0);
+        sciView.animate( 10, () -> p.rotate(0.07f) );
+        //p.rotate((float) (Math.PI*2));
         sciView.addNode(p);
+
+        // TODO write a test that checks a hyperslice v. a slice that has been transformed (e.g., at 90 degree angles)
 
         sciView.setActiveNode(v);
         sciView.centerOnNode( sciView.getActiveNode() );
