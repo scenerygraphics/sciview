@@ -1645,7 +1645,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
                     GLTypeEnum.UnsignedByte,
                     byteBuffer,
                     // don't repeat the color map
-                    false, false, false)));
+                    TextureRepeatMode.ClampToEdge, TextureRepeatMode.ClampToEdge, TextureRepeatMode.ClampToEdge)));
             ((Volume) n).setColormap("sciviewColormap");
             n.setDirty(true);
             n.setNeedsUpdate(true);
