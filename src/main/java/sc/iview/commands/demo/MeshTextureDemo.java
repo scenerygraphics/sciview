@@ -31,6 +31,7 @@ package sc.iview.commands.demo;
 import static sc.iview.commands.MenuWeights.DEMO;
 import static sc.iview.commands.MenuWeights.DEMO_MESH_TEXTURE;
 
+import graphics.scenery.TextureRepeatMode;
 import java.nio.ByteBuffer;
 
 import org.scijava.command.Command;
@@ -97,6 +98,13 @@ public class MeshTextureDemo implements Command {
         }
         bb.flip();
 
-        return new GenericTexture( "neverUsed", dims, nChannels, GLTypeEnum.UnsignedByte, bb, true, true, false );
+        return new GenericTexture( "neverUsed",
+				dims,
+				nChannels,
+				GLTypeEnum.UnsignedByte,
+				bb,
+				TextureRepeatMode.Repeat,
+				TextureRepeatMode.Repeat,
+				TextureRepeatMode.ClampToEdge);
     }
 }
