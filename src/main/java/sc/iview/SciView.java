@@ -90,6 +90,7 @@ import org.scijava.thread.ThreadService;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.InputTrigger;
 import org.scijava.ui.swing.menu.SwingJMenuBarCreator;
+import org.scijava.ui.swing.script.InterpreterPane;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.Colors;
 import org.scijava.util.VersionUtils;
@@ -194,6 +195,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     private SceneryJPanel panel;
     private JSplitPane mainSplitPane;
     private JSplitPane inspector;
+    private InterpreterPane interpreterPane;
     private NodePropertyEditor nodePropertyEditor;
     private ArrayList<PointLight> lights;
     private Stack<HashMap<String, Object>> controlStack;
@@ -373,6 +375,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         final JPanel p = new JPanel(new BorderLayout(0, 0));
         panel = new SceneryJPanel();
+
+
         JPopupMenu.setDefaultLightWeightPopupEnabled(false);
         final JMenuBar swingMenuBar = new JMenuBar();
         new SwingJMenuBarCreator().createMenus(menus.getMenu("SciView"), swingMenuBar);
@@ -431,6 +435,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         inspector.setContinuousLayout(true);
         inspector.setBorder(BorderFactory.createEmptyBorder());
 
+        // replPane
+
+
         mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
                 p,
                 inspector
@@ -438,7 +445,15 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         mainSplitPane.setDividerLocation( getWindowWidth()/3 * 2 );
         mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
 
-        frame.add(mainSplitPane, BorderLayout.CENTER);
+        interpreterPane = new InterpreterPane(getScijavaContext());
+        JSplitPane replSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
+                mainSplitPane,
+                interpreterPane.getComponent());
+        replSplitPane.setDividerLocation( getWindowHeight()/10 * 6 );
+        replSplitPane.setBorder(BorderFactory.createEmptyBorder());
+
+        //frame.add(mainSplitPane, BorderLayout.CENTER);
+        frame.add(replSplitPane, BorderLayout.CENTER);
 
         SciView sciView = this;
         frame.addWindowListener(new WindowAdapter() {
