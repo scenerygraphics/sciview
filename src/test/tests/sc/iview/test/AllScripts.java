@@ -31,7 +31,7 @@ import java.util.concurrent.Future;
 
 public class AllScripts {
 
-    static public void main(String args[]) {
+    static public void main(String[] args) {
         SceneryBase.xinitThreads();
 
         System.setProperty( "scijava.log.level:sc.iview", "debug" );
