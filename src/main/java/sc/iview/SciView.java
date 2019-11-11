@@ -1473,6 +1473,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             deleteNode(child, activePublish);
         }
 
+        objectService.removeObject(node);
         node.getParent().removeChild( node );
         if( activePublish ) {
             eventService.publish(new NodeRemovedEvent(node));
