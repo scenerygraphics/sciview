@@ -1473,6 +1473,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             deleteNode(child, activePublish);
         }
 
+        objectService.removeObject(node);
         node.getParent().removeChild( node );
         if( activePublish ) {
             eventService.publish(new NodeRemovedEvent(node));
@@ -1484,8 +1485,14 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * Dispose the current scenery renderer, hub, and other scenery things
      */
     public void dispose() {
+        List<Node> objs = objectService.getObjects(Node.class);
+        for( Node obj : objs ) {
+            objectService.removeObject(obj);
+        }
+        getScijavaContext().service(SciViewService.class).close(this);
         this.close();
     }
+
 
     /**
      * Move the current active camera to the specified position
