@@ -195,6 +195,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     private SceneryJPanel panel;
     private JSplitPane mainSplitPane;
     private JSplitPane inspector;
+    private JSplitPane interpreterSplitPane;
     private InterpreterPane interpreterPane;
     private NodePropertyEditor nodePropertyEditor;
     private ArrayList<PointLight> lights;
@@ -446,14 +447,14 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
 
         interpreterPane = new InterpreterPane(getScijavaContext());
-        JSplitPane replSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
+        interpreterSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
                 mainSplitPane,
                 interpreterPane.getComponent());
-        replSplitPane.setDividerLocation( getWindowHeight()/10 * 6 );
-        replSplitPane.setBorder(BorderFactory.createEmptyBorder());
+        interpreterSplitPane.setDividerLocation( getWindowHeight()/10 * 6 );
+        interpreterSplitPane.setBorder(BorderFactory.createEmptyBorder());
 
         //frame.add(mainSplitPane, BorderLayout.CENTER);
-        frame.add(replSplitPane, BorderLayout.CENTER);
+        frame.add(interpreterSplitPane, BorderLayout.CENTER);
 
         SciView sciView = this;
         frame.addWindowListener(new WindowAdapter() {
@@ -1365,6 +1366,25 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         }
 
     }
+
+    public void setInspectorWindowVisibility(boolean visible)
+    {
+        inspector.setVisible(visible);
+        if( visible )
+            mainSplitPane.setDividerLocation(getWindowWidth()/4 * 3);
+        else
+            mainSplitPane.setDividerLocation(getWindowWidth());
+    }
+
+    public void setInterpreterWindowVisibility(boolean visible)
+    {
+        interpreterPane.getComponent().setVisible(visible);
+        if( visible )
+            interpreterSplitPane.setDividerLocation(getWindowHeight()/10 * 6);
+        else
+            interpreterSplitPane.setDividerLocation(getWindowHeight());
+    }
+
 
     /**
      * Create an animation thread with the given fps speed and the specified action
