@@ -57,7 +57,7 @@ public final class MenuWeights {
 	public static final double EDIT_ADD_CAMERA = 6;
     public static final double EDIT_TOGGLE_FLOOR = 50;
     public static final double EDIT_DELETE_OBJECT = 100;
-    public static final double EDIT_PROPERTIES = 200;
+    public static final double EDIT_SCIVIEW_SETTINGS = 200;
 
     public static final double PROCESS_ISOSURFACE = 0;
     public static final double PROCESS_CONVEX_HULL = 1;
