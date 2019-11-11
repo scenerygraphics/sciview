@@ -32,7 +32,6 @@ import cleargl.GLVector;
 import com.jogamp.opengl.math.Quaternion;
 import graphics.scenery.*;
 import graphics.scenery.backends.ShaderType;
-import net.imagej.mesh.Mesh;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
 import org.scijava.io.IOService;
@@ -42,9 +41,6 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;

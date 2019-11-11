@@ -28,7 +28,6 @@
  */
 package sc.iview.commands;
 
-import net.imglib2.type.logic.BitType;
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.display.DisplayService;

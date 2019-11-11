@@ -87,7 +87,6 @@ import org.scijava.object.ObjectService;
 import org.scijava.plugin.Parameter;
 import org.scijava.service.SciJavaService;
 import org.scijava.thread.ThreadService;
-import org.scijava.ui.UIService;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.InputTrigger;
 import org.scijava.ui.swing.menu.SwingJMenuBarCreator;

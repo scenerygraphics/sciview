@@ -29,7 +29,6 @@
 
 package sc.iview.process;
 
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 

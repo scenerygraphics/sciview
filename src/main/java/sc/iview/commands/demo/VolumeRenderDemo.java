@@ -30,7 +30,6 @@ package sc.iview.commands.demo;
 
 import cleargl.GLVector;
 import graphics.scenery.Node;
-import graphics.scenery.volumes.TransferFunction;
 import graphics.scenery.volumes.Volume;
 import io.scif.services.DatasetIOService;
 import net.imagej.Dataset;
@@ -41,7 +40,6 @@ import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.scijava.command.Command;
-import org.scijava.command.CommandService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;

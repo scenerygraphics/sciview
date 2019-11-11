@@ -43,7 +43,6 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 import sc.iview.process.MeshConverter;
 
-import cleargl.GLVector;
 import graphics.scenery.Mesh;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //

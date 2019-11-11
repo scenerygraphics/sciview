@@ -41,7 +41,6 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
-import javax.naming.directory.BasicAttribute;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;

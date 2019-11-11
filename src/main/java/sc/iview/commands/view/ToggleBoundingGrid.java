@@ -31,14 +31,12 @@ package sc.iview.commands.view;
 import graphics.scenery.BoundingGrid;
 import graphics.scenery.Mesh;
 import graphics.scenery.Node;
-import net.imagej.ops.OpService;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
-import sc.iview.process.MeshConverter;
 
 import static sc.iview.commands.MenuWeights.*;
 

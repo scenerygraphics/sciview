@@ -49,7 +49,6 @@ import sc.iview.SciView;
 import cleargl.GLVector;
 import graphics.scenery.Material;
 import graphics.scenery.Node;
-import sc.iview.commands.view.CenterOnActiveNode;
 
 /**
  * A demo of meshes.

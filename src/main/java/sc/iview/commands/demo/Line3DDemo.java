@@ -33,7 +33,6 @@ import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.util.ColorRGB;
-import org.scijava.util.Colors;
 import sc.iview.SciView;
 import sc.iview.shape.Line3D;
 import sc.iview.vector.ClearGLVector3;

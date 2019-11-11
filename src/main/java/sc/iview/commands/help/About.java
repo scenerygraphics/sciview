@@ -8,7 +8,6 @@ import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
 
 import static sc.iview.commands.MenuWeights.*;
-import static sc.iview.commands.view.NodePropertyEditor.USAGE_TEXT;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Help", weight = HELP), //

@@ -28,8 +28,6 @@
  */
 package sc.iview.commands.view;
 
-import cleargl.GLVector;
-import com.jogamp.opengl.math.Quaternion;
 import graphics.scenery.Mesh;
 import graphics.scenery.Node;
 import org.scijava.command.Command;
