@@ -132,14 +132,7 @@ public class ParticleDemo implements Command {
             n.setMaterial(master.getMaterial());
 
             n.setPosition(new GLVector(x,y,z));
-            n.getMetadata().put("velocity",vel);
-
-            Quaternion newRot = new Quaternion();
-            float[] dir = new float[]{vel.x(), vel.y(), vel.z()};
-            float[] up = new float[]{0f, 1f, 0f};
-            newRot.setLookAt(dir, up,
-                    new float[3], new float[3], new float[3]).normalize();
-            n.setRotation(newRot);
+            faceNodeAlongVelocity(n, vel);
 
             master.getInstances().add(n);
             //sciView.addNode(n);
@@ -156,12 +149,7 @@ public class ParticleDemo implements Command {
                     // Switch velocity to point toward center + some random perturbation
                     GLVector perturb = new GLVector(threadRng.nextFloat() - 0.5f, threadRng.nextFloat() - 0.5f, threadRng.nextFloat() - 0.5f);
                     vel = pos.times(-1).plus(perturb).normalize();
-                    agent.getMetadata().put("velocity",vel);
-                    Quaternion newRot = new Quaternion();
-                    float[] dir = new float[]{vel.x(), vel.y(), vel.z()};
-                    float[] up = new float[]{0f, 1f, 0f};
-                    newRot.setLookAt(dir, up, new float[3], new float[3], new float[3]).normalize();
-                    agent.setRotation(newRot);
+                    faceNodeAlongVelocity(agent, vel);
 
                 } else {
                     vel = (GLVector) agent.getMetadata().get("velocity");
@@ -174,5 +162,16 @@ public class ParticleDemo implements Command {
 
         sciView.getFloor().setVisible(false);
         sciView.centerOnNode( agents.get(0) );
+    }
+
+    private void faceNodeAlongVelocity(Node n, GLVector vel) {
+        n.getMetadata().put("velocity",vel);
+
+        Quaternion newRot = new Quaternion();
+        float[] dir = new float[]{vel.x(), vel.y(), vel.z()};
+        float[] up = new float[]{0f, 1f, 0f};
+        newRot.setLookAt(dir, up,
+                new float[3], new float[3], new float[3]).normalize();
+        n.setRotation(newRot);
     }
 }
