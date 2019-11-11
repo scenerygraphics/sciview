@@ -2032,13 +2032,13 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     class showHelpDisplay implements ClickBehaviour {
 
         @Override public void click( int x, int y ) {
-            String helpString = "SciView help:\n\n";
+            StringBuilder helpString = new StringBuilder("SciView help:\n\n");
             for( InputTrigger trigger : getInputHandler().getAllBindings().keySet() ) {
-                helpString += trigger + "\t-\t" + getInputHandler().getAllBindings().get( trigger ) + "\n";
+                helpString.append(trigger).append("\t-\t").append(getInputHandler().getAllBindings().get(trigger)).append("\n");
             }
             // HACK: Make the console pop via stderr.
             // Later, we will use a nicer dialog box or some such.
-            log.warn( helpString );
+            log.warn(helpString.toString());
         }
     }
 
