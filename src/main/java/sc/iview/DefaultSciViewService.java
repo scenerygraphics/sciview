@@ -161,23 +161,12 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
 
     @Override
     public SciView getOrCreateActiveSciView() {
-        SciViewDisplay d = displayService.getActiveDisplay( SciViewDisplay.class );
-        if( d != null ) {
-            // We also have to check if the Viewer has been initialized
-            //   and we're doing it the bad way by polling. Replace if you want
-            SciView sv = d.get( 0 );
-            while( !sv.isInitialized() ) {
-                try {
-                    Thread.sleep( 20 );
-                } catch( InterruptedException e ) {
-                    logService.trace( e );
-                }
-            }
-            return sv;
-        }
+        SciView sv = getActiveSciView();
 
-        // Make one
-        SciView sv = makeSciView();
+        if( sv == null ) {
+            // Make one
+            sv = makeSciView();
+        }
 
         return sv;
 
