@@ -37,15 +37,15 @@ import net.imagej.ImageJService;
  */
 public interface SciViewService extends ImageJService {
 
-    public SciView getActiveSciView();
+    SciView getActiveSciView();
 
-    public SciView getOrCreateActiveSciView();
+    SciView getOrCreateActiveSciView();
 
-    public SciView getSciView( String name );
+    SciView getSciView(String name);
 
-    public void createSciView();
+    void createSciView();
 
-    public int numSciView();
+    int numSciView();
 
     void close(SciView sciView);
 }
