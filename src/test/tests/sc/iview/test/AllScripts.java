@@ -10,7 +10,6 @@ import net.imglib2.img.Img;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.junit.Assert;
-import org.junit.Test;
 import org.scijava.Context;
 import org.scijava.io.IOService;
 import org.scijava.log.LogService;
@@ -18,7 +17,6 @@ import org.scijava.script.ScriptModule;
 import org.scijava.script.ScriptService;
 import org.scijava.service.SciJavaService;
 import org.scijava.thread.ThreadService;
-import org.scijava.ui.UIService;
 import sc.iview.SciView;
 import sc.iview.SciViewService;
 import sc.iview.commands.demo.ResourceLoader;
@@ -31,7 +29,7 @@ import java.util.concurrent.Future;
 
 public class AllScripts {
 
-    static public void main(String args[]) {
+    static public void main(String[] args) {
         SceneryBase.xinitThreads();
 
         System.setProperty( "scijava.log.level:sc.iview", "debug" );

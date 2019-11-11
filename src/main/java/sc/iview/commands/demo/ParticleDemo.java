@@ -32,7 +32,6 @@ import cleargl.GLVector;
 import com.jogamp.opengl.math.Quaternion;
 import graphics.scenery.*;
 import graphics.scenery.backends.ShaderType;
-import net.imagej.mesh.Mesh;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
 import org.scijava.io.IOService;
@@ -42,9 +41,6 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -132,14 +128,7 @@ public class ParticleDemo implements Command {
             n.setMaterial(master.getMaterial());
 
             n.setPosition(new GLVector(x,y,z));
-            n.getMetadata().put("velocity",vel);
-
-            Quaternion newRot = new Quaternion();
-            float[] dir = new float[]{vel.x(), vel.y(), vel.z()};
-            float[] up = new float[]{0f, 1f, 0f};
-            newRot.setLookAt(dir, up,
-                    new float[3], new float[3], new float[3]).normalize();
-            n.setRotation(newRot);
+            faceNodeAlongVelocity(n, vel);
 
             master.getInstances().add(n);
             //sciView.addNode(n);
@@ -156,12 +145,7 @@ public class ParticleDemo implements Command {
                     // Switch velocity to point toward center + some random perturbation
                     GLVector perturb = new GLVector(threadRng.nextFloat() - 0.5f, threadRng.nextFloat() - 0.5f, threadRng.nextFloat() - 0.5f);
                     vel = pos.times(-1).plus(perturb).normalize();
-                    agent.getMetadata().put("velocity",vel);
-                    Quaternion newRot = new Quaternion();
-                    float[] dir = new float[]{vel.x(), vel.y(), vel.z()};
-                    float[] up = new float[]{0f, 1f, 0f};
-                    newRot.setLookAt(dir, up, new float[3], new float[3], new float[3]).normalize();
-                    agent.setRotation(newRot);
+                    faceNodeAlongVelocity(agent, vel);
 
                 } else {
                     vel = (GLVector) agent.getMetadata().get("velocity");
@@ -174,5 +158,16 @@ public class ParticleDemo implements Command {
 
         sciView.getFloor().setVisible(false);
         sciView.centerOnNode( agents.get(0) );
+    }
+
+    private void faceNodeAlongVelocity(Node n, GLVector vel) {
+        n.getMetadata().put("velocity",vel);
+
+        Quaternion newRot = new Quaternion();
+        float[] dir = new float[]{vel.x(), vel.y(), vel.z()};
+        float[] up = new float[]{0f, 1f, 0f};
+        newRot.setLookAt(dir, up,
+                new float[3], new float[3], new float[3]).normalize();
+        n.setRotation(newRot);
     }
 }

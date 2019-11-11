@@ -1,6 +1,5 @@
 package sc.iview.commands.view;
 
-import graphics.scenery.Node;
 import graphics.scenery.volumes.TransferFunction;
 import graphics.scenery.volumes.Volume;
 import org.scijava.command.Command;

@@ -31,26 +31,16 @@ package sc.iview.commands.demo;
 import cleargl.GLTypeEnum;
 import cleargl.GLVector;
 import graphics.scenery.*;
-import ij.ImagePlus;
-import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
 import net.imglib2.img.Img;
-import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.scijava.command.Command;
 import org.scijava.io.IOService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.util.Colors;
 import sc.iview.SciView;
-import sc.iview.vector.ClearGLVector3;
-import sc.iview.vector.Vector3;
 
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferByte;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 

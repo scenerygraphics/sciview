@@ -5,14 +5,11 @@ import graphics.scenery.*;
 import io.scif.SCIFIOService;
 import net.imagej.ImageJService;
 import org.junit.Assert;
-import org.junit.Test;
 import org.scijava.Context;
 import org.scijava.service.SciJavaService;
 import org.scijava.thread.ThreadService;
-import org.scijava.ui.UIService;
 import sc.iview.SciView;
 import sc.iview.SciViewService;
-import sc.iview.Utils;
 import sc.iview.vector.ClearGLVector3;
 
 public class SciViewTest {

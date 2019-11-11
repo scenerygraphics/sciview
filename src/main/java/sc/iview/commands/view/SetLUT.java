@@ -44,7 +44,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import static sc.iview.commands.MenuWeights.VIEW;
-import static sc.iview.commands.MenuWeights.VIEW_SCREENSHOT;
 import static sc.iview.commands.MenuWeights.VIEW_SET_LUT;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //

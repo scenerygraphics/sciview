@@ -29,7 +29,6 @@
 package sc.iview.commands.view;
 
 import cleargl.GLVector;
-import com.jogamp.opengl.math.Quaternion;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
@@ -39,7 +38,6 @@ import sc.iview.SciView;
 
 import static sc.iview.commands.MenuWeights.VIEW;
 import static sc.iview.commands.MenuWeights.VIEW_RESET_CAMERA_POSITION;
-import static sc.iview.commands.MenuWeights.VIEW_RESET_CAMERA_ROTATION;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
 menu = {@Menu(label = "View", weight = VIEW), //

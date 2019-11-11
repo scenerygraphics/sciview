@@ -31,19 +31,16 @@ package sc.iview.commands.process;
 import static sc.iview.commands.MenuWeights.PROCESS;
 import static sc.iview.commands.MenuWeights.PROCESS_MESH_TO_IMAGE;
 
-import graphics.scenery.Node;
 import net.imagej.ops.OpService;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.logic.BitType;
 
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
-import org.scijava.display.DisplayService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.ui.UIService;
 
 import sc.iview.SciView;
 import sc.iview.process.MeshConverter;

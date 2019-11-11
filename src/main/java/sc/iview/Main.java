@@ -28,18 +28,6 @@
  */
 package sc.iview;
 
-import graphics.scenery.SceneryBase;
-import io.scif.SCIFIOService;
-
-import net.imagej.ImageJService;
-
-import org.scijava.Context;
-import org.scijava.service.SciJavaService;
-import org.scijava.thread.ThreadService;
-import org.scijava.ui.UIService;
-
-import cleargl.GLVector;
-
 /**
  * Entry point for testing SciView functionality.
  * 

@@ -4,7 +4,6 @@ import cleargl.GLVector;
 import graphics.scenery.*;
 import graphics.scenery.volumes.Volume;
 
-import java.util.Collections;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -13,7 +12,6 @@ import java.awt.*;
 import java.awt.font.TextAttribute;
 import java.io.IOException;
 import java.util.Map;
-import javax.xml.soap.Text;
 
 /**
  * Class to render Node Property Tree with custom icons, depending on node type.

@@ -78,7 +78,6 @@ public class AddVolume implements Command {
     @Override
     public void run() {
         Node n = sciView.addVolume( image, new float[] { voxelWidth, voxelHeight, voxelDepth } );
-        n.setRenderScale(renderScale);
     }
 
 }

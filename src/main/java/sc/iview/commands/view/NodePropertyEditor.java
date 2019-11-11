@@ -31,7 +31,7 @@ package sc.iview.commands.view;
 import graphics.scenery.Node;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-import kotlin.jvm.Synchronized;
+
 import net.miginfocom.swing.MigLayout;
 import org.scijava.Context;
 import org.scijava.command.CommandInfo;

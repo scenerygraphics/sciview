@@ -43,7 +43,7 @@ public class CameraTranslateControl implements DragBehaviour {
 
     @Override public void drag( int x, int y ) {
 
-        if( sciView.getCamera().getLock().tryLock() != true) {
+        if(!sciView.getCamera().getLock().tryLock()) {
             return;
         }
 

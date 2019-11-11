@@ -25,11 +25,11 @@ public class Help implements Command {
     private UIService uiService;
 
     public String getKeybinds() {
-        String helpString = "";
+        StringBuilder helpString = new StringBuilder();
         for( InputTrigger trigger : sciView.getSceneryInputHandler().getAllBindings().keySet() ) {
-            helpString += trigger + "\t-\t" + sciView.getSceneryInputHandler().getAllBindings().get( trigger ) + "\n";
+            helpString.append(trigger).append("\t-\t").append(sciView.getSceneryInputHandler().getAllBindings().get(trigger)).append("\n");
         }
-        return helpString;
+        return helpString.toString();
     }
 
     @Override
