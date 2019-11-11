@@ -120,7 +120,7 @@ public class NodeTranslateControl implements DragBehaviour, ScrollBehaviour {
     }
 
     @Override public void drag( int x, int y ) {
-        if( sciView.getActiveNode() == null || sciView.getActiveNode().getLock().tryLock() != true) {
+        if( sciView.getActiveNode() == null || !sciView.getActiveNode().getLock().tryLock()) {
             return;
         }
 
@@ -141,7 +141,7 @@ public class NodeTranslateControl implements DragBehaviour, ScrollBehaviour {
 
     @Override
     public void scroll(double wheelRotation, boolean isHorizontal, int x, int y) {
-        if( sciView.getActiveNode() == null || sciView.getActiveNode().getLock().tryLock() != true) {
+        if( sciView.getActiveNode() == null || !sciView.getActiveNode().getLock().tryLock()) {
             return;
         }
 
