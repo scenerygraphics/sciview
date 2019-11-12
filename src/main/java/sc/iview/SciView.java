@@ -447,6 +447,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
 
         interpreterPane = new InterpreterPane(getScijavaContext());
+        ((JSplitPane) interpreterPane.getComponent()).setDividerLocation(0);
         interpreterSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
                 mainSplitPane,
                 interpreterPane.getComponent());
