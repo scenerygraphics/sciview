@@ -107,6 +107,7 @@ import sc.iview.vector.Vector3;
 import tpietzsch.example2.VolumeViewerOptions;
 
 import javax.imageio.ImageIO;
+import javax.script.ScriptException;
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicLookAndFeel;
 import java.awt.*;
@@ -451,8 +452,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         interpreterSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
                 mainSplitPane,
                 interpreterPane.getComponent());
-        interpreterSplitPane.setDividerLocation( getWindowHeight()/10 * 6 );
+        interpreterSplitPane.setDividerLocation( getWindowHeight()/10 * 7 );
         interpreterSplitPane.setBorder(BorderFactory.createEmptyBorder());
+
+        initializeInterpreter();
 
         //frame.add(mainSplitPane, BorderLayout.CENTER);
         frame.add(interpreterSplitPane, BorderLayout.CENTER);
@@ -516,6 +519,18 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
                     }
                     return null;
                 });
+    }
+
+    private void initializeInterpreter() {
+        String startupCode = "";
+        startupCode = new Scanner(SciView.class.getResourceAsStream("startup.py"), "UTF-8").useDelimiter("\\A").next();
+        interpreterPane.getREPL().lang("Python");
+        interpreterPane.getREPL().getInterpreter().getBindings().put("sciView", this);
+        try {
+            interpreterPane.getREPL().getInterpreter().eval(startupCode);
+        } catch (ScriptException e) {
+            e.printStackTrace();
+        }
     }
 
     /*
