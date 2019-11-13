@@ -1,4 +1,4 @@
-package sc.iview.shape;
+package sc.iview.node;
 
 import cleargl.GLVector;
 import graphics.scenery.*;
