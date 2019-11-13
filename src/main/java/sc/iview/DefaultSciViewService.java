@@ -52,7 +52,7 @@ import sc.iview.display.SciViewDisplay;
  *
  * @author Kyle Harrington (University of Idaho, Moscow)
  */
-@Plugin(type = Service.class)
+@Plugin(type = Service.class, name="sciViewService")
 public class DefaultSciViewService extends AbstractService implements SciViewService {
 
     /* Parameters */
