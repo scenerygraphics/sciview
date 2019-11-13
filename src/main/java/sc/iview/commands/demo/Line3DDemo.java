@@ -34,7 +34,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.util.ColorRGB;
 import sc.iview.SciView;
-import sc.iview.shape.Line3D;
+import sc.iview.node.Line3D;
 import sc.iview.vector.ClearGLVector3;
 import sc.iview.vector.Vector3;
 

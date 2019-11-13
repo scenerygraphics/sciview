@@ -284,7 +284,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         tetrahedron[2] = new GLVector( 0.0f,1.0f,1.0f/(float)Math.sqrt(2.0) );
         tetrahedron[3] = new GLVector( 0.0f,-1.0f,1.0f/(float)Math.sqrt(2.0) );
 
-        lights = new ArrayList<PointLight>();
+        lights = new ArrayList<>();
 
         for( int i = 0; i < 4; i++ ) {// TODO allow # initial lights to be customizable?
             PointLight light = new PointLight(150.0f);
