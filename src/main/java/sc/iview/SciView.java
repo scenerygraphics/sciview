@@ -53,6 +53,7 @@ import graphics.scenery.volumes.bdv.BDVVolume;
 import io.scif.SCIFIOService;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
+import kotlin.jvm.functions.Function3;
 import kotlin.jvm.functions.Function5;
 import net.imagej.Dataset;
 import net.imagej.ImageJService;
@@ -104,7 +105,6 @@ import sc.iview.event.NodeChangedEvent;
 import sc.iview.event.NodeRemovedEvent;
 import sc.iview.process.MeshConverter;
 import sc.iview.ui.ContextPopUp;
-import sc.iview.ui.ContextSelectCommand;
 import sc.iview.vector.ClearGLVector3;
 import sc.iview.vector.Vector3;
 import tpietzsch.example2.VolumeViewerOptions;
@@ -738,15 +738,15 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     public void setObjectSelectionMode() {
-        Function5<Integer, Integer, GLVector, GLVector, ? super List<Scene.RaycastResult>, Unit> selectAction = (x,y,worldPos,worldDir,nearest) -> {
-            if( !nearest.isEmpty() ) {
-                setActiveNode( nearest.get( 0 ).getNode() );
+        Function3<Scene.RaycastResult, Integer, Integer, Unit> selectAction = (nearest,x,y) -> {
+            if( !nearest.getMatches().isEmpty() ) {
+                setActiveNode( nearest.getMatches().get( 0 ).getNode() );
                 nodePropertyEditor.trySelectNode( getActiveNode() );
                 log.debug( "Selected node: " + getActiveNode().getName() );
 
                 // Setup the context menu for this node
 
-                ContextPopUp menu = new ContextPopUp(nearest.get(0).getNode());
+                ContextPopUp menu = new ContextPopUp(nearest.getMatches().get(0).getNode());
                 menu.show(panel, x, y);
             }
             return Unit.INSTANCE;
@@ -757,7 +757,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     /*
      * Set the action used during object selection
      */
-    public void setObjectSelectionMode(Function5<Integer, Integer, GLVector, GLVector, ? super List<Scene.RaycastResult>, Unit> selectAction) {
+    public void setObjectSelectionMode(Function3<Scene.RaycastResult, Integer, Integer, Unit> selectAction) {
         final InputHandler h = getInputHandler();
         List<Class<?>> ignoredObjects = new ArrayList<>();
         ignoredObjects.add( BoundingGrid.class );
@@ -767,7 +767,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             return;
         }
         h.addBehaviour( "object_selection_mode",
-                                        new ContextSelectCommand( "objectSelector", getRenderer(), getScene(),
+                                        new SelectCommand( "objectSelector", getRenderer(), getScene(),
                                                            () -> getScene().findObserver(), false, ignoredObjects,
                                                            selectAction ) );
         h.addKeyBinding( "object_selection_mode", "double-click button1" );
