@@ -558,6 +558,14 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         floor = n;
     }
 
+    /**
+     * Return the current SceneryJPanel. This is necessary for custom context menus
+     * @return
+     */
+    public SceneryJPanel getSceneryJPanel() {
+        return panel;
+    }
+
     /*
      * Return true if the scene has been initialized
      */
