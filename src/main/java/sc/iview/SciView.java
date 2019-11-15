@@ -2117,6 +2117,15 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         }
     }
 
+    /**
+     * Return a list of all nodes that match a given predicate function
+     * @param nodeMatchPredicate, returns true if a node is a match
+     * @return
+     */
+    public List<Node> findNodes(Function1<Node, Boolean> nodeMatchPredicate) {
+        return getScene().discover(getScene(), nodeMatchPredicate, false);
+    }
+
     /*
      * Convenience function for getting a string of info about a Node
      */
