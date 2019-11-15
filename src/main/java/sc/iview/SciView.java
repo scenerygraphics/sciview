@@ -53,6 +53,8 @@ import graphics.scenery.volumes.bdv.BDVVolume;
 import io.scif.SCIFIOService;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
+import kotlin.jvm.functions.Function3;
+import kotlin.jvm.functions.Function5;
 import net.imagej.Dataset;
 import net.imagej.ImageJService;
 import net.imagej.axis.CalibratedAxis;
@@ -102,6 +104,7 @@ import sc.iview.event.NodeAddedEvent;
 import sc.iview.event.NodeChangedEvent;
 import sc.iview.event.NodeRemovedEvent;
 import sc.iview.process.MeshConverter;
+import sc.iview.ui.ContextPopUp;
 import sc.iview.vector.ClearGLVector3;
 import sc.iview.vector.Vector3;
 import tpietzsch.example2.VolumeViewerOptions;
@@ -378,7 +381,6 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         final JPanel p = new JPanel(new BorderLayout(0, 0));
         panel = new SceneryJPanel();
 
-
         JPopupMenu.setDefaultLightWeightPopupEnabled(false);
         final JMenuBar swingMenuBar = new JMenuBar();
         new SwingJMenuBarCreator().createMenus(menus.getMenu("SciView"), swingMenuBar);
@@ -423,6 +425,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         p.setBackground(new java.awt.Color(50, 48, 47));
         p.add(panel, BorderLayout.CENTER);
         panel.setVisible(true);
+
+
 
         nodePropertyEditor.getComponent(); // Initialize node property panel
 
@@ -552,6 +556,14 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      */
     public void setFloor( Node n ) {
         floor = n;
+    }
+
+    /**
+     * Return the current SceneryJPanel. This is necessary for custom context menus
+     * @return
+     */
+    public SceneryJPanel getSceneryJPanel() {
+        return panel;
     }
 
     /*
@@ -726,11 +738,16 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     public void setObjectSelectionMode() {
-        Function1<? super List<Scene.RaycastResult>, Unit> selectAction = nearest -> {
-            if( !nearest.isEmpty() ) {
-                setActiveNode( nearest.get( 0 ).getNode() );
+        Function3<Scene.RaycastResult, Integer, Integer, Unit> selectAction = (nearest,x,y) -> {
+            if( !nearest.getMatches().isEmpty() ) {
+                setActiveNode( nearest.getMatches().get( 0 ).getNode() );
                 nodePropertyEditor.trySelectNode( getActiveNode() );
                 log.debug( "Selected node: " + getActiveNode().getName() );
+
+                // Setup the context menu for this node
+
+                ContextPopUp menu = new ContextPopUp(nearest.getMatches().get(0).getNode());
+                menu.show(panel, x, y);
             }
             return Unit.INSTANCE;
         };
@@ -740,7 +757,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     /*
      * Set the action used during object selection
      */
-    public void setObjectSelectionMode(Function1<? super List<Scene.RaycastResult>, Unit> selectAction) {
+    public void setObjectSelectionMode(Function3<Scene.RaycastResult, Integer, Integer, Unit> selectAction) {
         final InputHandler h = getInputHandler();
         List<Class<?>> ignoredObjects = new ArrayList<>();
         ignoredObjects.add( BoundingGrid.class );
