@@ -1682,6 +1682,19 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
+     * Set the colormap using an ImageJ LUT name
+     * @param n
+     * @param lutName
+     */
+    public void setColormap( Node n, String lutName ) {
+        try {
+            setColormap( n, lutService.loadLUT( lutService.findLUTs().get( lutName ) ) );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Set the ColorMap of node n to the supplied colorTable
      * @param n
      * @param colorTable
