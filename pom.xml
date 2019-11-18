@@ -189,6 +189,10 @@
 			<artifactId>imagej-launcher</artifactId>
 			<version>${imagej-launcher.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>scripting-jython</artifactId>
+		</dependency>
 
 		<!-- ImgLib2 dependencies -->
 		<dependency>
