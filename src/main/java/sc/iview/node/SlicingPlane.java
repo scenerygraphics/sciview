@@ -112,19 +112,22 @@ public class SlicingPlane<T extends GenericByteType> extends Node {
         return bb;
     }
 
-    public void rotate(float i) {
-        imgPlane.setRotation(imgPlane.getRotation().rotateByAngleY(i));
-
+    public RandomAccessible<T> randomAccessible() {
         AffineTransform3D tform = convertGLMatrixToAffineTransform3D(imgPlane.getWorld());
 
         RealRandomAccessible<T> realImg = Views.interpolate(Views.extendZero(img), new NearestNeighborInterpolatorFactory<T>());
         RealTransformRandomAccessible transformedSlice = RealViews.transform(realImg, tform);
 
+        // TODO the slice position is not correct
+        return Views.hyperSlice(Views.raster(transformedSlice), 2, img.dimension(0)/2);
+    }
+
+    public void rotate(float i) {
+        imgPlane.setRotation(imgPlane.getRotation().rotateByAngleY(i));
+
+        RandomAccessible<T> slice = randomAccessible();
         long width = img.dimension(0);
         long height = img.dimension(1);
-
-        // TODO the slice position is not correct
-        MixedTransformView slice = Views.hyperSlice(Views.raster(transformedSlice), 2, 10);
 
         bb = imgToByteBuffer(slice, Intervals.createMinMax(0,0,width-1,height-1));
 
