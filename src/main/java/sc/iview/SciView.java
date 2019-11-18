@@ -54,7 +54,6 @@ import io.scif.SCIFIOService;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import kotlin.jvm.functions.Function3;
-import kotlin.jvm.functions.Function5;
 import net.imagej.Dataset;
 import net.imagej.ImageJService;
 import net.imagej.axis.CalibratedAxis;
@@ -440,6 +439,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         inspector.setDividerLocation( getWindowHeight() / 3 );
         inspector.setContinuousLayout(true);
         inspector.setBorder(BorderFactory.createEmptyBorder());
+        inspector.setDividerSize(1);
 
         // replPane
 
@@ -450,14 +450,24 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         );
         mainSplitPane.setDividerLocation( getWindowWidth()/3 * 2 );
         mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
+        mainSplitPane.setDividerSize(1);
 
         interpreterPane = new InterpreterPane(getScijavaContext());
         ((JSplitPane) interpreterPane.getComponent()).setDividerLocation(0);
+        ((JSplitPane) interpreterPane.getComponent()).setDividerSize(1);
+        ((JSplitPane)((JSplitPane) interpreterPane.getComponent()).getRightComponent()).setDividerSize(1);
+        Component comp  = ((JPanel)((JSplitPane)((JSplitPane) interpreterPane.getComponent()).getRightComponent()).getBottomComponent()).getComponent(0);
+        ((JScrollPane)comp).setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+        JTextArea promptArea = (JTextArea)((JScrollPane) comp).getViewport().getView();
+        promptArea.setFont(new Font("Courier New", Font.PLAIN, 10));
+
+        interpreterPane.getComponent().setBorder(BorderFactory.createEmptyBorder());
         interpreterSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
                 mainSplitPane,
                 interpreterPane.getComponent());
         interpreterSplitPane.setDividerLocation( getWindowHeight()/10 * 7 );
         interpreterSplitPane.setBorder(BorderFactory.createEmptyBorder());
+        interpreterSplitPane.setDividerSize(1);
 
         initializeInterpreter();
 
