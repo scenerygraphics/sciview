@@ -91,7 +91,6 @@ import org.scijava.thread.ThreadService;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.InputTrigger;
 import org.scijava.ui.swing.menu.SwingJMenuBarCreator;
-import org.scijava.ui.swing.script.InterpreterPane;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.Colors;
 import org.scijava.util.VersionUtils;
@@ -104,6 +103,7 @@ import sc.iview.event.NodeChangedEvent;
 import sc.iview.event.NodeRemovedEvent;
 import sc.iview.process.MeshConverter;
 import sc.iview.ui.ContextPopUp;
+import sc.iview.ui.REPLPane;
 import sc.iview.vector.ClearGLVector3;
 import sc.iview.vector.Vector3;
 import tpietzsch.example2.VolumeViewerOptions;
@@ -199,7 +199,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     private JSplitPane mainSplitPane;
     private JSplitPane inspector;
     private JSplitPane interpreterSplitPane;
-    private InterpreterPane interpreterPane;
+    private REPLPane interpreterPane;
     private NodePropertyEditor nodePropertyEditor;
     private ArrayList<PointLight> lights;
     private Stack<HashMap<String, Object>> controlStack;
@@ -452,14 +452,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
         mainSplitPane.setDividerSize(1);
 
-        interpreterPane = new InterpreterPane(getScijavaContext());
-        ((JSplitPane) interpreterPane.getComponent()).setDividerLocation(0);
-        ((JSplitPane) interpreterPane.getComponent()).setDividerSize(1);
-        ((JSplitPane)((JSplitPane) interpreterPane.getComponent()).getRightComponent()).setDividerSize(1);
-        Component comp  = ((JPanel)((JSplitPane)((JSplitPane) interpreterPane.getComponent()).getRightComponent()).getBottomComponent()).getComponent(0);
-        ((JScrollPane)comp).setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
-        JTextArea promptArea = (JTextArea)((JScrollPane) comp).getViewport().getView();
-        promptArea.setFont(new Font("Courier New", Font.PLAIN, 10));
+        interpreterPane = new REPLPane(getScijavaContext());
 
         interpreterPane.getComponent().setBorder(BorderFactory.createEmptyBorder());
         interpreterSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
@@ -538,7 +531,6 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     private void initializeInterpreter() {
         String startupCode = "";
         startupCode = new Scanner(SciView.class.getResourceAsStream("startup.py"), "UTF-8").useDelimiter("\\A").next();
-        interpreterPane.getREPL().lang("Python");
         interpreterPane.getREPL().getInterpreter().getBindings().put("sciView", this);
         try {
             interpreterPane.getREPL().getInterpreter().eval(startupCode);
