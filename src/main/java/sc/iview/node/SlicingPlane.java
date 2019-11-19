@@ -106,7 +106,7 @@ public class SlicingPlane<T extends GenericByteType> extends Node {
 
         for( int y = 0; y < d.dimension(1); y++ ) {
             for( int x = 0; x < d.dimension(0); x++ ) {
-                pos[0] = x; pos[1] = d.dimension(1) - y - 1;
+                pos[0] = x; pos[1] = y;
                 ra.setPosition(pos);
                 bb.put(ra.get().getByte());
             }
@@ -117,7 +117,11 @@ public class SlicingPlane<T extends GenericByteType> extends Node {
     }
 
     public RandomAccessible<T> randomAccessible() {
-        AffineTransform3D planeTform = convertGLMatrixToAffineTransform3D(imgPlane.getWorld());
+        //AffineTransform3D planeTform = convertGLMatrixToAffineTransform3D(imgPlane.getWorld());
+        AffineTransform3D planeTform = convertGLMatrixToAffineTransform3D(imgPlane.getWorld().translate(v.getMaximumBoundingBox().getMax()));
+//        planeTform.translate(v.getMaximumBoundingBox().getMax().x(),
+//                v.getMaximumBoundingBox().getMax().y(),
+//                v.getMaximumBoundingBox().getMax().z());
         AffineTransform3D volTform = convertGLMatrixToAffineTransform3D(v.getWorld());
         AffineTransform3D tform = planeTform.concatenate(volTform.inverse());
 

@@ -40,6 +40,7 @@ public class Utils {
             ds[k] = fs[k];
         }
         tform.set(ds);
+        tform.translate(tmat.get(3,0), tmat.get(3,1), tmat.get(3,2));
         return tform;
     }
 
