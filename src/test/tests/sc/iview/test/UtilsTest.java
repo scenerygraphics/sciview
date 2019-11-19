@@ -22,13 +22,16 @@ public class UtilsTest {
 
         affine.translate(translation[0], translation[1], translation[2]);
         n.setPosition(new GLVector(translation));
+        n.updateWorld(true,true);
 
         AffineTransform3D fromN = createAffineTransform3DFromNode(n);
         assertTransformsEqual(affine, fromN);
 
         // Test rotation
-        double angle = Math.PI * 0.27;
+        double angle = Math.PI;
+        affine = new AffineTransform3D();
         affine.rotate(0,angle);
+        affine.translate(translation[0], translation[1], translation[2]);
 
         n.getRotation().rotateByAngleX((float) angle);
         n.updateWorld(true,true);
@@ -40,9 +43,9 @@ public class UtilsTest {
     private void assertTransformsEqual(AffineTransform3D affine, AffineTransform3D fromN) {
         double[] affineArray = affine.getRowPackedCopy();
         double[] nArray= fromN.getRowPackedCopy();
-        for(int k = 0; k < affineArray.length; k++) {
-            Assert.assertEquals(affineArray[k], nArray[k], 0.001);
-        }
+
+        Assert.assertArrayEquals(affineArray, nArray, 0.001);
+
     }
 
 
