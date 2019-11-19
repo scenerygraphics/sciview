@@ -25,7 +25,7 @@ public class Utils {
                              color.getBlue() / 255f );
     }
 
-    static public AffineTransform3D createAffineTransform3DFromNode(Node n) {
+    static public AffineTransform3D createAffineTransform3DFromNode(Node n, boolean setTranslation) {
         AffineTransform3D tform = new AffineTransform3D();
         double[] ds = new double[16];
 
@@ -52,9 +52,15 @@ public class Utils {
                 m.get(3,2),
                 m.get(3,3));
 
+//        float[] rot = n.getRotation().toMatrix(new float[16], 0);
+//        for( int k = 0; k < ds.length; k++ )
+//            ds[k] = rot[k];
+//        tform.set(ds);
+
         GLVector p = n.getPosition();
-        
-        tform.setTranslation(p.x(), p.y(), p.z());
+
+        if( setTranslation )
+            tform.setTranslation(p.x(), p.y(), p.z());
         
         return tform;
     }

@@ -119,12 +119,39 @@ public class SlicingPlane<T extends GenericByteType> extends Node {
 
     public RandomAccessible<T> randomAccessible() {
         //AffineTransform3D planeTform = convertGLMatrixToAffineTransform3D(imgPlane.getWorld());
-        AffineTransform3D planeTform = createAffineTransform3DFromNode(imgPlane);
-        planeTform.translate(v.getMaximumBoundingBox().getMax().x(),
-                v.getMaximumBoundingBox().getMax().y(),
-                v.getMaximumBoundingBox().getMax().z());
-        AffineTransform3D volTform = convertGLMatrixToAffineTransform3D(v.getWorld());
-        AffineTransform3D tform = planeTform.concatenate(volTform.inverse());
+        AffineTransform3D planeRotation = createAffineTransform3DFromNode(imgPlane, false);
+        AffineTransform3D planeTranslation = new AffineTransform3D();
+        planeTranslation.translate(imgPlane.getPosition().x(), imgPlane.getPosition().y(), imgPlane.getPosition().z());
+//        planeTform.translate(v.getMaximumBoundingBox().getMax().x(),
+//                v.getMaximumBoundingBox().getMax().y(),
+//                v.getMaximumBoundingBox().getMax().z());
+        //AffineTransform3D volTform = convertGLMatrixToAffineTransform3D(v.getWorld());
+        //AffineTransform3D tform = planeTform.concatenate(volTform.inverse());
+        AffineTransform3D volRotation = createAffineTransform3DFromNode(v, false);
+        AffineTransform3D volTranslation = new AffineTransform3D();
+        volTranslation.translate(v.getPosition().x(), v.getPosition().y(), v.getPosition().z());
+
+        AffineTransform3D dTranslation = new AffineTransform3D();
+        GLVector dV = imgPlane.getPosition().minus(v.getPosition()).plus(v.getMaximumBoundingBox().getMax());
+        dTranslation.translate(dV.x(), dV.y(), dV.z());
+        AffineTransform3D tform = planeRotation.concatenate(volRotation.inverse());
+
+//        RealPoint p = new RealPoint(0,0,0);
+//        RealPoint outp = new RealPoint(0,0,0);
+//
+//        tform.apply(p,outp);
+//        System.out.println("Tform: " + outp);
+
+//        RealPoint p = new RealPoint(10, 10, 10);
+//        RealPoint outp = new RealPoint(10, 10, 10);
+//        planeRotation.apply(p,outp);
+//        System.out.println("Plane rotation: " + outp);
+//        planeRotation.concatenate(planeTranslation).apply(p,outp);
+//        System.out.println("Plane rotation + translation: " + outp);
+//        planeRotation.concatenate(planeTranslation).concatenate(volRotation).apply(p,outp);
+//        System.out.println("Plane rotation + translation + vol rot: " + outp);
+//        planeRotation.concatenate(planeTranslation).concatenate(volRotation).concatenate(volTranslation).apply(p,outp);
+//        System.out.println("Plane rotation + translation + vol rot + vol trans: " + outp);
 
         RealRandomAccessible<T> realImg = Views.interpolate(Views.extendZero(img), new NearestNeighborInterpolatorFactory<T>());
         RealTransformRandomAccessible transformedSlice = RealViews.transform(realImg, tform);

@@ -24,7 +24,7 @@ public class UtilsTest {
         n.setPosition(new GLVector(translation));
         n.updateWorld(true,true);
 
-        AffineTransform3D fromN = createAffineTransform3DFromNode(n);
+        AffineTransform3D fromN = createAffineTransform3DFromNode(n, true);
         assertTransformsEqual(affine, fromN);
 
         // Test rotation
@@ -36,7 +36,7 @@ public class UtilsTest {
         n.getRotation().rotateByAngleX((float) angle);
         n.updateWorld(true,true);
 
-        fromN = createAffineTransform3DFromNode(n);
+        fromN = createAffineTransform3DFromNode(n, true);
         assertTransformsEqual(affine, fromN);
     }
 
