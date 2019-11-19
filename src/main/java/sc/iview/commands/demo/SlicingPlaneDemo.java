@@ -29,16 +29,11 @@
 package sc.iview.commands.demo;
 
 import cleargl.GLVector;
-import graphics.scenery.Node;
+import graphics.scenery.volumes.TransferFunction;
 import graphics.scenery.volumes.Volume;
 import io.scif.services.DatasetIOService;
 import net.imagej.Dataset;
-import net.imagej.mesh.Mesh;
 import net.imagej.ops.OpService;
-import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
-import net.imglib2.img.Img;
-import net.imglib2.type.logic.BitType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
 import org.scijava.log.LogService;
@@ -47,7 +42,6 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 import sc.iview.node.SlicingPlane;
-import sc.iview.process.MeshConverter;
 
 import java.io.File;
 import java.io.IOException;
@@ -91,20 +85,29 @@ public class SlicingPlaneDemo implements Command {
         }
 
         Volume v = (Volume) sciView.addVolume( cube, new float[] { 1, 1, 1 } );
+        v.setPosition(new GLVector(50,50,50));
+
+        TransferFunction tf = v.getTransferFunction();
+        tf.clear();
+        tf.addControlPoint(0.0f, 0.0f);
+        tf.addControlPoint(0, 0.0f);
+        tf.addControlPoint(1.0f, 0.001f);
+
         v.setPixelToWorldRatio(0.1f);
         v.setName( "Volume Render Demo" );
         v.setDirty(true);
         v.setNeedsUpdate(true);
 
         SlicingPlane p = new SlicingPlane( v, cube );
-        sciView.animate( 10, () -> p.rotate(0.07f) );
+        sciView.animate( 10, () -> p.rotate(0.02f) );
         //p.rotate((float) (Math.PI*2));
         sciView.addNode(p);
 
         // TODO write a test that checks a hyperslice v. a slice that has been transformed (e.g., at 90 degree angles)
 
         sciView.setActiveNode(v);
-        sciView.centerOnNode( sciView.getActiveNode() );
+        sciView.centerOnNode( v );
+        sciView.positionLights(v.getPosition(), 25f);
         sciView.getFloor().setVisible(false);
     }
 

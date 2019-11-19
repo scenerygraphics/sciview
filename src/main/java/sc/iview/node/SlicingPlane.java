@@ -40,8 +40,12 @@ public class SlicingPlane<T extends GenericByteType> extends Node {
         this.img = img;
         this.v = v;
 
-        imgPlane = new Box( new GLVector( 10f, 10f, 0.001f ) );
+        //imgPlane = new Box( new GLVector( 2f, 2f, 0.001f ) );
+        imgPlane = new Box( new GLVector( v.getMaximumBoundingBox().getMax().x()-v.getMaximumBoundingBox().getMin().x(),
+                v.getMaximumBoundingBox().getMax().y()-v.getMaximumBoundingBox().getMin().y(),
+                0.001f ) );
         imgPlane.setPosition(v.getPosition());
+        //imgPlane.setPosition(v.getPosition().minus(new GLVector(v.getMaximumBoundingBox().getMax().times(0.5f))));
 
         FloatBuffer tc = BufferUtils.allocateFloatAndPut(new float[]{
                 // front
@@ -113,13 +117,16 @@ public class SlicingPlane<T extends GenericByteType> extends Node {
     }
 
     public RandomAccessible<T> randomAccessible() {
-        AffineTransform3D tform = convertGLMatrixToAffineTransform3D(imgPlane.getWorld());
+        AffineTransform3D planeTform = convertGLMatrixToAffineTransform3D(imgPlane.getWorld());
+        AffineTransform3D volTform = convertGLMatrixToAffineTransform3D(v.getWorld());
+        AffineTransform3D tform = planeTform.concatenate(volTform.inverse());
 
         RealRandomAccessible<T> realImg = Views.interpolate(Views.extendZero(img), new NearestNeighborInterpolatorFactory<T>());
         RealTransformRandomAccessible transformedSlice = RealViews.transform(realImg, tform);
 
         // TODO the slice position is not correct
-        return Views.hyperSlice(Views.raster(transformedSlice), 2, img.dimension(0)/2);
+        //return Views.hyperSlice(Views.raster(transformedSlice), 2, img.dimension(0)/2);
+        return Views.hyperSlice(Views.raster(transformedSlice), 2, 0   );
     }
 
     public void rotate(float i) {

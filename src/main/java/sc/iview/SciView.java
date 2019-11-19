@@ -54,7 +54,6 @@ import io.scif.SCIFIOService;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import kotlin.jvm.functions.Function3;
-import kotlin.jvm.functions.Function5;
 import net.imagej.Dataset;
 import net.imagej.ImageJService;
 import net.imagej.axis.CalibratedAxis;
@@ -281,22 +280,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         }
 
         // Add initial objects
-        GLVector[] tetrahedron = new GLVector[4];
-        tetrahedron[0] = new GLVector( 1.0f, 0f, -1.0f/(float)Math.sqrt(2.0f) );
-        tetrahedron[1] = new GLVector( -1.0f,0f,-1.0f/(float)Math.sqrt(2.0) );
-        tetrahedron[2] = new GLVector( 0.0f,1.0f,1.0f/(float)Math.sqrt(2.0) );
-        tetrahedron[3] = new GLVector( 0.0f,-1.0f,1.0f/(float)Math.sqrt(2.0) );
-
-        lights = new ArrayList<>();
-
-        for( int i = 0; i < 4; i++ ) {// TODO allow # initial lights to be customizable?
-            PointLight light = new PointLight(150.0f);
-            light.setPosition( tetrahedron[i].times(25.0f) );
-            light.setEmissionColor( new GLVector( 1.0f, 1.0f, 1.0f ) );
-            light.setIntensity( 1.0f );
-            lights.add( light );
-            getScene().addChild( light );
-        }
+        positionLights(new GLVector(0,0,0), 25f);
 
         Camera cam;
         if( getCamera() == null ) {
@@ -315,6 +299,25 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         floor.setPosition( new GLVector( 0f, -1f, 0f ) );
         floor.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
         getScene().addChild( floor );
+    }
+
+    public void positionLights(GLVector center, float radius) {
+        GLVector[] tetrahedron = new GLVector[4];
+        tetrahedron[0] = new GLVector( 1.0f, 0f, -1.0f/(float)Math.sqrt(2.0f) );
+        tetrahedron[1] = new GLVector( -1.0f,0f,-1.0f/(float)Math.sqrt(2.0) );
+        tetrahedron[2] = new GLVector( 0.0f,1.0f,1.0f/(float)Math.sqrt(2.0) );
+        tetrahedron[3] = new GLVector( 0.0f,-1.0f,1.0f/(float)Math.sqrt(2.0) );
+
+        lights = new ArrayList<>();
+
+        for( int i = 0; i < 4; i++ ) {// TODO allow # initial lights to be customizable?
+            PointLight light = new PointLight(150.0f);
+            light.setPosition( tetrahedron[i].times(radius).plus(center) );
+            light.setEmissionColor( new GLVector( 1.0f, 1.0f, 1.0f ) );
+            light.setIntensity( 1.0f );
+            lights.add( light );
+            getScene().addChild( light );
+        }
     }
 
     /**
