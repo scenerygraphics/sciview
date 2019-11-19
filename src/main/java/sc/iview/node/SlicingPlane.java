@@ -19,6 +19,7 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
 import static sc.iview.Utils.convertGLMatrixToAffineTransform3D;
+import static sc.iview.Utils.createAffineTransform3DFromNode;
 
 /**
  * An ImgPlane is a plane that corresponds to a slice of an Img
@@ -118,10 +119,10 @@ public class SlicingPlane<T extends GenericByteType> extends Node {
 
     public RandomAccessible<T> randomAccessible() {
         //AffineTransform3D planeTform = convertGLMatrixToAffineTransform3D(imgPlane.getWorld());
-        AffineTransform3D planeTform = convertGLMatrixToAffineTransform3D(imgPlane.getWorld().translate(v.getMaximumBoundingBox().getMax()));
-//        planeTform.translate(v.getMaximumBoundingBox().getMax().x(),
-//                v.getMaximumBoundingBox().getMax().y(),
-//                v.getMaximumBoundingBox().getMax().z());
+        AffineTransform3D planeTform = createAffineTransform3DFromNode(imgPlane);
+        planeTform.translate(v.getMaximumBoundingBox().getMax().x(),
+                v.getMaximumBoundingBox().getMax().y(),
+                v.getMaximumBoundingBox().getMax().z());
         AffineTransform3D volTform = convertGLMatrixToAffineTransform3D(v.getWorld());
         AffineTransform3D tform = planeTform.concatenate(volTform.inverse());
 

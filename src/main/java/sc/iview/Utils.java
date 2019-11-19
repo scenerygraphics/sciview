@@ -2,6 +2,7 @@ package sc.iview;
 
 import cleargl.GLMatrix;
 import cleargl.GLVector;
+import graphics.scenery.Node;
 import net.imglib2.realtransform.AffineTransform3D;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.ColorRGBA;
@@ -22,6 +23,40 @@ public class Utils {
         return new GLVector( color.getRed() / 255f, //
                              color.getGreen() / 255f, //
                              color.getBlue() / 255f );
+    }
+
+    static public AffineTransform3D createAffineTransform3DFromNode(Node n) {
+        AffineTransform3D tform = new AffineTransform3D();
+        double[] ds = new double[16];
+
+        GLMatrix m = n.getWorld();
+
+        tform.set(
+                m.get(0,0),
+                m.get(0,1),
+                m.get(0,2),
+                m.get(0,3),
+
+                m.get(1,0),
+                m.get(1,1),
+                m.get(1,2),
+                m.get(1,3),
+
+                m.get(2,0),
+                m.get(2,1),
+                m.get(2,2),
+                m.get(2,3),
+
+                m.get(3,0),
+                m.get(3,1),
+                m.get(3,2),
+                m.get(3,3));
+
+        GLVector p = n.getPosition();
+        
+        tform.setTranslation(p.x(), p.y(), p.z());
+        
+        return tform;
     }
 
     static public AffineTransform3D convertGLMatrixToAffineTransform3D(GLMatrix tmat) {
