@@ -6,6 +6,7 @@ import graphics.scenery.*;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.integer.GenericByteType;
+import sc.iview.vector.ClearGLVector3;
 import sc.iview.vector.DoubleVector3;
 import sc.iview.vector.Vector3;
 
@@ -35,7 +36,7 @@ public class ImgPlane<T extends GenericByteType> extends Node {
             ch = getChildrenByName("imgPlane");
         }
 
-        Box imgPlane = new Box( new GLVector( 10f, 10f, 0.01f ) );
+        Box imgPlane = new Box(ClearGLVector3.convert(newSize));
         imgPlane.setName("imgPlane");
 
         FloatBuffer tc = BufferUtils.allocateFloatAndPut(new float[]{
