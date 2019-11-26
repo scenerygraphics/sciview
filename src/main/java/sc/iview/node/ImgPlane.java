@@ -5,29 +5,37 @@ import cleargl.GLVector;
 import graphics.scenery.*;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.GenericByteType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
+import sc.iview.vector.DoubleVector3;
+import sc.iview.vector.Vector3;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.util.List;
 
 /**
  * An ImgPlane is a plane that corresponds to a slice of an Img
  */
 public class ImgPlane<T extends GenericByteType> extends Node {
-    private RandomAccessibleInterval<T> rai;
+    private RandomAccessibleInterval<T> img;
 
     public ImgPlane(RandomAccessibleInterval<T> img) {
         this.setName("ImgPlane");
-        this.rai = img;
+        this.img = img;
 
-        ByteBuffer bb = imgToByteBuffer(img);
+        resize(new DoubleVector3(10, 10, 10));
+
+    }
+
+    public void resize(Vector3 newSize) {
+        // Remove children, we assume an ImgPlane only has 1 child Box
+        List<Node> ch = getChildrenByName("imgPlane");
+        while( !ch.isEmpty() ) {
+            removeChild(ch.get(0));
+        }
 
         Box imgPlane = new Box( new GLVector( 10f, 10f, 0.01f ) );
-        imgPlane.setPosition(new GLVector(0,10,0));
+        imgPlane.setName("imgPlane");
 
         FloatBuffer tc = BufferUtils.allocateFloatAndPut(new float[]{
                 // front
@@ -68,6 +76,7 @@ public class ImgPlane<T extends GenericByteType> extends Node {
         mat.setDiffuse(new GLVector(1,1,1));
         mat.setAmbient(new GLVector(1,1,1));
 
+        ByteBuffer bb = imgToByteBuffer(img);
         GenericTexture tex = new GenericTexture("imgPlane", new GLVector(img.dimension(0), img.dimension(1),1),3, GLTypeEnum.UnsignedByte, bb);
 
         mat.getTransferTextures().put("imgPlane",tex);
