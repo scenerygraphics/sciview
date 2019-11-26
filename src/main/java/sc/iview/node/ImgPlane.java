@@ -19,6 +19,7 @@ import java.util.List;
  */
 public class ImgPlane<T extends GenericByteType> extends Node {
     private RandomAccessibleInterval<T> img;
+    private Box plane;
 
     public ImgPlane(RandomAccessibleInterval<T> img) {
         this.setName("ImgPlane");
@@ -88,6 +89,8 @@ public class ImgPlane<T extends GenericByteType> extends Node {
         imgPlane.setMaterial(mat);
         imgPlane.setNeedsUpdate(true);
 
+        plane = imgPlane;
+
         this.addChild(imgPlane);
     }
 
@@ -116,4 +119,7 @@ public class ImgPlane<T extends GenericByteType> extends Node {
         return bb;
     }
 
+    public Box getPlane() {
+        return plane;
+    }
 }
