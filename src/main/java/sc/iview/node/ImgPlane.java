@@ -32,6 +32,7 @@ public class ImgPlane<T extends GenericByteType> extends Node {
         List<Node> ch = getChildrenByName("imgPlane");
         while( !ch.isEmpty() ) {
             removeChild(ch.get(0));
+            ch = getChildrenByName("imgPlane");
         }
 
         Box imgPlane = new Box( new GLVector( 10f, 10f, 0.01f ) );
