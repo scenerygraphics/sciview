@@ -116,6 +116,7 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.*;
@@ -441,8 +442,11 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         inspector.setBorder(BorderFactory.createEmptyBorder());
         inspector.setDividerSize(1);
 
-        // replPane
-
+        // We need to get the surface scale here before initialising scenery's renderer, as
+        // the information is needed already at initialisation time.
+        final AffineTransform dt = frame.getGraphicsConfiguration().getDefaultTransform();
+        final GLVector surfaceScale = new GLVector((float)dt.getScaleX(), (float)dt.getScaleY());
+        getSettings().set("Renderer.SurfaceScale", surfaceScale);
 
         mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
                 p,
