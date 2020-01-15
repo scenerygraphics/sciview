@@ -30,7 +30,6 @@ package sc.iview;
 
 import cleargl.GLTypeEnum;
 import cleargl.GLVector;
-import com.bulenkov.darcula.DarculaLaf;
 import com.jogamp.opengl.math.Quaternion;
 import coremem.enums.NativeTypeEnum;
 import graphics.scenery.Box;
@@ -321,14 +320,16 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * Initialization of SWING and scenery. Also triggers an initial population of lights/camera in the scene
      */
     @SuppressWarnings("restriction") @Override public void init() {
-        if(Boolean.parseBoolean(System.getProperty("sciview.useDarcula", "false"))) {
-            try {
-                BasicLookAndFeel darcula = new DarculaLaf();
-                UIManager.setLookAndFeel(darcula);
-            } catch (Exception e) {
-                getLogger().info("Could not load Darcula Look and Feel");
-            }
-        }
+
+        // Darcula dependency went missing from maven repo, factor it out
+//        if(Boolean.parseBoolean(System.getProperty("sciview.useDarcula", "false"))) {
+//            try {
+//                BasicLookAndFeel darcula = new DarculaLaf();
+//                UIManager.setLookAndFeel(darcula);
+//            } catch (Exception e) {
+//                getLogger().info("Could not load Darcula Look and Feel");
+//            }
+//        }
 
         log.setLevel(LogLevel.WARN);
 
