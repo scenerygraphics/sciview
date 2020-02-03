@@ -407,12 +407,14 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         final String versionString;
 
         if(sceneryVersion == null || sciviewVersion == null) {
-            versionString = "";
+            versionString = "sciview / scenery";
         } else {
-            versionString = "\n\nsciview " + sciviewVersion + " / scenery " + sceneryVersion;
+            versionString = "sciview " + sciviewVersion + " / scenery " + sceneryVersion;
         }
 
-        splashLabel = new JLabel(versionString,
+        getLogger().info("This is " + versionString);
+
+        splashLabel = new JLabel("\n\n" + versionString,
                 new ImageIcon(splashImage.getScaledInstance(500, 200, java.awt.Image.SCALE_SMOOTH)),
                 SwingConstants.CENTER);
         splashLabel.setBackground(new java.awt.Color(50, 48, 47));
@@ -748,7 +750,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             if( !nearest.getMatches().isEmpty() ) {
                 setActiveNode( nearest.getMatches().get( 0 ).getNode() );
                 nodePropertyEditor.trySelectNode( getActiveNode() );
-                log.debug( "Selected node: " + getActiveNode().getName() );
+                log.info( "Selected node: " + getActiveNode().getName() + " at " + x + "," + y);
 
                 // Setup the context menu for this node
 
@@ -774,7 +776,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         }
         h.addBehaviour( "object_selection_mode",
                                         new SelectCommand( "objectSelector", getRenderer(), getScene(),
-                                                           () -> getScene().findObserver(), false, ignoredObjects,
+                                                           () -> getScene().findObserver(), true, ignoredObjects,
                                                            selectAction ) );
         h.addKeyBinding( "object_selection_mode", "double-click button1" );
     }
