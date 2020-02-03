@@ -264,11 +264,6 @@
 			<artifactId>logback-classic</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-		<dependency>
-			<groupId>com.bulenkov</groupId>
-			<artifactId>darcula</artifactId>
-			<version>2018.2</version>
-		</dependency>
 
 		<!-- Test scope -->
 		<dependency>
