@@ -94,7 +94,6 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
             }
             return sv;
         }
-        logService.error( "No SciJava display available. Use getOrCreateActiveSciView() to automatically create a display if one does not exist." );
         return null;
     }
 
@@ -105,7 +104,6 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
                 return sceneryViewer;
             }
         }
-        logService.error( "No SciJava display available. Use getOrCreateActiveSciView() to automatically create a display if one does not exist." );
         return null;
     }
 
