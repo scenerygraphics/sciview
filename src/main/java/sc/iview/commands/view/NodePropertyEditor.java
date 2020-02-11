@@ -59,10 +59,7 @@ import sc.iview.event.NodeChangedEvent;
 import sc.iview.event.NodeRemovedEvent;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
-import javax.swing.tree.TreeSelectionModel;
+import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -305,9 +302,9 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
 
     private TreePath find(DefaultMutableTreeNode root, Node n) {
         @SuppressWarnings("unchecked")
-        Enumeration<DefaultMutableTreeNode> e = root.depthFirstEnumeration();
+        Enumeration<TreeNode> e = root.depthFirstEnumeration();
         while (e.hasMoreElements()) {
-            DefaultMutableTreeNode node = e.nextElement();
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.nextElement();
             if (node.getUserObject() == n) {
                 return new TreePath(node.getPath());
             }
