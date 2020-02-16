@@ -28,6 +28,7 @@
  */
 package sc.iview;
 
+import bdv.util.AxisOrder;
 import cleargl.GLTypeEnum;
 import cleargl.GLVector;
 import com.jogamp.opengl.math.Quaternion;
@@ -46,9 +47,9 @@ import graphics.scenery.controls.behaviours.FPSCameraControl;
 import graphics.scenery.controls.behaviours.MovementCommand;
 import graphics.scenery.controls.behaviours.SelectCommand;
 import graphics.scenery.utils.*;
+import graphics.scenery.volumes.Colormap;
 import graphics.scenery.volumes.TransferFunction;
-import graphics.scenery.volumes.Volume;
-import graphics.scenery.volumes.bdv.BDVVolume;
+import graphics.scenery.volumes.bdv.Volume;
 import io.scif.SCIFIOService;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
@@ -64,6 +65,7 @@ import net.imagej.ops.OpService;
 import net.imagej.units.UnitService;
 import net.imglib2.Cursor;
 import net.imglib2.*;
+import net.imglib2.RandomAccess;
 import net.imglib2.display.ColorTable;
 import net.imglib2.img.Img;
 import net.imglib2.type.numeric.RealType;
@@ -1190,7 +1192,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      */
     public void open( final String source ) throws IOException {
         if(source.endsWith(".xml")) {
-            addBDVVolume(source);
+            addNode(Volume.Companion.fromXML(source, getHub(), new VolumeViewerOptions()));
             return;
         }
 
@@ -1199,7 +1201,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         else if( data instanceof graphics.scenery.Mesh ) addMesh( ( graphics.scenery.Mesh ) data );
         else if( data instanceof graphics.scenery.PointCloud ) addPointCloud( ( graphics.scenery.PointCloud ) data );
         else if( data instanceof Dataset ) addVolume( ( Dataset ) data );
-        else if( data instanceof IterableInterval ) addVolume( ( ( IterableInterval ) data ), source );
+        else if( data instanceof RandomAccessibleInterval ) addVolume( ( ( RandomAccessibleInterval ) data ), source );
         else if( data instanceof List ) {
             final List<?> list = ( List<?> ) data;
             if( list.isEmpty() ) {
@@ -1619,30 +1621,30 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         return addVolume( image, voxelDims );
     }
 
-    /**
-     * Add a BigDataViewer volume to the scene.
-     * @param source, the path to an XML file for BDV style XML/Hdf5
-     * @return a Node corresponding to the BDVNode
-     */
-    public Node addBDVVolume( String source ) {
-        //getSettings().set("Renderer.HDR.Exposure", 20.0f);
-
-        final VolumeViewerOptions opts = new VolumeViewerOptions();
-        opts.maxCacheSizeInMB(Integer.parseInt(System.getProperty("scenery.BDVVolume.maxCacheSize", "512")));
-        final BDVVolume v = new BDVVolume(source, opts);
-
-        // TODO: use unitService to set scale
-        v.setScale(new GLVector(0.01f, 0.01f, 0.01f));
-        v.setBoundingBox(v.generateBoundingBox());
-
-        getScene().addChild(v);
-        setActiveNode(v);
-        v.goToTimePoint(0);
-
-		eventService.publish( new NodeAddedEvent( v ) );
-
-        return v;
-    }
+//    /**
+//     * Add a BigDataViewer volume to the scene.
+//     * @param source, the path to an XML file for BDV style XML/Hdf5
+//     * @return a Node corresponding to the BDVNode
+//     */
+//    public Node addBDVVolume( String source ) {
+//        //getSettings().set("Renderer.HDR.Exposure", 20.0f);
+//
+//        final VolumeViewerOptions opts = new VolumeViewerOptions();
+//        opts.maxCacheSizeInMB(Integer.parseInt(System.getProperty("scenery.BDVVolume.maxCacheSize", "512")));
+//        final BDVVolume v = new BDVVolume(source, opts);
+//
+//        // TODO: use unitService to set scale
+//        v.setScale(new GLVector(0.01f, 0.01f, 0.01f));
+//        v.setBoundingBox(v.generateBoundingBox());
+//
+//        getScene().addChild(v);
+//        setActiveNode(v);
+//        v.goToTimePoint(0);
+//
+//		eventService.publish( new NodeAddedEvent( v ) );
+//
+//        return v;
+//    }
 
     /**
      * Add a Dataset as a Volume with the specified voxel dimensions
@@ -1651,7 +1653,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @return a Node corresponding to the Volume
      */
     @SuppressWarnings({ "rawtypes", "unchecked" }) public Node addVolume( Dataset image, float[] voxelDimensions ) {
-        return addVolume( ( IterableInterval ) Views.flatIterable( image.getImgPlus() ), image.getName(),
+        return addVolume( ( RandomAccessibleInterval ) image.getImgPlus(), image.getName(),
                           voxelDimensions );
     }
 
@@ -1666,7 +1668,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     public <T extends RealType<T>> Node addVolume( RandomAccessibleInterval<T> image, String name, String extra ) {
         long[] pos = new long[]{10, 10, 10};
 
-        return addVolume( Views.flatIterable(image), name, 1, 1, 1 );
+        return addVolume( image, name, 1, 1, 1 );
     }
 
     /**
@@ -1675,8 +1677,12 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param <T>
      * @return a Node corresponding to the Volume
      */
-    public <T extends RealType<T>> Node addVolume( IterableInterval<T> image ) {
-        return addVolume( image, "Volume" );
+    public <T extends RealType<T>> Node addVolume( IterableInterval<T> image ) throws Exception {
+        if( image instanceof RandomAccessibleInterval ) {
+            return addVolume((RandomAccessibleInterval) image, "Volume");
+        } else {
+            throw new Exception("Unsupported Volume type:" + image);
+        }
     }
 
     /**
@@ -1686,8 +1692,12 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param <T>
      * @return a Node corresponding to the Volume
      */
-    public <T extends RealType<T>> Node addVolume( IterableInterval<T> image, String name ) {
-        return addVolume( image, name, 1, 1, 1 );
+    public <T extends RealType<T>> Node addVolume( IterableInterval<T> image, String name ) throws Exception {
+        if( image instanceof RandomAccessibleInterval ) {
+            return addVolume( (RandomAccessibleInterval) image, name, 1, 1, 1 );
+        } else {
+            throw new Exception("Unsupported Volume type:" + image);
+        }
     }
 
     /**
@@ -1735,14 +1745,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         n.getMetadata().put("sciviewColormap", colorTable);
 
         if(n instanceof Volume) {
-            ((Volume) n).getColormaps().put("sciviewColormap",
-                    new Volume.Colormap.ColormapBuffer(new GenericTexture("colorTable",
-                    new GLVector(colorTable.getLength(), copies, 1.0f), 4,
-                    GLTypeEnum.UnsignedByte,
-                    byteBuffer,
-                    // don't repeat the color map
-                    TextureRepeatMode.ClampToEdge, TextureRepeatMode.ClampToEdge, TextureRepeatMode.ClampToEdge)));
-            ((Volume) n).setColormap("sciviewColormap");
+            ((Volume) n).setColormap(Colormap.fromColorTable(colorTable));
             n.setDirty(true);
             n.setNeedsUpdate(true);
         }
@@ -1757,48 +1760,57 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param <T>
      * @return a Node corresponding to the Volume
      */
-    public <T extends RealType<T>> Node addVolume( IterableInterval<T> image, String name,
+    public <T extends RealType<T>> Node addVolume( RandomAccessibleInterval<T> image, String name,
                                                                     float... voxelDimensions ) {
         //log.debug( "Add Volume " + name + " image: " + image );
 
         long[] dimensions = new long[3];
         image.dimensions( dimensions );
 
-        Volume v = new Volume();
+        long[] minPt = new long[image.numDimensions()];
+
+        // Get type at min point
+        RandomAccess<T> imageRA = image.randomAccess();
+        image.min(minPt);
+        imageRA.setPosition(minPt);
+        T voxelType = imageRA.get().createVariable();
+
+        Volume v = Volume.Companion.fromRAII(image, voxelType, AxisOrder.DEFAULT, name, getHub(), new VolumeViewerOptions());
 
         getScene().addChild( v );
 
-        @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
-        float minVal, maxVal;
+//        @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
+//        float minVal, maxVal;
+//
+//        if( voxelType == UnsignedByteType.class ) {
+//            minVal = 0;
+//            maxVal = 255;
+//        } else if( voxelType == UnsignedShortType.class ) {
+//            minVal = 0;
+//            maxVal = 65535;
+//        } else if( voxelType == FloatType.class ) {
+//            minVal = 0;
+//            maxVal = 1;
+//        } else if( voxelType == VolatileUnsignedByteType.class ) {
+//            minVal = 0;
+//            maxVal = 255;
+//        } else if( voxelType == VolatileUnsignedShortType.class ) {
+//            minVal = 0;
+//            maxVal = 65535;
+//        } else if( voxelType == VolatileFloatType.class ) {
+//            minVal = 0;
+//            maxVal = 1;
+//        } else {
+//            log.debug( "Type: " + voxelType +
+//                       " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
+//            return null;
+//        }
+//
+//        updateVolume( image, name, voxelDimensions, v );
 
-        if( voxelType == UnsignedByteType.class ) {
-            minVal = 0;
-            maxVal = 255;
-        } else if( voxelType == UnsignedShortType.class ) {
-            minVal = 0;
-            maxVal = 65535;
-        } else if( voxelType == FloatType.class ) {
-            minVal = 0;
-            maxVal = 1;
-        } else if( voxelType == VolatileUnsignedByteType.class ) {
-            minVal = 0;
-            maxVal = 255;
-        } else if( voxelType == VolatileUnsignedShortType.class ) {
-            minVal = 0;
-            maxVal = 65535;
-        } else if( voxelType == VolatileFloatType.class ) {
-            minVal = 0;
-            maxVal = 1;
-        } else {
-            log.debug( "Type: " + voxelType +
-                       " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
-            return null;
-        }
-
-        updateVolume( image, name, voxelDimensions, v );
-
-        v.setTrangemin( minVal );
-        v.setTrangemax( maxVal );
+        // TODO fixme
+//        v.setTrangemin( minVal );
+//        v.setTrangemax( maxVal );
         v.setTransferFunction(TransferFunction.ramp(0.0f, 0.4f));
 
         try {
@@ -1825,62 +1837,62 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param <T>
      * @return a Node corresponding to the input volume
      */
-    public <T extends RealType<T>> Node updateVolume( IterableInterval<T> image, String name,
-                                                                       float[] voxelDimensions, Volume v ) {
-        //log.debug( "Update Volume" );
-
-        long[] dimensions = new long[3];
-        image.dimensions( dimensions );
-
-        @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
-        int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
-        NativeTypeEnum nType;
-
-        if( voxelType == UnsignedByteType.class || voxelType == VolatileUnsignedByteType.class ) {
-            nType = NativeTypeEnum.UnsignedByte;
-        } else if( voxelType == UnsignedShortType.class || voxelType == VolatileUnsignedShortType.class ) {
-            nType = NativeTypeEnum.UnsignedShort;
-        } else if( voxelType == FloatType.class || voxelType == VolatileFloatType.class ) {
-            nType = NativeTypeEnum.Float;
-        } else {
-            log.debug( "Type: " + voxelType +
-                       " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
-            return null;
-        }
-
-        // Make and populate a ByteBuffer with the content of the Dataset
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
-                ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2] ) );
-        Cursor<T> cursor = image.cursor();
-
-        while( cursor.hasNext() ) {
-            cursor.fwd();
-            // TODO should we check if volatiles are valid
-            if( voxelType == UnsignedByteType.class ) {
-                byteBuffer.put( ( byte ) ( ( ( UnsignedByteType ) cursor.get() ).get() ) );
-            } else if( voxelType == VolatileUnsignedByteType.class ) {
-                byteBuffer.put( ( byte ) ( ( ( VolatileUnsignedByteType ) cursor.get() ).get().get() ) );
-            } else if( voxelType == UnsignedShortType.class ) {
-                byteBuffer.putShort( ( short ) Math.abs( ( ( UnsignedShortType ) cursor.get() ).getShort() ) );
-            } else if( voxelType == VolatileUnsignedShortType.class ) {
-                byteBuffer.putShort( ( short ) Math.abs( ( ( VolatileUnsignedShortType ) cursor.get() ).get().getShort() ) );
-            } else if( voxelType == FloatType.class ) {
-                byteBuffer.putFloat( ( ( FloatType ) cursor.get() ).get() );
-            } else if( voxelType == VolatileFloatType.class ) {
-                byteBuffer.putFloat( ( ( VolatileFloatType ) cursor.get() ).get().get() );
-            }
-        }
-        byteBuffer.flip();
-
-        v.readFromBuffer( name, byteBuffer, dimensions[0], dimensions[1], dimensions[2], voxelDimensions[0],
-                          voxelDimensions[1], voxelDimensions[2], nType, bytesPerVoxel );
-
-        v.setDirty( true );
-        v.setNeedsUpdate( true );
-        v.setNeedsUpdateWorld( true );
-
-        return v;
-    }
+//    public <T extends RealType<T>> Node updateVolume( IterableInterval<T> image, String name,
+//                                                                       float[] voxelDimensions, Volume v ) {
+//        //log.debug( "Update Volume" );
+//
+//        long[] dimensions = new long[3];
+//        image.dimensions( dimensions );
+//
+//        @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
+//        int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
+//        NativeTypeEnum nType;
+//
+//        if( voxelType == UnsignedByteType.class || voxelType == VolatileUnsignedByteType.class ) {
+//            nType = NativeTypeEnum.UnsignedByte;
+//        } else if( voxelType == UnsignedShortType.class || voxelType == VolatileUnsignedShortType.class ) {
+//            nType = NativeTypeEnum.UnsignedShort;
+//        } else if( voxelType == FloatType.class || voxelType == VolatileFloatType.class ) {
+//            nType = NativeTypeEnum.Float;
+//        } else {
+//            log.debug( "Type: " + voxelType +
+//                       " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
+//            return null;
+//        }
+//
+//        // Make and populate a ByteBuffer with the content of the Dataset
+//        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
+//                ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2] ) );
+//        Cursor<T> cursor = image.cursor();
+//
+//        while( cursor.hasNext() ) {
+//            cursor.fwd();
+//            // TODO should we check if volatiles are valid
+//            if( voxelType == UnsignedByteType.class ) {
+//                byteBuffer.put( ( byte ) ( ( ( UnsignedByteType ) cursor.get() ).get() ) );
+//            } else if( voxelType == VolatileUnsignedByteType.class ) {
+//                byteBuffer.put( ( byte ) ( ( ( VolatileUnsignedByteType ) cursor.get() ).get().get() ) );
+//            } else if( voxelType == UnsignedShortType.class ) {
+//                byteBuffer.putShort( ( short ) Math.abs( ( ( UnsignedShortType ) cursor.get() ).getShort() ) );
+//            } else if( voxelType == VolatileUnsignedShortType.class ) {
+//                byteBuffer.putShort( ( short ) Math.abs( ( ( VolatileUnsignedShortType ) cursor.get() ).get().getShort() ) );
+//            } else if( voxelType == FloatType.class ) {
+//                byteBuffer.putFloat( ( ( FloatType ) cursor.get() ).get() );
+//            } else if( voxelType == VolatileFloatType.class ) {
+//                byteBuffer.putFloat( ( ( VolatileFloatType ) cursor.get() ).get().get() );
+//            }
+//        }
+//        byteBuffer.flip();
+//
+//        v.readFromBuffer( name, byteBuffer, dimensions[0], dimensions[1], dimensions[2], voxelDimensions[0],
+//                          voxelDimensions[1], voxelDimensions[2], nType, bytesPerVoxel );
+//
+//        v.setDirty( true );
+//        v.setNeedsUpdate( true );
+//        v.setNeedsUpdateWorld( true );
+//
+//        return v;
+//    }
 
     /**
      *

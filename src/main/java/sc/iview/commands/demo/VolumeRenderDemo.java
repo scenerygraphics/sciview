@@ -30,7 +30,7 @@ package sc.iview.commands.demo;
 
 import cleargl.GLVector;
 import graphics.scenery.Node;
-import graphics.scenery.volumes.Volume;
+import graphics.scenery.volumes.bdv.Volume;
 import io.scif.services.DatasetIOService;
 import net.imagej.Dataset;
 import net.imagej.mesh.Mesh;
@@ -93,7 +93,7 @@ public class VolumeRenderDemo implements Command {
         }
 
         Volume v = (Volume) sciView.addVolume( cube, new float[] { 1, 1, 1 } );
-        v.setPixelToWorldRatio(0.1f);
+        //v.setPixelToWorldRatio(0.1f);// FIXME
         v.setName( "Volume Render Demo" );
         v.setDirty(true);
         v.setNeedsUpdate(true);
@@ -112,9 +112,9 @@ public class VolumeRenderDemo implements Command {
             Node scMesh = sciView.addMesh(isoSurfaceMesh);
 
             isoSurfaceMesh.setName( "Volume Render Demo Isosurface" );
-            isoSurfaceMesh.setScale(new GLVector(v.getPixelToWorldRatio(),
-                    v.getPixelToWorldRatio(),
-                    v.getPixelToWorldRatio()));
+//            isoSurfaceMesh.setScale(new GLVector(v.getPixelToWorldRatio(),
+//                    v.getPixelToWorldRatio(),
+//                    v.getPixelToWorldRatio()));
         }
 
         sciView.setActiveNode(v);

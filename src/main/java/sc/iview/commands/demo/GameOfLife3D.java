@@ -29,11 +29,14 @@
 
 package sc.iview.commands.demo;
 
+import bdv.util.RandomAccessibleIntervalSource;
+import bdv.viewer.SourceAndConverter;
 import cleargl.GLVector;
 import graphics.scenery.BoundingGrid;
-import graphics.scenery.volumes.Volume;
+import graphics.scenery.volumes.bdv.Volume;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.Sampler;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
@@ -143,6 +146,9 @@ public class GameOfLife3D extends InteractiveCommand {
 
         // compute the new image field
         final RandomAccess<UnsignedByteType> access = field.randomAccess();
+
+        //RandomAccess<UnsignedByteType> access = ((SourceAndConverter) ((Volume.VolumeDataSource.RAIISource) volume.getDataSource()).getSources().get(0)).getSpimSource().getSource(0, 0).randomAccess();
+
         for( int z = 0; z < d; z++ ) {
             for( int y = 0; y < h; y++ ) {
                 for( int x = 0; x < w; x++ ) {
@@ -173,6 +179,18 @@ public class GameOfLife3D extends InteractiveCommand {
             cursor.get().set( alive ? ALIVE : DEAD );
         }
 
+//        for( int z = 0; z < d; z++ ) {
+//            for( int y = 0; y < h; y++ ) {
+//                for( int x = 0; x < w; x++ ) {
+//                    access.setPosition( x, 0 );
+//                    access.setPosition( y, 1 );
+//                    access.setPosition( y, 2 );
+//                    final boolean alive = bits[z * w * h + y * w + x];
+//                    access.get().set( alive ? ALIVE : DEAD );
+//                }
+//            }
+//        }
+
         updateVolume();
     }
 
@@ -180,6 +198,8 @@ public class GameOfLife3D extends InteractiveCommand {
     public void run() {
         field = ArrayImgs.unsignedBytes( w, h, d );
         randomize();
+
+        //play();
 
         //eventService.subscribe(this);
     }
@@ -256,12 +276,12 @@ public class GameOfLife3D extends InteractiveCommand {
             BoundingGrid bg = new BoundingGrid();
             bg.setNode( volume );
 
-            volume.setVoxelSizeX(10.0f);
-            volume.setVoxelSizeY(10.0f);
-            volume.setVoxelSizeZ(10.0f);
+//            volume.setVoxelSizeX(10.0f);
+//            volume.setVoxelSizeY(10.0f);
+//            volume.setVoxelSizeZ(10.0f);
 
             volume.putAbove(new GLVector(0.0f, 0.0f, 0.0f));
-            volume.setRenderingMethod(2);
+//            volume.setRenderingMethod(2);
             volume.getTransferFunction().addControlPoint(0.0f, 0.0f);
             volume.getTransferFunction().addControlPoint(0.4f, 0.3f);
 
@@ -270,7 +290,16 @@ public class GameOfLife3D extends InteractiveCommand {
             sciView.centerOnNode(volume);
         } else {
             // NB: Name must be unique each time.
-            sciView.updateVolume( field, name + "-" + ++tick, voxelDims, volume );
+            //sciView.updateVolume( field, name + "-" + ++tick, voxelDims, volume );
+
+            RandomAccessibleIntervalSource<UnsignedByteType> newSource = new RandomAccessibleIntervalSource<UnsignedByteType>(field, new UnsignedByteType(), name + "-" + ++tick);
+
+            ((Volume.VolumeDataSource.RAIISource) volume.getDataSource()).getSources().set(0,newSource);
+
+            volume.setDirty(true);
+            volume.setNeedsUpdate(true);
+            volume.getVolumeManager().requestRepaint();
+            //volume.getCacheControl().prepareNextFrame();
         }
     }
 
