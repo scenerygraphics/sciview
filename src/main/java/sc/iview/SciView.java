@@ -2170,7 +2170,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     /**
      * Static launching method
      */
-    public static SciView createSciView() {
+    public static SciView createSciView() throws Exception {
         SceneryBase.xinitThreads();
 
         System.setProperty( "scijava.log.level:sc.iview", "debug" );

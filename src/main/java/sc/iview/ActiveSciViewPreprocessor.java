@@ -60,7 +60,12 @@ public class ActiveSciViewPreprocessor extends SingleInputPreprocessor<SciView> 
     @Override
     public SciView getValue() {
         if( sciViewService == null ) return null;
-        return sciViewService.getOrCreateActiveSciView();
+        try {
+            return sciViewService.getOrCreateActiveSciView();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }

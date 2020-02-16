@@ -30,6 +30,7 @@ package sc.iview;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Future;
 
 import graphics.scenery.Mesh;
 import graphics.scenery.Node;
@@ -107,16 +108,23 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
         return null;
     }
 
-    public SciView makeSciView() {
+    public SciView makeSciView() throws Exception {
         SciView sv = new SciView( getContext() );
 
-        threadService.run( () -> sv.main() );
-        while( !sv.isInitialized() ) {
+        Future<?> svThread = threadService.run(() -> sv.main());
+
+        while( !sv.isInitialized() &&
+                !svThread.isDone() && !
+                !svThread.isCancelled() ) {
             try {
                 Thread.sleep( 20 );
             } catch( InterruptedException e ) {
                 logService.trace( e );
             }
+        }
+
+        if( svThread.isCancelled() || svThread.isDone() ){
+            throw new Exception("SciView thread is done or had an error");
         }
 
         Display<?> display = displayService.createDisplay( sv );
@@ -127,7 +135,7 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
     }
 
     @Override
-    public void createSciView() {
+    public void createSciView() throws Exception {
         SciView v = makeSciView();
 
         sceneryViewers.add( v );
@@ -158,7 +166,7 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
     /* Event Handlers */
 
     @Override
-    public SciView getOrCreateActiveSciView() {
+    public SciView getOrCreateActiveSciView() throws Exception {
         SciView sv = getActiveSciView();
 
         if( sv == null ) {

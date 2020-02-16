@@ -15,7 +15,7 @@ import sc.iview.vector.ClearGLVector3;
 public class SciViewTest {
 
     //@Test
-    public void nodeDeletionTest() {
+    public void nodeDeletionTest() throws Exception {
         SceneryBase.xinitThreads();
 
         System.setProperty( "scijava.log.level:sc.iview", "debug" );
@@ -36,7 +36,7 @@ public class SciViewTest {
     }
 
     //@Test
-    public void nestedNodeDeletionTest() {
+    public void nestedNodeDeletionTest() throws Exception {
         SceneryBase.xinitThreads();
 
         System.setProperty( "scijava.log.level:sc.iview", "debug" );
