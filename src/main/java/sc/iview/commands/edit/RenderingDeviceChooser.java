@@ -28,7 +28,6 @@
  */
 package sc.iview.commands.edit;
 
-import graphics.scenery.SceneryElement;
 import graphics.scenery.backends.Renderer;
 import graphics.scenery.backends.opengl.OpenGLRenderer;
 import graphics.scenery.backends.vulkan.VulkanRenderer;
@@ -46,11 +45,12 @@ import java.util.List;
 @Plugin(type = Command.class, name = "DeviceChooserDialog")
 public class RenderingDeviceChooser extends DynamicCommand {
 
-    //dialog will not show if UI is not available
+    //since dialog will not show if UI is not available,
+    //we need UIService to have someone to ask to show the UI
     @Parameter
     private UIService uiService;
 
-    //some "console-style" reporting
+    //for reporting
     @Parameter
     private LogService logService;
 
@@ -67,8 +67,7 @@ public class RenderingDeviceChooser extends DynamicCommand {
 
     void fillAvailRenderers() {
         availRenderers = listAvailRenderers(sciView);
-        if (availRenderers.size() > 1)
-        {
+        if (availRenderers.size() > 1) {
             logService.info("Will be choosing from these devices:");
             for (String d : availRenderers) logService.info("  "+d);
 
@@ -89,7 +88,7 @@ public class RenderingDeviceChooser extends DynamicCommand {
             throw new RuntimeException("SciView must be running!");
 
         if (availRenderers.size() == 0) {
-            logService.warn("No renderer device available!");
+            logService.warn("No renderer device available! Doing nothing.");
         }
         else if (availRenderers.size() == 1) {
             logService.info("Only one renderer device is available, using it.");
@@ -107,10 +106,10 @@ public class RenderingDeviceChooser extends DynamicCommand {
     }
 
 
-    // discover renderers and compile a list with their names
+    /** Discover renderers and compile a list with their names. */
     static public List<String> listAvailRenderers(final SciView sciView) {
         final Renderer r = sciView.getSceneryRenderer();
-        System.out.println( "The current renderer: "+r.toString() );
+        System.out.println("The current renderer: "+r.toString());
 
         final List<String> availRenderers = new ArrayList<>(5);
         if (r instanceof OpenGLRenderer) {
