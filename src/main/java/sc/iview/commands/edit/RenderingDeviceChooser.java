@@ -94,6 +94,8 @@ public class RenderingDeviceChooser extends DynamicCommand {
             logService.info("Only one renderer device is available, using it.");
         }
         else {
+            if (selectedRenderer.startsWith("SciView")) return;
+            //else
             //ask sciView to actually switch to the selected renderer
             logService.info("Switching to device: "+selectedRenderer);
             if (selectedRenderer.startsWith("OpenGL")) {
@@ -106,12 +108,45 @@ public class RenderingDeviceChooser extends DynamicCommand {
     }
 
 
+    /** Setup system properties scenery.Renderer and scenery.Renderer.Device based
+     *  on the provided parameter, if none of them is set or user has not selected
+     *  a particular renderer. The input parameter is expected to be one of the
+     *  possible menu items that the listAvailRenderers() can generate. */
+    static public void setupSystemProperties(final String selectedRenderer) {
+        //do nothing if "nothing" is requested...
+        if (selectedRenderer == null) return;
+
+        //do nothing if properties are already setup -- do not change them
+        if (System.getProperty("scenery.Renderer") != null
+         || System.getProperty("scenery.Renderer.Device") != null) return;
+
+        System.out.println("Considering the last selected renderer: "+selectedRenderer);
+
+        //both system properties are not set if we got here,
+        //do nothing if "automagic" is requested
+        if (selectedRenderer.startsWith("SciView")) return;
+
+        if (selectedRenderer.startsWith("OpenGL")) {
+            System.setProperty("scenery.Renderer", "OpenGLRenderer");
+            //
+            System.out.println("Setting up system property: scenery.Renderer=OpenGLRenderer");
+        } else {
+            System.setProperty("scenery.Renderer","VulkanRenderer");
+            System.setProperty("scenery.Renderer.Device", selectedRenderer.substring(8));
+            //
+            System.out.println("Setting up system property: scenery.Renderer=VulkanRenderer");
+            System.out.println("Setting up system property: scenery.Renderer.Device="+selectedRenderer.substring(8));
+        }
+    }
+
     /** Discover renderers and compile a list with their names. */
     static public List<String> listAvailRenderers(final SciView sciView) {
         final Renderer r = sciView.getSceneryRenderer();
         System.out.println("The current renderer: "+r.toString());
 
         final List<String> availRenderers = new ArrayList<>(5);
+        availRenderers.add("SciView decides itself at start up");
+
         if (r instanceof OpenGLRenderer) {
             availRenderers.add("OpenGL: default renderer");
             final String preferredDev = System.getProperty("scenery.Renderer.Device");
