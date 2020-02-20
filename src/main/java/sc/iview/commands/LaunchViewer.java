@@ -33,11 +33,13 @@ import org.scijava.command.Command;
 import org.scijava.display.DisplayService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.prefs.PrefService;
 import org.scijava.ui.UIService;
 
 import sc.iview.SciView;
 import sc.iview.SciViewService;
 import sc.iview.display.SciViewDisplay;
+import sc.iview.commands.edit.RenderingDeviceChooser;
 
 /**
  * Created by kharrington on 6/20/17.
@@ -54,11 +56,18 @@ public class LaunchViewer implements Command {
     @Parameter(required = false)
     private UIService uiService;
 
+    @Parameter
+    private PrefService prefsService;
+
     @Parameter(type = ItemIO.OUTPUT)
     private SciView sciView = null;
 
     @Override
     public void run() {
+        //setup the System properties just in case the sciview shall be created anew
+        RenderingDeviceChooser.setupSystemProperties(
+                prefsService.get(RenderingDeviceChooser.class,"selectedRenderer") );
+
         final SciViewDisplay display = displayService.getActiveDisplay(SciViewDisplay.class);
         if (display == null)
             sciView = sciViewService.getOrCreateActiveSciView();

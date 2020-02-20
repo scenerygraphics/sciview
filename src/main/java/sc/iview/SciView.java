@@ -85,6 +85,7 @@ import org.scijava.log.LogService;
 import org.scijava.menu.MenuService;
 import org.scijava.object.ObjectService;
 import org.scijava.plugin.Parameter;
+import org.scijava.prefs.PrefService;
 import org.scijava.service.SciJavaService;
 import org.scijava.thread.ThreadService;
 import org.scijava.ui.behaviour.ClickBehaviour;
@@ -93,6 +94,7 @@ import org.scijava.ui.swing.menu.SwingJMenuBarCreator;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.Colors;
 import org.scijava.util.VersionUtils;
+import sc.iview.commands.edit.RenderingDeviceChooser;
 import sc.iview.commands.view.NodePropertyEditor;
 import sc.iview.controls.behaviours.CameraTranslateControl;
 import sc.iview.controls.behaviours.NodeTranslateControl;
@@ -2163,6 +2165,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         System.setProperty( "scijava.log.level:sc.iview", "debug" );
         Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
+
+        //setup the System properties just in case the sciview shall be created anew
+        RenderingDeviceChooser.setupSystemProperties(
+                context.service(PrefService.class).get(RenderingDeviceChooser.class,"selectedRenderer") );
 
         SciViewService sciViewService = context.service( SciViewService.class );
         SciView sciView = sciViewService.getOrCreateActiveSciView();
