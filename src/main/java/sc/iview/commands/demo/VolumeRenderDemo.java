@@ -40,6 +40,7 @@ import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.scijava.command.Command;
+import org.scijava.command.CommandService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
@@ -49,6 +50,7 @@ import sc.iview.process.MeshConverter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 import static sc.iview.commands.MenuWeights.DEMO;
 import static sc.iview.commands.MenuWeights.DEMO_VOLUME_RENDER;
@@ -93,7 +95,7 @@ public class VolumeRenderDemo implements Command {
         }
 
         Volume v = (Volume) sciView.addVolume( cube, new float[] { 1, 1, 1 } );
-        //v.setPixelToWorldRatio(0.1f);// FIXME
+        v.setPixelToWorldRatio(0.1f);// FIXME
         v.setName( "Volume Render Demo" );
         v.setDirty(true);
         v.setNeedsUpdate(true);
@@ -112,12 +114,23 @@ public class VolumeRenderDemo implements Command {
             Node scMesh = sciView.addMesh(isoSurfaceMesh);
 
             isoSurfaceMesh.setName( "Volume Render Demo Isosurface" );
-//            isoSurfaceMesh.setScale(new GLVector(v.getPixelToWorldRatio(),
-//                    v.getPixelToWorldRatio(),
-//                    v.getPixelToWorldRatio()));
+            isoSurfaceMesh.setScale(new GLVector(v.getPixelToWorldRatio(),
+                    v.getPixelToWorldRatio(),
+                    v.getPixelToWorldRatio()));
         }
 
         sciView.setActiveNode(v);
         sciView.centerOnNode( sciView.getActiveNode() );
+    }
+
+    public static void main(String... args) throws Exception {
+        SciView sv = SciView.createSciView();
+
+        CommandService command = sv.getScijavaContext().getService(CommandService.class);
+
+        HashMap<String, Object> argmap = new HashMap<String, Object>();
+        argmap.put("iso",true);
+
+        command.run(VolumeRenderDemo.class, true, argmap);
     }
 }

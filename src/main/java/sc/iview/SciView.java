@@ -1767,7 +1767,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
                                                                     float... voxelDimensions ) {
         //log.debug( "Add Volume " + name + " image: " + image );
 
-        long[] dimensions = new long[3];
+        long[] dimensions = new long[image.numDimensions()];
         image.dimensions( dimensions );
 
         long[] minPt = new long[image.numDimensions()];
