@@ -119,6 +119,7 @@
 
 		<!-- for BVV -->
 		<bigdataviewer-core.version>7.0.0</bigdataviewer-core.version>
+		<bigdataviewer-vistools.version>1.0.0-beta-15</bigdataviewer-vistools.version>
 
 	</properties>
 
