@@ -294,7 +294,7 @@ public class GameOfLife3D extends InteractiveCommand {
 
             RandomAccessibleIntervalSource<UnsignedByteType> newSource = new RandomAccessibleIntervalSource<UnsignedByteType>(field, new UnsignedByteType(), name + "-" + ++tick);
 
-            ((Volume.VolumeDataSource.RAIISource) volume.getDataSource()).getSources().set(0,newSource);
+            ((Volume.VolumeDataSource.RAISource) volume.getDataSource()).getSources().set(0,newSource);
 
             volume.setDirty(true);
             volume.setNeedsUpdate(true);
