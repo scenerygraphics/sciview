@@ -29,11 +29,14 @@
 
 package sc.iview.commands.demo;
 
+import bdv.BigDataViewer;
 import bdv.util.RandomAccessibleIntervalSource;
 import bdv.viewer.SourceAndConverter;
 import cleargl.GLVector;
 import graphics.scenery.BoundingGrid;
 import graphics.scenery.volumes.bdv.Volume;
+import ij.gui.GenericDialog;
+import ij.gui.NonBlockingGenericDialog;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
@@ -52,18 +55,20 @@ import org.scijava.widget.NumberWidget;
 import sc.iview.SciView;
 import sc.iview.event.NodeRemovedEvent;
 
+import javax.swing.*;
+
 import static sc.iview.commands.MenuWeights.DEMO;
 import static sc.iview.commands.MenuWeights.DEMO_GAME_OF_LIFE;
 
 /**
  * Conway's Game of Life&mdash;in 3D!
- * 
+ *
  * @author Curtis Rueden
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
                  @Menu(label = "Game of Life 3D", weight = DEMO_GAME_OF_LIFE) })
-public class GameOfLife3D extends InteractiveCommand {
+public class GameOfLife3D implements Command {
 
     private static final int ALIVE = 255;
     private static final int DEAD = 16;
@@ -90,20 +95,20 @@ public class GameOfLife3D extends InteractiveCommand {
     @Parameter(label = "Initial saturation % when randomizing", min = "1", max = "99", style = NumberWidget.SCROLL_BAR_STYLE, persist = false)
     private int saturation = 10;
 
-    @Parameter(label = "Play speed", min = "1", max="100", style = NumberWidget.SCROLL_BAR_STYLE, persist = false)
+//    @Parameter(label = "Play speed", min = "1", max="100", style = NumberWidget.SCROLL_BAR_STYLE, persist = false)
     private int playSpeed = 10;
-
-    @Parameter(callback = "iterate")
-    private Button iterate;
-
-    @Parameter(callback = "randomize")
-    private Button randomize;
-
-    @Parameter(callback = "play")
-    private Button play;
-
-    @Parameter(callback = "pause")
-    private Button pause;
+//
+//    @Parameter(callback = "iterate")
+//    private Button iterate;
+//
+//    @Parameter(callback = "randomize")
+//    private Button randomize;
+//
+//    @Parameter(callback = "play")
+//    private Button play;
+//
+//    @Parameter(callback = "pause")
+//    private Button pause;
 
     private int w = 64, h = 64, d = 64;
     private Img<UnsignedByteType> field;
@@ -113,6 +118,7 @@ public class GameOfLife3D extends InteractiveCommand {
 
     /** Temporary buffer for use while recomputing the image. */
     private boolean[] bits = new boolean[w * h * d];
+    private GenericDialog dialog;
 
     /** Repeatedly iterates the simulation until stopped **/
     public void play() {
@@ -199,17 +205,13 @@ public class GameOfLife3D extends InteractiveCommand {
         field = ArrayImgs.unsignedBytes( w, h, d );
         randomize();
 
-        //play();
+        dialog = new NonBlockingGenericDialog("Game of Life 3D");
+
+        play();
 
         //eventService.subscribe(this);
     }
 
-    // -- Previewable methods --
-
-    @Override
-    public void preview() {
-        // NB: Do nothing when parameters are tuned.
-    }
 
     // -- Helper methods --
 
@@ -294,7 +296,10 @@ public class GameOfLife3D extends InteractiveCommand {
 
             RandomAccessibleIntervalSource<UnsignedByteType> newSource = new RandomAccessibleIntervalSource<UnsignedByteType>(field, new UnsignedByteType(), name + "-" + ++tick);
 
-            ((Volume.VolumeDataSource.RAISource) volume.getDataSource()).getSources().set(0,newSource);
+            SourceAndConverter<UnsignedByteType> sourceAndConverter = BigDataViewer.wrapWithTransformedSource(
+                    new SourceAndConverter<>(newSource, BigDataViewer.createConverterToARGB(new UnsignedByteType())));
+
+            ((Volume.VolumeDataSource.RAISource) volume.getDataSource()).getSources().set(0, sourceAndConverter);
 
             volume.setDirty(true);
             volume.setNeedsUpdate(true);
