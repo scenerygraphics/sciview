@@ -110,6 +110,9 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
     public SciView makeSciView() {
         SciView sv = new SciView( getContext() );
 
+        // Add to viewers list immediately
+        sceneryViewers.add( sv );
+
         threadService.run( () -> sv.main() );
         while( !sv.isInitialized() ) {
             try {
@@ -129,8 +132,6 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
     @Override
     public void createSciView() {
         SciView v = makeSciView();
-
-        sceneryViewers.add( v );
     }
 
     @Override
