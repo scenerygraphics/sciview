@@ -108,6 +108,8 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
+		<imagescience.version>3.0.0</imagescience.version>
+
 		<scenery.version>754815c</scenery.version>
 		<cleargl.version>2.2.10</cleargl.version>
 		<kotlin.version>1.3.61</kotlin.version>
@@ -211,6 +213,14 @@
 		<dependency>
 			<groupId>org.joml</groupId>
 			<artifactId>joml</artifactId>
+		</dependency>
+
+<!--		only added to resolve maven issues-->
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>imagescience</artifactId>
+			<version>${imagescience.version}</version>
+			<optional>true</optional>
 		</dependency>
 
 		<!-- Optional dependencies - for sc.iview.Main only! -->
