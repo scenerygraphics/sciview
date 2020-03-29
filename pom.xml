@@ -136,7 +136,6 @@
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-common</artifactId>
-			<version>${scijava-common.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
@@ -171,7 +170,6 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-launcher</artifactId>
-			<version>${imagej-launcher.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
