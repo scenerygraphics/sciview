@@ -2160,6 +2160,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Static launching method
+     * Deprecated, use SciView.create() method instead
      */
     @Deprecated
     public static SciView createSciView() {
