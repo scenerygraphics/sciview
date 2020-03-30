@@ -31,7 +31,6 @@ package sc.iview.commands.demo;
 import cleargl.GLTypeEnum;
 import cleargl.GLVector;
 import graphics.scenery.*;
-import graphics.scenery.textures.Texture;
 import net.imglib2.RandomAccess;
 import net.imglib2.img.Img;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -114,9 +113,10 @@ public class ImagePlaneDemo implements Command {
         mat.setDiffuse(new GLVector(1,1,1));
         mat.setAmbient(new GLVector(1,1,1));
 
-        Texture tex = new Texture(new GLVector(img.dimension(0), img.dimension(1),1),3, new UnsignedByteType(), bb);
+        GenericTexture tex = new GenericTexture("imgPlane", new GLVector(img.dimension(0), img.dimension(1),1),3, GLTypeEnum.UnsignedByte, bb);
 
-        mat.getTextures().put("diffuse", tex);
+        mat.getTransferTextures().put("imgPlane",tex);
+        mat.getTextures().put("diffuse","fromBuffer:imgPlane");
         mat.setNeedsTextureReload(true);
 
         imgPlane.setMaterial(mat);
