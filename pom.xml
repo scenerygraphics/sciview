@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>27.0.1</version>
+		<version>28.0.0</version>
 		<relativePath />
 	</parent>
 
@@ -114,6 +114,12 @@
 		<cleargl.version>2.2.10</cleargl.version>
 		<kotlin.version>1.3.61</kotlin.version>
 		<lwjgl.version>3.2.3</lwjgl.version>
+
+	   <scijava-ui-awt.version>0.1.7</scijava-ui-awt.version>
+	   <scijava-ui-swing.version>0.13.1</scijava-ui-swing.version>
+	   <scijava-search.version>0.7.0</scijava-search.version>
+	   <script-editor.version>0.5.4</script-editor.version>
+	   <imagej-ui-swing.version>0.23.2</imagej-ui-swing.version>
 	</properties>
 
 	<repositories>
