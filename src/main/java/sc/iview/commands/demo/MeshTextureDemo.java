@@ -31,9 +31,11 @@ package sc.iview.commands.demo;
 import static sc.iview.commands.MenuWeights.DEMO;
 import static sc.iview.commands.MenuWeights.DEMO_MESH_TEXTURE;
 
-import graphics.scenery.TextureRepeatMode;
 import java.nio.ByteBuffer;
 
+import graphics.scenery.textures.Texture;
+import kotlin.Triple;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.scijava.command.Command;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
@@ -41,10 +43,8 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
-import cleargl.GLTypeEnum;
 import cleargl.GLVector;
 import graphics.scenery.BufferUtils;
-import graphics.scenery.GenericTexture;
 import graphics.scenery.Node;
 
 /**
@@ -67,11 +67,9 @@ public class MeshTextureDemo implements Command {
         msh.setName( "Mesh Texture Demo" );
         msh.fitInto( 10.0f, true );
 
-        GenericTexture texture = generateGenericTexture();
+        Texture texture = generateTexture();
 
-        msh.getMaterial().getTransferTextures().put( "diffuse", texture );
-        msh.getMaterial().getTextures().put( "diffuse", "fromBuffer:diffuse" );
-        //msh.getMaterial().setDoubleSided( true );
+        msh.getMaterial().getTextures().put( "diffuse", texture );
         msh.getMaterial().setNeedsTextureReload( true );
 
         msh.setNeedsUpdate( true );
@@ -80,7 +78,7 @@ public class MeshTextureDemo implements Command {
         sciView.centerOnNode( sciView.getActiveNode() );
     }
 
-    private static GenericTexture generateGenericTexture() {
+    private static Texture generateTexture() {
         int width = 64;
         int height = 128;
 
@@ -98,13 +96,12 @@ public class MeshTextureDemo implements Command {
         }
         bb.flip();
 
-        return new GenericTexture( "neverUsed",
-				dims,
+        return new Texture(
+                dims,
 				nChannels,
-				GLTypeEnum.UnsignedByte,
+                new UnsignedByteType(),
 				bb,
-				TextureRepeatMode.Repeat,
-				TextureRepeatMode.Repeat,
-				TextureRepeatMode.ClampToEdge);
+				new Triple(Texture.RepeatMode.Repeat, Texture.RepeatMode.Repeat, Texture.RepeatMode.ClampToEdge));
+
     }
 }
