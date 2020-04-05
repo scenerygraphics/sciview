@@ -239,6 +239,17 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
+     * Toggle video recording with scenery's video recording mechanism
+     * Note: this video recording may skip frames because it is asynchronous
+     */
+    public void toggleRecordVideo(String filename, boolean overwrite) {
+        if( getRenderer() instanceof  OpenGLRenderer )
+            ((OpenGLRenderer)getRenderer()).recordMovie(filename, overwrite);
+        else
+            ((VulkanRenderer)getRenderer()).recordMovie(filename, overwrite);
+    }
+
+    /**
      * This pushes the current input setup onto a stack that allows them to be restored with restoreControls
      */
     public void stashControls() {
