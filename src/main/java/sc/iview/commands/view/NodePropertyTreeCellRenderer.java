@@ -3,6 +3,7 @@ package sc.iview.commands.view;
 import cleargl.GLVector;
 import graphics.scenery.*;
 import graphics.scenery.volumes.Volume;
+import org.joml.Vector3f;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -75,7 +76,7 @@ class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
      * @param rgb RGB color, with each channel in [0, 1].
      * @return converted color in HSL space
      */
-    public static GLVector convertRGBtoHSL(GLVector rgb) {
+    public static Vector3f convertRGBtoHSL(Vector3f rgb) {
         float max = Math.max(rgb.x(), Math.max(rgb.y(), rgb.z()));
         float min = Math.min(rgb.x(), Math.min(rgb.y(), rgb.z()));
         float h;
@@ -104,7 +105,7 @@ class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
             h /= 6.0f;
         }
 
-        return new GLVector(h, s, l);
+        return new Vector3f(h, s, l);
     }
 
     /**
@@ -142,12 +143,12 @@ class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
             // Here, we set the background of the point light to its emission color.
             // First, we convert the emission color of the light to
             // HSL to determine whether a light or dark font color is needed:
-            final GLVector emissionColor = ((Light) n).getEmissionColor();
+            final Vector3f emissionColor = ((Light) n).getEmissionColor();
             final Color awtEmissionColor = new Color(
                     emissionColor.x(),
                     emissionColor.y(),
                     emissionColor.z());
-            final GLVector hslEmissionColor = convertRGBtoHSL(emissionColor);
+            final Vector3f hslEmissionColor = convertRGBtoHSL(emissionColor);
 
 
             setOpaque(true);

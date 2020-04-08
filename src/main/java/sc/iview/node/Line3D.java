@@ -1,11 +1,11 @@
 package sc.iview.node;
 
-import cleargl.GLVector;
 import graphics.scenery.*;
+import org.joml.Vector3f;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.Colors;
 import sc.iview.Utils;
-import sc.iview.vector.ClearGLVector3;
+import sc.iview.vector.JOMLVector3;
 import sc.iview.vector.Vector3;
 
 import java.util.ArrayList;
@@ -30,13 +30,19 @@ public class Line3D extends Node {
         if( sphereJoints ) joints= new ArrayList<>();
         for( int k = 0; k < points.size(); k++) {
             if( k > 0 ) {
-                Node edge = Cylinder.betweenPoints(ClearGLVector3.convert(points.get(k - 1)), ClearGLVector3.convert(points.get(k)), (float) edgeWidth, 1f, 15);
+                Node edge =
+                        Cylinder.betweenPoints(
+                                JOMLVector3.convert(points.get(k - 1)),
+                                JOMLVector3.convert(points.get(k)),
+                                (float) edgeWidth,
+                                1f,
+                                15);
                 addLine(edge);
             }
 
             if( sphereJoints ) {
                 Node joint = new Sphere((float) edgeWidth,15);
-                joint.setPosition(ClearGLVector3.convert(points.get(k)));
+                joint.setPosition(JOMLVector3.convert(points.get(k)));
                 joints.add(joint);
                 addChild(joint);
             }
@@ -49,14 +55,20 @@ public class Line3D extends Node {
         edges = new ArrayList<>();
         if( sphereJoints ) joints= new ArrayList<>();
         for( int k = 0; k < points.size(); k++) {
-            GLVector c = Utils.convertToGLVector(colors.get(k));
+            Vector3f c = Utils.convertToVector3f(colors.get(k));
             Material mat = new Material();
             mat.setDiffuse(c);
             mat.setAmbient(c);
             mat.setSpecular(c);
 
             if( k > 0 ) {
-                Node edge = Cylinder.betweenPoints(ClearGLVector3.convert(points.get(k - 1)), ClearGLVector3.convert(points.get(k)), (float) edgeWidth, 1f, 15);
+                Node edge =
+                        Cylinder.betweenPoints(
+                                JOMLVector3.convert(points.get(k - 1)),
+                                JOMLVector3.convert(points.get(k)),
+                                (float) edgeWidth,
+                                1f,
+                                15);
                 edge.setMaterial(mat);
                 addLine(edge);
             }
@@ -64,7 +76,7 @@ public class Line3D extends Node {
             if( sphereJoints ) {
                 Node joint = new Sphere((float) edgeWidth,15);
                 joint.setMaterial(mat);
-                joint.setPosition(ClearGLVector3.convert(points.get(k)));
+                joint.setPosition(JOMLVector3.convert(points.get(k)));
                 joints.add(joint);
                 addChild(joint);
             }
@@ -73,7 +85,7 @@ public class Line3D extends Node {
 
     public void setColors( List<ColorRGB> colors ) {
         for( int k = 0; k < joints.size(); k++ ) {
-            GLVector c = Utils.convertToGLVector(colors.get(k));
+            Vector3f c = Utils.convertToVector3f(colors.get(k));
             Material mat = new Material();
             mat.setDiffuse(c);
             mat.setAmbient(c);

@@ -38,7 +38,7 @@ import org.scijava.plugin.Plugin;
 import org.scijava.util.ColorRGB;
 
 import sc.iview.SciView;
-import sc.iview.vector.ClearGLVector3;
+import sc.iview.vector.JOMLVector3;
 import sc.iview.vector.Vector3;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
@@ -49,8 +49,8 @@ public class AddSphere implements Command {
     @Parameter
     private SciView sciView;
 
-    @Parameter
-    private String position = "0; 0; 0";
+//    @Parameter
+//    private String position = "0; 0; 0";
 
     @Parameter
     private float radius = 1.0f;
@@ -60,7 +60,8 @@ public class AddSphere implements Command {
 
     @Override
     public void run() {
-        final Vector3 pos = ClearGLVector3.parse( position );
+        //final Vector3 pos = ClearGLVector3.parse( position );
+        final Vector3 pos = new JOMLVector3(0, 0, 0);
         sciView.addSphere( pos, radius, color );
     }
 }

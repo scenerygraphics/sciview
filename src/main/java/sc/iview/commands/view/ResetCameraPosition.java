@@ -29,6 +29,7 @@
 package sc.iview.commands.view;
 
 import cleargl.GLVector;
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
@@ -52,7 +53,7 @@ public class ResetCameraPosition implements Command {
 
     @Override
     public void run() {
-        sciView.getCamera().setPosition( new GLVector(0,5,5) );
+        sciView.getCamera().setPosition( new Vector3f(0,5,5) );
     }
 
 }

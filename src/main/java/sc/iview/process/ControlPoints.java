@@ -9,7 +9,7 @@ import org.scijava.ui.behaviour.ScrollBehaviour;
 import org.scijava.util.ColorRGB;
 import sc.iview.SciView;
 import sc.iview.Utils;
-import sc.iview.vector.ClearGLVector3;
+import sc.iview.vector.JOMLVector3;
 import sc.iview.vector.Vector3;
 
 import java.util.ArrayList;
@@ -36,7 +36,7 @@ public class ControlPoints {
     public List<Vector3> getVertices() {
         List<Vector3> points = new ArrayList<>();
         for( int k = 0; k < nodes.size(); k++ ) {
-            points.add( new ClearGLVector3( nodes.get(k).getPosition() ) );
+            points.add( new JOMLVector3( nodes.get(k).getPosition() ) );
         }
         return points;
     }
@@ -46,7 +46,7 @@ public class ControlPoints {
         nodes = new ArrayList<>();
         for( int k = 0; k < newPoints.length; k++ ) {
             Sphere cp = new Sphere(DEFAULT_RADIUS, DEFAULT_SEGMENTS);
-            cp.setPosition(ClearGLVector3.convert(newPoints[k]));
+            cp.setPosition(JOMLVector3.convert(newPoints[k]));
             nodes.add(cp);
         }
     }
@@ -75,11 +75,11 @@ public class ControlPoints {
         // Create target point
         targetPoint = new Sphere(ControlPoints.DEFAULT_RADIUS, ControlPoints.DEFAULT_SEGMENTS);
         Material mat = new Material();
-        mat.setAmbient(Utils.convertToGLVector(ControlPoints.TARGET_COLOR));
-        mat.setDiffuse(Utils.convertToGLVector(ControlPoints.TARGET_COLOR));
+        mat.setAmbient(Utils.convertToVector3f(ControlPoints.TARGET_COLOR));
+        mat.setDiffuse(Utils.convertToVector3f(ControlPoints.TARGET_COLOR));
         targetPoint.setMaterial(mat);
 
-        targetPoint.setPosition( sciView.getCamera().getPosition().plus(sciView.getCamera().getForward().times(controlPointDistance) ) );
+        targetPoint.setPosition( sciView.getCamera().getPosition().add(sciView.getCamera().getForward().mul(controlPointDistance) ) );
 
         sciView.addNode(targetPoint,false);
         //sciView.getCamera().addChild(targetPoint);
@@ -87,7 +87,7 @@ public class ControlPoints {
         targetPoint.getUpdate().add(() -> {
             //targetPoint.getRotation().set(sciView.getCamera().getRotation().conjugate().rotateByAngleY((float) Math.PI));
             // Set rotation before setting position
-            targetPoint.setPosition( sciView.getCamera().getPosition().plus(sciView.getCamera().getForward().times(controlPointDistance) ) );
+            targetPoint.setPosition( sciView.getCamera().getPosition().add(sciView.getCamera().getForward().mul(controlPointDistance) ) );
             return null;
         });
     }
@@ -107,7 +107,7 @@ public class ControlPoints {
             @Override
             public void scroll(double wheelRotation, boolean isHorizontal, int x, int y) {
                 controlPointDistance += wheelRotation;
-                targetPoint.setPosition( sciView.getCamera().getPosition().plus(sciView.getCamera().getForward().times(controlPointDistance) ) );
+                targetPoint.setPosition( sciView.getCamera().getPosition().add(sciView.getCamera().getForward().mul(controlPointDistance) ) );
             }
         };
         return b;
@@ -117,8 +117,8 @@ public class ControlPoints {
 
         Sphere controlPoint = new Sphere(ControlPoints.DEFAULT_RADIUS, ControlPoints.DEFAULT_SEGMENTS);
         Material mat = new Material();
-        mat.setAmbient(Utils.convertToGLVector(ControlPoints.DEFAULT_COLOR));
-        mat.setDiffuse(Utils.convertToGLVector(ControlPoints.DEFAULT_COLOR));
+        mat.setAmbient(Utils.convertToVector3f(ControlPoints.DEFAULT_COLOR));
+        mat.setDiffuse(Utils.convertToVector3f(ControlPoints.DEFAULT_COLOR));
         controlPoint.setMaterial(mat);
 
         //controlPoint.setPosition( sciView.getCamera().getTransformation().mult(targetPoint.getPosition().xyzw()) );

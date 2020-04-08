@@ -30,7 +30,7 @@ package sc.iview.commands.demo;
 
 import cleargl.GLVector;
 import graphics.scenery.Node;
-import graphics.scenery.volumes.bdv.Volume;
+import graphics.scenery.volumes.Volume;
 import io.scif.services.DatasetIOService;
 import net.imagej.Dataset;
 import net.imagej.mesh.Mesh;
@@ -39,6 +39,7 @@ import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
 import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
 import org.scijava.log.LogService;
@@ -114,7 +115,7 @@ public class VolumeRenderDemo implements Command {
             Node scMesh = sciView.addMesh(isoSurfaceMesh);
 
             isoSurfaceMesh.setName( "Volume Render Demo Isosurface" );
-            isoSurfaceMesh.setScale(new GLVector(v.getPixelToWorldRatio(),
+            isoSurfaceMesh.setScale(new Vector3f(v.getPixelToWorldRatio(),
                     v.getPixelToWorldRatio(),
                     v.getPixelToWorldRatio()));
         }

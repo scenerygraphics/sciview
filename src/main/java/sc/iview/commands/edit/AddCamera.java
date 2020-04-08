@@ -28,20 +28,18 @@
  */
 package sc.iview.commands.edit;
 
-import static sc.iview.commands.MenuWeights.EDIT;
-import static sc.iview.commands.MenuWeights.EDIT_ADD_CAMERA;
-
-import cleargl.GLVector;
 import graphics.scenery.DetachedHeadCamera;
 import org.scijava.command.Command;
 import org.scijava.display.DisplayService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-
 import sc.iview.SciView;
-import sc.iview.vector.ClearGLVector3;
+import sc.iview.vector.JOMLVector3;
 import sc.iview.vector.Vector3;
+
+import static sc.iview.commands.MenuWeights.EDIT;
+import static sc.iview.commands.MenuWeights.EDIT_ADD_CAMERA;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
 		menu = { @Menu(label = "Edit", weight = EDIT), //
@@ -54,8 +52,9 @@ public class AddCamera implements Command {
 	@Parameter
 	private SciView sciView;
 
-	@Parameter
-	private String position = "0; 0; 0";
+	// FIXME
+//	@Parameter
+//	private String position = "0; 0; 0";
 
 	@Parameter(label = "Field of View")
 	private float fov = 50.0f;
@@ -68,10 +67,11 @@ public class AddCamera implements Command {
 
 	@Override
 	public void run() {
-		final Vector3 pos = ClearGLVector3.parse( position );
+		//final Vector3 pos = ClearGLVector3.parse( position );
+		final Vector3 pos = new JOMLVector3(0, 0, 0);
 		final DetachedHeadCamera cam = new DetachedHeadCamera();
 		cam.perspectiveCamera( fov, sciView.getWindowWidth(), sciView.getWindowHeight(), Math.min(nearPlane, farPlane), Math.max(nearPlane, farPlane)  );
-		cam.setPosition( new GLVector(pos.asFloatArray()) );
+		cam.setPosition( pos );
 
 		sciView.addNode( cam );
 	}

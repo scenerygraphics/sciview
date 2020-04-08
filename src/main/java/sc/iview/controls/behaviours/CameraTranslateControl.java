@@ -2,6 +2,8 @@ package sc.iview.controls.behaviours;
 
 import cleargl.GLVector;
 import com.jogamp.opengl.math.Quaternion;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import org.scijava.ui.behaviour.DragBehaviour;
 import sc.iview.SciView;
 
@@ -47,11 +49,11 @@ public class CameraTranslateControl implements DragBehaviour {
             return;
         }
 
-        float[] translationVector = new float[]{ ( x - lastX ) * getDragSpeed(), ( y - lastY ) * getDragSpeed(), 0};
+        Vector3f translationVector = new Vector3f((x - lastX) * getDragSpeed(), (y - lastY) * getDragSpeed(), 0);
 
-        ( new Quaternion( sciView.getCamera().getRotation() ) ).conjugate().rotateVector( translationVector, 0, translationVector, 0 );
-        translationVector[1] *= -1;
-        sciView.getCamera().setPosition( sciView.getCamera().getPosition().plus( new GLVector( translationVector ) ) );
+        ( new Quaternionf( sciView.getCamera().getRotation() ) ).conjugate().transform( translationVector );
+        translationVector.y *= -1;
+        sciView.getCamera().setPosition( sciView.getCamera().getPosition().add( new Vector3f( translationVector.x(), translationVector.y(), translationVector.z() ) ) );
 
         sciView.getCamera().getLock().unlock();
     }

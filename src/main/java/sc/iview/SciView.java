@@ -29,10 +29,8 @@
 package sc.iview;
 
 import bdv.util.AxisOrder;
-import cleargl.GLTypeEnum;
 import cleargl.GLVector;
 import com.jogamp.opengl.math.Quaternion;
-import coremem.enums.NativeTypeEnum;
 import graphics.scenery.Box;
 import graphics.scenery.*;
 import graphics.scenery.backends.RenderedImage;
@@ -49,7 +47,7 @@ import graphics.scenery.controls.behaviours.SelectCommand;
 import graphics.scenery.utils.*;
 import graphics.scenery.volumes.Colormap;
 import graphics.scenery.volumes.TransferFunction;
-import graphics.scenery.volumes.bdv.Volume;
+import graphics.scenery.volumes.Volume;
 import io.scif.SCIFIOService;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
@@ -63,19 +61,15 @@ import net.imagej.interval.CalibratedRealInterval;
 import net.imagej.lut.LUTService;
 import net.imagej.ops.OpService;
 import net.imagej.units.UnitService;
-import net.imglib2.Cursor;
 import net.imglib2.*;
 import net.imglib2.RandomAccess;
 import net.imglib2.display.ColorTable;
 import net.imglib2.img.Img;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.type.volatiles.VolatileFloatType;
-import net.imglib2.type.volatiles.VolatileUnsignedByteType;
-import net.imglib2.type.volatiles.VolatileUnsignedShortType;
-import net.imglib2.view.Views;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.scijava.Context;
 import org.scijava.display.Display;
 import org.scijava.display.DisplayService;
@@ -105,14 +99,13 @@ import sc.iview.event.NodeRemovedEvent;
 import sc.iview.process.MeshConverter;
 import sc.iview.ui.ContextPopUp;
 import sc.iview.ui.REPLPane;
-import sc.iview.vector.ClearGLVector3;
+import sc.iview.vector.JOMLVector3;
 import sc.iview.vector.Vector3;
 import tpietzsch.example2.VolumeViewerOptions;
 
 import javax.imageio.ImageIO;
 import javax.script.ScriptException;
 import javax.swing.*;
-import javax.swing.plaf.basic.BasicLookAndFeel;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -293,18 +286,18 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         }
 
         // Add initial objects
-        GLVector[] tetrahedron = new GLVector[4];
-        tetrahedron[0] = new GLVector( 1.0f, 0f, -1.0f/(float)Math.sqrt(2.0f) );
-        tetrahedron[1] = new GLVector( -1.0f,0f,-1.0f/(float)Math.sqrt(2.0) );
-        tetrahedron[2] = new GLVector( 0.0f,1.0f,1.0f/(float)Math.sqrt(2.0) );
-        tetrahedron[3] = new GLVector( 0.0f,-1.0f,1.0f/(float)Math.sqrt(2.0) );
+        Vector3f[] tetrahedron = new Vector3f[4];
+        tetrahedron[0] = new Vector3f( 1.0f, 0f, -1.0f/(float)Math.sqrt(2.0f) );
+        tetrahedron[1] = new Vector3f( -1.0f,0f,-1.0f/(float)Math.sqrt(2.0) );
+        tetrahedron[2] = new Vector3f( 0.0f,1.0f,1.0f/(float)Math.sqrt(2.0) );
+        tetrahedron[3] = new Vector3f( 0.0f,-1.0f,1.0f/(float)Math.sqrt(2.0) );
 
         lights = new ArrayList<>();
 
         for( int i = 0; i < 4; i++ ) {// TODO allow # initial lights to be customizable?
             PointLight light = new PointLight(150.0f);
-            light.setPosition( tetrahedron[i].times(25.0f) );
-            light.setEmissionColor( new GLVector( 1.0f, 1.0f, 1.0f ) );
+            light.setPosition( tetrahedron[i].mul(25.0f) );
+            light.setEmissionColor( new Vector3f( 1.0f, 1.0f, 1.0f ) );
             light.setIntensity( 1.0f );
             lights.add( light );
             getScene().addChild( light );
@@ -318,14 +311,14 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         } else {
             cam = getCamera();
         }
-        cam.setPosition( new GLVector( 0.0f, 5.0f, 5.0f ) );
+        cam.setPosition( new Vector3f( 0.0f, 5.0f, 5.0f ) );
         cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 1000.0f );
         cam.setActive( true );
 
-        floor = new Box( new GLVector( 500f, 0.2f, 500f ) );
+        floor = new Box( new Vector3f( 500f, 0.2f, 500f ) );
         floor.setName( "Floor" );
-        floor.setPosition( new GLVector( 0f, -1f, 0f ) );
-        floor.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        floor.setPosition( new Vector3f( 0f, -1f, 0f ) );
+        floor.getMaterial().setDiffuse( new Vector3f( 1.0f, 1.0f, 1.0f ) );
         getScene().addChild( floor );
     }
 
@@ -684,19 +677,15 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         getCamera().setTargeted( true );
 
         // Set forward direction to point from camera at active node
-        GLVector forward = bb.getBoundingSphere().getOrigin().minus( getCamera().getPosition() ).normalize().times( -1 );
+        Vector3f forward = bb.getBoundingSphere().getOrigin().sub( getCamera().getPosition() ).normalize().mul( -1 );
 
         float distance = (float) (bb.getBoundingSphere().getRadius() / Math.tan( getCamera().getFov() / 360 * java.lang.Math.PI ));
 
         // Solve for the proper rotation
-        Quaternion rotation = new Quaternion().setLookAt( forward.toFloatArray(),
-                                                          new GLVector(0,1,0).toFloatArray(),
-                                                          new GLVector(1,0,0).toFloatArray(),
-                                                          new GLVector( 0,1,0).toFloatArray(),
-                                                          new GLVector( 0, 0, 1).toFloatArray() );
+        Quaternionf rotation = new Quaternionf().lookAlong(forward, new Vector3f(0,1,0));
 
         getCamera().setRotation( rotation.invert().normalize() );
-        getCamera().setPosition( bb.getBoundingSphere().getOrigin().plus( getCamera().getForward().times( distance * -1 ) ) );
+        getCamera().setPosition( bb.getBoundingSphere().getOrigin().add( getCamera().getForward().mul( distance * -1 ) ) );
 
         getCamera().setDirty(true);
         getCamera().setNeedsUpdate(true);
@@ -868,9 +857,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             return;
         }
 
-        GLVector target;
+        Vector3f target;
         if( getActiveNode() == null ) {
-            target = new GLVector( 0, 0, 0 );
+            target = new Vector3f( 0, 0, 0 );
         } else {
             target = getActiveNode().getPosition();
         }
@@ -885,7 +874,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         targetArcball.setMaximumDistance( Float.MAX_VALUE );
         targetArcball.setMouseSpeedMultiplier( mouseSpeed );
         targetArcball.setScrollSpeedMultiplier( 0.05f );
-        targetArcball.setDistance( getCamera().getPosition().minus( target ).magnitude() );
+        targetArcball.setDistance( getCamera().getPosition().sub( target ).length() );
 
         // FIXME: Swing seems to have issues with shift-scroll actions, so we change
 		//  this to alt-scroll here for the moment.
@@ -923,7 +912,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @return the Node corresponding to the box
      */
     public Node addBox() {
-        return addBox( new ClearGLVector3( 0.0f, 0.0f, 0.0f ) );
+        return addBox( new JOMLVector3( 0.0f, 0.0f, 0.0f ) );
     }
 
     /**
@@ -932,7 +921,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @return the Node corresponding to the box
      */
     public Node addBox( Vector3 position ) {
-        return addBox( position, new ClearGLVector3( 1.0f, 1.0f, 1.0f ) );
+        return addBox( position, new JOMLVector3( 1.0f, 1.0f, 1.0f ) );
     }
 
     /**
@@ -957,13 +946,13 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
                                          final boolean inside ) {
         // TODO: use a material from the current palate by default
         final Material boxmaterial = new Material();
-        boxmaterial.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        boxmaterial.setDiffuse( Utils.convertToGLVector( color ) );
-        boxmaterial.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        boxmaterial.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
+        boxmaterial.setDiffuse( Utils.convertToVector3f( color ) );
+        boxmaterial.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
 
-        final Box box = new Box( ClearGLVector3.convert( size ), inside );
+        final Box box = new Box( JOMLVector3.convert( size ), inside );
         box.setMaterial( boxmaterial );
-        box.setPosition( ClearGLVector3.convert( position ) );
+        box.setPosition( JOMLVector3.convert( position ) );
 
         return addNode( box );
     }
@@ -973,7 +962,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @return the Node corresponding to the sphere
      */
     public Node addSphere() {
-        return addSphere( new ClearGLVector3( 0.0f, 0.0f, 0.0f ), 1 );
+        return addSphere( new JOMLVector3( 0.0f, 0.0f, 0.0f ), 1 );
     }
 
     /**
@@ -995,13 +984,13 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      */
     public Node addSphere( final Vector3 position, final float radius, final ColorRGB color ) {
         final Material material = new Material();
-        material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        material.setDiffuse( Utils.convertToGLVector( color ) );
-        material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        material.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
+        material.setDiffuse( Utils.convertToVector3f( color ) );
+        material.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
 
         final Sphere sphere = new Sphere( radius, 20 );
         sphere.setMaterial( material );
-        sphere.setPosition( ClearGLVector3.convert( position ) );
+        sphere.setPosition( JOMLVector3.convert( position ) );
 
         return addNode( sphere );
     }
@@ -1016,7 +1005,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      */
     public Node addCylinder( final Vector3 position, final float radius, final float height, final int num_segments ) {
         final Cylinder cyl = new Cylinder( radius, height, num_segments );
-        cyl.setPosition( ClearGLVector3.convert( position ) );
+        cyl.setPosition( JOMLVector3.convert( position ) );
         return addNode( cyl );
     }
 
@@ -1029,8 +1018,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @return  the Node corresponding to the cone
      */
     public Node addCone( final Vector3 position, final float radius, final float height, final int num_segments ) {
-        final Cone cone = new Cone( radius, height, num_segments, new GLVector(0,0,1) );
-        cone.setPosition( ClearGLVector3.convert( position ) );
+        final Cone cone = new Cone( radius, height, num_segments, new Vector3f(0,0,1) );
+        cone.setPosition( JOMLVector3.convert( position ) );
         return addNode( cone );
     }
 
@@ -1039,7 +1028,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @return  the Node corresponding to the line
      */
     public Node addLine() {
-        return addLine( new ClearGLVector3( 0.0f, 0.0f, 0.0f ), new ClearGLVector3( 1.0f, 1.0f, 1.0f ) );
+        return addLine( new JOMLVector3( 0.0f, 0.0f, 0.0f ), new JOMLVector3( 1.0f, 1.0f, 1.0f ) );
     }
 
     /**
@@ -1072,19 +1061,19 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      */
     public Node addLine( final Vector3[] points, final ColorRGB color, final double edgeWidth ) {
         final Material material = new Material();
-        material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        material.setDiffuse( Utils.convertToGLVector( color ) );
-        material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        material.setAmbient( new Vector3f( 1.0f, 1.0f, 1.0f ) );
+        material.setDiffuse( Utils.convertToVector3f( color ) );
+        material.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
 
         final Line line = new Line( points.length );
         for( final Vector3 pt : points ) {
-            line.addPoint( ClearGLVector3.convert( pt ) );
+            line.addPoint( JOMLVector3.convert( pt ) );
         }
 
         line.setEdgeWidth( ( float ) edgeWidth );
 
         line.setMaterial( material );
-        line.setPosition( ClearGLVector3.convert( points[0] ) );
+        line.setPosition( JOMLVector3.convert( points[0] ) );
 
         return addNode( line );
     }
@@ -1095,13 +1084,13 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      */
     public Node addPointLight() {
         final Material material = new Material();
-        material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        material.setDiffuse( new GLVector( 0.0f, 1.0f, 0.0f ) );
-        material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        material.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
+        material.setDiffuse( new Vector3f( 0.0f, 1.0f, 0.0f ) );
+        material.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
 
         final PointLight light = new PointLight( 5.0f );
         light.setMaterial( material );
-        light.setPosition( new GLVector( 0.0f, 0.0f, 0.0f ) );
+        light.setPosition( new Vector3f( 0.0f, 0.0f, 0.0f ) );
         lights.add(light);
 
         return addNode( light );
@@ -1115,14 +1104,14 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         OrientedBoundingBox.BoundingSphere boundingSphere = bb.getBoundingSphere();
         // Choose a good y-position, then place lights around the cross-section through this plane
         float y = 0;
-        GLVector c = boundingSphere.getOrigin();
+        Vector3f c = boundingSphere.getOrigin();
         float r = boundingSphere.getRadius();
         for( int k = 0; k < lights.size(); k++ ) {
             PointLight light = lights.get(k);
             float x = (float) (c.x() + r * Math.cos( k == 0 ? 0 : Math.PI * 2 * ((float)k / (float)lights.size()) ));
             float z = (float) (c.y() + r * Math.sin( k == 0 ? 0 : Math.PI * 2 * ((float)k / (float)lights.size()) ));
             light.setLightRadius( 2 * r );
-            light.setPosition( new GLVector( x, y, z ) );
+            light.setPosition( new Vector3f( x, y, z ) );
         }
     }
 
@@ -1274,11 +1263,11 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         pointCloud.setNormals( nBuffer );
         pointCloud.setIndices( BufferUtils.allocateInt( 0 ) );
         pointCloud.setupPointCloud();
-        material.setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        material.setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        material.setAmbient( new Vector3f( 1.0f, 1.0f, 1.0f ) );
+        material.setDiffuse( new Vector3f( 1.0f, 1.0f, 1.0f ) );
+        material.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
         pointCloud.setMaterial( material );
-        pointCloud.setPosition( new GLVector( 0f, 0f, 0f ) );
+        pointCloud.setPosition( new Vector3f( 0f, 0f, 0f ) );
 
         return addNode( pointCloud );
     }
@@ -1290,10 +1279,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      */
     public Node addPointCloud( final PointCloud pointCloud ) {
         pointCloud.setupPointCloud();
-        pointCloud.getMaterial().setAmbient( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        pointCloud.getMaterial().setDiffuse( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        pointCloud.getMaterial().setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
-        pointCloud.setPosition( new GLVector( 0f, 0f, 0f ) );
+        pointCloud.getMaterial().setAmbient( new Vector3f( 1.0f, 1.0f, 1.0f ) );
+        pointCloud.getMaterial().setDiffuse( new Vector3f( 1.0f, 1.0f, 1.0f ) );
+        pointCloud.getMaterial().setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
+        pointCloud.setPosition( new Vector3f( 0f, 0f, 0f ) );
 
         return addNode( pointCloud );
     }
@@ -1334,12 +1323,12 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      */
     public Node addMesh( final Mesh scMesh ) {
         final Material material = new Material();
-        material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        material.setDiffuse( new GLVector( 0.0f, 1.0f, 0.0f ) );
-        material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        material.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
+        material.setDiffuse( new Vector3f( 0.0f, 1.0f, 0.0f ) );
+        material.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
 
         scMesh.setMaterial( material );
-        scMesh.setPosition( new GLVector( 0.0f, 0.0f, 0.0f ) );
+        scMesh.setPosition( new Vector3f( 0.0f, 0.0f, 0.0f ) );
 
         objectService.addObject(scMesh);
 
@@ -1381,7 +1370,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     public Node setActiveNode( Node n ) {
         if( activeNode == n ) return activeNode;
         activeNode = n;
-        targetArcball.setTarget( n == null ? () -> new GLVector( 0, 0, 0 ) : () -> n.getMaximumBoundingBox().getBoundingSphere().getOrigin());
+        targetArcball.setTarget( n == null ? () -> new Vector3f( 0, 0, 0 ) : () -> n.getMaximumBoundingBox().getBoundingSphere().getOrigin());
         eventService.publish( new NodeActivatedEvent( activeNode ) );
 
         return activeNode;
@@ -1589,7 +1578,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param position
      */
     public void moveCamera( float[] position ) {
-        getCamera().setPosition( new GLVector( position[0], position[1], position[2] ) );
+        getCamera().setPosition( new Vector3f( position[0], position[1], position[2] ) );
     }
 
     /**
@@ -1597,7 +1586,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param position
      */
     public void moveCamera( double[] position ) {
-        getCamera().setPosition( new GLVector( ( float ) position[0], ( float ) position[1], ( float ) position[2] ) );
+        getCamera().setPosition( new Vector3f( ( float ) position[0], ( float ) position[1], ( float ) position[2] ) );
     }
 
     /**
@@ -2025,22 +2014,22 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param w
      */
     public void setRotation(Node n, float x, float y, float z, float w) {
-        n.setRotation(new Quaternion(x,y,z,w));
+        n.setRotation(new Quaternionf(x,y,z,w));
     }
 
     public void setScale(Node n, float x, float y, float z) {
-        n.setScale(new GLVector(x,y,z));
+        n.setScale(new Vector3f(x,y,z));
     }
 
     public void setColor(Node n, float x, float y, float z, float w) {
-        GLVector col = new GLVector(x, y, z, w);
+        Vector3f col = new Vector3f(x, y, z);
         n.getMaterial().setAmbient(col);
         n.getMaterial().setDiffuse(col);
         n.getMaterial().setSpecular(col);
     }
 
     public void setPosition(Node n, float x, float y, float z) {
-        n.setPosition(new GLVector(x,y,z));
+        n.setPosition(new Vector3f(x,y,z));
     }
 
     public void addWindowListener(WindowListener wl) {

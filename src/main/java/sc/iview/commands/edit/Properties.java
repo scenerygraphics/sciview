@@ -33,6 +33,9 @@ import com.jogamp.opengl.math.Quaternion;
 import graphics.scenery.*;
 import graphics.scenery.volumes.Volume;
 //import graphics.scenery.volumes.bdv.BDVVolume;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
 import org.scijava.event.EventService;
@@ -273,7 +276,7 @@ public class Properties extends InteractiveCommand {
 
         // update colour
         if( currentSceneNode.getMaterial() != null && currentSceneNode.getMaterial().getDiffuse() != null ) {
-            GLVector colourVector;
+            Vector3f colourVector;
             if( currentSceneNode instanceof PointLight ) {
                 colourVector = ( ( PointLight ) currentSceneNode ).getEmissionColor();
             } else {
@@ -288,20 +291,19 @@ public class Properties extends InteractiveCommand {
         visible = currentSceneNode.getVisible();
 
         // update position
-        final GLVector position = currentSceneNode.getPosition();
+        final Vector3f position = currentSceneNode.getPosition();
         positionX = position.get( 0 );
         positionY = position.get( 1 );
         positionZ = position.get( 2 );
 
         // update rotation
-        final float[] eulerAngles = new float[3];
-        currentSceneNode.getRotation().toEuler( eulerAngles );
-        rotationPhi = eulerAngles[0];
-        rotationTheta = eulerAngles[1];
-        rotationPsi = eulerAngles[2];
+        final Vector3f eulerAngles = currentSceneNode.getRotation().getEulerAnglesXYZ(new Vector3f());
+        rotationPhi = eulerAngles.x();
+        rotationTheta = eulerAngles.y();
+        rotationPsi = eulerAngles.z();
 
         // update scale
-        final GLVector scale = currentSceneNode.getScale();
+        final Vector3f scale = currentSceneNode.getScale();
         scaleX = scale.x();
         scaleY = scale.y();
         scaleZ = scale.z();
@@ -310,16 +312,17 @@ public class Properties extends InteractiveCommand {
 
         name = currentSceneNode.getName();
 
-        if(currentSceneNode instanceof Volume) {
-            final MutableModuleItem<String> renderingModeInput = getInfo().getMutableInput( "renderingMode", String.class );
-            renderingModeInput.setChoices(renderingModeChoices);
-
-            renderingMode = (String)renderingModeChoices.get(((Volume)currentSceneNode).getRenderingMethod());
-            occlusionSteps = ((Volume)currentSceneNode).getOcclusionSteps();
-        } else {
-            maybeRemoveInput( "occlusionSteps", Integer.class );
-            maybeRemoveInput( "renderingMode", String.class );
-        }
+        // FIXME
+//        if(currentSceneNode instanceof Volume) {
+//            final MutableModuleItem<String> renderingModeInput = getInfo().getMutableInput( "renderingMode", String.class );
+//            renderingModeInput.setChoices(renderingModeChoices);
+//
+//            renderingMode = (String)renderingModeChoices.get(((Volume)currentSceneNode).getRenderingMethod());
+//            occlusionSteps = ((Volume)currentSceneNode).getOcclusionSteps();
+//        } else {
+//            maybeRemoveInput( "occlusionSteps", Integer.class );
+//            maybeRemoveInput( "renderingMode", String.class );
+//        }
 
         if(currentSceneNode instanceof PointLight) {
             intensity = ((PointLight)currentSceneNode).getIntensity();
@@ -368,10 +371,10 @@ public class Properties extends InteractiveCommand {
             maybeRemoveInput( "text", String.class );
         }
 
-        if(currentSceneNode instanceof graphics.scenery.volumes.bdv.Volume) {
-            timepoint = ((graphics.scenery.volumes.bdv.Volume)currentSceneNode).getCurrentTimepoint();
+        if(currentSceneNode instanceof graphics.scenery.volumes.Volume) {
+            timepoint = ((graphics.scenery.volumes.Volume)currentSceneNode).getCurrentTimepoint();
             getInfo().getMutableInput("timepoint", Integer.class).setMinimumValue(0);
-            getInfo().getMutableInput("timepoint", Integer.class).setMaximumValue(((graphics.scenery.volumes.bdv.Volume) currentSceneNode).getMaxTimepoint());
+            getInfo().getMutableInput("timepoint", Integer.class).setMaximumValue(((graphics.scenery.volumes.Volume) currentSceneNode).getMaxTimepoint());
         } else {
             maybeRemoveInput("timepoint", Integer.class);
         }
@@ -387,12 +390,12 @@ public class Properties extends InteractiveCommand {
         currentSceneNode.setVisible( visible );
 
         // update rotation
-        currentSceneNode.setRotation( new Quaternion().setFromEuler( rotationPhi, //
+        currentSceneNode.setRotation( new Quaternionf().rotateXYZ( rotationPhi, //
                                                                      rotationTheta, //
                                                                      rotationPsi ) );
 
         // update colour
-        final GLVector cVector = new GLVector( colour.getRed() / 255f, //
+        final Vector3f cVector = new Vector3f( colour.getRed() / 255f, //
                                                colour.getGreen() / 255f, //
                                                colour.getBlue() / 255f );
         if( currentSceneNode instanceof PointLight ) {
@@ -403,17 +406,17 @@ public class Properties extends InteractiveCommand {
         }
 
         // update position
-        final GLVector position = currentSceneNode.getPosition();
-        position.set( 0, ( positionX ) );
-        position.set( 1, ( positionY ) );
-        position.set( 2, ( positionZ ) );
+        final Vector3f position = currentSceneNode.getPosition();
+        position.x = positionX;
+        position.y = positionY;
+        position.z = positionZ;
         currentSceneNode.setPosition( position );
 
         // update scale
-        final GLVector scale = currentSceneNode.getScale();
-        scale.set( 0, scaleX );
-        scale.set( 1, scaleY );
-        scale.set( 2, scaleZ );
+        final Vector3f scale = currentSceneNode.getScale();
+        scale.x = scaleX;
+        scale.y = scaleY;
+        scale.z = scaleZ;
         currentSceneNode.setScale(scale);
 
         // update render scale
@@ -425,15 +428,16 @@ public class Properties extends InteractiveCommand {
             ((PointLight) currentSceneNode).setIntensity(intensity);
         }
 
-        if(currentSceneNode instanceof Volume) {
-            final int mode = renderingModeChoices.indexOf(renderingMode);
-
-            if(mode != -1) {
-                ((Volume) currentSceneNode).setRenderingMethod(mode);
-            }
-
-            ((Volume)currentSceneNode).setOcclusionSteps(occlusionSteps);
-        }
+        // FIXME
+//        if(currentSceneNode instanceof Volume) {
+//            final int mode = renderingModeChoices.indexOf(renderingMode);
+//
+//            if(mode != -1) {
+//                ((Volume) currentSceneNode).setRenderingMethod(mode);
+//            }
+//
+//            ((Volume)currentSceneNode).setOcclusionSteps(occlusionSteps);
+//        }
 
         if(currentSceneNode instanceof Camera) {
         	final Scene scene = currentSceneNode.getScene();
@@ -455,7 +459,7 @@ public class Properties extends InteractiveCommand {
 
             ((BoundingGrid)currentSceneNode).setTicksOnly(ticks);
 
-            ((BoundingGrid)currentSceneNode).setGridColor(new GLVector(gridColor.getRed()/255.0f, gridColor.getGreen()/255.0f, gridColor.getBlue()/255.0f));
+            ((BoundingGrid)currentSceneNode).setGridColor(new Vector3f(gridColor.getRed()/255.0f, gridColor.getGreen()/255.0f, gridColor.getBlue()/255.0f));
         }
 
         if(currentSceneNode instanceof TextBoard) {
@@ -469,12 +473,12 @@ public class Properties extends InteractiveCommand {
 
             ((TextBoard)currentSceneNode).setTransparent(transparent);
             ((TextBoard)currentSceneNode).setText(text);
-            ((TextBoard)currentSceneNode).setFontColor(new GLVector(fontColor.getRed()/255.0f, fontColor.getGreen()/255.0f, fontColor.getBlue()/255.0f));
-            ((TextBoard)currentSceneNode).setBackgroundColor(new GLVector(backgroundColor.getRed()/255.0f, backgroundColor.getGreen()/255.0f, backgroundColor.getBlue()/255.0f));
+            ((TextBoard)currentSceneNode).setFontColor(new Vector4f(fontColor.getRed()/255.0f, fontColor.getGreen()/255.0f, fontColor.getBlue()/255.0f, 1f));
+            ((TextBoard)currentSceneNode).setBackgroundColor(new Vector4f(backgroundColor.getRed()/255.0f, backgroundColor.getGreen()/255.0f, backgroundColor.getBlue()/255.0f, 1f));
         }
 
-        if(currentSceneNode instanceof graphics.scenery.volumes.bdv.Volume) {
-            ((graphics.scenery.volumes.bdv.Volume) currentSceneNode).goToTimePoint(timepoint);
+        if(currentSceneNode instanceof graphics.scenery.volumes.Volume) {
+            ((graphics.scenery.volumes.Volume) currentSceneNode).goToTimePoint(timepoint);
         }
 
         events.publish( new NodeChangedEvent( currentSceneNode ) );

@@ -31,9 +31,11 @@ package sc.iview.commands.demo;
 import cleargl.GLTypeEnum;
 import cleargl.GLVector;
 import graphics.scenery.*;
+import graphics.scenery.textures.Texture;
 import net.imglib2.RandomAccess;
 import net.imglib2.img.Img;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.io.IOService;
 import org.scijava.plugin.Menu;
@@ -71,8 +73,8 @@ public class ImagePlaneDemo implements Command {
 
         ByteBuffer bb = imgToByteBuffer(img);
 
-        Box imgPlane = new Box( new GLVector( 10f, 10f, 0.01f ) );
-        imgPlane.setPosition(new GLVector(0,10,0));
+        Box imgPlane = new Box( new Vector3f( 10f, 10f, 0.01f ) );
+        imgPlane.setPosition(new Vector3f(0,10,0));
 
         FloatBuffer tc = BufferUtils.allocateFloatAndPut(new float[]{
                 // front
@@ -109,15 +111,15 @@ public class ImagePlaneDemo implements Command {
         imgPlane.setTexcoords(tc);
 
         Material mat = new Material();
-        mat.setSpecular(new GLVector(1,1,1));
-        mat.setDiffuse(new GLVector(1,1,1));
-        mat.setAmbient(new GLVector(1,1,1));
+        mat.setSpecular(new Vector3f(1,1,1));
+        mat.setDiffuse(new Vector3f(1,1,1));
+        mat.setAmbient(new Vector3f(1,1,1));
 
-        GenericTexture tex = new GenericTexture("imgPlane", new GLVector(img.dimension(0), img.dimension(1),1),3, GLTypeEnum.UnsignedByte, bb);
-
-        mat.getTransferTextures().put("imgPlane",tex);
-        mat.getTextures().put("diffuse","fromBuffer:imgPlane");
-        mat.setNeedsTextureReload(true);
+        // FIXME
+//        Texture tex = new Texture(new Vector3f(img.dimension(0), img.dimension(1),1),3, GLTypeEnum.UnsignedByte, bb);
+//
+//        mat.getTextures().put("diffuse",tex);
+        //mat.setNeedsTextureReload(true);
 
         imgPlane.setMaterial(mat);
         imgPlane.setNeedsUpdate(true);

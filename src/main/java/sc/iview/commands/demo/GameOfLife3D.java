@@ -34,7 +34,7 @@ import bdv.util.RandomAccessibleIntervalSource;
 import bdv.viewer.SourceAndConverter;
 import cleargl.GLVector;
 import graphics.scenery.BoundingGrid;
-import graphics.scenery.volumes.bdv.Volume;
+import graphics.scenery.volumes.Volume;
 import ij.gui.GenericDialog;
 import ij.gui.NonBlockingGenericDialog;
 import net.imglib2.Cursor;
@@ -44,6 +44,7 @@ import net.imglib2.Sampler;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
 import org.scijava.event.EventHandler;
@@ -282,7 +283,7 @@ public class GameOfLife3D implements Command {
 //            volume.setVoxelSizeY(10.0f);
 //            volume.setVoxelSizeZ(10.0f);
 
-            volume.putAbove(new GLVector(0.0f, 0.0f, 0.0f));
+            volume.putAbove(new Vector3f(0.0f, 0.0f, 0.0f));
 //            volume.setRenderingMethod(2);
             volume.getTransferFunction().addControlPoint(0.0f, 0.0f);
             volume.getTransferFunction().addControlPoint(0.4f, 0.3f);

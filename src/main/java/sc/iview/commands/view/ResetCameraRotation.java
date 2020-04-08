@@ -29,6 +29,7 @@
 package sc.iview.commands.view;
 
 import com.jogamp.opengl.math.Quaternion;
+import org.joml.Quaternionf;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
@@ -52,7 +53,7 @@ public class ResetCameraRotation implements Command {
 
     @Override
     public void run() {
-        sciView.getCamera().setRotation( new Quaternion(0, 0, 0, 1) );
+        sciView.getCamera().setRotation( new Quaternionf(0, 0, 0, 1) );
     }
 
 }

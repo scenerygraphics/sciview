@@ -32,6 +32,8 @@ import cleargl.GLVector;
 import com.jogamp.opengl.math.Quaternion;
 import graphics.scenery.*;
 import graphics.scenery.backends.ShaderType;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
 import org.scijava.io.IOService;
@@ -87,7 +89,7 @@ public class ParticleDemo implements Command {
 
         float maxL2 = maxX * maxX + maxY * maxY + maxZ * maxZ;
 
-        Node master = new Cone(5, 10, 25, new GLVector(0,0,1));
+        Node master = new Cone(5, 10, 25, new Vector3f(0,0,1));
         //Material mat = ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag");
         List<ShaderType> sList = new ArrayList<>();
         sList.add(ShaderType.VertexShader);
@@ -96,9 +98,9 @@ public class ParticleDemo implements Command {
 
         Material mat = ShaderMaterial.fromClass(ParticleDemo.class, sList);
 
-        mat.setAmbient(new GLVector(0.1f, 0f, 0f));
-        mat.setDiffuse(new GLVector(0.8f, 0.7f, 0.7f));
-        mat.setDiffuse(new GLVector(0.05f, 0f, 0f));
+        mat.setAmbient(new Vector3f(0.1f, 0f, 0f));
+        mat.setDiffuse(new Vector3f(0.8f, 0.7f, 0.7f));
+        mat.setDiffuse(new Vector3f(0.05f, 0f, 0f));
         mat.setMetallic(0.01f);
         mat.setRoughness(0.5f);
         master.setMaterial(mat);
@@ -120,14 +122,14 @@ public class ParticleDemo implements Command {
             float y = rng.nextFloat()*maxY;
             float z = rng.nextFloat()*maxZ;
 
-            GLVector vel = new GLVector(rng.nextFloat(),rng.nextFloat(),rng.nextFloat());
+            Vector3f vel = new Vector3f(rng.nextFloat(),rng.nextFloat(),rng.nextFloat());
 
-            final GLVector col = new GLVector(rng.nextFloat(),rng.nextFloat(), ((float) k) / ((float) numAgents), 1.0f);
+            final Vector3f col = new Vector3f(rng.nextFloat(),rng.nextFloat(), ((float) k) / ((float) numAgents));
 
             n.getInstancedProperties().put("Color", () -> col);
             n.setMaterial(master.getMaterial());
 
-            n.setPosition(new GLVector(x,y,z));
+            n.setPosition(new Vector3f(x,y,z));
             faceNodeAlongVelocity(n, vel);
 
             master.getInstances().add(n);
@@ -136,22 +138,22 @@ public class ParticleDemo implements Command {
         }
 
         sciView.animate(30, new Thread(() -> {
-            GLVector vel;
+            Vector3f vel;
 
             Random threadRng = new Random();
             for( Node agent : agents ) {
-                GLVector pos = agent.getPosition();
-                if( pos.length2() > maxL2 ) {
+                Vector3f pos = agent.getPosition();
+                if( pos.lengthSquared() > maxL2 ) {
                     // Switch velocity to point toward center + some random perturbation
-                    GLVector perturb = new GLVector(threadRng.nextFloat() - 0.5f, threadRng.nextFloat() - 0.5f, threadRng.nextFloat() - 0.5f);
-                    vel = pos.times(-1).plus(perturb).normalize();
+                    Vector3f perturb = new Vector3f(threadRng.nextFloat() - 0.5f, threadRng.nextFloat() - 0.5f, threadRng.nextFloat() - 0.5f);
+                    vel = pos.mul(-1).add(perturb).normalize();
                     faceNodeAlongVelocity(agent, vel);
 
                 } else {
-                    vel = (GLVector) agent.getMetadata().get("velocity");
+                    vel = (Vector3f) agent.getMetadata().get("velocity");
                 }
 
-                agent.setPosition(pos.plus(vel.times(dt)));
+                agent.setPosition(pos.add(vel.mul(dt)));
                 agent.setNeedsUpdate(true);
             }
         }));
@@ -160,14 +162,13 @@ public class ParticleDemo implements Command {
         sciView.centerOnNode( agents.get(0) );
     }
 
-    private void faceNodeAlongVelocity(Node n, GLVector vel) {
+    private void faceNodeAlongVelocity(Node n, Vector3f vel) {
         n.getMetadata().put("velocity",vel);
 
-        Quaternion newRot = new Quaternion();
-        float[] dir = new float[]{vel.x(), vel.y(), vel.z()};
-        float[] up = new float[]{0f, 1f, 0f};
-        newRot.setLookAt(dir, up,
-                new float[3], new float[3], new float[3]).normalize();
+        Quaternionf newRot = new Quaternionf();
+        Vector3f dir = new Vector3f(vel.x(), vel.y(), vel.z());
+        Vector3f up = new Vector3f(0f, 1f, 0f);
+        newRot.lookAlong(dir, up);
         n.setRotation(newRot);
     }
 }

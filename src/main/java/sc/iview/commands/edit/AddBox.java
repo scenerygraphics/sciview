@@ -39,7 +39,7 @@ import org.scijava.plugin.Plugin;
 import org.scijava.util.ColorRGB;
 
 import sc.iview.SciView;
-import sc.iview.vector.ClearGLVector3;
+import sc.iview.vector.JOMLVector3;
 import sc.iview.vector.Vector3;
 
 @Plugin(type = Command.class, menuRoot = "SciView", //
@@ -53,8 +53,9 @@ public class AddBox implements Command {
     @Parameter
     private SciView sciView;
 
-    @Parameter
-    private String position = "0; 0; 0";
+    // FIXME
+//    @Parameter
+//    private String position = "0; 0; 0";
 
     @Parameter
     private float size = 1.0f;
@@ -67,8 +68,9 @@ public class AddBox implements Command {
 
     @Override
     public void run() {
-        final Vector3 pos = ClearGLVector3.parse( position );
-        final Vector3 vSize = new ClearGLVector3( size, size, size );
+        //final Vector3 pos = ClearGLVector3.parse( position );
+        final Vector3 pos = new JOMLVector3(0, 0, 0);
+        final Vector3 vSize = new JOMLVector3( size, size, size );
         sciView.addBox( pos, vSize, color, inside );
     }
 }

@@ -4,13 +4,14 @@ import cleargl.GLVector;
 import graphics.scenery.*;
 import io.scif.SCIFIOService;
 import net.imagej.ImageJService;
+import org.joml.Vector3f;
 import org.junit.Assert;
 import org.scijava.Context;
 import org.scijava.service.SciJavaService;
 import org.scijava.thread.ThreadService;
 import sc.iview.SciView;
 import sc.iview.SciViewService;
-import sc.iview.vector.ClearGLVector3;
+import sc.iview.vector.JOMLVector3;
 
 public class SciViewTest {
 
@@ -48,13 +49,13 @@ public class SciViewTest {
         Group group = new Group();
 
         final Material material = new Material();
-        material.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        material.setDiffuse( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        material.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        material.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
+        material.setDiffuse( new Vector3f( 1.0f, 0.0f, 0.0f ) );
+        material.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
 
         final Sphere sphere = new Sphere( 1, 20 );
         sphere.setMaterial( material );
-        sphere.setPosition( ClearGLVector3.convert( new ClearGLVector3(0,0,0) ) );
+        sphere.setPosition( JOMLVector3.convert( new JOMLVector3(0,0,0) ) );
         //sphere.setParent(group);
         group.addChild(sphere);
         sciView.addNode(group);
