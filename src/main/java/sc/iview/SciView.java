@@ -68,6 +68,7 @@ import net.imglib2.img.Img;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.joml.Quaternionf;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.scijava.Context;
@@ -454,7 +455,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         // We need to get the surface scale here before initialising scenery's renderer, as
         // the information is needed already at initialisation time.
         final AffineTransform dt = frame.getGraphicsConfiguration().getDefaultTransform();
-        final GLVector surfaceScale = new GLVector((float)dt.getScaleX(), (float)dt.getScaleY());
+        final Vector2f surfaceScale = new Vector2f((float)dt.getScaleX(), (float)dt.getScaleY());
         getSettings().set("Renderer.SurfaceScale", surfaceScale);
 
         mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
@@ -1166,18 +1167,18 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         float[] normals = new float[verts.size()];// div3 * 3coords
 
         for( int k = 0; k < verts.size(); k += 3 ) {
-            GLVector v1 = new GLVector( verts.get( k ).getFloatPosition( 0 ), //
+            Vector3f v1 = new Vector3f( verts.get( k ).getFloatPosition( 0 ), //
                                         verts.get( k ).getFloatPosition( 1 ), //
                                         verts.get( k ).getFloatPosition( 2 ) );
-            GLVector v2 = new GLVector( verts.get( k + 1 ).getFloatPosition( 0 ),
+            Vector3f v2 = new Vector3f( verts.get( k + 1 ).getFloatPosition( 0 ),
                                         verts.get( k + 1 ).getFloatPosition( 1 ),
                                         verts.get( k + 1 ).getFloatPosition( 2 ) );
-            GLVector v3 = new GLVector( verts.get( k + 2 ).getFloatPosition( 0 ),
+            Vector3f v3 = new Vector3f( verts.get( k + 2 ).getFloatPosition( 0 ),
                                         verts.get( k + 2 ).getFloatPosition( 1 ),
                                         verts.get( k + 2 ).getFloatPosition( 2 ) );
-            GLVector a = v2.minus( v1 );
-            GLVector b = v3.minus( v1 );
-            GLVector n = a.cross( b ).getNormalized();
+            Vector3f a = v2.sub( v1 );
+            Vector3f b = v3.sub( v1 );
+            Vector3f n = a.cross( b ).normalize();
             normals[k / 3] = n.get( 0 );
             normals[k / 3 + 1] = n.get( 1 );
             normals[k / 3 + 2] = n.get( 2 );

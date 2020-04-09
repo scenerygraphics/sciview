@@ -124,6 +124,7 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
         }
 
         if( svThread.isCancelled() || svThread.isDone() ){
+            svThread.get();// Trigger an exception from the Future if possible
             throw new Exception("SciView thread is done or had an error");
         }
 
