@@ -190,7 +190,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     private float fpsScrollSpeed = 0.05f;
     private float mouseSpeedMult = 0.25f;
     private Display<?> scijavaDisplay;
-    private JLabel splashLabel;
+    private SplashLabel splashLabel;
     private SceneryJPanel panel;
     private JSplitPane mainSplitPane;
     private JSplitPane inspector;
@@ -394,49 +394,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         new SwingJMenuBarCreator().createMenus(menus.getMenu("SciView"), swingMenuBar);
         frame.setJMenuBar(swingMenuBar);
 
-//        frame.addComponentListener(new ComponentAdapter() {
-//            @Override
-//            public void componentResized(ComponentEvent componentEvent) {
-//                super.componentResized(componentEvent);
-//                panel.setSize(componentEvent.getComponent().getWidth(), componentEvent.getComponent().getHeight());
-//            }
-//        });
-
-        BufferedImage splashImage;
-        try {
-            splashImage = ImageIO.read(this.getClass().getResourceAsStream("sciview-logo.png"));
-        } catch (IOException e) {
-            getLogger().warn("Could not read splash image 'sciview-logo.png'");
-            splashImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
-        }
-
-        final String sceneryVersion = SceneryBase.class.getPackage().getImplementationVersion();
-        final String sciviewVersion = SciView.class.getPackage().getImplementationVersion();
-        final String versionString;
-
-        if(sceneryVersion == null || sciviewVersion == null) {
-            versionString = "sciview / scenery";
-        } else {
-            versionString = "sciview " + sciviewVersion + " / scenery " + sceneryVersion;
-        }
-
-        getLogger().info("This is " + versionString);
-
-        splashLabel = new JLabel("\n\n" + versionString,
-                new ImageIcon(splashImage.getScaledInstance(500, 200, java.awt.Image.SCALE_SMOOTH)),
-                SwingConstants.CENTER);
-        splashLabel.setBackground(new java.awt.Color(50, 48, 47));
-        splashLabel.setForeground(new java.awt.Color(78, 76, 75));
-        splashLabel.setOpaque(true);
-        splashLabel.setVerticalTextPosition(JLabel.BOTTOM);
-        splashLabel.setHorizontalTextPosition(JLabel.CENTER);
-
         p.setLayout(new OverlayLayout(p));
         p.setBackground(new java.awt.Color(50, 48, 47));
         p.add(panel, BorderLayout.CENTER);
         panel.setVisible(true);
-
-
 
         nodePropertyEditor.getComponent(); // Initialize node property panel
 
@@ -491,8 +452,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             }
         });
 
+        splashLabel = new SplashLabel();
         frame.setGlassPane(splashLabel);
         frame.getGlassPane().setVisible(true);
+        frame.getGlassPane().requestFocusInWindow();
 //            frame.getGlassPane().setBackground(new java.awt.Color(50, 48, 47, 255));
         frame.setVisible(true);
 
@@ -525,21 +488,23 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             }
 
             nodePropertyEditor.rebuildTree();
-            frame.getGlassPane().setVisible(false);
             getLogger().info("Done initializing SciView");
 
             // subscribe to Node{Added, Removed, Changed} events
             eventService.subscribe(this);
-        });
+            frame.getGlassPane().setVisible(false);
+            panel.setVisible(true);
 
-        // install hook to keep inspector updated on external changes (scripting, etc)
-        getScene().getOnNodePropertiesChanged().put("updateInspector",
-                node -> {
-                    if( node == nodePropertyEditor.getCurrentNode() ) {
-                        nodePropertyEditor.updateProperties(node);
-                    }
-                    return null;
-                });
+            // install hook to keep inspector updated on external changes (scripting, etc)
+            getScene().getOnNodePropertiesChanged().put("updateInspector",
+                    node -> {
+                        if( node == nodePropertyEditor.getCurrentNode() ) {
+                            nodePropertyEditor.updateProperties(node);
+                        }
+                        return null;
+                    });
+
+        });
     }
 
     private void initializeInterpreter() {
@@ -1981,7 +1946,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             replaceRenderer(getRenderer().getClass().getSimpleName(), true, true);
             getRenderer().toggleVR();
 
-            while(!getRenderer().getInitialized() || !getRenderer().getFirstImageReady()) {
+            while(!getRenderer().getInitialized()/* || !getRenderer().getFirstImageReady()*/) {
                 getLogger().debug("Waiting for renderer reinitialisation");
                 try {
                     Thread.sleep(200);
