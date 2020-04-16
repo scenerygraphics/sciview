@@ -16,7 +16,7 @@ import javax.script.ScriptContext;
 import java.awt.event.KeyEvent;
 
 /**
- * <Description>
+ * REPL editor
  *
  * @author Ulrik Günther <hello@ulrik.is>
  */
