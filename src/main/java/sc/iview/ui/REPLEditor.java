@@ -18,7 +18,7 @@ import java.awt.event.KeyEvent;
 /**
  * REPL editor
  *
- * @author Ulrik Guenther <hello@ulrik.is>
+ * @author Ulrik Günther
  */
 public class REPLEditor extends EditorPane {
   protected ScriptREPL repl;
