@@ -49,19 +49,19 @@ public class REPLEditor extends EditorPane {
       return;
     }
 
-    if(e.isControlDown() && e.getKeyCode() == KeyEvent.VK_UP) {
+    if(e.isControlDown() && e.getKeyCode() == KeyEvent.VK_UP && e.getID() == KeyEvent.KEY_RELEASED) {
       walk(false);
       e.consume();
       return;
     }
 
-    if(e.isControlDown() && e.getKeyCode() == KeyEvent.VK_DOWN) {
+    if(e.isControlDown() && e.getKeyCode() == KeyEvent.VK_DOWN && e.getID() == KeyEvent.KEY_RELEASED) {
       walk(true);
       e.consume();
       return;
     }
 
-    if(e.isControlDown() && e.getKeyCode() == KeyEvent.VK_ENTER) {
+    if(e.isControlDown() && e.getKeyCode() == KeyEvent.VK_ENTER && e.getID() == KeyEvent.KEY_RELEASED) {
       String text = getText();
       if(text.length() == 0) {
         e.consume();
