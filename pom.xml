@@ -133,10 +133,6 @@
 		    <url>https://jitpack.io</url>
 		</repository>
 		<repository>
-			<id>scijava.public</id>
-			<url>https://maven.scijava.org/content/groups/public</url>
-		</repository>
-        <repository>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -147,6 +143,10 @@
             <name>Bintray Kotlin EAP Repository</name>
             <url>https://dl.bintray.com/kotlin/kotlin-eap</url>
         </repository>
+		<repository>
+			<id>scijava.public</id>
+			<url>https://maven.scijava.org/content/groups/public</url>
+		</repository>
 	</repositories>
 
 	<dependencies>
