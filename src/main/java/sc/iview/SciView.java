@@ -29,6 +29,7 @@
 package sc.iview;
 
 import bdv.util.AxisOrder;
+import bdv.viewer.SourceAndConverter;
 import cleargl.GLVector;
 import com.jogamp.opengl.math.Quaternion;
 import graphics.scenery.Box;
@@ -1735,6 +1736,23 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
+     * Adss a SourceAndConverter to the scene.
+     *
+     * @param sac The SourceAndConverter to add
+     * @param name Name of the dataset
+     * @param voxelDimensions Array with voxel dimensions.
+     * @param <T> Type of the dataset.
+     * @return THe node corresponding to the volume just added.
+     */
+    public <T extends RealType<T>> Node addVolume(SourceAndConverter<T> sac, String name,
+                                                  float... voxelDimensions ) {
+        Volume v = Volume.fromSourceAndConverter(sac, sac.getSpimSource().getType(), name, getHub());
+
+        getScene().addChild(v);
+        return v;
+    }
+
+    /**
      * Add an IterableInterval to the image with the specified voxelDimensions and name
      * This version of addVolume does most of the work
      * @param image
@@ -1758,7 +1776,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         imageRA.setPosition(minPt);
         T voxelType = imageRA.get().createVariable();
 
-        Volume v = Volume.Companion.fromRAII(image, voxelType, AxisOrder.DEFAULT, name, getHub(), new VolumeViewerOptions());
+        Volume v = Volume.fromRAII(image, voxelType, AxisOrder.DEFAULT, name, getHub(), new VolumeViewerOptions());
 
         getScene().addChild( v );
 
