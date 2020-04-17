@@ -28,11 +28,8 @@
  */
 package sc.iview.commands.edit;
 
-import cleargl.GLVector;
-import com.jogamp.opengl.math.Quaternion;
 import graphics.scenery.*;
 import graphics.scenery.volumes.Volume;
-//import graphics.scenery.volumes.bdv.BDVVolume;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -51,6 +48,7 @@ import sc.iview.event.NodeChangedEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.scijava.widget.ChoiceWidget.LIST_BOX_STYLE;
 
@@ -132,10 +130,6 @@ public class Properties extends InteractiveCommand {
             stepSize = "0.1", callback = "updateNodeProperties")
     private float scaleZ = 1;
 
-//    @Parameter(label = "Global Renderscale", style = NumberWidget.SPINNER_STYLE, //
-//            stepSize = "0.1", callback = "updateNodeProperties")
-//    private float renderscale = 1;
-
     @Parameter(label = "Rotation Phi", style = NumberWidget.SPINNER_STYLE, //
             min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
     private float rotationPhi;
@@ -175,7 +169,7 @@ public class Properties extends InteractiveCommand {
     @Parameter(label = "Transparent Background", callback = "updateNodeProperties")
     private boolean transparentBackground;
 
-    private List renderingModeChoices = Arrays.asList("Local Maximum Projection", "Maximum Projection", "Alpha Blending");
+    private List<Volume.RenderingMethod> renderingModeChoices = Arrays.asList(Volume.RenderingMethod.values());
 
     boolean fieldsUpdating = true;
 
@@ -308,21 +302,17 @@ public class Properties extends InteractiveCommand {
         scaleY = scale.y();
         scaleZ = scale.z();
 
-//        renderscale = currentSceneNode.getRenderScale();
 
-        name = currentSceneNode.getName();
+        if(currentSceneNode instanceof Volume) {
+            final MutableModuleItem<String> renderingModeInput = getInfo().getMutableInput( "renderingMode", String.class );
+            final List<String> methods = Arrays.asList(Volume.RenderingMethod.values()).stream().map(method -> method.toString()).collect(Collectors.toList());
+            renderingModeInput.setChoices(methods);
 
-        // FIXME
-//        if(currentSceneNode instanceof Volume) {
-//            final MutableModuleItem<String> renderingModeInput = getInfo().getMutableInput( "renderingMode", String.class );
-//            renderingModeInput.setChoices(renderingModeChoices);
-//
-//            renderingMode = (String)renderingModeChoices.get(((Volume)currentSceneNode).getRenderingMethod());
-//            occlusionSteps = ((Volume)currentSceneNode).getOcclusionSteps();
-//        } else {
-//            maybeRemoveInput( "occlusionSteps", Integer.class );
-//            maybeRemoveInput( "renderingMode", String.class );
-//        }
+            renderingMode = renderingModeChoices.get(Arrays.asList(Volume.RenderingMethod.values()).indexOf(((Volume)currentSceneNode).getRenderingMethod())).toString();
+            maybeRemoveInput("colour", ColorRGB.class);
+        } else {
+            maybeRemoveInput( "renderingMode", String.class );
+        }
 
         if(currentSceneNode instanceof PointLight) {
             intensity = ((PointLight)currentSceneNode).getIntensity();
@@ -379,6 +369,8 @@ public class Properties extends InteractiveCommand {
             maybeRemoveInput("timepoint", Integer.class);
         }
 
+        name = currentSceneNode.getName();
+
         fieldsUpdating = false;
     }
 
@@ -419,25 +411,19 @@ public class Properties extends InteractiveCommand {
         scale.z = scaleZ;
         currentSceneNode.setScale(scale);
 
-        // update render scale
-//        currentSceneNode.setRenderScale(renderscale);
-
         currentSceneNode.setName(name);
 
         if(currentSceneNode instanceof PointLight) {
             ((PointLight) currentSceneNode).setIntensity(intensity);
         }
 
-        // FIXME
-//        if(currentSceneNode instanceof Volume) {
-//            final int mode = renderingModeChoices.indexOf(renderingMode);
-//
-//            if(mode != -1) {
-//                ((Volume) currentSceneNode).setRenderingMethod(mode);
-//            }
-//
-//            ((Volume)currentSceneNode).setOcclusionSteps(occlusionSteps);
-//        }
+        if(currentSceneNode instanceof Volume) {
+            final int mode = renderingModeChoices.indexOf(renderingMode);
+
+            if(mode != -1) {
+                ((Volume) currentSceneNode).setRenderingMethod(Volume.RenderingMethod.values()[mode]);
+            }
+        }
 
         if(currentSceneNode instanceof Camera) {
         	final Scene scene = currentSceneNode.getScene();
