@@ -650,7 +650,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         // Solve for the proper rotation
         Quaternionf rotation = new Quaternionf().lookAlong(forward, new Vector3f(0,1,0));
 
-        getCamera().setRotation( rotation.invert().normalize() );
+        getCamera().setRotation( rotation.normalize() );
         getCamera().setPosition( bb.getBoundingSphere().getOrigin().add( getCamera().getForward().mul( distance * -1 ) ) );
 
         getCamera().setDirty(true);
