@@ -1471,6 +1471,20 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
+     * @param name The name of the node to find.
+     * @return the node object or null, if the node has not been found.
+     */
+    public Node find(final String name) {
+        final Node n = getScene().find(name);
+
+        if(n == null) {
+            getLogger().warn("Node with name " + name + " not found.");
+        }
+
+        return n;
+    }
+
+    /**
      * @return an array of all nodes in the scene except Cameras and PointLights
      */
     public Node[] getSceneNodes() {
