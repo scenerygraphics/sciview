@@ -10,7 +10,11 @@ import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.font.TextAttribute;
+import java.awt.geom.Line2D;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Map;
 
@@ -21,27 +25,49 @@ import java.util.Map;
  */
 class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
 
-    private static final Icon cameraIcon = getImageIcon("camera.png");
-    private static final Icon lightIcon = getImageIcon("light.png");
-    private static final Icon meshIcon = getImageIcon("mesh.png");
-    private static final Icon nodeIcon = getImageIcon("node.png");
-    private static final Icon sceneIcon = getImageIcon("scene.png");
-    private static final Icon textIcon = getImageIcon("text.png");
-    private static final Icon volumeIcon = getImageIcon("volume.png");
+    private static final Icon[] cameraIcon = getImageIcons("camera.png");
+    private static final Icon[] lightIcon = getImageIcons("light.png");
+    private static final Icon[] meshIcon = getImageIcons("mesh.png");
+    private static final Icon[] nodeIcon = getImageIcons("node.png");
+    private static final Icon[] sceneIcon = getImageIcons("scene.png");
+    private static final Icon[] textIcon = getImageIcons("text.png");
+    private static final Icon[] volumeIcon = getImageIcons("volume.png");
+
 
     private Color nodeBackground = null;
     private boolean overrideColor = false;
 
-    private static Icon getImageIcon(String name){
+    private static Icon[] getImageIcons(String name){
+        ImageIcon icon;
+        ImageIcon disabledIcon;
+
         try {
-            return new ImageIcon(ImageIO.read(NodePropertyTreeCellRenderer.class.getResourceAsStream(name)).getScaledInstance(16, 16, Image.SCALE_SMOOTH));
+            BufferedImage iconImage = ImageIO.read(NodePropertyTreeCellRenderer.class.getResourceAsStream(name));
+            BufferedImage disabledIconImage = ImageIO.read(NodePropertyTreeCellRenderer.class.getResourceAsStream(name));
+            icon = new ImageIcon(iconImage.getScaledInstance(16, 16, Image.SCALE_SMOOTH));
+
+            int width = disabledIconImage.getWidth();
+            int height = disabledIconImage.getHeight();
+
+            final Graphics2D g2 = disabledIconImage.createGraphics();
+            final Line2D l = new Line2D.Float(0.0f, height, width, 0.0f);
+            g2.setColor(Color.RED);
+            g2.setStroke(new BasicStroke(4));
+            g2.draw(l);
+            g2.dispose();
+
+            disabledIcon = new ImageIcon(disabledIconImage.getScaledInstance(16, 16, Image.SCALE_SMOOTH));
         } catch (NullPointerException npe) {
             System.err.println("Could not load image " + name + " as it was not found, returning default.");
+            icon = (ImageIcon) UIManager.get("Tree.leafIcon");
+            disabledIcon = (ImageIcon) UIManager.get("Tree.leafIcon");
         } catch (IOException e) {
             System.err.println("Could not load image " + name + " because of IO error, returning default.");
+            icon = (ImageIcon) UIManager.get("Tree.leafIcon");
+            disabledIcon = (ImageIcon) UIManager.get("Tree.leafIcon");
         }
 
-        return (Icon) UIManager.get("Tree.leafIcon");
+        return new Icon[]{icon, disabledIcon};
     }
 
     public NodePropertyTreeCellRenderer() {
@@ -115,7 +141,7 @@ class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
     @Override
     public Component getTreeCellRendererComponent(JTree tree, Object value,
                                                   boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-        JComponent component = (JComponent) super.getTreeCellRendererComponent(
+        JLabel component = (JLabel) super.getTreeCellRendererComponent(
                 tree, value, selected, expanded, leaf, row, hasFocus);
 
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
@@ -124,10 +150,15 @@ class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
         Node n = (Node)node.getUserObject();
         overrideColor = false;
 
+        int iconIndex = 0;
+        if(n != null && !n.getVisible()) {
+            iconIndex = 1;
+        }
+
         if (n instanceof Camera) {
-            setIcon(cameraIcon);
-            setOpenIcon(cameraIcon);
-            setClosedIcon(cameraIcon);
+            setIcon(cameraIcon[iconIndex]);
+            setOpenIcon(cameraIcon[iconIndex]);
+            setClosedIcon(cameraIcon[iconIndex]);
 
             active = ( ( Camera ) n ).getActive();
             if(active && n.getScene().findObserver() == n) {
@@ -136,9 +167,9 @@ class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
             	setText( n.getName() );
 			}
         } else if(n instanceof Light) {
-            setIcon(lightIcon);
-            setOpenIcon(lightIcon);
-            setClosedIcon(lightIcon);
+            setIcon(lightIcon[iconIndex]);
+            setOpenIcon(lightIcon[iconIndex]);
+            setClosedIcon(lightIcon[iconIndex]);
 
             // Here, we set the background of the point light to its emission color.
             // First, we convert the emission color of the light to
@@ -163,30 +194,30 @@ class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
                 component.setForeground(Color.BLACK);
             }
         } else if(n instanceof TextBoard) {
-            setIcon(textIcon);
-            setOpenIcon(textIcon);
-            setClosedIcon(textIcon);
+            setIcon(textIcon[iconIndex]);
+            setOpenIcon(textIcon[iconIndex]);
+            setClosedIcon(textIcon[iconIndex]);
         } else if(n instanceof Volume) {
-            setIcon(volumeIcon);
-            setOpenIcon(volumeIcon);
-            setClosedIcon(volumeIcon);
+            setIcon(volumeIcon[iconIndex]);
+            setOpenIcon(volumeIcon[iconIndex]);
+            setClosedIcon(volumeIcon[iconIndex]);
         } else if(n instanceof Mesh) {
-            setIcon(meshIcon);
-            setOpenIcon(meshIcon);
-            setClosedIcon(meshIcon);
+            setIcon(meshIcon[iconIndex]);
+            setOpenIcon(meshIcon[iconIndex]);
+            setClosedIcon(meshIcon[iconIndex]);
         } else if(n instanceof Scene) {
-            setIcon(sceneIcon);
-            setOpenIcon(sceneIcon);
-            setClosedIcon(sceneIcon);
+            setIcon(sceneIcon[iconIndex]);
+            setOpenIcon(sceneIcon[iconIndex]);
+            setClosedIcon(sceneIcon[iconIndex]);
         } else {
             if(!leaf && n == null) {
-                setIcon(sceneIcon);
-                setOpenIcon(sceneIcon);
-                setClosedIcon(sceneIcon);
+                setIcon(sceneIcon[iconIndex]);
+                setOpenIcon(sceneIcon[iconIndex]);
+                setClosedIcon(sceneIcon[iconIndex]);
             } else {
-                setIcon(nodeIcon);
-                setOpenIcon(nodeIcon);
-                setClosedIcon(nodeIcon);
+                setIcon(nodeIcon[iconIndex]);
+                setOpenIcon(nodeIcon[iconIndex]);
+                setClosedIcon(nodeIcon[iconIndex]);
             }
         }
 

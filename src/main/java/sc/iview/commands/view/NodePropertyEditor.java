@@ -28,10 +28,12 @@
  */
 package sc.iview.commands.view;
 
+import graphics.scenery.Camera;
 import graphics.scenery.Node;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
+import graphics.scenery.Scene;
 import net.miginfocom.swing.MigLayout;
 import org.scijava.Context;
 import org.scijava.command.CommandInfo;
@@ -191,6 +193,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         tree = new JTree( treeModel );
         tree.setRootVisible( true );
         tree.setCellRenderer(new NodePropertyTreeCellRenderer());
+//        tree.setCellEditor(new NodePropertyTreeCellEditor(sciView));
 
         tree.getSelectionModel().setSelectionMode( TreeSelectionModel.SINGLE_TREE_SELECTION );
         tree.addTreeSelectionListener( e -> {
@@ -213,6 +216,20 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
                     Node node = (Node)n.getUserObject();
                     sciView.setActiveNode( node );
                     sciView.centerOnNode( node );
+                } else {
+                    TreePath path = tree.getPathForLocation(e.getX(), e.getY());
+                    if (path != null && e.getX() / 1.2 < tree.getPathBounds(path).x + 16) {
+                        SceneryTreeNode n = (SceneryTreeNode) path.getLastPathComponent();
+
+                        if (n != null) {
+                            Node node = n.getNode();
+                            if (node != null && !(node instanceof Camera) && !(node instanceof Scene)) {
+                                node.setVisible(!node.getVisible());
+                                tree.repaint();
+                            }
+                        }
+                        e.consume();
+                    }
                 }
             }
         });
@@ -325,7 +342,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
 //        updateProperties( sciView.getActiveNode() );
 
         if(currentPath != null) {
-            final Node selectedNode = ((SceneryTreeNode)currentPath.getLastPathComponent()).node;
+            final Node selectedNode = ((SceneryTreeNode)currentPath.getLastPathComponent()).getNode();
             trySelectNode(selectedNode);
         }
     }
@@ -361,32 +378,4 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         }
     }
 
-    private static class SceneryTreeNode extends DefaultMutableTreeNode {
-        private final Node node;
-
-        public SceneryTreeNode( final SciView sciView ) {
-            this( ( Node ) null );
-            for( final Node sceneNode : sciView.getSceneNodes( n -> true ) ) {
-                addNode( sceneNode );
-            }
-        }
-
-        private SceneryTreeNode( final Node node ) {
-            super( node );
-            this.node = node;
-        }
-
-        @Override
-        public String toString() {
-            return node == null ? "Scene" : node.getName();
-        }
-
-        private void addNode( final Node child ) {
-            final SceneryTreeNode treeNode = new SceneryTreeNode( child );
-            add( treeNode );
-            for( final Node n : child.getChildren() ) {
-                treeNode.addNode( n );
-            }
-        }
-    }
 }
