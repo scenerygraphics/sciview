@@ -124,9 +124,9 @@ public class ShowSegmentationDemo implements Command {
             v.addChild(isoSurfaceMesh);
 
             isoSurfaceMesh.setName( "segment " + k );
-            isoSurfaceMesh.setScale(new Vector3f(v.getPixelToWorldRatio(),
-                    v.getPixelToWorldRatio(),
-                    v.getPixelToWorldRatio()));
+//            isoSurfaceMesh.setScale(new Vector3f(v.getPixelToWorldRatio(),
+//                    v.getPixelToWorldRatio(),
+//                    v.getPixelToWorldRatio()));
         }
 
     }
