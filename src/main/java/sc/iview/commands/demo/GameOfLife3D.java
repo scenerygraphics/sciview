@@ -65,6 +65,7 @@ import static sc.iview.commands.MenuWeights.DEMO_GAME_OF_LIFE;
  * Conway's Game of Life&mdash;in 3D!
  *
  * @author Curtis Rueden
+ * @author Kyle Harrington
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
@@ -206,9 +207,37 @@ public class GameOfLife3D implements Command {
         field = ArrayImgs.unsignedBytes( w, h, d );
         randomize();
 
-        dialog = new NonBlockingGenericDialog("Game of Life 3D");
+        dialog = new GenericDialog("Game of Life 3D");
+        dialog.addNumericField("Starvation threshold", starvation, 0);
+        dialog.addNumericField("Birth threshold", birth, 0);
+        dialog.addNumericField("Suffocation threshold", suffocation, 0);
+        dialog.addNumericField("Initial saturation % when randomizing", saturation, 0);
+        dialog.showDialog();
 
+        if( dialog.wasCanceled() ) return;
+
+        starvation = (int) dialog.getNextNumber();
+        birth = (int) dialog.getNextNumber();
+        suffocation = (int) dialog.getNextNumber();
+        saturation = (int) dialog.getNextNumber();
+
+        randomize();
         play();
+
+//
+//    @Parameter(callback = "iterate")
+//    private Button iterate;
+//
+//    @Parameter(callback = "randomize")
+//    private Button randomize;
+//
+//    @Parameter(callback = "play")
+//    private Button play;
+//
+//    @Parameter(callback = "pause")
+//    private Button pause;
+
+        //play();
 
         //eventService.subscribe(this);
     }

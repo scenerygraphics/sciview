@@ -61,7 +61,7 @@ import static sc.iview.commands.MenuWeights.DEMO;
 import static sc.iview.commands.MenuWeights.DEMO_VOLUME_RENDER;
 
 /**
- * A demo of volume rendering.
+ * A demo of rendering meshes
  *
  * @author Kyle Harrington
  */
