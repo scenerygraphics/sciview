@@ -28,10 +28,8 @@
  */
 package sc.iview.commands.demo;
 
-import graphics.scenery.Node;
 import graphics.scenery.volumes.Volume;
 import io.scif.services.DatasetIOService;
-import net.imagej.Dataset;
 import net.imagej.mesh.Mesh;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
@@ -41,10 +39,8 @@ import net.imglib2.RealPoint;
 import net.imglib2.converter.Converters;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
-import net.imglib2.position.FunctionRandomAccessible;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
 import org.joml.Vector3f;
 import org.scijava.command.Command;
@@ -56,9 +52,10 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 import sc.iview.process.MeshConverter;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
 
 import static sc.iview.commands.MenuWeights.DEMO;
 import static sc.iview.commands.MenuWeights.DEMO_VOLUME_RENDER;
@@ -85,62 +82,56 @@ public class ShowSegmentationDemo implements Command {
     @Parameter
     private SciView sciView;
 
+    @Parameter
+    private int numSegments = 20;
+
     private Random rng = new Random();
 
     @Override
     public void run() {
-        int numSegments = 5;
-
         sciView.getFloor().setVisible(false);
 
         RandomAccessibleInterval<UnsignedByteType> inputImage = generateDemo(100, 100, 100, numSegments);
 
         Volume v = (Volume) sciView.addVolume( inputImage, new float[] { 1, 1, 1 } );
-        v.setPixelToWorldRatio(0.1f);// FIXME
+        v.setPixelToWorldRatio(0.05f);
         v.setName( "Segmentation Viz Demo" );
-        v.setDirty(true);
         v.setNeedsUpdate(true);
-
-        sciView.setActiveNode(v);
-        sciView.centerOnNode( sciView.getActiveNode() );
 
         for( int k = 0; k < numSegments; k++ ) {
             int segmentLabel = k + 1;
 
             RandomAccessibleInterval<UnsignedByteType> segmentImg = getSegmentImg(inputImage, segmentLabel);
 
+            // Generate the mesh with imagej-ops
             Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( Views.iterable(segmentImg), new UnsignedByteType( 1 ) );
-
             Mesh m = ops.geom().marchingCubes( bitImg, 1, new BitTypeVertexInterpolator() );
 
+            // Convert the mesh into a scenery mesh for visualization
             graphics.scenery.Mesh isoSurfaceMesh = MeshConverter.toScenery(m,false);
 
-            Vector3f c = new Vector3f(rng.nextFloat(), rng.nextFloat(), rng.nextFloat());
+            // Name the mesh after the segment label
+            isoSurfaceMesh.setName( "segment " + segmentLabel );
 
+            // Make a random color and assign it
+            Vector3f c = new Vector3f(rng.nextFloat(), rng.nextFloat(), rng.nextFloat());
             isoSurfaceMesh.getMaterial().setDiffuse(c);
             isoSurfaceMesh.getMaterial().setAmbient(c);
             isoSurfaceMesh.getMaterial().setSpecular(c);
 
+            // Make the segmentation mesh a child of the parent
             v.addChild(isoSurfaceMesh);
-
-            isoSurfaceMesh.setName( "segment " + k );
-//            isoSurfaceMesh.setScale(new Vector3f(v.getPixelToWorldRatio(),
-//                    v.getPixelToWorldRatio(),
-//                    v.getPixelToWorldRatio()));
         }
 
     }
 
+    // Return a binary image for this segmentLabel
     private RandomAccessibleInterval<UnsignedByteType> getSegmentImg(RandomAccessibleInterval<UnsignedByteType> inputImage, int segmentLabel) {
-        RandomAccessibleInterval<UnsignedByteType> out = Converters.convert(inputImage, (a, b) -> b.set(a.get() == segmentLabel ? 255 : 0), new UnsignedByteType());
-        return out;
+        return Converters.convert(inputImage, (a, b) -> b.set(a.get() == segmentLabel ? 255 : 0), new UnsignedByteType());
     }
 
-
+    // Generate a demo image with a bunch of spheres at random positions
     private RandomAccessibleInterval<UnsignedByteType> generateDemo(int w, int h, int d, int numSegments) {
-        int dimension = 3;
-        double scale = 1.0;
-        double stretch = 1.0;
         double radiusSq = 36;
 
         List<RealPoint> points = new ArrayList<>();
