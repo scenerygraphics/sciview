@@ -31,7 +31,6 @@ package sc.iview;
 import bdv.util.AxisOrder;
 import bdv.viewer.SourceAndConverter;
 import cleargl.GLVector;
-import com.jogamp.opengl.math.Quaternion;
 import graphics.scenery.Box;
 import graphics.scenery.*;
 import graphics.scenery.backends.RenderedImage;
@@ -71,7 +70,6 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
 import org.scijava.Context;
 import org.scijava.display.Display;
 import org.scijava.display.DisplayService;
@@ -342,6 +340,12 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         log.setLevel(LogLevel.WARN);
 
         LogbackUtils.setLogLevel(null, System.getProperty("scenery.LogLevel", "info"));
+
+        System.getProperties().stringPropertyNames().forEach(name -> {
+            if(name.startsWith("scenery.LogLevel")) {
+                LogbackUtils.setLogLevel(name.substring(17), System.getProperty(name, "info"));
+            }
+        });
 
         // determine imagej-launcher version and to disable Vulkan if XInitThreads() fix
         // is not deployed
@@ -1788,7 +1792,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         imageRA.setPosition(minPt);
         T voxelType = imageRA.get().createVariable();
 
-        Volume v = Volume.fromRAII(image, voxelType, AxisOrder.DEFAULT, name, getHub(), new VolumeViewerOptions());
+        Volume v = Volume.fromRAI(image, voxelType, AxisOrder.DEFAULT, name, getHub(), new VolumeViewerOptions());
+        BoundingGrid bg = new BoundingGrid();
+        bg.setNode(v);
 
         getScene().addChild( v );
 
@@ -1934,11 +1940,11 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         stopAnimation();
     }
 
-    public Settings getScenerySettings() {
+    public Settings settings() {
         return this.getSettings();
     }
 
-    public Statistics getSceneryStats() {
+    public Statistics statistics() {
         return this.getStats();
     }
 

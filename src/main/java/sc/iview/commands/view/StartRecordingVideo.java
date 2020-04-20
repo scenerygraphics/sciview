@@ -53,8 +53,8 @@ public class StartRecordingVideo implements Command {
     @Override
     public void run() {
         bitrate = Math.max(0,bitrate);
-        sciView.getScenerySettings().set("VideoEncoder.Bitrate", bitrate);
-        sciView.getScenerySettings().set("VideoEncoder.Quality", videoEncodingQuality);
+        sciView.settings().set("VideoEncoder.Bitrate", bitrate);
+        sciView.settings().set("VideoEncoder.Quality", videoEncodingQuality);
         sciView.toggleRecordVideo();
     }
 }
