@@ -1656,6 +1656,18 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
+     * Add a RandomAccessibleInterval to the image
+     * @param image
+     * @param <T>
+     * @return a Node corresponding to the volume
+     */
+    public <T extends RealType<T>> Node addVolume( RandomAccessibleInterval<T> image, float[] voxelDimensions ) {
+        long[] pos = new long[]{10, 10, 10};
+
+        return addVolume( image, "volume", voxelDimensions );
+    }
+
+    /**
      * Add an IterableInterval as a Volume
      * @param image
      * @param <T>
