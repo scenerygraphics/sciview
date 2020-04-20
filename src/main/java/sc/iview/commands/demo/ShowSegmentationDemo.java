@@ -67,7 +67,6 @@ import static sc.iview.commands.MenuWeights.DEMO_VOLUME_RENDER;
  * A demo of volume rendering.
  *
  * @author Kyle Harrington
- * @author Curtis Rueden
  */
 @Plugin(type = Command.class, label = "Show segmentation", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
@@ -98,7 +97,7 @@ public class ShowSegmentationDemo implements Command {
 
         Volume v = (Volume) sciView.addVolume( inputImage, new float[] { 1, 1, 1 } );
         v.setPixelToWorldRatio(0.1f);// FIXME
-        v.setName( "Volume Render Demo" );
+        v.setName( "Segmentation Viz Demo" );
         v.setDirty(true);
         v.setNeedsUpdate(true);
 
