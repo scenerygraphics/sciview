@@ -173,6 +173,8 @@ public class DefaultSciViewService extends AbstractService implements SciViewSer
         if( sv == null ) {
             // Make one
             sv = makeSciView();
+
+            sceneryViewers.add( sv );
         }
 
         return sv;
