@@ -34,12 +34,19 @@ import net.imagej.mesh.Mesh;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
 import net.imglib2.Cursor;
+import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
+import net.imglib2.algorithm.labeling.ConnectedComponents;
 import net.imglib2.converter.Converters;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.roi.labeling.ImgLabeling;
+import net.imglib2.roi.labeling.LabelRegion;
+import net.imglib2.roi.labeling.LabelRegions;
+import net.imglib2.roi.labeling.LabelingType;
 import net.imglib2.type.logic.BitType;
+import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.view.Views;
 import org.joml.Vector3f;
@@ -98,20 +105,18 @@ public class ShowSegmentationDemo implements Command {
         v.setName( "Segmentation Viz Demo" );
         v.setNeedsUpdate(true);
 
-        for( int k = 0; k < numSegments; k++ ) {
-            int segmentLabel = k + 1;
+        ImgLabeling<Integer, IntType> labeling = ops.labeling().cca(inputImage, ConnectedComponents.StructuringElement.FOUR_CONNECTED);
+        LabelRegions<Integer> regions = new LabelRegions<>(labeling);
 
-            RandomAccessibleInterval<UnsignedByteType> segmentImg = getSegmentImg(inputImage, segmentLabel);
-
+        for( LabelRegion region : regions ) {
             // Generate the mesh with imagej-ops
-            Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( Views.iterable(segmentImg), new UnsignedByteType( 1 ) );
-            Mesh m = ops.geom().marchingCubes( bitImg, 1, new BitTypeVertexInterpolator() );
+            Mesh m = ops.geom().marchingCubes( region, 1, new BitTypeVertexInterpolator() );
 
             // Convert the mesh into a scenery mesh for visualization
             graphics.scenery.Mesh isoSurfaceMesh = MeshConverter.toScenery(m,false);
 
             // Name the mesh after the segment label
-            isoSurfaceMesh.setName( "segment " + segmentLabel );
+            isoSurfaceMesh.setName( "region " + region );
 
             // Make a random color and assign it
             Vector3f c = new Vector3f(rng.nextFloat(), rng.nextFloat(), rng.nextFloat());
