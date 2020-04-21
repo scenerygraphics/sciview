@@ -32,4 +32,7 @@ rm -f plugins/Trainable_Segmentation*
 # upload complete update site
 password=$WIKI_UPLOAD_PASS
 ./$launcher --update edit-update-site $update_site $url "webdav:$webdav_user:$password" .
+echo "===== Simulating update site upload ====="
+./$launcher --update upload-complete-site --simulate --force --force-shadow $update_site
+echo "===== Updating update site ====="
 ./$launcher --update upload-complete-site --force --force-shadow $update_site
