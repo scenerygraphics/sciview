@@ -1609,31 +1609,6 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         return addVolume( image, voxelDims );
     }
 
-//    /**
-//     * Add a BigDataViewer volume to the scene.
-//     * @param source, the path to an XML file for BDV style XML/Hdf5
-//     * @return a Node corresponding to the BDVNode
-//     */
-//    public Node addBDVVolume( String source ) {
-//        //getSettings().set("Renderer.HDR.Exposure", 20.0f);
-//
-//        final VolumeViewerOptions opts = new VolumeViewerOptions();
-//        opts.maxCacheSizeInMB(Integer.parseInt(System.getProperty("scenery.BDVVolume.maxCacheSize", "512")));
-//        final BDVVolume v = new BDVVolume(source, opts);
-//
-//        // TODO: use unitService to set scale
-//        v.setScale(new GLVector(0.01f, 0.01f, 0.01f));
-//        v.setBoundingBox(v.generateBoundingBox());
-//
-//        getScene().addChild(v);
-//        setActiveNode(v);
-//        v.goToTimePoint(0);
-//
-//		eventService.publish( new NodeAddedEvent( v ) );
-//
-//        return v;
-//    }
-
     /**
      * Add a Dataset as a Volume with the specified voxel dimensions
      * @param image
