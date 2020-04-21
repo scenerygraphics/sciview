@@ -127,12 +127,6 @@ public class ShowSegmentationDemo implements Command {
             // Make the segmentation mesh a child of the parent
             v.addChild(isoSurfaceMesh);
         }
-
-    }
-
-    // Return a binary image for this segmentLabel
-    private RandomAccessibleInterval<UnsignedByteType> getSegmentImg(RandomAccessibleInterval<UnsignedByteType> inputImage, int segmentLabel) {
-        return Converters.convert(inputImage, (a, b) -> b.set(a.get() == segmentLabel ? 255 : 0), new UnsignedByteType());
     }
 
     // Generate a demo image with a bunch of spheres at random positions
