@@ -28,7 +28,6 @@
  */
 package sc.iview.commands.demo;
 
-import cleargl.GLVector;
 import graphics.scenery.Node;
 import graphics.scenery.volumes.Volume;
 import io.scif.services.DatasetIOService;
@@ -125,7 +124,7 @@ public class VolumeRenderDemo implements Command {
     }
 
     public static void main(String... args) throws Exception {
-        SciView sv = SciView.createSciView();
+        SciView sv = SciView.create();
 
         CommandService command = sv.getScijavaContext().getService(CommandService.class);
 

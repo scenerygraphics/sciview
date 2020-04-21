@@ -35,6 +35,6 @@ package sc.iview;
  */
 public class Main {
     public static void main( String... args ) throws Exception {
-        SciView.createSciView();
+        SciView.create();
     }
 }

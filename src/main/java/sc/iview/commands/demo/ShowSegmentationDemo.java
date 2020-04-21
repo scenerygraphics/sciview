@@ -34,18 +34,13 @@ import net.imagej.mesh.Mesh;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
 import net.imglib2.Cursor;
-import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.algorithm.labeling.ConnectedComponents;
-import net.imglib2.converter.Converters;
-import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.roi.labeling.ImgLabeling;
 import net.imglib2.roi.labeling.LabelRegion;
 import net.imglib2.roi.labeling.LabelRegions;
-import net.imglib2.roi.labeling.LabelingType;
-import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.view.Views;
@@ -165,7 +160,7 @@ public class ShowSegmentationDemo implements Command {
     }
 
     public static void main(String... args) throws Exception {
-        SciView sv = SciView.createSciView();
+        SciView sv = SciView.create();
 
         CommandService command = sv.getScijavaContext().getService(CommandService.class);
 
