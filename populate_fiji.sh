@@ -53,6 +53,7 @@ then
       Linux,*) launcher=ImageJ-linux32 ;;
       Darwin,*) launcher=Contents/MacOS/ImageJ-macosx ;;
       MING*,*) launcher=ImageJ-win32.exe ;;
+      MSYS_NT*,*) launcher=ImageJ-win32.exe ;;
       *) die "Unknown platform" ;;
     esac
     
@@ -81,10 +82,12 @@ fi
 
 echo
 echo "--> Copying dependencies into Fiji installation"
-(set -x; mvn -Dscijava.app.directory=$FijiDirectory)
+(set -x; mvn -Dscijava.app.directory=$FijiDirectory) ||
+    die "Failed to copy dependencies into Fiji directory"
 
 echo "--> Removing slf4j bindings"
-(set -x; rm -f $FijiDirectory/jars/slf4j-simple-*.jar)
+(set -x; rm -f $FijiDirectory/jars/slf4j-simple-*.jar) ||
+    die "Failed to remove slf4j bindings"
 
 # -- Put back jar/gluegen-rt and jar/jogl-all --
 echo
