@@ -36,6 +36,12 @@ import sc.iview.SciView;
 
 import static sc.iview.commands.MenuWeights.*;
 
+/**
+ * Command to start recording a video. Currently this will record to ~/Desktop
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "View", weight = VIEW), //
                  @Menu(label = "Start recording video", weight = VIEW_START_RECORDING_VIDEO) })

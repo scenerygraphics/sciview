@@ -44,7 +44,10 @@ import org.scijava.ui.viewer.DisplayWindow;
 import sc.iview.SciView;
 
 /**
- * Created by kharrington on 6/24/17.
+ * SciJava DisplayViewer for SciView
+ *
+ * @author Kyle Harrington
+ *
  */
 @Plugin(type = DisplayViewer.class)
 public class SciViewDisplayViewer extends AbstractDisplayViewer<SciView> {

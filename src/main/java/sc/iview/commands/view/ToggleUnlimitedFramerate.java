@@ -38,6 +38,13 @@ import sc.iview.SciView;
 import static sc.iview.commands.MenuWeights.VIEW;
 import static sc.iview.commands.MenuWeights.VIEW_TOGGLE_UNLIMITED_FRAMERATE;
 
+/**
+ * Command to toggle scenery's PushMode. If this is true the scene only renders when it is changed, otherwise it is
+ * continuously rendered
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = {@Menu(label = "View", weight = VIEW), //
                 @Menu(label = "Toggle Unlimited Framerate", weight = VIEW_TOGGLE_UNLIMITED_FRAMERATE)})

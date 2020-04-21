@@ -7,6 +7,12 @@ import org.joml.Vector3f;
 import org.scijava.ui.behaviour.DragBehaviour;
 import sc.iview.SciView;
 
+/**
+ * Behavior for translating a camera
+ *
+ * @author Kyle Harrington
+ *
+ */
 public class CameraTranslateControl implements DragBehaviour {
     protected SciView sciView;
     private boolean firstEntered;

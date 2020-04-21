@@ -42,6 +42,12 @@ import sc.iview.SciView;
 import sc.iview.vector.JOMLVector3;
 import sc.iview.vector.Vector3;
 
+/**
+ * Command to add a box to the scene
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Edit", weight = EDIT), //
                  @Menu(label = "Add Box...", weight = EDIT_ADD_BOX) })

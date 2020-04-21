@@ -28,7 +28,6 @@
  */
 package sc.iview.commands.process;
 
-import cleargl.GLVector;
 import graphics.scenery.Cylinder;
 import graphics.scenery.Node;
 import net.imagej.ops.OpService;
@@ -40,16 +39,17 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.Button;
 import sc.iview.SciView;
-import sc.iview.process.ControlPoints;
 import sc.iview.node.Line3D;
+import sc.iview.process.ControlPoints;
 import sc.iview.vector.Vector3;
 
 import java.util.ArrayList;
 
-import static sc.iview.commands.MenuWeights.*;
+import static sc.iview.commands.MenuWeights.PROCESS;
+import static sc.iview.commands.MenuWeights.PROCESS_DRAW_LINES;
 
-/*
- * Interactively place points that are used to seed a convex hull
+/**
+ * Interactively place points that are used to draw a line
  *
  * @author Kyle Harrington
  */

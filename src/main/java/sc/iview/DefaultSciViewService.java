@@ -51,7 +51,7 @@ import sc.iview.display.SciViewDisplay;
 /**
  * Default service for rendering inside Scenery.
  *
- * @author Kyle Harrington (University of Idaho, Moscow)
+ * @author Kyle Harrington
  */
 @Plugin(type = Service.class, name="sciViewService")
 public class DefaultSciViewService extends AbstractService implements SciViewService {

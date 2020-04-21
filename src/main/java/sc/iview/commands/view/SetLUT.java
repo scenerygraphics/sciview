@@ -46,6 +46,12 @@ import java.util.ArrayList;
 import static sc.iview.commands.MenuWeights.VIEW;
 import static sc.iview.commands.MenuWeights.VIEW_SET_LUT;
 
+/**
+ * Command to set the currently used Look Up Table (LUT). This is a colormap for the volume.
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "View", weight = VIEW), //
                  @Menu(label = "Set LUT", weight = VIEW_SET_LUT) })

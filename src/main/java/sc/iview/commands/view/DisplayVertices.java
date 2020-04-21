@@ -15,6 +15,12 @@ import sc.iview.process.MeshConverter;
 import static sc.iview.commands.MenuWeights.VIEW;
 import static sc.iview.commands.MenuWeights.VIEW_SET_TRANSFER_FUNCTION;
 
+/**
+ * Command to display the vertices of the currently active Node as a table.
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = {@Menu(label = "View", weight = VIEW), //
                 @Menu(label = "Display Vertices", weight = VIEW_SET_TRANSFER_FUNCTION)})

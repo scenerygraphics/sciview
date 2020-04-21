@@ -40,7 +40,10 @@ import sc.iview.SciViewService;
 import sc.iview.display.SciViewDisplay;
 
 /**
- * Created by kharrington on 6/20/17.
+ * Command to launch SciView
+ *
+ * @author Kyle Harrington
+ *
  */
 @Plugin(type = Command.class, menuPath = "Plugins>SciView")
 public class LaunchViewer implements Command {

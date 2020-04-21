@@ -39,6 +39,9 @@ import sc.iview.SciView;
  * Note that {@link SciView} takes care of its own window internally; this class
  * exists only to adapt that window to the SciJava API.
  * </p>
+ *
+ * @author Kyle Harrington
+ *
  */
 public class SciViewDisplayWindow implements DisplayWindow {
 

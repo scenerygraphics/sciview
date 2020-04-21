@@ -38,6 +38,12 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
+/**
+ * Command to add a point light to the scene
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Edit", weight = EDIT), //
                  @Menu(label = "Add Point Light", weight = EDIT_ADD_POINT_LIGHT) })

@@ -53,6 +53,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
+
 /**
  * Adds a label image to the scene.
  *

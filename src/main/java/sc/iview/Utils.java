@@ -1,10 +1,14 @@
 package sc.iview;
 
-import cleargl.GLVector;
 import org.joml.Vector3f;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.ColorRGBA;
 
+/**
+ * Utility methods.
+ *
+ * @author Kyle Harrington
+ */
 public class Utils {
     static public Vector3f convertToVector3f(ColorRGB color) {
         if( color instanceof ColorRGBA) {

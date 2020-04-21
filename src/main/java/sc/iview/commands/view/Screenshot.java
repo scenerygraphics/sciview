@@ -49,6 +49,12 @@ import java.io.IOException;
 import static sc.iview.commands.MenuWeights.VIEW;
 import static sc.iview.commands.MenuWeights.VIEW_SCREENSHOT;
 
+/**
+ * Command to take a screenshot. The screenshot is opened in ImageJ.
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "View", weight = VIEW), //
                  @Menu(label = "Screenshot", weight = VIEW_SCREENSHOT) })

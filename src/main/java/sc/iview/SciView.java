@@ -125,6 +125,11 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+/**
+ * Main SciView class.
+ *
+ * @author Kyle Harrington
+ */
 // we suppress unused warnings here because @Parameter-annotated fields
 // get updated automatically by SciJava.
 @SuppressWarnings({"unused", "WeakerAccess"})
@@ -2178,7 +2183,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Static launching method
-     * [DEPRECATED use SciView.create() instead
+     * [DEPRECATED] use SciView.create() instead
      */
     @Deprecated
     public static SciView createSciView() throws Exception {

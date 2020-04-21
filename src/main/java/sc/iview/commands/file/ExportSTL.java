@@ -44,6 +44,12 @@ import sc.iview.SciView;
 
 import graphics.scenery.Mesh;
 
+/**
+ * Command to export a STL of the currently active Node
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "File", weight = FILE), //
                  @Menu(label = "Export STL...", weight = FILE_EXPORT_STL) })

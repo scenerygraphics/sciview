@@ -41,6 +41,12 @@ import sc.iview.vector.Vector3;
 import static sc.iview.commands.MenuWeights.EDIT;
 import static sc.iview.commands.MenuWeights.EDIT_ADD_CAMERA;
 
+/**
+ * Command to add a camera to the scene
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
 		menu = { @Menu(label = "Edit", weight = EDIT), //
 				@Menu(label = "Add Camera...", weight = EDIT_ADD_CAMERA) })

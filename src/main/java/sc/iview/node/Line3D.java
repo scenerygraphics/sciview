@@ -11,6 +11,11 @@ import sc.iview.vector.Vector3;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A 3D line composed of scenery Nodes
+ *
+ * @author Kyle Harrington
+ */
 public class Line3D extends Node {
     private List<Node> edges;
     private List<Node> joints;

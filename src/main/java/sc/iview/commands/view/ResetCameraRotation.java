@@ -28,7 +28,6 @@
  */
 package sc.iview.commands.view;
 
-import com.jogamp.opengl.math.Quaternion;
 import org.joml.Quaternionf;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
@@ -40,6 +39,12 @@ import sc.iview.SciView;
 import static sc.iview.commands.MenuWeights.VIEW;
 import static sc.iview.commands.MenuWeights.VIEW_RESET_CAMERA_ROTATION;
 
+/**
+ * Command to set the camera rotation to the default orientation.
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
 menu = {@Menu(label = "View", weight = VIEW), //
         @Menu(label = "Reset Camera Rotation", weight = VIEW_RESET_CAMERA_ROTATION)})

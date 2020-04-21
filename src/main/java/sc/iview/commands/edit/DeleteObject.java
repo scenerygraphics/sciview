@@ -38,6 +38,12 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
+/**
+ * Command to delete the currently active Node from the scene
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Edit", weight = EDIT), //
                  @Menu(label = "Delete Object", weight = EDIT_DELETE_OBJECT) })

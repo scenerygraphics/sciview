@@ -33,7 +33,11 @@ import org.scijava.io.IOPlugin;
 import org.scijava.plugin.Plugin;
 import org.scijava.util.FileUtils;
 
-/** {@link IOPlugin} adapter for Scenery OBJ reader. */
+/** {@link IOPlugin} adapter for Scenery OBJ reader.
+ *
+ * @author Kyle Harrington
+ *
+ * */
 @Plugin(type = IOPlugin.class)
 public class OBJMeshIO extends AbstractIOPlugin<graphics.scenery.Mesh> {
 

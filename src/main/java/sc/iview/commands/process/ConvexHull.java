@@ -45,6 +45,11 @@ import sc.iview.process.MeshConverter;
 
 import graphics.scenery.Mesh;
 
+/**
+ * Command to create a convex hull of the currently open mesh
+ *
+ * @author Kyle Harrington
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
 menu = {@Menu(label = "Process", weight = PROCESS), //
         @Menu(label = "Convex Hull", weight = PROCESS_CONVEX_HULL)})

@@ -28,9 +28,7 @@
  */
 package sc.iview.commands.view;
 
-import cleargl.GLVector;
 import com.google.common.io.Files;
-import com.jogamp.opengl.math.Quaternion;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.scijava.command.Command;
@@ -49,6 +47,12 @@ import java.io.IOException;
 import static sc.iview.commands.MenuWeights.VIEW;
 import static sc.iview.commands.MenuWeights.VIEW_SAVE_CAMERA_CONFIGURATION;
 
+/**
+ * Save the current camera configuration to file.
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
 menu = {@Menu(label = "View", weight = VIEW), //
         @Menu(label = "Save Camera Configuration", weight = VIEW_SAVE_CAMERA_CONFIGURATION)})

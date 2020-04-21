@@ -41,6 +41,12 @@ import sc.iview.SciView;
 import sc.iview.vector.JOMLVector3;
 import sc.iview.vector.Vector3;
 
+/**
+ * Command to add a line in the scene
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Edit", weight = EDIT), //
                  @Menu(label = "Add Line...", weight = EDIT_ADD_LINE) })

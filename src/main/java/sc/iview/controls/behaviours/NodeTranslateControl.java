@@ -13,6 +13,12 @@ import sc.iview.SciView;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Control behavior for moving a Node
+ *
+ * @author Kyle Harrington
+ *
+ */
 public class NodeTranslateControl implements DragBehaviour, ScrollBehaviour {
 
     protected SciView sciView;

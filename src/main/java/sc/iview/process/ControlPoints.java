@@ -15,6 +15,11 @@ import sc.iview.vector.Vector3;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * ControlPoints developed for interactive mesh creation
+ *
+ * @author Kyle Harrington
+ */
 public class ControlPoints {
     static public float DEFAULT_RADIUS = 0.5f;
     static public int DEFAULT_SEGMENTS = 18;

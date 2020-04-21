@@ -50,10 +50,9 @@ import java.io.IOException;
 import static sc.iview.commands.MenuWeights.*;
 
 /**
- * A demo of meshes.
+ * A demo of text annotations
  *
  * @author Kyle Harrington
- * @author Curtis Rueden
  */
 @Plugin(type = Command.class, label = "Mesh Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //

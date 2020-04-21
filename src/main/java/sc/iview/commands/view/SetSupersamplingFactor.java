@@ -37,6 +37,12 @@ import sc.iview.SciView;
 
 import static sc.iview.commands.MenuWeights.*;
 
+/**
+ * Command to set scenery's Supersampling Factor
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = {@Menu(label = "View", weight = VIEW), //
                 @Menu(label = "Set Supersampling Factor", weight = VIEW_SET_SUPERSAMPLING_FACTOR)})

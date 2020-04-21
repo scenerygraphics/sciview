@@ -37,6 +37,12 @@ import sc.iview.SciView;
 
 import static sc.iview.commands.MenuWeights.*;
 
+/**
+ * Command to adjust SciView settings
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
 menu = {@Menu(label = "Edit", weight = EDIT), //
         @Menu(label = "SciView Settings", weight = EDIT_SCIVIEW_SETTINGS)})

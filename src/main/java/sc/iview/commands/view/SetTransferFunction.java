@@ -14,6 +14,12 @@ import sc.iview.SciView;
 import static sc.iview.commands.MenuWeights.VIEW;
 import static sc.iview.commands.MenuWeights.VIEW_SET_TRANSFER_FUNCTION;
 
+/**
+ * Command to set the transfer function of a Volume
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = {@Menu(label = "View", weight = VIEW), //
                 @Menu(label = "Set Transfer Function", weight = VIEW_SET_TRANSFER_FUNCTION)})
