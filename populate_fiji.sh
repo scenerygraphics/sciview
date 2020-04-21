@@ -12,8 +12,7 @@ right() { echo "${1##*$2}"; }
 mid() { right "$(left "$1" "$3")" "$2"; }
 
 die() {
-  echo "$@" 1>&2
-  exit 1
+  echo "ERROR: $@" 1>&2; exit 1;
 }
 
 # Copies the given Maven coordinate to the specified output directory.
@@ -119,13 +118,17 @@ installWithGroupId "$ffmpegGAV:jar:macosx-x86_64" $FijiDirectory/jars/macosx
 
 # -- Get the latest imagej-launcher --
 
-wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-linux64.exe" -O $FijiDirectory/ImageJ-linux64
+wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-linux64.exe" -O $FijiDirectory/ImageJ-linux64 ||
+    die "Could not get linux64 launcher"
 chmod +x $FijiDirectory/ImageJ-linux64
-wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-macosx.exe" -O $FijiDirectory/Contents/MacOS/ImageJ-macosx
+wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-macosx.exe" -O $FijiDirectory/Contents/MacOS/ImageJ-macosx ||
+    die "Could not get macOS launcher"
 chmod +x $FijiDirectory/Contents/MacOS/ImageJ-macosx
-wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-win32.exe" -O $FijiDirectory/ImageJ-win32
+wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-win32.exe" -O $FijiDirectory/ImageJ-win32 ||
+    die "Could not get Win32 launcher"
 chmod +x $FijiDirectory/ImageJ-win32
-wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-win64.exe" -O $FijiDirectory/ImageJ-win64
+wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-win64.exe" -O $FijiDirectory/ImageJ-win64 ||
+    die "Could not get Win64 launcher"
 chmod +x $FijiDirectory/ImageJ-win64
 
 # -- Get the list of native libraries --
