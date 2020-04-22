@@ -1809,7 +1809,6 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         BoundingGrid bg = new BoundingGrid();
         bg.setNode(v);
 
-        getScene().addChild( v );
 
 //        @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
 //        float minVal, maxVal;
@@ -1851,10 +1850,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             e.printStackTrace();
         }
 
-        setActiveNode( v );
-        eventService.publish( new NodeAddedEvent( v ) );
-
-        objectService.addObject( v );
+        addNode(v);
 
         return v;
     }
