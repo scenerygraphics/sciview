@@ -65,6 +65,7 @@ import net.imglib2.*;
 import net.imglib2.RandomAccess;
 import net.imglib2.display.ColorTable;
 import net.imglib2.img.Img;
+import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.joml.Quaternionf;
@@ -271,6 +272,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      */
     public void fitCameraToScene() {
         centerOnNode(getScene());
+    }
+
+    public ArrayList<PointLight> getLights() {
+        return lights;
     }
 
     /**
@@ -774,7 +779,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         }
         h.addBehaviour( "object_selection_mode",
                                         new SelectCommand( "objectSelector", getRenderer(), getScene(),
-                                                           () -> getScene().findObserver(), true, ignoredObjects,
+                                                           () -> getScene().findObserver(), false, ignoredObjects,
                                                            selectAction ) );
         h.addKeyBinding( "object_selection_mode", "double-click button1" );
     }
@@ -1500,6 +1505,16 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
+     * Take a screenshot and return it as an Img
+     * @return an Img of type UnsignedByteType
+     */
+    public Img<ARGBType> getARGBScreenshot() {
+        Img<UnsignedByteType> screenshot = getScreenshot();
+
+        return Utils.convertToARGB(screenshot);
+    }
+
+    /**
      * @param name The name of the node to find.
      * @return the node object or null, if the node has not been found.
      */
@@ -2107,6 +2122,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     @Override
     public int numDimensions() {
         return axes.length;
+    }
+
+    public void setCamera(Camera camera) {
+        this.camera = camera;
     }
 
     public class TransparentSlider extends JSlider {
