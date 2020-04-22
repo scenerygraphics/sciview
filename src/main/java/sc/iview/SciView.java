@@ -1778,8 +1778,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
                                                   float... voxelDimensions ) {
         Volume v = Volume.fromSourceAndConverter(sac, sac.getSpimSource().getType(), name, getHub());
 
-        getScene().addChild(v);
-        return v;
+        return addNode(v);
     }
 
     /**
