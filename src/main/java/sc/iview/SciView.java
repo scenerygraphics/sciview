@@ -290,7 +290,20 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             deleteNode(n, false);
         }
 
-        // Add initial objects
+        // Setup camera
+        Camera cam;
+        if( getCamera() == null ) {
+            cam = new DetachedHeadCamera();
+            this.camera = cam;
+            getScene().addChild( cam );
+        } else {
+            cam = getCamera();
+        }
+        cam.setPosition( new Vector3f( 0.0f, 5.0f, 5.0f ) );
+        cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 1000.0f );
+        cam.setActive( true );
+
+        // Setup lights
         Vector3f[] tetrahedron = new Vector3f[4];
         tetrahedron[0] = new Vector3f( 1.0f, 0f, -1.0f/(float)Math.sqrt(2.0f) );
         tetrahedron[1] = new Vector3f( -1.0f,0f,-1.0f/(float)Math.sqrt(2.0) );
@@ -305,20 +318,26 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             light.setEmissionColor( new Vector3f( 1.0f, 1.0f, 1.0f ) );
             light.setIntensity( 1.0f );
             lights.add( light );
+            //camera.addChild( light );
             getScene().addChild( light );
         }
 
-        Camera cam;
-        if( getCamera() == null ) {
-            cam = new DetachedHeadCamera();
-            this.camera = cam;
-            getScene().addChild( cam );
-        } else {
-            cam = getCamera();
-        }
-        cam.setPosition( new Vector3f( 0.0f, 5.0f, 5.0f ) );
-        cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 1000.0f );
-        cam.setActive( true );
+        // Make a headlight for the camera
+        PointLight light = new PointLight(150.0f);
+        light.setPosition( new Vector3f(0f, 0f, -1f).mul(25.0f) );
+        light.setEmissionColor( new Vector3f( 1.0f, 1.0f, 1.0f ) );
+        light.setIntensity( 0.5f );
+        light.setName("headlight");
+
+        Icosphere lightSphere = new Icosphere(1.0f, 2);
+        light.addChild(lightSphere);
+        lightSphere.getMaterial().setDiffuse(light.getEmissionColor());
+        lightSphere.getMaterial().setSpecular(light.getEmissionColor());
+        lightSphere.getMaterial().setAmbient(light.getEmissionColor());
+        lightSphere.getMaterial().setWireframe(true);
+        lightSphere.setVisible(false);
+        //lights.add( light );
+        camera.addChild( light );
 
         floor = new Box( new Vector3f( 500f, 0.2f, 500f ) );
         floor.setName( "Floor" );
