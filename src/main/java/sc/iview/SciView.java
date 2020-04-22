@@ -1885,6 +1885,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         Volume v = new RAIVolume(ds, options, getHub());
 
+        v.getMetadata().put("sources", sources);
+
         BoundingGrid bg = new BoundingGrid();
         bg.setNode(v);
 
