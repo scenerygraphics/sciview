@@ -28,32 +28,31 @@
  */
 package sc.iview.commands.file;
 
-import static sc.iview.commands.MenuWeights.FILE;
-import static sc.iview.commands.MenuWeights.FILE_EXPORT_STL;
-
-import java.io.File;
-
+import graphics.scenery.Mesh;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.FileWidget;
-
 import sc.iview.SciView;
+import sc.iview.Utils;
 
-import graphics.scenery.Mesh;
+import java.io.File;
+
+import static sc.iview.commands.MenuWeights.FILE;
+import static sc.iview.commands.MenuWeights.FILE_EXPORT_STL;
 
 /**
- * Command to export a STL of the currently active Node
+ * Command to export a XYZ file for the currently active Mesh
  *
  * @author Kyle Harrington
  *
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "File", weight = FILE), //
-                 @Menu(label = "Export STL...", weight = FILE_EXPORT_STL) })
-public class ExportSTL implements Command {
+                 @Menu(label = "Export XYZ...", weight = FILE_EXPORT_STL) })
+public class ExportXYZ implements Command {
 
     @Parameter
     private LogService logService;
@@ -62,7 +61,7 @@ public class ExportSTL implements Command {
     private SciView sciView;
 
     @Parameter(style = FileWidget.SAVE_STYLE)
-    private File stlFile = new File( "" );
+    private File xyzFile = new File( "" );
 
     @Override
     public void run() {
@@ -71,7 +70,7 @@ public class ExportSTL implements Command {
 
             if( mesh != null ) {
                 try {
-                    sciView.writeSCMesh( stlFile.getAbsolutePath(), mesh );
+                    Utils.writeXYZ(xyzFile, mesh);
                 } catch( final Exception e ) {
                     logService.trace( e );
                 }

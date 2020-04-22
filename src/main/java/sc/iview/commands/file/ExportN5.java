@@ -72,8 +72,8 @@ public class ExportN5 implements Command {
     @Parameter(style = FileWidget.SAVE_STYLE)
     private File n5File = new File( "" );
 
-    @Parameter
-    private String dataset = "/myNode";
+    @Parameter(label = "Dataset")
+    private String dataset = "/myDataset";
 
     @Override
     public void run() {

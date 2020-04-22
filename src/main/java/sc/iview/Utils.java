@@ -1,8 +1,10 @@
 package sc.iview;
 
+import graphics.scenery.Mesh;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.RealLocalizable;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.type.numeric.ARGBType;
@@ -11,6 +13,14 @@ import net.imglib2.view.Views;
 import org.joml.Vector3f;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.ColorRGBA;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Utility methods.
@@ -53,5 +63,33 @@ public class Utils {
             outCur.get().set(ARGBType.rgba(r, g, b, a));
         }
         return out;
+    }
+
+    static public List<Vector3f> getVertexList(Mesh m) {
+        List<Vector3f> l = new ArrayList<>();
+
+        FloatBuffer vb = m.getVertices();
+        while( vb.hasRemaining() ) {
+            float x = vb.get();
+            float y = vb.get();
+            float z = vb.get();
+            l.add( new Vector3f(x, y, z) );
+        }
+
+        vb.flip();
+
+        return l;
+    }
+
+    public static void writeXYZ(File xyzFile, Mesh mesh) throws IOException {
+        BufferedWriter w = new BufferedWriter( new FileWriter(xyzFile) );
+
+        List<Vector3f> verts = getVertexList(mesh);
+
+        for( Vector3f v : verts ) {
+            w.write(v.x() + ", " + v.y() + ", " + v.z() + "\n");
+        }
+
+        w.close();
     }
 }
