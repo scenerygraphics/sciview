@@ -41,7 +41,7 @@ public class N5 {
      */
     public static void save(Mesh mesh, N5Writer n5, String dataset, int[] vertexBlockSize, int[] triangleBlockSize, Compression compression) throws IOException {
         Img<DoubleType> vertImg = ArrayImgs.doubles(mesh.vertices().size(), 3);
-        Img<LongType> triImg = ArrayImgs.longs(mesh.triangles().size(), 2);
+        Img<LongType> triImg = ArrayImgs.longs(mesh.triangles().size(), 3);
 
         RandomAccess<DoubleType> vAccess = vertImg.randomAccess();
         long[] vPos = new long[2];

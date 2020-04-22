@@ -102,6 +102,9 @@ public class MeshDemo implements Command {
         msh.setNeedsUpdate( true );
         msh.setDirty( true );
 
+        sciView.getFloor().setPosition(new Vector3f(0, -25, 0));
+
+        sciView.setActiveNode(msh);
         sciView.centerOnNode( sciView.getActiveNode() );
     }
 }
