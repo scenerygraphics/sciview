@@ -28,7 +28,15 @@
  */
 package sc.iview;
 
+import bdv.BigDataViewer;
+import bdv.cache.CacheControl;
+import bdv.tools.brightness.ConverterSetup;
 import bdv.util.AxisOrder;
+import bdv.util.RandomAccessibleIntervalSource;
+import bdv.util.RandomAccessibleIntervalSource4D;
+import bdv.util.volatiles.VolatileView;
+import bdv.util.volatiles.VolatileViewData;
+import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import cleargl.GLVector;
 import graphics.scenery.Box;
@@ -46,6 +54,7 @@ import graphics.scenery.controls.behaviours.MovementCommand;
 import graphics.scenery.controls.behaviours.SelectCommand;
 import graphics.scenery.utils.*;
 import graphics.scenery.volumes.Colormap;
+import graphics.scenery.volumes.RAIVolume;
 import graphics.scenery.volumes.TransferFunction;
 import graphics.scenery.volumes.Volume;
 import io.scif.SCIFIOService;
@@ -65,6 +74,7 @@ import net.imglib2.*;
 import net.imglib2.RandomAccess;
 import net.imglib2.display.ColorTable;
 import net.imglib2.img.Img;
+import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -1776,7 +1786,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      */
     public <T extends RealType<T>> Node addVolume(SourceAndConverter<T> sac, String name,
                                                   float... voxelDimensions ) {
-        Volume v = Volume.fromSourceAndConverter(sac, sac.getSpimSource().getType(), name, getHub());
+        List<SourceAndConverter<T>> sources = new ArrayList<>();
+        sources.add(sac);
+
+        Node v = addVolume(sources, name, voxelDimensions);
 
         return addNode(v);
     }
@@ -1805,54 +1818,77 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         imageRA.setPosition(minPt);
         T voxelType = imageRA.get().createVariable();
 
-        Volume v = Volume.fromRAI(image, voxelType, AxisOrder.DEFAULT, name, getHub(), new VolumeViewerOptions());
+        ArrayList<ConverterSetup> converterSetups = new ArrayList();
+        ArrayList<RandomAccessibleInterval<T>> stacks = AxisOrder.splitInputStackIntoSourceStacks(image, AxisOrder.getAxisOrder(AxisOrder.DEFAULT, image, false));
+        AffineTransform3D sourceTransform = new AffineTransform3D();
+        ArrayList<SourceAndConverter<T>> sources = new ArrayList();
+
+        int numTimepoints = 1;
+        for (RandomAccessibleInterval stack : stacks) {
+            Source<T> s;
+            if (stack.numDimensions() > 3) {
+                numTimepoints = (int) (stack.max(3) + 1);
+                s = new RandomAccessibleIntervalSource4D<T>(stack, voxelType, sourceTransform, name);
+            } else {
+                s = new RandomAccessibleIntervalSource<T>(stack, voxelType, sourceTransform, name);
+            }
+            SourceAndConverter<T> source = BigDataViewer.wrapWithTransformedSource(
+                new SourceAndConverter<T>(s, BigDataViewer.createConverterToARGB(voxelType)));
+            converterSetups.add(BigDataViewer.createConverterSetup(source, 17));
+            sources.add(source);
+        }
+
+        return addVolume(sources, name, voxelDimensions);
+    }
+
+    /**
+     * Adss a SourceAndConverter to the scene.
+     *
+     * @param sources The list of SourceAndConverter to add
+     * @param name Name of the dataset
+     * @param voxelDimensions Array with voxel dimensions.
+     * @param <T> Type of the dataset.
+     * @return THe node corresponding to the volume just added.
+     */
+    public <T extends RealType<T>> Node addVolume(List<SourceAndConverter<T>> sources, String name,
+                                                  float... voxelDimensions ) {
+
+        CacheControl cacheControl = null;
+        RandomAccessibleInterval<T> image = sources.get(0).getSpimSource().getSource(0, 0);
+
+        if (image instanceof VolatileView) {
+            VolatileViewData<T, Volatile<T>> viewData  = ((VolatileView<T, Volatile<T>>) image).getVolatileViewData();
+            cacheControl = viewData.getCacheControl();
+        }
+
+        long[] dimensions = new long[image.numDimensions()];
+        image.dimensions( dimensions );
+
+        long[] minPt = new long[image.numDimensions()];
+
+        // Get type at min point
+        RandomAccess<T> imageRA = image.randomAccess();
+        image.min(minPt);
+        imageRA.setPosition(minPt);
+        T voxelType = imageRA.get().createVariable();
+
+        int numTimepoints = 1;
+
+        int setupId = 0;
+        ArrayList<ConverterSetup> converterSetups = new ArrayList<>();
+        for( SourceAndConverter source: sources ) {
+            converterSetups.add(BigDataViewer.createConverterSetup(source, setupId++));
+        }
+
+        Volume.VolumeDataSource.RAISource<T> ds = new Volume.VolumeDataSource.RAISource<T>(voxelType, sources, converterSetups, numTimepoints, cacheControl);
+        VolumeViewerOptions options = new VolumeViewerOptions();
+
+        Volume v = new RAIVolume(ds, options, getHub());
+
         BoundingGrid bg = new BoundingGrid();
         bg.setNode(v);
 
-
-//        @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
-//        float minVal, maxVal;
-//
-//        if( voxelType == UnsignedByteType.class ) {
-//            minVal = 0;
-//            maxVal = 255;
-//        } else if( voxelType == UnsignedShortType.class ) {
-//            minVal = 0;
-//            maxVal = 65535;
-//        } else if( voxelType == FloatType.class ) {
-//            minVal = 0;
-//            maxVal = 1;
-//        } else if( voxelType == VolatileUnsignedByteType.class ) {
-//            minVal = 0;
-//            maxVal = 255;
-//        } else if( voxelType == VolatileUnsignedShortType.class ) {
-//            minVal = 0;
-//            maxVal = 65535;
-//        } else if( voxelType == VolatileFloatType.class ) {
-//            minVal = 0;
-//            maxVal = 1;
-//        } else {
-//            log.debug( "Type: " + voxelType +
-//                       " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
-//            return null;
-//        }
-//
-//        updateVolume( image, name, voxelDimensions, v );
-
-        // TODO fixme
-//        v.setTrangemin( minVal );
-//        v.setTrangemax( maxVal );
-        v.setTransferFunction(TransferFunction.ramp(0.0f, 0.4f));
-
-        try {
-            setColormap( v, lutService.loadLUT( lutService.findLUTs().get( "WCIF/ICA.lut" ) ) );
-        } catch( IOException e ) {
-            e.printStackTrace();
-        }
-
-        addNode(v);
-
-        return v;
+        return addNode(v);
     }
 
     /**
