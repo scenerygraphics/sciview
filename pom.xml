@@ -110,6 +110,7 @@
 
 		<scenery.version>a0af22c3f</scenery.version>
 		<cleargl.version>2.2.10</cleargl.version>
+		<coremem.version>0.4.6</coremem.version>
 
 		<kotlin.version>1.4-M1</kotlin.version>
 		<kotlinx-coroutines-core.version>1.3.5-1.4-M1</kotlinx-coroutines-core.version>
@@ -151,20 +152,25 @@
 	</repositories>
 
 	<dependencies>
-
-		<!-- Hack for current issue with jinput and imagej-update handler -->
-<!--        <dependency>-->
-<!--			<groupId>com.github.kephale</groupId>-->
-<!--			<artifactId>imagej-updater</artifactId>-->
-<!--			<version>${custom-imagej-updater.version}</version>-->
-<!--		</dependency>-->
-
+		<!-- Graphics dependencies -->
 		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>imagej-updater</artifactId>
-			<version>${imagej-updater.version}</version>
-<!--			<scope>system</scope>-->
-<!--			<systemPath>${project.basedir}/misc/empty.jar</systemPath>-->
+			<groupId>graphics.scenery</groupId>
+			<artifactId>scenery</artifactId>
+			<version>${scenery.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>net.clearvolume</groupId>
+			<artifactId>cleargl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.clearcontrol</groupId>
+			<artifactId>coremem</artifactId>
+			<version>${coremem.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jogamp.jogl</groupId>
+			<artifactId>jogl-all</artifactId>
+			<version>${jogl.version}</version>
 		</dependency>
 
 		<!-- SciJava dependencies -->
@@ -187,6 +193,10 @@
 		</dependency>
 
 		<!-- ImageJ dependencies -->
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-common</artifactId>
@@ -221,27 +231,6 @@
 		<dependency>
 			<groupId>net.imglib2</groupId>
 			<artifactId>imglib2</artifactId>
-		</dependency>
-
-		<!-- Graphics dependencies -->
-		<dependency>
-			<groupId>graphics.scenery</groupId>
-			<artifactId>scenery</artifactId>
-			<version>${scenery.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>net.clearvolume</groupId>
-			<artifactId>cleargl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.clearcontrol</groupId>
-			<artifactId>coremem</artifactId>
-			<version>0.4.6</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jogamp.jogl</groupId>
-			<artifactId>jogl-all</artifactId>
-			<version>${jogl.version}</version>
 		</dependency>
 
 		<!-- Math dependencies -->
