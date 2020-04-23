@@ -56,6 +56,7 @@ import sc.iview.SciView;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 import static sc.iview.Utils.convertToARGB;
 import static sc.iview.commands.MenuWeights.DEMO;
@@ -125,10 +126,12 @@ public class SceneRiggingDemo implements Command {
             light.addChild(s);
         }
 
+        sciView.getFloor().setVisible(false);
         screenshotCam = new DetachedHeadCamera();
         screenshotCam.setPosition( new Vector3f( 0.0f, 5.0f, -5.0f ) );
         screenshotCam.perspectiveCamera( 50.0f, sciView.getWindowWidth(), sciView.getWindowHeight(), 0.1f, 1000.0f );
-        screenshotCam.setActive( true );
+        screenshotCam.getRotation().lookAlong( msh.getPosition().sub(screenshotCam.getPosition()), new Vector3f(0,1,0));
+
         sciView.addNode(screenshotCam);
 
         Box b = new Box(new Vector3f(1f, 1f, 1f));
@@ -139,6 +142,7 @@ public class SceneRiggingDemo implements Command {
 
         sciView.setActiveNode(b);
         sciView.centerOnNode(b);
+        sciView.getTargetArcball().setDistance(50f);
 
         makeDialog();
     }
@@ -156,8 +160,9 @@ public class SceneRiggingDemo implements Command {
         if( dialog.wasCanceled() )
             return;
 
-        Camera prevCamera = sciView.getCamera();
+        Camera prevCamera = sciView.getActiveObserver();
         sciView.setCamera(screenshotCam);
+
         screenshotCam.setNeedsUpdate(true);
         screenshotCam.setDirty(true);
         Img<UnsignedByteType> screenshot = sciView.getScreenshot();
@@ -175,5 +180,13 @@ public class SceneRiggingDemo implements Command {
 
     }
 
+    public static void main(String... args) throws Exception {
+        SciView sv = SciView.create();
 
+        CommandService command = sv.getScijavaContext().getService(CommandService.class);
+
+        HashMap<String, Object> argmap = new HashMap<String, Object>();
+
+        command.run(SceneRiggingDemo.class, true, argmap);
+    }
 }

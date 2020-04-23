@@ -316,7 +316,6 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         }
         cam.setPosition( new Vector3f( 0.0f, 5.0f, 5.0f ) );
         cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 1000.0f );
-        cam.setActive( true );
 
         // Setup lights
         Vector3f[] tetrahedron = new Vector3f[4];
@@ -1834,7 +1833,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             }
             SourceAndConverter<T> source = BigDataViewer.wrapWithTransformedSource(
                 new SourceAndConverter<T>(s, BigDataViewer.createConverterToARGB(voxelType)));
-            converterSetups.add(BigDataViewer.createConverterSetup(source, 17));
+            converterSetups.add(BigDataViewer.createConverterSetup(source, Volume.Companion.getSetupId().getAndIncrement()));
             sources.add(source);
         }
 
@@ -2159,6 +2158,15 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     public void setCamera(Camera camera) {
         this.camera = camera;
+        setActiveObserver(camera);
+    }
+
+    public void setActiveObserver(Camera screenshotCam) {
+        getScene().setActiveObserver(screenshotCam);
+    }
+
+    public Camera getActiveObserver() {
+        return getScene().getActiveObserver();
     }
 
     public class TransparentSlider extends JSlider {

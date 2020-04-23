@@ -160,7 +160,6 @@ class NodePropertyTreeCellRenderer extends DefaultTreeCellRenderer {
             setOpenIcon(cameraIcon[iconIndex]);
             setClosedIcon(cameraIcon[iconIndex]);
 
-            active = ( ( Camera ) n ).getActive();
             if(active && n.getScene().findObserver() == n) {
             	setText( n.getName() + " (active)" );
 			} else {
