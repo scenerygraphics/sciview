@@ -92,4 +92,24 @@ public class Utils {
 
         w.close();
     }
+
+    public static void writeXYZ(File xyzFile, List<RealLocalizable> points) throws IOException {
+        BufferedWriter w = new BufferedWriter( new FileWriter(xyzFile) );
+
+        if( points.isEmpty() )
+            return;
+
+        int numDim = points.get(0).numDimensions();
+        double[] pos = new double[numDim];
+        for( RealLocalizable v : points ) {
+            for( int d = 0; d < numDim; d++ ) {
+                if( d > 0 )
+                    w.write(", ");
+                w.write("" + v.getDoublePosition(d));
+            }
+            w.write("\n");
+        }
+
+        w.close();
+    }
 }
