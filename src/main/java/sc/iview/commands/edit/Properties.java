@@ -421,9 +421,9 @@ public class Properties extends InteractiveCommand {
             final Scene scene = currentSceneNode.getScene();
 
             if(scene != null) {
-                active = ( ( Camera ) currentSceneNode ).getActive() && scene.findObserver() == currentSceneNode;
+                active = scene.findObserver() == currentSceneNode;
             } else {
-                active = ( ( Camera ) currentSceneNode ).getActive();
+                active = false;
             }
         } else {
             maybeRemoveInput( "active", Boolean.class );
@@ -527,7 +527,6 @@ public class Properties extends InteractiveCommand {
 
         	if(active && scene != null) {
 				scene.setActiveObserver( ( Camera ) currentSceneNode );
-				( ( Camera ) currentSceneNode ).setActive( true );
 			}
 		}
 
