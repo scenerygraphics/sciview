@@ -34,7 +34,7 @@ package sc.iview;
  * @author Kyle Harrington
  */
 public class Main {
-    public static void main( String... args ) {
-        SciView.createSciView();
+    public static void main( String... args ) throws Exception {
+        SciView.create();
     }
 }

@@ -32,6 +32,7 @@ package sc.iview.vector;
  * {@link Vector3} backed by three {@code double}s.
  * 
  * @author Curtis Rueden
+ * @author Kyle Harrington
  */
 public class DoubleVector3 implements Vector3 {
 

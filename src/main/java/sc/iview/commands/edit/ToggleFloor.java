@@ -38,6 +38,12 @@ import sc.iview.SciView;
 import static sc.iview.commands.MenuWeights.EDIT;
 import static sc.iview.commands.MenuWeights.EDIT_TOGGLE_FLOOR;
 
+/**
+ * Command to toggle the visibility of the floor
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
 menu = {@Menu(label = "Edit", weight = EDIT), //
         @Menu(label = "Toggle Floor", weight = EDIT_TOGGLE_FLOOR)})

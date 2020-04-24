@@ -13,6 +13,12 @@ import static sc.iview.commands.MenuWeights.HELP;
 import static sc.iview.commands.MenuWeights.HELP_HELP;
 import static sc.iview.commands.view.NodePropertyEditor.USAGE_TEXT;
 
+/**
+ * Command to show input controls
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Help", weight = HELP), //
                  @Menu(label = "Help", weight = HELP_HELP) })

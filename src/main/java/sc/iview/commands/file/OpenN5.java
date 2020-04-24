@@ -26,41 +26,53 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.commands.file;
 
 import org.scijava.command.Command;
+import org.scijava.io.IOService;
+import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
-import static sc.iview.commands.MenuWeights.*;
+import java.io.File;
+import java.io.IOException;
+
+import static sc.iview.commands.MenuWeights.FILE;
+import static sc.iview.commands.MenuWeights.FILE_OPEN;
 
 /**
- * Command to start recording a video. Currently this will record to ~/Desktop
+ * Command to open a file in SciView
  *
  * @author Kyle Harrington
  *
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "View", weight = VIEW), //
-                 @Menu(label = "Start recording video", weight = VIEW_START_RECORDING_VIDEO) })
-public class StartRecordingVideo implements Command {
+        menu = { @Menu(label = "File", weight = FILE), //
+                 @Menu(label = "Open N5...", weight = FILE_OPEN) })
+public class OpenN5 implements Command {
+
+    @Parameter
+    private IOService io;
+
+    @Parameter
+    private LogService log;
 
     @Parameter
     private SciView sciView;
 
-    @Parameter
-    private int bitrate = 10000000;// 10 MBit
-
-    @Parameter(choices={"VeryLow", "Low", "Medium", "High", "Ultra", "Insane"}, style="listBox")
-    private String videoEncodingQuality;// listed as an enum here, cant access from java https://github.com/scenerygraphics/scenery/blob/1a451c2864e5a48e47622d9313fe1681e47d7958/src/main/kotlin/graphics/scenery/utils/H264Encoder.kt#L65
+    // TODO: Find a more extensible way than hard-coding the extensions.
+    @Parameter(style = "directory")
+    private File file;
 
     @Override
     public void run() {
-        bitrate = Math.max(0,bitrate);
-        sciView.settings().set("VideoEncoder.Bitrate", bitrate);
-        sciView.settings().set("VideoEncoder.Quality", videoEncodingQuality);
-        sciView.toggleRecordVideo();
+        try {
+            sciView.open( file.getAbsolutePath() );
+        }
+        catch (final IOException | IllegalArgumentException exc) {
+            log.error( exc );
+        }
     }
 }

@@ -32,6 +32,7 @@ package sc.iview.commands;
  * Constants for coherent menu ordering.
  *
  * @author Curtis Rueden
+ * @author Kyle Harrington
  */
 public final class MenuWeights {
     private MenuWeights() {

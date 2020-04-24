@@ -48,7 +48,7 @@ import java.util.List;
 import static sc.iview.commands.MenuWeights.PROCESS;
 import static sc.iview.commands.MenuWeights.PROCESS_INTERACTIVE_CONVEX_MESH;
 
-/*
+/**
  * Interactively place points that are used to seed a convex hull
  *
  * @author Kyle Harrington

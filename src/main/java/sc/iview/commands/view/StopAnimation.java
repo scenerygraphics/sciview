@@ -38,6 +38,12 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
+/**
+ * Command to stop all current animations
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "View", weight = VIEW), //
                  @Menu(label = "Stop Animation", weight = VIEW_STOP_ANIMATION) })

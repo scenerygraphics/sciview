@@ -28,11 +28,15 @@
  */
 package sc.iview.commands.edit;
 
-import cleargl.GLVector;
-import com.jogamp.opengl.math.Quaternion;
 import graphics.scenery.*;
+import graphics.scenery.volumes.Colormap;
 import graphics.scenery.volumes.Volume;
-import graphics.scenery.volumes.bdv.BDVVolume;
+import kotlin.jvm.Volatile;
+import net.imagej.lut.LUTService;
+import net.imglib2.display.ColorTable;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
 import org.scijava.event.EventService;
@@ -41,13 +45,14 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
 import org.scijava.util.ColorRGB;
+import org.scijava.widget.Button;
 import org.scijava.widget.NumberWidget;
 import sc.iview.SciView;
 import sc.iview.event.NodeChangedEvent;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.scijava.widget.ChoiceWidget.LIST_BOX_STYLE;
 
@@ -78,6 +83,9 @@ public class Properties extends InteractiveCommand {
     private UIService uiSrv;
 
     @Parameter
+    private LUTService lutService;
+
+    @Parameter
     private SciView sciView;
 
     @Parameter
@@ -98,8 +106,28 @@ public class Properties extends InteractiveCommand {
     @Parameter(label = "Name", callback = "updateNodeProperties")
     private String name;
 
-    @Parameter(label = "Timepoint", callback = "updateNodeProperties")
+    @Parameter(label = "Timepoint", callback = "updateNodeProperties", style = NumberWidget.SLIDER_STYLE)
     private int timepoint = 0;
+
+    @Parameter(label = "Play", callback = "playTimeSeries")
+    private Button playPauseButton;
+
+    @Volatile
+    @Parameter(label = "Speed", min = "1", max="10", style = NumberWidget.SCROLL_BAR_STYLE, persist = false)
+    private int playSpeed = 4;
+
+    @Parameter(label = "Min", callback = "updateNodeProperties")
+    private int min = 0;
+
+    @Parameter(label = "Max", callback = "updateNodeProperties")
+    private int max = 255;
+
+    @Parameter(label = "Color map", choices = {}, callback = "updateNodeProperties")
+    private String colormapName;
+
+    @Parameter(label = " ")
+    private ColorTable colormap = dummyColorTable;
+    private static ColorTable dummyColorTable;
 
     @Parameter(label = "Intensity", style = NumberWidget.SPINNER_STYLE, //
             stepSize = "0.1", callback = "updateNodeProperties")
@@ -128,10 +156,6 @@ public class Properties extends InteractiveCommand {
     @Parameter(label = "Scale Z", style = NumberWidget.SPINNER_STYLE, //
             stepSize = "0.1", callback = "updateNodeProperties")
     private float scaleZ = 1;
-
-//    @Parameter(label = "Global Renderscale", style = NumberWidget.SPINNER_STYLE, //
-//            stepSize = "0.1", callback = "updateNodeProperties")
-//    private float renderscale = 1;
 
     @Parameter(label = "Rotation Phi", style = NumberWidget.SPINNER_STYLE, //
             min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
@@ -172,7 +196,7 @@ public class Properties extends InteractiveCommand {
     @Parameter(label = "Transparent Background", callback = "updateNodeProperties")
     private boolean transparentBackground;
 
-    private List renderingModeChoices = Arrays.asList("Local Maximum Projection", "Maximum Projection", "Alpha Blending");
+    private List<Volume.RenderingMethod> renderingModeChoices = Arrays.asList(Volume.RenderingMethod.values());
 
     boolean fieldsUpdating = true;
 
@@ -202,6 +226,14 @@ public class Properties extends InteractiveCommand {
     }
 
     protected void initValues() {
+        if(colormap == null) {
+            try {
+                lutService.loadLUT(lutService.findLUTs().get("Red.lut"));
+            } catch(IOException ioe) {
+                System.err.println("IOException while loading Red.lut");
+            }
+        }
+
         rebuildSceneObjectChoiceList();
         refreshSceneNodeInDialog();
         updateCommandFields();
@@ -265,6 +297,49 @@ public class Properties extends InteractiveCommand {
         }
     }
 
+    private boolean playing = false;
+    private Thread timeSeriesPlayer = null;
+
+    public void playTimeSeries() {
+        if(!(currentSceneNode instanceof Volume)) {
+            return;
+        }
+        final Volume v = (Volume)currentSceneNode;
+
+        playing = !playing;
+
+        if(playing && timeSeriesPlayer == null) {
+            timeSeriesPlayer = new Thread(() -> {
+                while(playing) {
+                    try {
+                        int nextTimepoint = v.getCurrentTimepoint() + 1;
+                        if(nextTimepoint >= v.getMaxTimepoint()) {
+                            nextTimepoint = 0;
+                        }
+
+                        v.goToTimePoint(nextTimepoint);
+
+                        Thread.sleep(1000L/playSpeed);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            getInfo().getMutableInput("playPauseButton", Button.class).setLabel("Pause");
+            timeSeriesPlayer.start();
+        } else {
+            try {
+                timeSeriesPlayer.join(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            timeSeriesPlayer = null;
+            getInfo().getMutableInput("playPauseButton", Button.class).setLabel("Play");
+        }
+    }
+
     /** Updates command fields to match current scene node properties. */
     public void updateCommandFields() {
         if( currentSceneNode == null ) return;
@@ -273,7 +348,7 @@ public class Properties extends InteractiveCommand {
 
         // update colour
         if( currentSceneNode.getMaterial() != null && currentSceneNode.getMaterial().getDiffuse() != null ) {
-            GLVector colourVector;
+            Vector3f colourVector;
             if( currentSceneNode instanceof PointLight ) {
                 colourVector = ( ( PointLight ) currentSceneNode ).getEmissionColor();
             } else {
@@ -288,37 +363,50 @@ public class Properties extends InteractiveCommand {
         visible = currentSceneNode.getVisible();
 
         // update position
-        final GLVector position = currentSceneNode.getPosition();
+        final Vector3f position = currentSceneNode.getPosition();
         positionX = position.get( 0 );
         positionY = position.get( 1 );
         positionZ = position.get( 2 );
 
         // update rotation
-        final float[] eulerAngles = new float[3];
-        currentSceneNode.getRotation().toEuler( eulerAngles );
-        rotationPhi = eulerAngles[0];
-        rotationTheta = eulerAngles[1];
-        rotationPsi = eulerAngles[2];
+        final Vector3f eulerAngles = currentSceneNode.getRotation().getEulerAnglesXYZ(new Vector3f());
+        rotationPhi = eulerAngles.x();
+        rotationTheta = eulerAngles.y();
+        rotationPsi = eulerAngles.z();
 
         // update scale
-        final GLVector scale = currentSceneNode.getScale();
+        final Vector3f scale = currentSceneNode.getScale();
         scaleX = scale.x();
         scaleY = scale.y();
         scaleZ = scale.z();
 
-//        renderscale = currentSceneNode.getRenderScale();
-
-        name = currentSceneNode.getName();
-
         if(currentSceneNode instanceof Volume) {
             final MutableModuleItem<String> renderingModeInput = getInfo().getMutableInput( "renderingMode", String.class );
-            renderingModeInput.setChoices(renderingModeChoices);
+            final List<String> methods = Arrays.asList(Volume.RenderingMethod.values()).stream().map(method -> method.toString()).collect(Collectors.toList());
+            renderingModeInput.setChoices(methods);
 
-            renderingMode = (String)renderingModeChoices.get(((Volume)currentSceneNode).getRenderingMethod());
-            occlusionSteps = ((Volume)currentSceneNode).getOcclusionSteps();
+            renderingMode = renderingModeChoices.get(Arrays.asList(Volume.RenderingMethod.values()).indexOf(((Volume)currentSceneNode).getRenderingMethod())).toString();
+
+            final MutableModuleItem<String> lutNameItem = getInfo().getMutableInput("colormapName", String.class );
+            lutNameItem.setChoices( new ArrayList( lutService.findLUTs().keySet() ) );
+
+            timepoint = ((graphics.scenery.volumes.Volume)currentSceneNode).getCurrentTimepoint();
+            getInfo().getMutableInput("timepoint", Integer.class).setMinimumValue(0);
+            getInfo().getMutableInput("timepoint", Integer.class).setMaximumValue(((graphics.scenery.volumes.Volume) currentSceneNode).getMaxTimepoint());
+
+            min = (int)((Volume)currentSceneNode).getConverterSetups().get(0).getDisplayRangeMin();
+            max = (int)((Volume)currentSceneNode).getConverterSetups().get(0).getDisplayRangeMax();
+
+            maybeRemoveInput("colour", ColorRGB.class);
         } else {
-            maybeRemoveInput( "occlusionSteps", Integer.class );
             maybeRemoveInput( "renderingMode", String.class );
+            maybeRemoveInput( "min", Integer.class );
+            maybeRemoveInput( "max", Integer.class );
+            maybeRemoveInput("timepoint", Integer.class);
+            maybeRemoveInput("colormap", ColorTable.class);
+            maybeRemoveInput("colormapName", String.class);
+            maybeRemoveInput("playPauseButton", Button.class);
+            maybeRemoveInput("playSpeed", Integer.class);
         }
 
         if(currentSceneNode instanceof PointLight) {
@@ -333,9 +421,9 @@ public class Properties extends InteractiveCommand {
             final Scene scene = currentSceneNode.getScene();
 
             if(scene != null) {
-                active = ( ( Camera ) currentSceneNode ).getActive() && scene.findObserver() == currentSceneNode;
+                active = scene.findObserver() == currentSceneNode;
             } else {
-                active = ( ( Camera ) currentSceneNode ).getActive();
+                active = false;
             }
         } else {
             maybeRemoveInput( "active", Boolean.class );
@@ -368,13 +456,7 @@ public class Properties extends InteractiveCommand {
             maybeRemoveInput( "text", String.class );
         }
 
-        if(currentSceneNode instanceof BDVVolume) {
-            timepoint = ((BDVVolume)currentSceneNode).getCurrentTimepoint();
-            getInfo().getMutableInput("timepoint", Integer.class).setMinimumValue(0);
-            getInfo().getMutableInput("timepoint", Integer.class).setMaximumValue(((BDVVolume) currentSceneNode).getMaxTimepoint());
-        } else {
-            maybeRemoveInput("timepoint", Integer.class);
-        }
+        name = currentSceneNode.getName();
 
         fieldsUpdating = false;
     }
@@ -387,12 +469,12 @@ public class Properties extends InteractiveCommand {
         currentSceneNode.setVisible( visible );
 
         // update rotation
-        currentSceneNode.setRotation( new Quaternion().setFromEuler( rotationPhi, //
+        currentSceneNode.setRotation( new Quaternionf().rotateXYZ( rotationPhi, //
                                                                      rotationTheta, //
                                                                      rotationPsi ) );
 
         // update colour
-        final GLVector cVector = new GLVector( colour.getRed() / 255f, //
+        final Vector3f cVector = new Vector3f( colour.getRed() / 255f, //
                                                colour.getGreen() / 255f, //
                                                colour.getBlue() / 255f );
         if( currentSceneNode instanceof PointLight ) {
@@ -403,21 +485,18 @@ public class Properties extends InteractiveCommand {
         }
 
         // update position
-        final GLVector position = currentSceneNode.getPosition();
-        position.set( 0, ( positionX ) );
-        position.set( 1, ( positionY ) );
-        position.set( 2, ( positionZ ) );
+        final Vector3f position = currentSceneNode.getPosition();
+        position.x = positionX;
+        position.y = positionY;
+        position.z = positionZ;
         currentSceneNode.setPosition( position );
 
         // update scale
-        final GLVector scale = currentSceneNode.getScale();
-        scale.set( 0, scaleX );
-        scale.set( 1, scaleY );
-        scale.set( 2, scaleZ );
+        final Vector3f scale = currentSceneNode.getScale();
+        scale.x = scaleX;
+        scale.y = scaleY;
+        scale.z = scaleZ;
         currentSceneNode.setScale(scale);
-
-        // update render scale
-//        currentSceneNode.setRenderScale(renderscale);
 
         currentSceneNode.setName(name);
 
@@ -429,10 +508,18 @@ public class Properties extends InteractiveCommand {
             final int mode = renderingModeChoices.indexOf(renderingMode);
 
             if(mode != -1) {
-                ((Volume) currentSceneNode).setRenderingMethod(mode);
+                ((Volume) currentSceneNode).setRenderingMethod(Volume.RenderingMethod.values()[mode]);
             }
 
-            ((Volume)currentSceneNode).setOcclusionSteps(occlusionSteps);
+            try {
+                colormap = lutService.loadLUT(lutService.findLUTs().get(colormapName));
+                ((Volume) currentSceneNode).setColormap(Colormap.fromColorTable(colormap));
+            } catch(IOException ioe) {
+                System.err.println("Could not load LUT " + colormapName);
+            }
+
+            ((graphics.scenery.volumes.Volume) currentSceneNode).goToTimePoint(timepoint);
+            ((Volume) currentSceneNode).getConverterSetups().get(0).setDisplayRange(min, max);
         }
 
         if(currentSceneNode instanceof Camera) {
@@ -440,7 +527,7 @@ public class Properties extends InteractiveCommand {
 
         	if(active && scene != null) {
 				scene.setActiveObserver( ( Camera ) currentSceneNode );
-				( ( Camera ) currentSceneNode ).setActive( true );
+
 			}
 		}
 
@@ -455,7 +542,7 @@ public class Properties extends InteractiveCommand {
 
             ((BoundingGrid)currentSceneNode).setTicksOnly(ticks);
 
-            ((BoundingGrid)currentSceneNode).setGridColor(new GLVector(gridColor.getRed()/255.0f, gridColor.getGreen()/255.0f, gridColor.getBlue()/255.0f));
+            ((BoundingGrid)currentSceneNode).setGridColor(new Vector3f(gridColor.getRed()/255.0f, gridColor.getGreen()/255.0f, gridColor.getBlue()/255.0f));
         }
 
         if(currentSceneNode instanceof TextBoard) {
@@ -469,12 +556,8 @@ public class Properties extends InteractiveCommand {
 
             ((TextBoard)currentSceneNode).setTransparent(transparent);
             ((TextBoard)currentSceneNode).setText(text);
-            ((TextBoard)currentSceneNode).setFontColor(new GLVector(fontColor.getRed()/255.0f, fontColor.getGreen()/255.0f, fontColor.getBlue()/255.0f));
-            ((TextBoard)currentSceneNode).setBackgroundColor(new GLVector(backgroundColor.getRed()/255.0f, backgroundColor.getGreen()/255.0f, backgroundColor.getBlue()/255.0f));
-        }
-
-        if(currentSceneNode instanceof BDVVolume) {
-            ((BDVVolume) currentSceneNode).goToTimePoint(timepoint);
+            ((TextBoard)currentSceneNode).setFontColor(new Vector4f(fontColor.getRed()/255.0f, fontColor.getGreen()/255.0f, fontColor.getBlue()/255.0f, 1f));
+            ((TextBoard)currentSceneNode).setBackgroundColor(new Vector4f(backgroundColor.getRed()/255.0f, backgroundColor.getGreen()/255.0f, backgroundColor.getBlue()/255.0f, 1f));
         }
 
         events.publish( new NodeChangedEvent( currentSceneNode ) );
@@ -484,4 +567,32 @@ public class Properties extends InteractiveCommand {
         return "" + node.getName() + "[" + count + "]";
     }
 
+    static {
+        dummyColorTable = new ColorTable() {
+            @Override
+            public int lookupARGB(double v, double v1, double v2) {
+                return 0;
+            }
+
+            @Override
+            public int getComponentCount() {
+                return 0;
+            }
+
+            @Override
+            public int getLength() {
+                return 0;
+            }
+
+            @Override
+            public int get(int i, int i1) {
+                return 0;
+            }
+
+            @Override
+            public int getResampled(int i, int i1, int i2) {
+                return 0;
+            }
+        };
+    }
 }

@@ -37,6 +37,12 @@ import sc.iview.SciView;
 
 import static sc.iview.commands.MenuWeights.*;
 
+/**
+ * Command to set the far plane for the renderer. Everything beyond this **will not** be rendered
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = {@Menu(label = "View", weight = VIEW), //
                 @Menu(label = "Set Far Plane", weight = VIEW_SET_FAR_PLANE)})

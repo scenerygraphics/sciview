@@ -38,7 +38,11 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
-/** {@link IOPlugin} adapter for Scenery SMLM reader. */
+/** {@link IOPlugin} adapter for Scenery SMLM reader.
+ *
+ * @author Kyle Harrington
+ *
+ * */
 @Plugin(type = IOPlugin.class, priority = 10)
 public class SMLMPointCloudIO extends AbstractIOPlugin<graphics.scenery.PointCloud> {
 

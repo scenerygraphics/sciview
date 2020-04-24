@@ -38,6 +38,12 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
+/**
+ * Command to circle the camera around the currently active Node
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "View", weight = VIEW), //
                  @Menu(label = "Circle camera around current object", weight = VIEW_ROTATE) })

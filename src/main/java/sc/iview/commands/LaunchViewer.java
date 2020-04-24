@@ -40,7 +40,10 @@ import sc.iview.SciViewService;
 import sc.iview.display.SciViewDisplay;
 
 /**
- * Created by kharrington on 6/20/17.
+ * Command to launch SciView
+ *
+ * @author Kyle Harrington
+ *
  */
 @Plugin(type = Command.class, menuPath = "Plugins>SciView")
 public class LaunchViewer implements Command {
@@ -60,10 +63,15 @@ public class LaunchViewer implements Command {
     @Override
     public void run() {
         final SciViewDisplay display = displayService.getActiveDisplay(SciViewDisplay.class);
-        if (display == null)
-            sciView = sciViewService.getOrCreateActiveSciView();
-        else
-            sciViewService.createSciView();
+        try {
+            if (display == null) {
+                sciView = sciViewService.getOrCreateActiveSciView();
+            }
+            else
+                sciViewService.createSciView();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 //        else if (uiService != null)
 //            uiService.showDialog( "The SciView window is already open. For now, only one SciView window is supported.", "SciView" );

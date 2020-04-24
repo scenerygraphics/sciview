@@ -33,6 +33,8 @@ import graphics.scenery.Material;
 import graphics.scenery.Node;
 import graphics.scenery.TextBoard;
 import net.imagej.mesh.Mesh;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
 import org.scijava.io.IOService;
@@ -48,10 +50,9 @@ import java.io.IOException;
 import static sc.iview.commands.MenuWeights.*;
 
 /**
- * A demo of meshes.
+ * A demo of text annotations
  *
  * @author Kyle Harrington
- * @author Curtis Rueden
  */
 @Plugin(type = Command.class, label = "Mesh Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
@@ -89,9 +90,9 @@ public class TextDemo implements Command {
         //msh.fitInto( 15.0f, true );
 
         Material mat = new Material();
-        mat.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        mat.setDiffuse( new GLVector( 0.8f, 0.5f, 0.4f ) );
-        mat.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        mat.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
+        mat.setDiffuse( new Vector3f( 0.8f, 0.5f, 0.4f ) );
+        mat.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
         //mat.setDoubleSided( true );
 
         msh.setMaterial( mat );
@@ -103,10 +104,10 @@ public class TextDemo implements Command {
         board.setText("This mesh was contributed by Robert Wiese!");
         board.setName("TextBoard");
         board.setTransparent(0);
-        board.setFontColor(new GLVector(0, 0, 0));
-        board.setBackgroundColor(new GLVector(100,100,0));
-        board.setPosition(msh.getPosition().plus(new GLVector(0,10,0)));
-        board.setScale(new GLVector(10.0f,10.0f,10.0f));
+        board.setFontColor(new Vector4f(0, 0, 0, 0));
+        board.setBackgroundColor(new Vector4f(100,100,0, 0));
+        board.setPosition(msh.getPosition().add(new Vector3f(0,10,0)));
+        board.setScale(new Vector3f(10.0f,10.0f,10.0f));
 
         sciView.addNode(board,false);
 

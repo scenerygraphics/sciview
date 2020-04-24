@@ -39,11 +39,11 @@ public interface SciViewService extends ImageJService {
 
     SciView getActiveSciView();
 
-    SciView getOrCreateActiveSciView();
+    SciView getOrCreateActiveSciView() throws Exception;
 
     SciView getSciView(String name);
 
-    void createSciView();
+    void createSciView() throws Exception;
 
     int numSciView();
 

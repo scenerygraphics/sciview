@@ -28,7 +28,7 @@
  */
 package sc.iview.commands.view;
 
-import cleargl.GLVector;
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
@@ -39,6 +39,12 @@ import sc.iview.SciView;
 import static sc.iview.commands.MenuWeights.VIEW;
 import static sc.iview.commands.MenuWeights.VIEW_RESET_CAMERA_POSITION;
 
+/**
+ * Command to set the camera position to the default position
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
 menu = {@Menu(label = "View", weight = VIEW), //
         @Menu(label = "Reset Camera Position", weight = VIEW_RESET_CAMERA_POSITION)})
@@ -52,7 +58,7 @@ public class ResetCameraPosition implements Command {
 
     @Override
     public void run() {
-        sciView.getCamera().setPosition( new GLVector(0,5,5) );
+        sciView.getCamera().setPosition( new Vector3f(0,5,5) );
     }
 
 }

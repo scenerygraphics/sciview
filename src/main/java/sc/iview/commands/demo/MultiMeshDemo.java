@@ -32,6 +32,7 @@ import cleargl.GLVector;
 import graphics.scenery.Material;
 import graphics.scenery.Node;
 import net.imagej.mesh.Mesh;
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
 import org.scijava.io.IOService;
@@ -88,9 +89,9 @@ public class MultiMeshDemo implements Command {
         }
 
         Material mat = new Material();
-        mat.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        mat.setDiffuse( new GLVector( 0.8f, 0.5f, 0.4f ) );
-        mat.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        mat.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
+        mat.setDiffuse( new Vector3f( 0.8f, 0.5f, 0.4f ) );
+        mat.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
         //mat.setDoubleSided( true );
 
         Random RNG = new Random();
@@ -104,7 +105,7 @@ public class MultiMeshDemo implements Command {
             Node msh = sciView.addMesh(m);
             msh.setName("Mesh_" + k);
 
-            msh.setPosition( new GLVector( ( RNG.nextFloat() * shellR - shellR ), ( RNG.nextFloat() * shellR - shellR ), ( RNG.nextFloat() * shellR - shellR ) ) );
+            msh.setPosition( new Vector3f( ( RNG.nextFloat() * shellR - shellR ), ( RNG.nextFloat() * shellR - shellR ), ( RNG.nextFloat() * shellR - shellR ) ) );
 
             //msh.fitInto( 15.0f, true );
 

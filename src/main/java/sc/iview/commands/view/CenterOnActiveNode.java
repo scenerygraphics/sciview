@@ -40,6 +40,12 @@ import sc.iview.SciView;
 import static sc.iview.commands.MenuWeights.VIEW;
 import static sc.iview.commands.MenuWeights.VIEW_CENTER_ON_ACTIVE_NODE;
 
+/**
+ * Command to center the camera on the currently active Node
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
 menu = {@Menu(label = "View", weight = VIEW), //
         @Menu(label = "Center On Active Node", weight = VIEW_CENTER_ON_ACTIVE_NODE)})

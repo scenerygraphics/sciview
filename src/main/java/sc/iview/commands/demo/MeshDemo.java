@@ -36,6 +36,7 @@ import java.io.IOException;
 
 import net.imagej.mesh.Mesh;
 
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
 import org.scijava.io.IOService;
@@ -91,9 +92,9 @@ public class MeshDemo implements Command {
         //msh.fitInto( 15.0f, true );
 
         Material mat = new Material();
-        mat.setAmbient( new GLVector( 1.0f, 0.0f, 0.0f ) );
-        mat.setDiffuse( new GLVector( 0.8f, 0.5f, 0.4f ) );
-        mat.setSpecular( new GLVector( 1.0f, 1.0f, 1.0f ) );
+        mat.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
+        mat.setDiffuse( new Vector3f( 0.8f, 0.5f, 0.4f ) );
+        mat.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
         //mat.setDoubleSided( true );
 
         msh.setMaterial( mat );
@@ -101,6 +102,9 @@ public class MeshDemo implements Command {
         msh.setNeedsUpdate( true );
         msh.setDirty( true );
 
+        sciView.getFloor().setPosition(new Vector3f(0, -25, 0));
+
+        sciView.setActiveNode(msh);
         sciView.centerOnNode( sciView.getActiveNode() );
     }
 }

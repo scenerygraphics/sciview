@@ -46,6 +46,12 @@ import sc.iview.SciView;
 import static sc.iview.commands.MenuWeights.PROCESS;
 import static sc.iview.commands.MenuWeights.PROCESS_ISOSURFACE;
 
+/**
+ * Command to create a mesh from the currently open Image
+ * @param <T> a RealType
+ *
+ * @author Kyle Harrington
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = {@Menu(label = "Process", weight = PROCESS), //
                 @Menu(label = "Isosurface", weight = PROCESS_ISOSURFACE)})

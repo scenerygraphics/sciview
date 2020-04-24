@@ -37,6 +37,12 @@ import sc.iview.SciView;
 import static sc.iview.commands.MenuWeights.VIEW;
 import static sc.iview.commands.MenuWeights.VIEW_STOP_RECORDING_VIDEO;
 
+/**
+ * Command to stop recording the current video
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "View", weight = VIEW), //
                  @Menu(label = "Stop recording video", weight = VIEW_STOP_RECORDING_VIDEO) })

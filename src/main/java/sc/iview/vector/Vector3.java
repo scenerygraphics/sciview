@@ -316,7 +316,7 @@ public interface Vector3 extends RealLocalizable, RealPositionable {
     }
 
     default Vector3 cross(Vector3 v2) {
-        return new ClearGLVector3(ClearGLVector3.convert(this).cross(ClearGLVector3.convert(v2)));
+        return new JOMLVector3(JOMLVector3.convert(this).cross(JOMLVector3.convert(v2)));
     }
 
     default Vector3 elmul(Vector3 v2) {

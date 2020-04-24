@@ -28,10 +28,10 @@
  */
 package sc.iview.commands.process;
 
-import cleargl.GLVector;
 import graphics.scenery.Cylinder;
 import graphics.scenery.Node;
 import net.imagej.ops.OpService;
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
 import org.scijava.plugin.Menu;
@@ -39,16 +39,17 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.Button;
 import sc.iview.SciView;
-import sc.iview.process.ControlPoints;
 import sc.iview.node.Line3D;
+import sc.iview.process.ControlPoints;
 import sc.iview.vector.Vector3;
 
 import java.util.ArrayList;
 
-import static sc.iview.commands.MenuWeights.*;
+import static sc.iview.commands.MenuWeights.PROCESS;
+import static sc.iview.commands.MenuWeights.PROCESS_DRAW_LINES;
 
-/*
- * Interactively place points that are used to seed a convex hull
+/**
+ * Interactively place points that are used to draw a line
  *
  * @author Kyle Harrington
  */
@@ -82,15 +83,15 @@ public class DrawLines extends InteractiveCommand {
     public void createLine() {
         //Line line = new Line();
 
-        ArrayList<GLVector> points = new ArrayList<>();
+        ArrayList<Vector3f> points = new ArrayList<>();
         for( Vector3 v : controlPoints.getVertices() ) {
-            points.add(new GLVector(v.xf(), v.yf(), v.zf()));
+            points.add(new Vector3f(v.xf(), v.yf(), v.zf()));
         }
 
         float r = 0.1f;
         float h;
         int s = 15;
-        GLVector p1,p2;
+        Vector3f p1,p2;
 
         // Add Group Node for lines, or make a Line3D
         Line3D line = new Line3D();

@@ -35,7 +35,7 @@ import org.scijava.plugin.Plugin;
 import org.scijava.util.ColorRGB;
 import sc.iview.SciView;
 import sc.iview.node.Line3D;
-import sc.iview.vector.ClearGLVector3;
+import sc.iview.vector.JOMLVector3;
 import sc.iview.vector.Vector3;
 
 import java.util.ArrayList;
@@ -64,7 +64,7 @@ public class Line3DDemo implements Command {
         List<ColorRGB> colors = new ArrayList<>();
 
         for( int k = 0; k < numPoints; k++ ) {
-            points.add( new ClearGLVector3( ( float ) ( 10.0f * Math.random() - 5.0f ), //
+            points.add( new JOMLVector3( ( float ) ( 10.0f * Math.random() - 5.0f ), //
                                             ( float ) ( 10.0f * Math.random() - 5.0f ), //
                                             ( float ) ( 10.0f * Math.random() - 5.0f ) ) );
             colors.add(new ColorRGB((int) (Math.random()*255), (int) (Math.random()*255), (int) (Math.random()*255)));

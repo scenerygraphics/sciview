@@ -43,6 +43,12 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
+/**
+ * Command to open a file in SciView
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "File", weight = FILE), //
                  @Menu(label = "Open...", weight = FILE_OPEN) })

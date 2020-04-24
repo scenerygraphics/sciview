@@ -29,15 +29,22 @@
 
 package sc.iview.commands.demo;
 
+import bdv.BigDataViewer;
+import bdv.util.RandomAccessibleIntervalSource;
+import bdv.viewer.SourceAndConverter;
 import cleargl.GLVector;
 import graphics.scenery.BoundingGrid;
 import graphics.scenery.volumes.Volume;
+import ij.gui.GenericDialog;
+import ij.gui.NonBlockingGenericDialog;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.Sampler;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
 import org.scijava.event.EventHandler;
@@ -49,18 +56,21 @@ import org.scijava.widget.NumberWidget;
 import sc.iview.SciView;
 import sc.iview.event.NodeRemovedEvent;
 
+import javax.swing.*;
+
 import static sc.iview.commands.MenuWeights.DEMO;
 import static sc.iview.commands.MenuWeights.DEMO_GAME_OF_LIFE;
 
 /**
  * Conway's Game of Life&mdash;in 3D!
- * 
+ *
  * @author Curtis Rueden
+ * @author Kyle Harrington
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
                  @Menu(label = "Game of Life 3D", weight = DEMO_GAME_OF_LIFE) })
-public class GameOfLife3D extends InteractiveCommand {
+public class GameOfLife3D implements Command {
 
     private static final int ALIVE = 255;
     private static final int DEAD = 16;
@@ -87,20 +97,20 @@ public class GameOfLife3D extends InteractiveCommand {
     @Parameter(label = "Initial saturation % when randomizing", min = "1", max = "99", style = NumberWidget.SCROLL_BAR_STYLE, persist = false)
     private int saturation = 10;
 
-    @Parameter(label = "Play speed", min = "1", max="100", style = NumberWidget.SCROLL_BAR_STYLE, persist = false)
+//    @Parameter(label = "Play speed", min = "1", max="100", style = NumberWidget.SCROLL_BAR_STYLE, persist = false)
     private int playSpeed = 10;
-
-    @Parameter(callback = "iterate")
-    private Button iterate;
-
-    @Parameter(callback = "randomize")
-    private Button randomize;
-
-    @Parameter(callback = "play")
-    private Button play;
-
-    @Parameter(callback = "pause")
-    private Button pause;
+//
+//    @Parameter(callback = "iterate")
+//    private Button iterate;
+//
+//    @Parameter(callback = "randomize")
+//    private Button randomize;
+//
+//    @Parameter(callback = "play")
+//    private Button play;
+//
+//    @Parameter(callback = "pause")
+//    private Button pause;
 
     private int w = 64, h = 64, d = 64;
     private Img<UnsignedByteType> field;
@@ -110,6 +120,7 @@ public class GameOfLife3D extends InteractiveCommand {
 
     /** Temporary buffer for use while recomputing the image. */
     private boolean[] bits = new boolean[w * h * d];
+    private GenericDialog dialog;
 
     /** Repeatedly iterates the simulation until stopped **/
     public void play() {
@@ -143,6 +154,9 @@ public class GameOfLife3D extends InteractiveCommand {
 
         // compute the new image field
         final RandomAccess<UnsignedByteType> access = field.randomAccess();
+
+        //RandomAccess<UnsignedByteType> access = ((SourceAndConverter) ((Volume.VolumeDataSource.RAIISource) volume.getDataSource()).getSources().get(0)).getSpimSource().getSource(0, 0).randomAccess();
+
         for( int z = 0; z < d; z++ ) {
             for( int y = 0; y < h; y++ ) {
                 for( int x = 0; x < w; x++ ) {
@@ -173,6 +187,18 @@ public class GameOfLife3D extends InteractiveCommand {
             cursor.get().set( alive ? ALIVE : DEAD );
         }
 
+//        for( int z = 0; z < d; z++ ) {
+//            for( int y = 0; y < h; y++ ) {
+//                for( int x = 0; x < w; x++ ) {
+//                    access.setPosition( x, 0 );
+//                    access.setPosition( y, 1 );
+//                    access.setPosition( y, 2 );
+//                    final boolean alive = bits[z * w * h + y * w + x];
+//                    access.get().set( alive ? ALIVE : DEAD );
+//                }
+//            }
+//        }
+
         updateVolume();
     }
 
@@ -181,15 +207,41 @@ public class GameOfLife3D extends InteractiveCommand {
         field = ArrayImgs.unsignedBytes( w, h, d );
         randomize();
 
+        dialog = new GenericDialog("Game of Life 3D");
+        dialog.addNumericField("Starvation threshold", starvation, 0);
+        dialog.addNumericField("Birth threshold", birth, 0);
+        dialog.addNumericField("Suffocation threshold", suffocation, 0);
+        dialog.addNumericField("Initial saturation % when randomizing", saturation, 0);
+        dialog.showDialog();
+
+        if( dialog.wasCanceled() ) return;
+
+        starvation = (int) dialog.getNextNumber();
+        birth = (int) dialog.getNextNumber();
+        suffocation = (int) dialog.getNextNumber();
+        saturation = (int) dialog.getNextNumber();
+
+        randomize();
+        play();
+
+//
+//    @Parameter(callback = "iterate")
+//    private Button iterate;
+//
+//    @Parameter(callback = "randomize")
+//    private Button randomize;
+//
+//    @Parameter(callback = "play")
+//    private Button play;
+//
+//    @Parameter(callback = "pause")
+//    private Button pause;
+
+        //play();
+
         //eventService.subscribe(this);
     }
 
-    // -- Previewable methods --
-
-    @Override
-    public void preview() {
-        // NB: Do nothing when parameters are tuned.
-    }
 
     // -- Helper methods --
 
@@ -256,12 +308,12 @@ public class GameOfLife3D extends InteractiveCommand {
             BoundingGrid bg = new BoundingGrid();
             bg.setNode( volume );
 
-            volume.setVoxelSizeX(10.0f);
-            volume.setVoxelSizeY(10.0f);
-            volume.setVoxelSizeZ(10.0f);
+//            volume.setVoxelSizeX(10.0f);
+//            volume.setVoxelSizeY(10.0f);
+//            volume.setVoxelSizeZ(10.0f);
 
-            volume.putAbove(new GLVector(0.0f, 0.0f, 0.0f));
-            volume.setRenderingMethod(2);
+            volume.putAbove(new Vector3f(0.0f, 0.0f, 0.0f));
+//            volume.setRenderingMethod(2);
             volume.getTransferFunction().addControlPoint(0.0f, 0.0f);
             volume.getTransferFunction().addControlPoint(0.4f, 0.3f);
 
@@ -270,7 +322,19 @@ public class GameOfLife3D extends InteractiveCommand {
             sciView.centerOnNode(volume);
         } else {
             // NB: Name must be unique each time.
-            sciView.updateVolume( field, name + "-" + ++tick, voxelDims, volume );
+            //sciView.updateVolume( field, name + "-" + ++tick, voxelDims, volume );
+
+            RandomAccessibleIntervalSource<UnsignedByteType> newSource = new RandomAccessibleIntervalSource<UnsignedByteType>(field, new UnsignedByteType(), name + "-" + ++tick);
+
+            SourceAndConverter<UnsignedByteType> sourceAndConverter = BigDataViewer.wrapWithTransformedSource(
+                    new SourceAndConverter<>(newSource, BigDataViewer.createConverterToARGB(new UnsignedByteType())));
+
+            ((Volume.VolumeDataSource.RAISource) volume.getDataSource()).getSources().set(0, sourceAndConverter);
+
+            volume.setDirty(true);
+            volume.setNeedsUpdate(true);
+            volume.getVolumeManager().requestRepaint();
+            //volume.getCacheControl().prepareNextFrame();
         }
     }
 

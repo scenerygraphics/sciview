@@ -38,7 +38,7 @@ import org.scijava.plugin.Plugin;
 import org.scijava.util.Colors;
 
 import sc.iview.SciView;
-import sc.iview.vector.ClearGLVector3;
+import sc.iview.vector.JOMLVector3;
 import sc.iview.vector.Vector3;
 
 /**
@@ -61,7 +61,7 @@ public class LineDemo implements Command {
         Vector3[] points = new Vector3[numPoints];
 
         for( int k = 0; k < numPoints; k++ ) {
-            points[k] = new ClearGLVector3( ( float ) ( 10.0f * Math.random() - 5.0f ), //
+            points[k] = new JOMLVector3( ( float ) ( 10.0f * Math.random() - 5.0f ), //
                                             ( float ) ( 10.0f * Math.random() - 5.0f ), //
                                             ( float ) ( 10.0f * Math.random() - 5.0f ) );
         }

@@ -9,6 +9,11 @@ import org.scijava.ui.UIService;
 
 import static sc.iview.commands.MenuWeights.*;
 
+/**
+ * Command to show information about the authors of SciView
+ *
+ * @author Kyle Harrington
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Help", weight = HELP), //
                  @Menu(label = "About", weight = HELP_ABOUT) })

@@ -44,7 +44,10 @@ import org.scijava.thread.ThreadService;
 import sc.iview.SciView;
 
 /**
- * Created by kharrington on 6/24/17.
+ * SciJava Display for SciView
+ *
+ * @author Kyle Harrington
+ *
  */
 @Plugin(type = Display.class)
 public class SciViewDisplay extends AbstractDisplay<SciView> {

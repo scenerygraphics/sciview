@@ -47,6 +47,12 @@ import sc.iview.process.MeshConverter;
 
 import graphics.scenery.Mesh;
 
+/**
+ * Command to voxelize the currently active Mesh into an image.
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Process", weight = PROCESS), //
                  @Menu(label = "Mesh To Image", weight = PROCESS_MESH_TO_IMAGE) })

@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>27.0.1</version>
+		<version>28.0.0</version>
 		<relativePath />
 	</parent>
 
@@ -108,16 +108,28 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
-		<scenery.version>c80aa00b</scenery.version>
+		<scenery.version>6a994af</scenery.version>
 		<cleargl.version>2.2.10</cleargl.version>
-		<kotlin.version>1.3.61</kotlin.version>
-		<lwjgl.version>3.2.3</lwjgl.version>
-		<scijava-common.version>2.79.0</scijava-common.version>
-		<imagej-launcher.version>5.0.2</imagej-launcher.version>
-		<imagej-updater.version>0.10.3</imagej-updater.version>
-		<imagej-common.version>9ed2255</imagej-common.version>
+		<coremem.version>0.4.6</coremem.version>
 
-<!--		<custom-imagej-updater.version>a580040</custom-imagej-updater.version>-->
+		<kotlin.version>1.4-M1</kotlin.version>
+		<kotlinx-coroutines-core.version>1.3.5-1.4-M1</kotlinx-coroutines-core.version>
+
+		<lwjgl.version>3.2.3</lwjgl.version>
+		<joml.version>1.9.22</joml.version>
+        <scijava-maven-plugin.version>1.1.0</scijava-maven-plugin.version>
+<!--		<scijava-common.version>2.79.0</scijava-common.version>-->
+        <imagej-launcher.version>5.0.2</imagej-launcher.version>
+<!--		<imagej-updater.version>0.10.3</imagej-updater.version>-->
+<!--		<imagej-common.version>9ed2255</imagej-common.version>-->
+
+		<!-- for BVV -->
+		<bigdataviewer-core.version>9.0.2</bigdataviewer-core.version>
+		<bigdataviewer-vistools.version>1.0.0-beta-20</bigdataviewer-vistools.version>
+		<spim_data.version>2.2.4</spim_data.version>
+		<n5.version>2.1.3</n5.version>
+		<n5-imglib2.version>3.4.1</n5-imglib2.version>
+		<ui-behaviour.version>2.0.1</ui-behaviour.version>
 	</properties>
 
 	<repositories>
@@ -126,26 +138,42 @@
 		    <url>https://jitpack.io</url>
 		</repository>
 		<repository>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray.kotlin.eap</id>
+            <name>Bintray Kotlin EAP Repository</name>
+            <url>https://dl.bintray.com/kotlin/kotlin-eap</url>
+        </repository>
+		<repository>
 			<id>scijava.public</id>
 			<url>https://maven.scijava.org/content/groups/public</url>
 		</repository>
 	</repositories>
 
 	<dependencies>
-
-		<!-- Hack for current issue with jinput and imagej-update handler -->
-<!--        <dependency>-->
-<!--			<groupId>com.github.kephale</groupId>-->
-<!--			<artifactId>imagej-updater</artifactId>-->
-<!--			<version>${custom-imagej-updater.version}</version>-->
-<!--		</dependency>-->
-
+		<!-- Graphics dependencies -->
 		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>imagej-updater</artifactId>
-			<version>${imagej-updater.version}</version>
-<!--			<scope>system</scope>-->
-<!--			<systemPath>${project.basedir}/misc/empty.jar</systemPath>-->
+			<groupId>graphics.scenery</groupId>
+			<artifactId>scenery</artifactId>
+			<version>${scenery.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>net.clearvolume</groupId>
+			<artifactId>cleargl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.clearcontrol</groupId>
+			<artifactId>coremem</artifactId>
+			<version>${coremem.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jogamp.jogl</groupId>
+			<artifactId>jogl-all</artifactId>
+			<version>${jogl.version}</version>
 		</dependency>
 
 		<!-- SciJava dependencies -->
@@ -168,6 +196,10 @@
 		</dependency>
 
 		<!-- ImageJ dependencies -->
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-common</artifactId>
@@ -204,27 +236,6 @@
 			<artifactId>imglib2</artifactId>
 		</dependency>
 
-		<!-- Graphics dependencies -->
-		<dependency>
-			<groupId>graphics.scenery</groupId>
-			<artifactId>scenery</artifactId>
-			<version>${scenery.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>net.clearvolume</groupId>
-			<artifactId>cleargl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.clearcontrol</groupId>
-			<artifactId>coremem</artifactId>
-			<version>0.4.6</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jogamp.jogl</groupId>
-			<artifactId>jogl-all</artifactId>
-			<version>${jogl.version}</version>
-		</dependency>
-
 		<!-- Math dependencies -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -234,6 +245,14 @@
 			<groupId>org.joml</groupId>
 			<artifactId>joml</artifactId>
 		</dependency>
+
+		<!-- Kotlin dependencies -->
+
+		<dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-core</artifactId>
+            <version>${kotlinx-coroutines-core.version}</version>
+        </dependency>
 
 		<!-- Optional dependencies - for sc.iview.Main only! -->
 		<dependency>
@@ -270,6 +289,33 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>ij</artifactId>
+<!--			<scope>test</scope>-->
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-ij</artifactId>
+<!--			<scope>test</scope>-->
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.janelia.saalfeldlab</groupId>
+			<artifactId>n5</artifactId>
+			<version>${n5.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.janelia.saalfeldlab</groupId>
+			<artifactId>n5-imglib2</artifactId>
+			<version>${n5-imglib2.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>spim_data</artifactId>
+			<version>${spim_data.version}</version>
 		</dependency>
 	</dependencies>
 

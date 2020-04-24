@@ -28,24 +28,22 @@
  */
 package sc.iview.commands.demo;
 
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_MESH_TEXTURE;
-
-import graphics.scenery.TextureRepeatMode;
-import java.nio.ByteBuffer;
-
+import graphics.scenery.BufferUtils;
+import graphics.scenery.Node;
+import graphics.scenery.textures.Texture;
+import kotlin.Triple;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import org.joml.Vector3i;
 import org.scijava.command.Command;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-
 import sc.iview.SciView;
 
-import cleargl.GLTypeEnum;
-import cleargl.GLVector;
-import graphics.scenery.BufferUtils;
-import graphics.scenery.GenericTexture;
-import graphics.scenery.Node;
+import java.nio.ByteBuffer;
+
+import static sc.iview.commands.MenuWeights.DEMO;
+import static sc.iview.commands.MenuWeights.DEMO_MESH_TEXTURE;
 
 /**
  * A demo of mesh textures.
@@ -67,12 +65,11 @@ public class MeshTextureDemo implements Command {
         msh.setName( "Mesh Texture Demo" );
         msh.fitInto( 10.0f, true );
 
-        GenericTexture texture = generateGenericTexture();
+        Texture texture = generateTexture();
 
-        msh.getMaterial().getTransferTextures().put( "diffuse", texture );
-        msh.getMaterial().getTextures().put( "diffuse", "fromBuffer:diffuse" );
+        msh.getMaterial().getTextures().put( "diffuse", texture );
         //msh.getMaterial().setDoubleSided( true );
-        msh.getMaterial().setNeedsTextureReload( true );
+        //msh.getMaterial().setNeedsTextureReload( true );
 
         msh.setNeedsUpdate( true );
         msh.setDirty( true );
@@ -80,11 +77,11 @@ public class MeshTextureDemo implements Command {
         sciView.centerOnNode( sciView.getActiveNode() );
     }
 
-    private static GenericTexture generateGenericTexture() {
+    private static Texture generateTexture() {
         int width = 64;
         int height = 128;
 
-        GLVector dims = new GLVector( width, height, 1 );
+        Vector3i dims = new Vector3i( width, height, 1 );
         int nChannels = 1;
 
         // TODO: Use BufferUtils, or ByteBuffer.allocateDirect?
@@ -98,13 +95,12 @@ public class MeshTextureDemo implements Command {
         }
         bb.flip();
 
-        return new GenericTexture( "neverUsed",
-				dims,
+        return new Texture( dims,
 				nChannels,
-				GLTypeEnum.UnsignedByte,
+				new UnsignedByteType(),
 				bb,
-				TextureRepeatMode.Repeat,
-				TextureRepeatMode.Repeat,
-				TextureRepeatMode.ClampToEdge);
+				new Triple(Texture.RepeatMode.Repeat,
+				    Texture.RepeatMode.Repeat,
+				    Texture.RepeatMode.ClampToEdge));
     }
 }

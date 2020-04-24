@@ -44,7 +44,10 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
 /**
- * Created by kharrington on 6/21/17.
+ * Command to add a volume to the scene.
+ *
+ * @author Kyle Harrington
+ *
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Edit", weight = EDIT), //

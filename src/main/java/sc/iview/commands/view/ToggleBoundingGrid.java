@@ -40,6 +40,12 @@ import sc.iview.SciView;
 
 import static sc.iview.commands.MenuWeights.*;
 
+/**
+ * Command to toggle the bounding grid around a Node
+ *
+ * @author Kyle Harrington
+ *
+ */
 @Plugin(type = Command.class, menuRoot = "SciView", //
 menu = {@Menu(label = "View", weight = VIEW), //
         @Menu(label = "Toggle Bounding Grid", weight = VIEW_TOGGLE_BOUNDING_GRID)})

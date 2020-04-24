@@ -26,41 +26,56 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.commands.file;
 
+import graphics.scenery.Mesh;
 import org.scijava.command.Command;
+import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.widget.FileWidget;
 import sc.iview.SciView;
+import sc.iview.Utils;
 
-import static sc.iview.commands.MenuWeights.*;
+import java.io.File;
+
+import static sc.iview.commands.MenuWeights.FILE;
+import static sc.iview.commands.MenuWeights.FILE_EXPORT_STL;
 
 /**
- * Command to start recording a video. Currently this will record to ~/Desktop
+ * Command to export a XYZ file for the currently active Mesh
  *
  * @author Kyle Harrington
  *
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "View", weight = VIEW), //
-                 @Menu(label = "Start recording video", weight = VIEW_START_RECORDING_VIDEO) })
-public class StartRecordingVideo implements Command {
+        menu = { @Menu(label = "File", weight = FILE), //
+                 @Menu(label = "Export XYZ...", weight = FILE_EXPORT_STL) })
+public class ExportXYZ implements Command {
+
+    @Parameter
+    private LogService logService;
 
     @Parameter
     private SciView sciView;
 
-    @Parameter
-    private int bitrate = 10000000;// 10 MBit
-
-    @Parameter(choices={"VeryLow", "Low", "Medium", "High", "Ultra", "Insane"}, style="listBox")
-    private String videoEncodingQuality;// listed as an enum here, cant access from java https://github.com/scenerygraphics/scenery/blob/1a451c2864e5a48e47622d9313fe1681e47d7958/src/main/kotlin/graphics/scenery/utils/H264Encoder.kt#L65
+    @Parameter(style = FileWidget.SAVE_STYLE)
+    private File xyzFile = new File( "" );
 
     @Override
     public void run() {
-        bitrate = Math.max(0,bitrate);
-        sciView.settings().set("VideoEncoder.Bitrate", bitrate);
-        sciView.settings().set("VideoEncoder.Quality", videoEncodingQuality);
-        sciView.toggleRecordVideo();
+        if( sciView.getActiveNode() instanceof Mesh ) {
+            Mesh mesh = ( Mesh ) sciView.getActiveNode();
+
+            if( mesh != null ) {
+                try {
+                    Utils.writeXYZ(xyzFile, mesh);
+                } catch( final Exception e ) {
+                    logService.trace( e );
+                }
+            }
+        }
     }
+
 }

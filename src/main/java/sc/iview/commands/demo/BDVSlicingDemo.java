@@ -28,6 +28,10 @@
  */
 package sc.iview.commands.demo;
 
+import bdv.BigDataViewer;
+import bdv.tools.brightness.ConverterSetup;
+import bdv.util.*;
+import bdv.viewer.SourceAndConverter;
 import graphics.scenery.Node;
 import graphics.scenery.volumes.Volume;
 import io.scif.services.DatasetIOService;
@@ -35,6 +39,7 @@ import net.imagej.Dataset;
 import net.imagej.mesh.Mesh;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
+import net.imglib2.display.ColorConverter;
 import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -50,21 +55,22 @@ import sc.iview.process.MeshConverter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import static sc.iview.commands.MenuWeights.DEMO;
 import static sc.iview.commands.MenuWeights.DEMO_VOLUME_RENDER;
 
 /**
- * A demo of volume rendering.
+ * A demo of slicing a BDV plane through a volume
  *
  * @author Kyle Harrington
- * @author Curtis Rueden
  */
-@Plugin(type = Command.class, label = "Volume Render/Isosurface Demo", menuRoot = "SciView", //
+@Plugin(type = Command.class, label = "BigDataViewer Slicing Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Volume Render/Isosurface", weight = DEMO_VOLUME_RENDER) })
-public class VolumeRenderDemo implements Command {
+                 @Menu(label = "BigDataViewer Slicing", weight = DEMO_VOLUME_RENDER) })
+public class BDVSlicingDemo implements Command {
 
     @Parameter
     private DatasetIOService datasetIO;
@@ -77,9 +83,6 @@ public class VolumeRenderDemo implements Command {
 
     @Parameter
     private SciView sciView;
-
-    @Parameter(label = "Show isosurface")
-    private boolean iso = true;
 
     @Override
     public void run() {
@@ -100,24 +103,9 @@ public class VolumeRenderDemo implements Command {
         v.setDirty(true);
         v.setNeedsUpdate(true);
 
-        if (iso) {
-            int isoLevel = 1;
+        List<SourceAndConverter<UnsignedByteType>> sources = (List<SourceAndConverter<UnsignedByteType>>) v.getMetadata().get("sources");
 
-            @SuppressWarnings("unchecked")
-            Img<UnsignedByteType> cubeImg = ( Img<UnsignedByteType> ) cube.getImgPlus().getImg();
-
-            Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( cubeImg, new UnsignedByteType( isoLevel ) );
-
-            Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
-
-            graphics.scenery.Mesh isoSurfaceMesh = MeshConverter.toScenery(m,true);
-            Node scMesh = sciView.addMesh(isoSurfaceMesh);
-
-            isoSurfaceMesh.setName( "Volume Render Demo Isosurface" );
-            isoSurfaceMesh.setScale(new Vector3f(v.getPixelToWorldRatio(),
-                    v.getPixelToWorldRatio(),
-                    v.getPixelToWorldRatio()));
-        }
+        BdvFunctions.show(sources.get(0).getSpimSource(), new BdvOptions().frameTitle("slice of " + v.getName()));
 
         sciView.setActiveNode(v);
         sciView.centerOnNode( sciView.getActiveNode() );
@@ -129,8 +117,7 @@ public class VolumeRenderDemo implements Command {
         CommandService command = sv.getScijavaContext().getService(CommandService.class);
 
         HashMap<String, Object> argmap = new HashMap<String, Object>();
-        argmap.put("iso",true);
 
-        command.run(VolumeRenderDemo.class, true, argmap);
+        command.run(BDVSlicingDemo.class, true, argmap);
     }
 }
