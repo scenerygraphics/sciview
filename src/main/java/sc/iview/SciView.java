@@ -71,6 +71,7 @@ import net.imagej.lut.LUTService;
 import net.imagej.ops.OpService;
 import net.imagej.units.UnitService;
 import net.imglib2.*;
+import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
 import net.imglib2.display.ColorTable;
 import net.imglib2.img.Img;
@@ -78,6 +79,7 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.view.Views;
 import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -1677,9 +1679,17 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @return a Node corresponding to the volume
      */
     public <T extends RealType<T>> Node addVolume( RandomAccessibleInterval<T> image, String name, String extra ) {
-        long[] pos = new long[]{10, 10, 10};
-
         return addVolume( image, name, 1, 1, 1 );
+    }
+
+    /**
+     * Add a RandomAccessibleInterval to the image
+     * @param image
+     * @param <T>
+     * @return a Node corresponding to the volume
+     */
+    public <T extends RealType<T>> Node addVolume(RandomAccessibleInterval<T> image, String name) {
+        return addVolume(image, name, 1f, 1f, 1f);
     }
 
     /**
@@ -1841,7 +1851,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
-     * Adss a SourceAndConverter to the scene.
+     * Adds a SourceAndConverter to the scene.
      *
      * @param sources The list of SourceAndConverter to add
      * @param name Name of the dataset
@@ -1849,7 +1859,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param <T> Type of the dataset.
      * @return THe node corresponding to the volume just added.
      */
-    public <T extends RealType<T>> Node addVolume(List<SourceAndConverter<T>> sources, String name,
+    public <T extends RealType<T>> Node addVolume(List<SourceAndConverter<T>> sources,
+                                                  ArrayList<ConverterSetup> converterSetups,
+                                                  String name,
                                                   float... voxelDimensions ) {
 
         CacheControl cacheControl = null;
@@ -1873,12 +1885,6 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         int numTimepoints = 1;
 
-        int setupId = 0;
-        ArrayList<ConverterSetup> converterSetups = new ArrayList<>();
-        for( SourceAndConverter source: sources ) {
-            converterSetups.add(BigDataViewer.createConverterSetup(source, setupId++));
-        }
-
         Volume.VolumeDataSource.RAISource<T> ds = new Volume.VolumeDataSource.RAISource<T>(voxelType, sources, converterSetups, numTimepoints, cacheControl);
         VolumeViewerOptions options = new VolumeViewerOptions();
 
@@ -1893,6 +1899,26 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
+     * Adds a SourceAndConverter to the scene.
+     *
+     * @param sources The list of SourceAndConverter to add
+     * @param name Name of the dataset
+     * @param voxelDimensions Array with voxel dimensions.
+     * @param <T> Type of the dataset.
+     * @return THe node corresponding to the volume just added.
+     */
+    public <T extends RealType<T>> Node addVolume(List<SourceAndConverter<T>> sources, String name,
+                                                  float... voxelDimensions ) {
+        int setupId = 0;
+        ArrayList<ConverterSetup> converterSetups = new ArrayList<>();
+        for( SourceAndConverter source: sources ) {
+            converterSetups.add(BigDataViewer.createConverterSetup(source, setupId++));
+        }
+
+        return addVolume(sources, converterSetups, name, voxelDimensions);
+    }
+
+    /**
      * Update a volume with the given IterableInterval.
      * This method actually populates the volume
      * @param image
@@ -1902,62 +1928,27 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param <T>
      * @return a Node corresponding to the input volume
      */
-//    public <T extends RealType<T>> Node updateVolume( IterableInterval<T> image, String name,
-//                                                                       float[] voxelDimensions, Volume v ) {
-//        //log.debug( "Update Volume" );
-//
-//        long[] dimensions = new long[3];
-//        image.dimensions( dimensions );
-//
-//        @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
-//        int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
-//        NativeTypeEnum nType;
-//
-//        if( voxelType == UnsignedByteType.class || voxelType == VolatileUnsignedByteType.class ) {
-//            nType = NativeTypeEnum.UnsignedByte;
-//        } else if( voxelType == UnsignedShortType.class || voxelType == VolatileUnsignedShortType.class ) {
-//            nType = NativeTypeEnum.UnsignedShort;
-//        } else if( voxelType == FloatType.class || voxelType == VolatileFloatType.class ) {
-//            nType = NativeTypeEnum.Float;
-//        } else {
-//            log.debug( "Type: " + voxelType +
-//                       " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
-//            return null;
-//        }
-//
-//        // Make and populate a ByteBuffer with the content of the Dataset
-//        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
-//                ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2] ) );
-//        Cursor<T> cursor = image.cursor();
-//
-//        while( cursor.hasNext() ) {
-//            cursor.fwd();
-//            // TODO should we check if volatiles are valid
-//            if( voxelType == UnsignedByteType.class ) {
-//                byteBuffer.put( ( byte ) ( ( ( UnsignedByteType ) cursor.get() ).get() ) );
-//            } else if( voxelType == VolatileUnsignedByteType.class ) {
-//                byteBuffer.put( ( byte ) ( ( ( VolatileUnsignedByteType ) cursor.get() ).get().get() ) );
-//            } else if( voxelType == UnsignedShortType.class ) {
-//                byteBuffer.putShort( ( short ) Math.abs( ( ( UnsignedShortType ) cursor.get() ).getShort() ) );
-//            } else if( voxelType == VolatileUnsignedShortType.class ) {
-//                byteBuffer.putShort( ( short ) Math.abs( ( ( VolatileUnsignedShortType ) cursor.get() ).get().getShort() ) );
-//            } else if( voxelType == FloatType.class ) {
-//                byteBuffer.putFloat( ( ( FloatType ) cursor.get() ).get() );
-//            } else if( voxelType == VolatileFloatType.class ) {
-//                byteBuffer.putFloat( ( ( VolatileFloatType ) cursor.get() ).get().get() );
-//            }
-//        }
-//        byteBuffer.flip();
-//
-//        v.readFromBuffer( name, byteBuffer, dimensions[0], dimensions[1], dimensions[2], voxelDimensions[0],
-//                          voxelDimensions[1], voxelDimensions[2], nType, bytesPerVoxel );
-//
-//        v.setDirty( true );
-//        v.setNeedsUpdate( true );
-//        v.setNeedsUpdateWorld( true );
-//
-//        return v;
-//    }
+    public <T extends RealType<T>> Node updateVolume( IterableInterval<T> image, String name,
+                                                                       float[] voxelDimensions, Volume v ) {
+        List<SourceAndConverter<T>> sacs = (List<SourceAndConverter<T>>) v.getMetadata().get("sources");
+
+        RandomAccessibleInterval<T> source = sacs.get(0).getSpimSource().getSource(0, 0);// hard coded to timepoint and mipmap 0
+
+        Cursor<T> sCur = Views.iterable(source).cursor();
+        Cursor<T> iCur = image.cursor();
+        while( sCur.hasNext() ) {
+            sCur.fwd();
+            iCur.fwd();
+            sCur.get().set(iCur.get());
+        }
+        
+        v.getCacheControls().clear();
+        v.setDirty( true );
+        v.setNeedsUpdate( true );
+        v.setNeedsUpdateWorld( true );
+
+        return v;
+    }
 
     /**
      *
