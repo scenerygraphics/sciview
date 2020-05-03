@@ -221,6 +221,13 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     private boolean isClosed = false;
     private Function<Node,List<Node>> notAbstractBranchingFunction = node -> node.getChildren().stream().filter(notAbstractNode).collect(Collectors.toList());
 
+    // If true, then when a new node is added to the scene, the camera will refocus on this node by default
+    private boolean centerOnNewNodes;
+
+    // If true, then when a new node is added the thread will block until the node is added to the scene. This is required for
+    //   centerOnNewNodes
+    private boolean blockOnNewNodes;
+
     public SciView( Context context ) {
         super( "SciView", 1280, 720, false, context );
         context.inject( this );
@@ -440,7 +447,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         frame.setJMenuBar(swingMenuBar);
 
         p.setLayout(new OverlayLayout(p));
-        p.setBackground(new java.awt.Color(50, 48, 47));
+        p.setBackground(new Color(50, 48, 47));
         p.add(panel, BorderLayout.CENTER);
         panel.setVisible(true);
 
@@ -678,19 +685,22 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * Center the camera on the specified Node
      */
     public void centerOnNode( Node currentNode, Function<Node,List<Node>> branchFunction ) {
-        if( currentNode == null ) return;
+        if( currentNode == null ) {
+            log.info("Cannot center on node. CurrentNode is null" );
+            return;
+        }
 
-        OrientedBoundingBox bb = getSubgraphBoundingBox(currentNode, branchFunction);
-        //log.debug("Centering on: " + currentNode + " bb: " + bb.getMin() + " to " + bb.getMax());
+        //OrientedBoundingBox bb = getSubgraphBoundingBox(currentNode, branchFunction);
+        OrientedBoundingBox bb = currentNode.getBoundingBox();
         if( bb == null ) return;
 
         getCamera().setTarget( bb.getBoundingSphere().getOrigin() );
         getCamera().setTargeted( true );
 
         // Set forward direction to point from camera at active node
-        Vector3f forward = bb.getBoundingSphere().getOrigin().sub( getCamera().getPosition() ).normalize().mul( -1 );
+        Vector3f forward = bb.getBoundingSphere().getOrigin().sub( getCamera().getPosition() ).normalize();
 
-        float distance = (float) (bb.getBoundingSphere().getRadius() / Math.tan( getCamera().getFov() / 360 * java.lang.Math.PI ));
+        float distance = (float) (bb.getBoundingSphere().getRadius() / Math.tan( getCamera().getFov() / 360 * Math.PI ));
 
         // Solve for the proper rotation
         Quaternionf rotation = new Quaternionf().lookAlong(forward, new Vector3f(0,1,0));
@@ -1209,8 +1219,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         final Object data = io.open( source );
         if( data instanceof net.imagej.mesh.Mesh ) addMesh( ( net.imagej.mesh.Mesh ) data );
-        else if( data instanceof graphics.scenery.Mesh ) addMesh( ( graphics.scenery.Mesh ) data );
-        else if( data instanceof graphics.scenery.PointCloud ) addPointCloud( ( graphics.scenery.PointCloud ) data );
+        else if( data instanceof Mesh ) addMesh( ( Mesh ) data );
+        else if( data instanceof PointCloud ) addPointCloud( ( PointCloud ) data );
         else if( data instanceof Dataset ) addVolume( ( Dataset ) data );
         else if( data instanceof RandomAccessibleInterval ) addVolume( ( ( RandomAccessibleInterval ) data ), source );
         else if( data instanceof List ) {
@@ -1318,10 +1328,18 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         objectService.addObject(n);
 
+        if( blockOnNewNodes ) {
+            blockWhile(sciView -> (sciView.find(n.getName()) == null), 20);
+            System.out.println("find(name) " + find(n.getName()) );
+        }
+
         if( activePublish ) {
-//            setActiveNode(n);
-//            if (floor.getVisible())
-//                updateFloorPosition();
+            // Set new node as active and center
+            if( getCenterOnNewNodes() ) {
+                setActiveNode(n);
+                centerOnNode(n);
+            }
+
             eventService.publish(new NodeAddedEvent(n));
         }
         return n;
@@ -1853,6 +1871,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     /**
      * Adds a SourceAndConverter to the scene.
      *
+     * This method actually instantiates the volume.
+     *
      * @param sources The list of SourceAndConverter to add
      * @param name Name of the dataset
      * @param voxelDimensions Array with voxel dimensions.
@@ -1889,6 +1909,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         VolumeViewerOptions options = new VolumeViewerOptions();
 
         Volume v = new RAIVolume(ds, options, getHub());
+        v.setName(name);
 
         v.getMetadata().put("sources", sources);
 
@@ -1896,6 +1917,16 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         bg.setNode(v);
 
         return addNode(v);
+    }
+
+    private void blockWhile(Function<SciView, Boolean> predicate, int waitTime) {
+        while( predicate.apply(this) ) {
+            try {
+                Thread.sleep(waitTime);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -2160,14 +2191,30 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         return getScene().getActiveObserver();
     }
 
+    public void setCenterOnNewNodes(boolean centerOnNewNodes) {
+        this.centerOnNewNodes = centerOnNewNodes;
+    }
+
+    public boolean getCenterOnNewNodes() {
+        return centerOnNewNodes;
+    }
+
+    public void setBlockOnNewNodes(boolean blockOnNewNodes) {
+        this.blockOnNewNodes = blockOnNewNodes;
+    }
+
+    public boolean getBlockOnNewNodes() {
+        return blockOnNewNodes;
+    }
+
     public class TransparentSlider extends JSlider {
 
         public TransparentSlider() {
             // Important, we taking over the filling of the
             // component...
             setOpaque(false);
-            setBackground(java.awt.Color.DARK_GRAY);
-            setForeground(java.awt.Color.LIGHT_GRAY);
+            setBackground(Color.DARK_GRAY);
+            setForeground(Color.LIGHT_GRAY);
         }
 
         @Override
