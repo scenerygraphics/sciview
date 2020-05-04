@@ -360,6 +360,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         lightSphere.getMaterial().setWireframe(true);
         lightSphere.setVisible(false);
         //lights.add( light );
+        camera.setNearPlaneDistance(0.001f);
         camera.addChild( light );
 
         floor = new Box( new Vector3f( 500f, 0.2f, 500f ) );
