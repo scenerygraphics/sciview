@@ -6,10 +6,9 @@ import javax.swing.*;
 
 public class ContextPopUp extends JPopupMenu {
 
-    JMenuItem anItem;
     public ContextPopUp(Node n) {
-        anItem = new JMenuItem("I'm a " + n.getNodeType());
-        add(anItem);
+        add( new JMenuItem("Name: " + n.getName()) );
+        add( new JMenuItem("Type: " + n.getNodeType()) );
     }
 
 }
