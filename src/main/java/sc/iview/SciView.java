@@ -368,6 +368,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         floor.setPosition( new Vector3f( 0f, -1f, 0f ) );
         floor.getMaterial().setDiffuse( new Vector3f( 1.0f, 1.0f, 1.0f ) );
         getScene().addChild( floor );
+
     }
 
     /**
@@ -691,8 +692,11 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             return;
         }
 
-        //OrientedBoundingBox bb = getSubgraphBoundingBox(currentNode, branchFunction);
-        OrientedBoundingBox bb = currentNode.getBoundingBox();
+        OrientedBoundingBox bb = getSubgraphBoundingBox(currentNode, branchFunction);
+        //OrientedBoundingBox bb = currentNode.getBoundingBox().asWorld();
+
+        //System.out.println("CurrentNode BoundingBox " + bb + " " + bb.getBoundingSphere().getOrigin() + " " + bb.getBoundingSphere().getRadius());
+
         if( bb == null ) return;
 
         getCamera().setTarget( bb.getBoundingSphere().getOrigin() );
@@ -1331,7 +1335,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         if( blockOnNewNodes ) {
             blockWhile(sciView -> (sciView.find(n.getName()) == null), 20);
-            System.out.println("find(name) " + find(n.getName()) );
+            //System.out.println("find(name) " + find(n.getName()) );
         }
 
         if( activePublish ) {
@@ -1626,6 +1630,12 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         this.close();
     }
 
+
+    public void close() {
+        super.close();
+
+        frame.dispose();
+    }
 
     /**
      * Move the current active camera to the specified position
