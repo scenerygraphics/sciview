@@ -227,6 +227,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     // If true, then when a new node is added the thread will block until the node is added to the scene. This is required for
     //   centerOnNewNodes
     private boolean blockOnNewNodes;
+    private PointLight headlight;
 
     public SciView( Context context ) {
         super( "SciView", 1280, 720, false, context );
@@ -346,22 +347,23 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         }
 
         // Make a headlight for the camera
-        PointLight light = new PointLight(150.0f);
-        light.setPosition( new Vector3f(0f, 0f, -1f).mul(25.0f) );
-        light.setEmissionColor( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-        light.setIntensity( 0.5f );
-        light.setName("headlight");
+        headlight = new PointLight(150.0f);
+        headlight.setPosition( new Vector3f(0f, 0f, -1f).mul(25.0f) );
+        headlight.setEmissionColor( new Vector3f( 1.0f, 1.0f, 1.0f ) );
+        headlight.setIntensity( 0.5f );
+        headlight.setName("headlight");
+
 
         Icosphere lightSphere = new Icosphere(1.0f, 2);
-        light.addChild(lightSphere);
-        lightSphere.getMaterial().setDiffuse(light.getEmissionColor());
-        lightSphere.getMaterial().setSpecular(light.getEmissionColor());
-        lightSphere.getMaterial().setAmbient(light.getEmissionColor());
+        headlight.addChild(lightSphere);
+        lightSphere.getMaterial().setDiffuse(headlight.getEmissionColor());
+        lightSphere.getMaterial().setSpecular(headlight.getEmissionColor());
+        lightSphere.getMaterial().setAmbient(headlight.getEmissionColor());
         lightSphere.getMaterial().setWireframe(true);
         lightSphere.setVisible(false);
         //lights.add( light );
         camera.setNearPlaneDistance(0.001f);
-        camera.addChild( light );
+        camera.addChild( headlight );
 
         floor = new Box( new Vector3f( 500f, 0.2f, 500f ) );
         floor.setName( "Floor" );
@@ -695,9 +697,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         }
 
         OrientedBoundingBox bb = getSubgraphBoundingBox(currentNode, branchFunction);
-        //OrientedBoundingBox bb = currentNode.getBoundingBox().asWorld();
 
-        //System.out.println("CurrentNode BoundingBox " + bb + " " + bb.getBoundingSphere().getOrigin() + " " + bb.getBoundingSphere().getRadius());
+        // TODO: find the widest dimensions of BB and align to that normal
+
+        System.out.println("CurrentNode BoundingBox " + bb + " " + bb.getBoundingSphere().getOrigin() + " " + bb.getBoundingSphere().getRadius());
 
         if( bb == null ) return;
 
@@ -708,6 +711,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         Vector3f forward = bb.getBoundingSphere().getOrigin().sub( getCamera().getPosition() ).normalize();
 
         float distance = (float) (bb.getBoundingSphere().getRadius() / Math.tan( getCamera().getFov() / 360 * Math.PI ));
+
+        headlight.setLightRadius(distance * 1.1f);
 
         // Solve for the proper rotation
         Quaternionf rotation = new Quaternionf().lookAlong(forward, new Vector3f(0,1,0));
