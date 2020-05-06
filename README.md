@@ -4,7 +4,7 @@
 
 # sciview - interactive visualisation in vr for fiji & imagej2
 
-SciView is an ImageJ/FIJI plugin for 3D visualization of images and meshes. It uses the [scenery](https://github.com/ClearVolume/scenery) as a rendering backend and supports rendering to VR headsets via [OpenVR](https://github.com/ValveSoftware/OpenVR).
+SciView is an ImageJ/FIJI plugin for 3D visualization of images and meshes. It uses [scenery](https://github.com/scenerygraphics/scenery) as a rendering backend and supports rendering to VR headsets via [OpenVR](https://github.com/ValveSoftware/OpenVR).
 
 ![sciview running the Game of Life 3D demo](https://ulrik.is/sciview-gameoflife.gif)
 
