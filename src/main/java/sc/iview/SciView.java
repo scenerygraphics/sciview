@@ -1986,11 +1986,11 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         stopAnimation();
     }
 
-    public Settings scenerySettings() {
+    public Settings getScenerySettings() {
         return this.getSettings();
     }
 
-    public Statistics sceneryStatistics() {
+    public Statistics getSceneryStatistics() {
         return this.getStats();
     }
 
