@@ -108,7 +108,7 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
-		<scenery.version>cdfce26</scenery.version>
+		<scenery.version>f3aba5a</scenery.version>
 		<cleargl.version>2.2.10</cleargl.version>
 		<coremem.version>0.4.6</coremem.version>
 
@@ -118,10 +118,10 @@
 		<lwjgl.version>3.2.3</lwjgl.version>
 		<joml.version>1.9.22</joml.version>
         <scijava-maven-plugin.version>1.1.0</scijava-maven-plugin.version>
-        <imagej-launcher.version>5.0.2</imagej-launcher.version>
+<!--        <imagej-launcher.version>5.0.2</imagej-launcher.version>-->
 
 		<!-- for BVV -->
-		<bigdataviewer-core.version>9.0.2</bigdataviewer-core.version>
+		<bigdataviewer-core.version>9.0.5</bigdataviewer-core.version>
 		<bigdataviewer-vistools.version>1.0.0-beta-20</bigdataviewer-vistools.version>
 		<spim_data.version>2.2.4</spim_data.version>
 		<n5.version>2.1.3</n5.version>
