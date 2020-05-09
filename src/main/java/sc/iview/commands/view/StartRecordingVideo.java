@@ -46,7 +46,6 @@ import static sc.iview.commands.MenuWeights.*;
         menu = { @Menu(label = "View", weight = VIEW), //
                  @Menu(label = "Start recording video", weight = VIEW_START_RECORDING_VIDEO) })
 public class StartRecordingVideo implements Command {
-
     @Parameter
     private SciView sciView;
 
@@ -59,8 +58,8 @@ public class StartRecordingVideo implements Command {
     @Override
     public void run() {
         bitrate = Math.max(0,bitrate);
-        sciView.scenerySettings().set("VideoEncoder.Bitrate", bitrate);
-        sciView.scenerySettings().set("VideoEncoder.Quality", videoEncodingQuality);
+        sciView.getScenerySettings().set("VideoEncoder.Bitrate", bitrate);
+        sciView.getScenerySettings().set("VideoEncoder.Quality", videoEncodingQuality);
         sciView.toggleRecordVideo();
     }
 }
