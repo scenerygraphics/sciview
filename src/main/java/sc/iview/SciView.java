@@ -1931,6 +1931,14 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         v.getMetadata().put("sources", sources);
 
+        TransferFunction tf = v.getTransferFunction();
+        float rampMin = 0f;
+        float rampMax = 0.1f;
+        tf.clear();
+        tf.addControlPoint(0.0f, 0.0f);
+        tf.addControlPoint(rampMin, 0.0f);
+        tf.addControlPoint(1.0f, rampMax);
+
         BoundingGrid bg = new BoundingGrid();
         bg.setNode(v);
 
