@@ -118,7 +118,7 @@
 		<lwjgl.version>3.2.3</lwjgl.version>
 		<joml.version>1.9.22</joml.version>
         <scijava-maven-plugin.version>1.1.0</scijava-maven-plugin.version>
-<!--        <imagej-launcher.version>5.0.2</imagej-launcher.version>-->
+
 
 		<!-- for BVV -->
 		<bigdataviewer-core.version>9.0.5</bigdataviewer-core.version>
