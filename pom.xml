@@ -135,6 +135,7 @@
 		<scijava-search.version>0.7.0</scijava-search.version>
 
 		<imagej-legacy.version>39befb3</imagej-legacy.version>
+		<miglayout-swing.version>5.2</miglayout-swing.version>
 	</properties>
 
 	<repositories>
@@ -189,10 +190,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
-			<artifactId>scijava-ui-swing</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.scijava</groupId>
 			<artifactId>ui-behaviour</artifactId>
 		</dependency>
 		<dependency>
@@ -214,6 +211,11 @@
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-search</artifactId>
 			<version>${scijava-search.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.miglayout</groupId>
+			<artifactId>miglayout-swing</artifactId>
+			<version>${miglayout-swing.version}</version>
 		</dependency>
 
 		<!-- ImageJ dependencies -->
