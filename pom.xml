@@ -108,7 +108,7 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
-		<scenery.version>1dbf644</scenery.version>
+		<scenery.version>c4f0602</scenery.version>
 		<cleargl.version>2.2.10</cleargl.version>
 		<coremem.version>0.4.6</coremem.version>
 
