@@ -116,7 +116,7 @@ installWithGroupId "$ffmpegGAV:jar:windows-x86_64" $FijiDirectory/jars/win64
 installWithGroupId "$ffmpegGAV:jar:linux-x86_64" $FijiDirectory/jars/linux64
 installWithGroupId "$ffmpegGAV:jar:macosx-x86_64" $FijiDirectory/jars/macosx
 
-# -- Get the latest imagej-launcher --
+# -- Get the latest imagej-launcher -- [CHECK IF THIS CAN BE REMOVED]
 
 wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-linux64.exe" -O $FijiDirectory/ImageJ-linux64 ||
     die "Could not get linux64 launcher"
@@ -130,6 +130,11 @@ chmod +x $FijiDirectory/ImageJ-win32
 wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-win64.exe" -O $FijiDirectory/ImageJ-win64 ||
     die "Could not get Win64 launcher"
 chmod +x $FijiDirectory/ImageJ-win64
+
+# -- Fix old miglayout
+
+rm jars/miglayout-3.7.4-swing.jar
+install "com.miglayout:miglayout-swing:5.2" $FijiDirectory/jars
 
 # -- Get the list of native libraries --
 
