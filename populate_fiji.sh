@@ -133,7 +133,7 @@ chmod +x $FijiDirectory/ImageJ-win64
 
 # -- Fix old miglayout
 
-rm jars/miglayout-3.7.4-swing.jar
+rm $FijiDirectory/jars/miglayout-3.7.4-swing.jar
 install "com.miglayout:miglayout-swing:5.2" $FijiDirectory/jars
 
 # -- Get the list of native libraries --
