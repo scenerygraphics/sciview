@@ -394,7 +394,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         System.getProperties().stringPropertyNames().forEach(name -> {
             if(name.startsWith("scenery.LogLevel")) {
-                LogbackUtils.setLogLevel(name.substring(17), System.getProperty(name, "info"));
+                LogbackUtils.setLogLevel("", System.getProperty(name, "info"));
             }
         });
 
