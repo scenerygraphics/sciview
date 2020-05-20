@@ -108,7 +108,7 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
-		<scenery.version>6a994af</scenery.version>
+		<scenery.version>c4f0602</scenery.version>
 		<cleargl.version>2.2.10</cleargl.version>
 		<coremem.version>0.4.6</coremem.version>
 
@@ -118,18 +118,24 @@
 		<lwjgl.version>3.2.3</lwjgl.version>
 		<joml.version>1.9.22</joml.version>
         <scijava-maven-plugin.version>1.1.0</scijava-maven-plugin.version>
-<!--		<scijava-common.version>2.79.0</scijava-common.version>-->
-        <imagej-launcher.version>5.0.2</imagej-launcher.version>
-<!--		<imagej-updater.version>0.10.3</imagej-updater.version>-->
-<!--		<imagej-common.version>9ed2255</imagej-common.version>-->
 
 		<!-- for BVV -->
-		<bigdataviewer-core.version>9.0.2</bigdataviewer-core.version>
+		<bigdataviewer-core.version>9.0.5</bigdataviewer-core.version>
 		<bigdataviewer-vistools.version>1.0.0-beta-20</bigdataviewer-vistools.version>
 		<spim_data.version>2.2.4</spim_data.version>
 		<n5.version>2.1.3</n5.version>
 		<n5-imglib2.version>3.4.1</n5-imglib2.version>
 		<ui-behaviour.version>2.0.1</ui-behaviour.version>
+
+		<!-- because of duplicate classes with miglayout -->
+		<scijava-ui-swing.version>0.13.1</scijava-ui-swing.version>
+		<script-editor.version>0.5.5</script-editor.version>
+		<imagej-ui-swing.version>0.23.2</imagej-ui-swing.version>
+		<scijava-ui-awt.version>0.1.7</scijava-ui-awt.version>
+		<scijava-search.version>0.7.0</scijava-search.version>
+
+		<imagej-legacy.version>39befb3</imagej-legacy.version>
+		<miglayout-swing.version>5.2</miglayout-swing.version>
 	</properties>
 
 	<repositories>
@@ -184,15 +190,32 @@
 		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
-			<artifactId>scijava-ui-swing</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.scijava</groupId>
 			<artifactId>ui-behaviour</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>script-editor</artifactId>
+			<version>${script-editor.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>scijava-ui-swing</artifactId>
+			<version>${scijava-ui-swing.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>scijava-ui-awt</artifactId>
+			<version>${scijava-ui-awt.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>scijava-search</artifactId>
+			<version>${scijava-search.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.miglayout</groupId>
+			<artifactId>miglayout-swing</artifactId>
+			<version>${miglayout-swing.version}</version>
 		</dependency>
 
 		<!-- ImageJ dependencies -->
@@ -224,6 +247,16 @@
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scripting-jython</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-ui-swing</artifactId>
+			<version>${imagej-ui-swing.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-legacy</artifactId>
+			<version>${imagej-legacy.version}</version>
 		</dependency>
 
 		<!-- ImgLib2 dependencies -->
