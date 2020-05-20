@@ -1996,11 +1996,13 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             iCur.fwd();
             sCur.get().set(iCur.get());
         }
-        
-        v.getCacheControls().clear();
-        v.setDirty( true );
+
+        v.getVolumeManager().notifyUpdate(v);
+        v.getVolumeManager().requestRepaint();
+        //v.getCacheControls().clear();
+        //v.setDirty( true );
         v.setNeedsUpdate( true );
-        v.setNeedsUpdateWorld( true );
+        //v.setNeedsUpdateWorld( true );
 
         return v;
     }
