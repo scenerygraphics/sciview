@@ -1829,12 +1829,14 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param <T> Type of the dataset.
      * @return THe node corresponding to the volume just added.
      */
-    public <T extends RealType<T>> Node addVolume(SourceAndConverter<T> sac, String name,
+    public <T extends RealType<T>> Node addVolume(SourceAndConverter<T> sac,
+                                                  int numTimepoints,
+                                                  String name,
                                                   float... voxelDimensions ) {
         List<SourceAndConverter<T>> sources = new ArrayList<>();
         sources.add(sac);
 
-        Node v = addVolume(sources, name, voxelDimensions);
+        Node v = addVolume(sources, numTimepoints, name, voxelDimensions);
 
         return addNode(v);
     }
@@ -1883,7 +1885,11 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             sources.add(source);
         }
 
-        return addVolume(sources, name, voxelDimensions);
+        Node v = addVolume(sources, numTimepoints, name, voxelDimensions);
+
+        v.getMetadata().put("RandomAccessibleInterval", image);
+
+        return v;
     }
 
     /**
@@ -1899,10 +1905,15 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      */
     public <T extends RealType<T>> Node addVolume(List<SourceAndConverter<T>> sources,
                                                   ArrayList<ConverterSetup> converterSetups,
+                                                  int numTimepoints,
                                                   String name,
                                                   float... voxelDimensions ) {
 
         CacheControl cacheControl = null;
+
+//        RandomAccessibleInterval<T> image =
+//                ((RandomAccessibleIntervalSource4D) sources.get(0).getSpimSource()).
+//                .getSource(0, 0);
         RandomAccessibleInterval<T> image = sources.get(0).getSpimSource().getSource(0, 0);
 
         if (image instanceof VolatileView) {
@@ -1921,7 +1932,12 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         imageRA.setPosition(minPt);
         T voxelType = imageRA.get().createVariable();
 
-        int numTimepoints = 1;
+        System.out.println("addVolume " + image.numDimensions() + " interval " + ((Interval) image) );
+
+        //int numTimepoints = 1;
+        if( image.numDimensions() > 3 ) {
+            numTimepoints = (int) image.dimension(3);
+        }
 
         Volume.VolumeDataSource.RAISource<T> ds = new Volume.VolumeDataSource.RAISource<T>(voxelType, sources, converterSetups, numTimepoints, cacheControl);
         VolumeViewerOptions options = new VolumeViewerOptions();
@@ -1964,7 +1980,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param <T> Type of the dataset.
      * @return THe node corresponding to the volume just added.
      */
-    public <T extends RealType<T>> Node addVolume(List<SourceAndConverter<T>> sources, String name,
+    public <T extends RealType<T>> Node addVolume(List<SourceAndConverter<T>> sources,
+                                                  int numTimepoints,
+                                                  String name,
                                                   float... voxelDimensions ) {
         int setupId = 0;
         ArrayList<ConverterSetup> converterSetups = new ArrayList<>();
@@ -1972,7 +1990,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             converterSetups.add(BigDataViewer.createConverterSetup(source, setupId++));
         }
 
-        return addVolume(sources, converterSetups, name, voxelDimensions);
+        return addVolume(sources, converterSetups, numTimepoints, name, voxelDimensions);
     }
 
     /**
