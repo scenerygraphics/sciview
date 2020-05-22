@@ -125,7 +125,7 @@ public class VolumeTimeseriesDemo implements Command {
         // Interval is 30x30x30 w/ 10 timepoints
         FinalInterval interval = new FinalInterval(
                 new long[]{0, 0, 0, 0},
-                new long[]{30, 30, 30, 10});
+                new long[]{30, 30, 30, 100});
 
         double center = interval.max(2) / 2;
 
