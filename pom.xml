@@ -227,6 +227,16 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej</artifactId>
+	  	    <exclusions>
+			  <exclusion>  <!-- declare the exclusion here -->
+			    <groupId>org.scijava</groupId>
+			    <artifactId>scripting-renjin</artifactId>
+			  </exclusion>
+			  <exclusion>  <!-- declare the exclusion here -->
+			    <groupId>org.scijava</groupId>
+			    <artifactId>scripting-jruby</artifactId>
+			  </exclusion>
+		    </exclusions>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
@@ -248,10 +258,6 @@
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-launcher</artifactId>
 			<version>${imagej-launcher.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.scijava</groupId>
-			<artifactId>scripting-jython</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
@@ -319,6 +325,10 @@
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>scripting-jython</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 
