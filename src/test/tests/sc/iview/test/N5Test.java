@@ -3,6 +3,8 @@ package sc.iview.test;
 import net.imagej.ImageJ;
 import net.imagej.mesh.Mesh;
 import net.imagej.mesh.Triangle;
+import net.imagej.mesh.io.stl.STLMeshIO;
+import net.imagej.ops.geom.geom3d.DefaultMarchingCubes;
 import net.imglib2.RandomAccess;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
@@ -14,6 +16,8 @@ import org.janelia.saalfeldlab.n5.N5FSReader;
 import org.janelia.saalfeldlab.n5.N5FSWriter;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import sc.iview.commands.demo.MeshDemo;
+import sc.iview.commands.demo.ResourceLoader;
 import sc.iview.io.N5;
 
 import java.io.IOException;
@@ -32,11 +36,23 @@ public class N5Test {
 	private static Mesh mesh;
 
 	@BeforeClass
-	public static void setupBefore() {
-		mesh = getMesh();
-	}
+	public static void setupBefore()
+    {
+        try {
+            mesh = getMesh();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-    private static Mesh getMesh() {
+	private static Mesh getMesh() throws IOException {
+        return (new STLMeshIO()
+                .open(ResourceLoader.createFile(
+                        MeshDemo.class,
+                        "/WieseRobert_simplified_Cip1.stl" ).getAbsolutePath()));
+    }
+
+    private static Mesh generateMesh() {
         ImageJ imagej = new ImageJ();
 
 	    // Generate an image
@@ -47,7 +63,10 @@ public class N5Test {
         imgAccess.get().set(true);
 
         // Run marching cubes
-        return imagej.op().geom().marchingCubes(img);
+        //return imagej.op().geom().marchingCubes(img);
+
+
+        return (new DefaultMarchingCubes()).calculate(img);
     }
 
     @Test
