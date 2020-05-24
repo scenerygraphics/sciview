@@ -191,5 +191,7 @@ if [ -z "$OUT_TEST" ]
 then
     echo "Test of a populated Fiji failed"
     exit 1
+else
+    echo "Test of populated Fiji passed"
 fi
 
