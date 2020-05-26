@@ -1834,9 +1834,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         List<SourceAndConverter<T>> sources = new ArrayList<>();
         sources.add(sac);
 
-        Node v = addVolume(sources, name, voxelDimensions);
-
-        return addNode(v);
+        return addVolume(sources, name, voxelDimensions);
     }
 
     /**
