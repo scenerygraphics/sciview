@@ -117,7 +117,7 @@
 
 		<lwjgl.version>3.2.3</lwjgl.version>
 		<joml.version>1.9.22</joml.version>
-        <scijava-maven-plugin.version>1.1.0</scijava-maven-plugin.version>
+<!--        <scijava-maven-plugin.version>1.1.0</scijava-maven-plugin.version>-->
 
 		<!-- for BVV -->
 		<bigdataviewer-core.version>9.0.5</bigdataviewer-core.version>
@@ -126,17 +126,6 @@
 		<n5.version>2.2.0</n5.version>
 		<n5-imglib2.version>3.4.1</n5-imglib2.version>
 		<ui-behaviour.version>2.0.1</ui-behaviour.version>
-
-
-		<!-- because of duplicate classes with miglayout -->
-<!--		<scijava-ui-swing.version>0.13.1</scijava-ui-swing.version>-->
-<!--		<script-editor.version>0.5.5</script-editor.version>-->
-<!--		<imagej-ui-swing.version>0.23.2</imagej-ui-swing.version>-->
-<!--		<scijava-ui-awt.version>0.1.7</scijava-ui-awt.version>-->
-<!--		<scijava-search.version>0.7.0</scijava-search.version>-->
-
-<!--		<imagej-legacy.version>39befb3</imagej-legacy.version>-->
-<!--		<miglayout-swing.version>5.2</miglayout-swing.version>-->
 
 		<!-- to override jackson in pom-scijava -->
 
@@ -321,12 +310,6 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-plugins-commands</artifactId>
-			<scope>runtime</scope>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>imagej-ui-swing</artifactId>
 			<scope>runtime</scope>
 			<optional>true</optional>
 		</dependency>
