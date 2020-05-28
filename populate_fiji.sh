@@ -184,14 +184,16 @@ done
 
 # -- Now that we populated fiji, let's double check that it works --
 
+echo
+echo "--> Testing installation with command: sc.iview.commands.help.About"
 OUT_TEST=$(Fiji.app/$launcher  --headless --run sc.iview.commands.help.About)
 echo $OUT_TEST
 
 if [ -z "$OUT_TEST" ]
 then
-    echo "Test of a populated Fiji failed"
+    echo "Test failed"
     exit 1
 else
-    echo "Test of populated Fiji passed"
+    echo "Test passed"
 fi
 
