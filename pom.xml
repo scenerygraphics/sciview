@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>29.0.0-SNAPSHOT</version>
+		<version>29.0.0-beta-1</version>
 		<relativePath />
 	</parent>
 
@@ -108,7 +108,7 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
-		<scenery.version>2778360</scenery.version>
+		<scenery.version>f55e46b</scenery.version>
 		<cleargl.version>2.2.10</cleargl.version>
 		<coremem.version>0.4.6</coremem.version>
 
