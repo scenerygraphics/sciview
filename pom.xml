@@ -108,7 +108,7 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
-		<scenery.version>f55e46b</scenery.version>
+		<scenery.version>e15511f</scenery.version>
 		<cleargl.version>2.2.10</cleargl.version>
 		<coremem.version>0.4.6</coremem.version>
 
@@ -289,7 +289,9 @@
 
 		<!-- Kotlin dependencies -->
 
-		<dependency>
+
+
+				<dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-core</artifactId>
             <version>${kotlinx-coroutines-core.version}</version>
