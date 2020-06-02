@@ -33,6 +33,7 @@ import static sc.iview.commands.MenuWeights.DEMO_MESH;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 import net.imagej.mesh.Mesh;
 
@@ -106,5 +107,15 @@ public class MeshDemo implements Command {
 
         sciView.setActiveNode(msh);
         sciView.centerOnNode( sciView.getActiveNode() );
+    }
+
+    public static void main(String... args) throws Exception {
+        SciView sv = SciView.create();
+
+        CommandService command = sv.getScijavaContext().getService(CommandService.class);
+
+        HashMap<String, Object> argmap = new HashMap<>();
+
+        command.run(MeshDemo.class, true, argmap);
     }
 }

@@ -28,8 +28,6 @@
  */
 package sc.iview.commands.demo;
 
-import cleargl.GLVector;
-import com.jogamp.opengl.math.Quaternion;
 import graphics.scenery.*;
 import graphics.scenery.backends.ShaderType;
 import org.joml.Quaternionf;
@@ -44,6 +42,7 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -106,12 +105,11 @@ public class ParticleDemo implements Command {
         master.setMaterial(mat);
         master.setName("Agent_Master");
         master.getInstancedProperties().put("ModelMatrix", master::getModel);
-        master.getInstancedProperties().put("Color", () -> new GLVector(0.5f, 0.5f, 0.5f, 1.0f));
+        master.getInstancedProperties().put("Color", () -> new Vector3f(0.5f, 0.5f, 0.5f));
         //master.getInstancedProperties().put("Material", master::getMaterial);
         sciView.addNode(master);
 
         for( int k = 0; k < numAgents; k++ ) {
-            //Node n = new Cone(5, 10, 25, new GLVector(0,0,1));
             Node n = new graphics.scenery.Mesh();
             n.setName("agent_" + k);
             n.getInstancedProperties().put("ModelMatrix", n::getWorld);
@@ -170,5 +168,15 @@ public class ParticleDemo implements Command {
         Vector3f up = new Vector3f(0f, 1f, 0f);
         newRot.lookAlong(dir, up);
         n.setRotation(newRot);
+    }
+
+    public static void main(String... args) throws Exception {
+        SciView sv = SciView.create();
+
+        CommandService command = sv.getScijavaContext().getService(CommandService.class);
+
+        HashMap<String, Object> argmap = new HashMap<>();
+
+        command.run(ParticleDemo.class, true, argmap);
     }
 }

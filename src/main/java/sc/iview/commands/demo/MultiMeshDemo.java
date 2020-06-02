@@ -45,6 +45,7 @@ import sc.iview.SciView;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 
 import static sc.iview.commands.MenuWeights.DEMO;
@@ -128,5 +129,15 @@ public class MultiMeshDemo implements Command {
         sciView.surroundLighting();
 
         sciView.centerOnScene();
+    }
+
+    public static void main(String... args) throws Exception {
+        SciView sv = SciView.create();
+
+        CommandService command = sv.getScijavaContext().getService(CommandService.class);
+
+        HashMap<String, Object> argmap = new HashMap<>();
+
+        command.run(MultiMeshDemo.class, true, argmap);
     }
 }

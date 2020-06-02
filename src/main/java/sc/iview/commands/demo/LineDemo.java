@@ -32,6 +32,7 @@ import static sc.iview.commands.MenuWeights.DEMO;
 import static sc.iview.commands.MenuWeights.DEMO_LINES;
 
 import org.scijava.command.Command;
+import org.scijava.command.CommandService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -40,6 +41,8 @@ import org.scijava.util.Colors;
 import sc.iview.SciView;
 import sc.iview.vector.JOMLVector3;
 import sc.iview.vector.Vector3;
+
+import java.util.HashMap;
 
 /**
  * A demo of lines.
@@ -62,8 +65,8 @@ public class LineDemo implements Command {
 
         for( int k = 0; k < numPoints; k++ ) {
             points[k] = new JOMLVector3( ( float ) ( 10.0f * Math.random() - 5.0f ), //
-                                            ( float ) ( 10.0f * Math.random() - 5.0f ), //
-                                            ( float ) ( 10.0f * Math.random() - 5.0f ) );
+                                         ( float ) ( 10.0f * Math.random() - 5.0f ), //
+                                         ( float ) ( 10.0f * Math.random() - 5.0f ) );
         }
 
         double edgeWidth = 0.1;
@@ -71,5 +74,15 @@ public class LineDemo implements Command {
         sciView.addLine( points, Colors.LIGHTSALMON, edgeWidth ).setName( "Lines Demo" );
 
         sciView.centerOnNode( sciView.getActiveNode() );
+    }
+
+    public static void main(String... args) throws Exception {
+        SciView sv = SciView.create();
+
+        CommandService command = sv.getScijavaContext().getService(CommandService.class);
+
+        HashMap<String, Object> argmap = new HashMap<>();
+
+        command.run(LineDemo.class, true, argmap);
     }
 }

@@ -29,6 +29,7 @@
 package sc.iview.commands.demo;
 
 import org.scijava.command.Command;
+import org.scijava.command.CommandService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -39,6 +40,7 @@ import sc.iview.vector.JOMLVector3;
 import sc.iview.vector.Vector3;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static sc.iview.commands.MenuWeights.DEMO;
@@ -79,5 +81,15 @@ public class Line3DDemo implements Command {
         sciView.getFloor().setVisible(false);
 
         sciView.centerOnNode( line );
+    }
+
+    public static void main(String... args) throws Exception {
+        SciView sv = SciView.create();
+
+        CommandService command = sv.getScijavaContext().getService(CommandService.class);
+
+        HashMap<String, Object> argmap = new HashMap<>();
+
+        command.run(Line3DDemo.class, true, argmap);
     }
 }

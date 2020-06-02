@@ -37,6 +37,7 @@ import net.imglib2.img.Img;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.joml.Vector3f;
 import org.scijava.command.Command;
+import org.scijava.command.CommandService;
 import org.scijava.io.IOService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
@@ -45,6 +46,8 @@ import sc.iview.SciView;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.util.HashMap;
+import java.util.Random;
 
 import static sc.iview.commands.MenuWeights.DEMO;
 import static sc.iview.commands.MenuWeights.DEMO_LINES;
@@ -70,6 +73,10 @@ public class ImagePlaneDemo implements Command {
 
         // Load the 2D image
         Img<UnsignedByteType> img = sciView.getScreenshot();
+
+        // Add noise
+        Random rng = new Random(17);
+        img.forEach(t -> t.add(new UnsignedByteType(rng.nextInt(25))));
 
         ByteBuffer bb = imgToByteBuffer(img);
 
@@ -156,5 +163,13 @@ public class ImagePlaneDemo implements Command {
     }
 
 
+    public static void main(String... args) throws Exception {
+        SciView sv = SciView.create();
 
+        CommandService command = sv.getScijavaContext().getService(CommandService.class);
+
+        HashMap<String, Object> argmap = new HashMap<>();
+
+        command.run(ImagePlaneDemo.class, true, argmap);
+    }
 }
