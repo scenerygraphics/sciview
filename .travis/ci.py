@@ -13,7 +13,7 @@ if is_PR:
 
     import requests
     import json
-    r = requests.get('https://api.github.com/repos/scenerygraphics/sciview/pulls/%d/commits' % PR)
+    r = requests.get('https://api.github.com/repos/scenerygraphics/sciview/pulls/%d/commits' % int(PR))
 
     if r.ok:
         commits = json.loads(r.text or r.content)
