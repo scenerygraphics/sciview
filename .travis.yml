@@ -7,7 +7,7 @@ branches:
 install: true
 script:
 #- ".travis/build.sh"
-- ".travis/ci.py"
+- "python .travis/ci.py"
 cache:
   directories:
   - "~/.m2/repository"
