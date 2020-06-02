@@ -46,6 +46,7 @@ import sc.iview.SciView;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 import static sc.iview.commands.MenuWeights.*;
 
@@ -112,5 +113,15 @@ public class TextDemo implements Command {
         sciView.addNode(board,false);
 
         sciView.centerOnNode( msh );
+    }
+
+    public static void main(String... args) throws Exception {
+        SciView sv = SciView.create();
+
+        CommandService command = sv.getScijavaContext().getService(CommandService.class);
+
+        HashMap<String, Object> argmap = new HashMap<>();
+
+        command.run(TextDemo.class, true, argmap);
     }
 }

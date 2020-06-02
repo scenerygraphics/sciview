@@ -46,6 +46,7 @@ import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.joml.Vector3f;
 import org.scijava.command.Command;
+import org.scijava.command.CommandService;
 import org.scijava.command.InteractiveCommand;
 import org.scijava.event.EventHandler;
 import org.scijava.plugin.Menu;
@@ -57,6 +58,8 @@ import sc.iview.SciView;
 import sc.iview.event.NodeRemovedEvent;
 
 import javax.swing.*;
+
+import java.util.HashMap;
 
 import static sc.iview.commands.MenuWeights.DEMO;
 import static sc.iview.commands.MenuWeights.DEMO_GAME_OF_LIFE;
@@ -363,5 +366,15 @@ public class GameOfLife3D implements Command {
      */
     public Volume getVolume() {
         return volume;
+    }
+
+    public static void main(String... args) throws Exception {
+        SciView sv = SciView.create();
+
+        CommandService command = sv.getScijavaContext().getService(CommandService.class);
+
+        HashMap<String, Object> argmap = new HashMap<>();
+
+        command.run(GameOfLife3D.class, true, argmap);
     }
 }
