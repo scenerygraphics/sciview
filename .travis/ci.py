@@ -55,7 +55,7 @@ print('Checking if upload to update site needed')
 if ( branch == 'master' and not is_PR and travis_secure ) or \
     commit_message.startswith('SV_IJ_DEPLOY_UNSTABLE'):
     print('Upload to SciView-Unstable')
-    #subprocess.call(['sh', 'sciview_deploy_unstable.sh'])
+    subprocess.call(['sh', 'sciview_deploy_unstable.sh'])
 
 
 ## Primary
@@ -66,5 +66,5 @@ if ( branch == 'master' and not is_PR and travis_secure ) or \
 if ( branch == 'master' and not is_PR and travis_secure and release_properties_exists ) or \
     commit_message.startswith('SV_IJ_DEPLOY_PRIMARY'):
     print('Upload to SciView')
-    #subprocess.call(['sh', 'sciview_deploy.sh'])
+    subprocess.call(['sh', 'sciview_deploy.sh'])
 
