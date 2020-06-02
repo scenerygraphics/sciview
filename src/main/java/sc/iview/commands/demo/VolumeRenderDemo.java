@@ -95,7 +95,7 @@ public class VolumeRenderDemo implements Command {
         }
 
         Volume v = (Volume) sciView.addVolume( cube, new float[] { 1, 1, 1 } );
-        v.setPixelToWorldRatio(0.1f);// FIXME
+        v.setPixelToWorldRatio(0.05f);
         v.setName( "Volume Render Demo" );
         v.setDirty(true);
         v.setNeedsUpdate(true);
@@ -110,13 +110,10 @@ public class VolumeRenderDemo implements Command {
 
             Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
 
-            graphics.scenery.Mesh isoSurfaceMesh = MeshConverter.toScenery(m,true);
-            Node scMesh = sciView.addMesh(isoSurfaceMesh);
+            graphics.scenery.Mesh isoSurfaceMesh = MeshConverter.toScenery(m,false);
+            v.addChild(isoSurfaceMesh);
 
             isoSurfaceMesh.setName( "Volume Render Demo Isosurface" );
-            isoSurfaceMesh.setScale(new Vector3f(v.getPixelToWorldRatio(),
-                    v.getPixelToWorldRatio(),
-                    v.getPixelToWorldRatio()));
         }
 
         sciView.setActiveNode(v);
