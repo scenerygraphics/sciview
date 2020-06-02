@@ -3,11 +3,12 @@ import os
 import subprocess
 
 travis_secure = os.environ['TRAVIS_SECURE_ENV_VARS']
-is_PR = os.environ['TRAVIS_PULL_REQUEST']
+is_PR = os.environ['TRAVIS_PULL_REQUEST'] != 'false'
 commit_message = os.environ['TRAVIS_COMMIT_MESSAGE']
 branch = os.environ['TRAVIS_BRANCH']
 release_properties_exists = os.path.exists('release.properties')
 
+print('Repo: %s' % os.environ['TRAVIS_REPO_SLUG'])
 print('Branch: %s' % branch)
 print('Release?: %s' % str(release_properties_exists))
 print('Is Pull Request?: %s' % is_PR)
@@ -18,6 +19,7 @@ print('Starting build')
 subprocess.call(['curl', '-fsLO', 'https://raw.githubusercontent.com/scijava/scijava-scripts/master/travis-build.sh'])
 build_var1 = os.environ['encrypted_eb7aa63bf7ac_key']
 build_var2 = os.environ['encrypted_eb7aa63bf7ac_iv']
+subprocess.call(['sh', 'travis-build.sh', build_var1, build_var2])
 
 # Update sites
 print('Checking if upload to update site needed')
