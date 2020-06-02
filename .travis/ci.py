@@ -8,6 +8,9 @@ commit_message = os.environ['TRAVIS_COMMIT_MESSAGE']
 branch = os.environ['TRAVIS_BRANCH']
 release_properties_exists = os.path.exists('release.properties')
 
+print('')
+print('')
+print('')
 print('Repo: %s' % os.environ['TRAVIS_REPO_SLUG'])
 print('Branch: %s' % branch)
 print('Release?: %s' % str(release_properties_exists))
@@ -22,6 +25,9 @@ build_var2 = os.environ['encrypted_eb7aa63bf7ac_iv']
 subprocess.call(['sh', 'travis-build.sh', build_var1, build_var2])
 
 # Update sites
+print('')
+print('')
+print('')
 print('Checking if upload to update site needed')
 
 ## Unstable
