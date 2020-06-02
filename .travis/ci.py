@@ -53,7 +53,7 @@ print('Checking if upload to update site needed')
 ## - push/merge to master
 
 if ( branch == 'master' and not is_PR and travis_secure ) or \
-    commit_message.startswith('SV_IJ_DEPLOY_UNSTABLE'):
+    ( '[SV_IJ_DEPLOY_UNSTABLE]' in commit_message ):
     print('Upload to SciView-Unstable')
     subprocess.call(['sh', 'sciview_deploy_unstable.sh'])
 
@@ -64,7 +64,7 @@ if ( branch == 'master' and not is_PR and travis_secure ) or \
 ## - release
 
 if ( branch == 'master' and not is_PR and travis_secure and release_properties_exists ) or \
-    commit_message.startswith('SV_IJ_DEPLOY_PRIMARY'):
+    ( '[SV_IJ_DEPLOY_PRIMARY]' in commit_message ):
     print('Upload to SciView')
     subprocess.call(['sh', 'sciview_deploy.sh'])
 
