@@ -805,6 +805,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         final InputHandler h = getInputHandler();
         List<Class<?>> ignoredObjects = new ArrayList<>();
         ignoredObjects.add( BoundingGrid.class );
+        ignoredObjects.add( Camera.class ); //do not mess with "scene params", allow only "scene data" to be selected
+        ignoredObjects.add( DetachedHeadCamera.class );
+        ignoredObjects.add( DirectionalLight.class );
+        ignoredObjects.add( PointLight.class );
 
         if(h == null) {
             getLogger().error("InputHandler is null, cannot change object selection mode.");
