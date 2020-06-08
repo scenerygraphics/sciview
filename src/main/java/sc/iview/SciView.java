@@ -1461,15 +1461,11 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             //System.out.println("find(name) " + find(n.getName()) );
         }
 
-        if( activePublish ) {
-            // Set new node as active and center
-            if( getCenterOnNewNodes() ) {
-                setActiveNode(n);
-                centerOnNode(n);
-            }
+        // Set new node as active and centered?
+        setActiveNode(n);
+        if( centerOnNewNodes ) centerOnNode(n);
+        if( activePublish ) eventService.publish(new NodeAddedEvent(n));
 
-            eventService.publish(new NodeAddedEvent(n));
-        }
         return n;
     }
 
@@ -1745,10 +1741,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         objectService.removeObject(node);
         node.getParent().removeChild( node );
-        if( activePublish ) {
-            eventService.publish(new NodeRemovedEvent(node));
-            if (activeNode == node) setActiveNode(null);
-        }
+        if (activeNode == node) setActiveNode(null); //maintain consistency
+        if( activePublish ) eventService.publish(new NodeRemovedEvent(node));
     }
 
     /**
