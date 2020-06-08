@@ -1403,7 +1403,11 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
-     * Set the currently active node
+     * Activate the node (without centering view on it). The node becomes a target
+     * of the Arcball camera movement, will become subject of the node dragging
+     * (ctrl[+shift]+mouse-left-click-and-drag), will be selected in the scene graph
+     * inspector (the {@link NodePropertyEditor})
+     * and {@link sc.iview.event.NodeActivatedEvent} will be published.
      * @param n
      * @return the currently active node
      */
@@ -1415,6 +1419,19 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         eventService.publish( new NodeActivatedEvent( activeNode ) );
 
         return activeNode;
+    }
+
+    /**
+     * Activate the node, and center the view on it.
+     * @param n
+     * @return the currently active node
+     */
+    public Node setActiveCenteredNode( Node n ) {
+        //activate...
+        Node ret = setActiveNode(n);
+        //...and center
+        if (ret != null) centerOnNode(ret);
+        return ret;
     }
 
     @EventHandler
