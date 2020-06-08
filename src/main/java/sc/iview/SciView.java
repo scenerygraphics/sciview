@@ -896,14 +896,18 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
                 log.info( "Selected node: " + getActiveNode().getName() + " at " + x + "," + y);
 
                 // Setup the context menu for this node
-
                 ContextPopUp menu = new ContextPopUp(nearest.getMatches().get(0).getNode());
                 menu.show(panel, x, y);
+
+                // copy reference on the last result into "public domain"
+                objectSelectionLastResult = nearest;
             }
             return Unit.INSTANCE;
         };
         setObjectSelectionMode(selectAction);
     }
+
+    public Scene.RaycastResult objectSelectionLastResult;
 
     /*
      * Set the action used during object selection
