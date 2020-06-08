@@ -403,6 +403,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         final TreePath newPath = find((DefaultMutableTreeNode) treeModel.getRoot(), node);
         if(newPath != null) {
             tree.setSelectionPath(newPath);
+            tree.scrollPathToVisible(newPath);
             if(node != sciView.getActiveNode()) {
                 updateProperties(node);
             }

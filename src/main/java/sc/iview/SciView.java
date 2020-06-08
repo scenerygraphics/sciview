@@ -894,7 +894,6 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         Function3<Scene.RaycastResult, Integer, Integer, Unit> selectAction = (nearest,x,y) -> {
             if( !nearest.getMatches().isEmpty() ) {
                 setActiveNode( nearest.getMatches().get( 0 ).getNode() );
-                nodePropertyEditor.trySelectNode( getActiveNode() );
                 log.info( "Selected node: " + getActiveNode().getName() + " at " + x + "," + y);
 
                 // Setup the context menu for this node
@@ -1524,6 +1523,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         if( activeNode == n ) return activeNode;
         activeNode = n;
         targetArcball.setTarget( n == null ? () -> new Vector3f( 0, 0, 0 ) : () -> n.getMaximumBoundingBox().getBoundingSphere().getOrigin());
+        nodePropertyEditor.trySelectNode( activeNode );
         eventService.publish( new NodeActivatedEvent( activeNode ) );
 
         return activeNode;
@@ -1541,7 +1541,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     @EventHandler
     protected void onNodeChanged(NodeChangedEvent event) {
-    	nodePropertyEditor.rebuildTree();
+        nodePropertyEditor.rebuildTree();
     }
 
     @EventHandler
