@@ -548,8 +548,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             nodePropertyEditor.rebuildTree();
             getLogger().info("Done initializing SciView");
 
-            // subscribe to Node{Added, Removed, Changed} events
-            eventService.subscribe(this);
+            // subscribe to Node{Added, Removed, Changed} events happens automagically owing to the annotations
             frame.getGlassPane().setVisible(false);
             panel.setVisible(true);
 
