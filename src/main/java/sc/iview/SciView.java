@@ -203,11 +203,15 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * This tracks the actively selected Node in the scene
      */
     private Node activeNode = null;
+
     /**
      * Speeds for input controls
      */
-    private float fpsScrollSpeed = 0.05f;
-    private float mouseSpeedMult = 0.25f;
+    private float fpsSpeedSlow     = 0.05f;
+    private float fpsSpeedFast     = 1.0f;
+    private float fpsSpeedVeryFast = 50.0f;
+    private float mouseSpeedMult   = 0.25f;
+
     private Display<?> scijavaDisplay;
     private SplashLabel splashLabel;
     private SceneryJPanel panel;
@@ -761,15 +765,36 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         }
     }
 
-    public float getFPSSpeed() {
-        return fpsScrollSpeed;
+    public float getFPSSpeedSlow() {
+        return fpsSpeedSlow;
+    }
+    public float getFPSSpeedFast() {
+        return fpsSpeedFast;
+    }
+    public float getFPSSpeedVeryFast() {
+        return fpsSpeedVeryFast;
     }
 
-    public void setFPSSpeed( float newspeed ) {
-        if( newspeed < 0.30f ) newspeed = 0.3f;
-        else if( newspeed > 30.0f ) newspeed = 30.0f;
-        fpsScrollSpeed = newspeed;
-        //log.debug( "FPS scroll speed: " + fpsScrollSpeed );
+    private float speedWithinBounds(float newspeed, final float minBound, final float maxBound)
+    {
+        if( newspeed < minBound ) newspeed = minBound;
+        else if( newspeed > maxBound ) newspeed = maxBound;
+        return newspeed;
+    }
+    public void setFPSSpeed( float newBaseSpeed ) {
+        fpsSpeedSlow     = speedWithinBounds(newBaseSpeed, 0.01f,30f);
+        fpsSpeedFast     = fpsSpeedSlow * 20;
+        fpsSpeedVeryFast = fpsSpeedFast * 50;
+        log.debug( "FPS speeds: slow=" + fpsSpeedSlow + ", fast=" + fpsSpeedFast + ", very fast=" + fpsSpeedVeryFast );
+    }
+    public void setFPSSpeedSlow( float slowSpeed ) {
+        fpsSpeedSlow = speedWithinBounds(slowSpeed, 0.01f,30f);
+    }
+    public void setFPSSpeedFast( float fastSpeed ) {
+        fpsSpeedFast = speedWithinBounds(fastSpeed, 0.2f,600f);
+    }
+    public void setFPSSpeedVeryFast( float veryFastSpeed ) {
+        fpsSpeedVeryFast = speedWithinBounds(veryFastSpeed, 40f,2000f);
     }
 
     public float getMouseSpeed() {
@@ -777,10 +802,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     public void setMouseSpeed( float newspeed ) {
-        if( newspeed < 0.30f ) newspeed = 0.3f;
-        else if( newspeed > 3.0f ) newspeed = 3.0f;
-        mouseSpeedMult = newspeed;
-        //log.debug( "Mouse speed: " + mouseSpeedMult );
+        mouseSpeedMult = speedWithinBounds(newspeed, 0.1f,3.0f);
+        log.debug( "Mouse speed: " + mouseSpeedMult );
     }
 
     /*
@@ -939,15 +962,12 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             target = getActiveNode().getPosition();
         }
 
-        float mouseSpeed = 0.25f;
-        mouseSpeed = getMouseSpeed();
-
         Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
         targetArcball = new AnimatedCenteringBeforeArcBallControl( "mouse_control_arcball", cameraSupplier,
                                                   getRenderer().getWindow().getWidth(),
                                                   getRenderer().getWindow().getHeight(), target );
         targetArcball.setMaximumDistance( Float.MAX_VALUE );
-        targetArcball.setMouseSpeedMultiplier( mouseSpeed );
+        targetArcball.setMouseSpeedMultiplier( mouseSpeedMult );
         targetArcball.setScrollSpeedMultiplier( 0.05f );
         targetArcball.setDistance( getCamera().getPosition().sub( target ).length() );
 
@@ -2352,10 +2372,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     class enableIncrease implements ClickBehaviour {
 
         @Override public void click( int x, int y ) {
-            setFPSSpeed( getFPSSpeed() + 0.5f );
+            setFPSSpeed( getFPSSpeedSlow() + 0.01f );
             setMouseSpeed( getMouseSpeed() + 0.05f );
-
-            //log.debug( "Increasing FPS scroll Speed" );
 
             resetFPSInputs();
         }
@@ -2364,10 +2382,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     class enableDecrease implements ClickBehaviour {
 
         @Override public void click( int x, int y ) {
-            setFPSSpeed( getFPSSpeed() - 0.1f );
+            setFPSSpeed( getFPSSpeedSlow() - 0.01f );
             setMouseSpeed( getMouseSpeed() - 0.05f );
-
-            //log.debug( "Decreasing FPS scroll Speed" );
 
             resetFPSInputs();
         }
