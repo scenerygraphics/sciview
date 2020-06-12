@@ -63,6 +63,7 @@ import graphics.scenery.volumes.TransferFunction;
 import graphics.scenery.volumes.Volume;
 import io.scif.SCIFIOService;
 import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function1;
 import kotlin.jvm.functions.Function3;
 import net.imagej.Dataset;
@@ -84,6 +85,7 @@ import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.view.Views;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -158,7 +160,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     /**
      * Mouse controls for FPS movement and Arcball rotation
      */
-    protected ArcballCameraControl targetArcball;
+    protected AnimatedCenteringBeforeArcBallControl targetArcball;
     protected FPSCameraControl fpsControl;
     /**
      * The floor that orients the user in the scene
@@ -1043,7 +1045,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         mouseSpeed = getMouseSpeed();
 
         Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
-        targetArcball = new ArcballCameraControl( "mouse_control_arcball", cameraSupplier,
+        targetArcball = new AnimatedCenteringBeforeArcBallControl( "mouse_control_arcball", cameraSupplier,
                                                   getRenderer().getWindow().getWidth(),
                                                   getRenderer().getWindow().getHeight(), target );
         targetArcball.setMaximumDistance( Float.MAX_VALUE );
@@ -1057,6 +1059,45 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         h.addKeyBinding( "mouse_control_arcball", "shift button1" );
         h.addBehaviour( "scroll_arcball", targetArcball );
         h.addKeyBinding( "scroll_arcball", "shift scroll" );
+    }
+
+    /*
+     * A wrapping class for the {@ArcballCameraControl} that calls {@link CenterOnPosition()}
+     * before the actual Arcball camera movement takes place. This way, the targeted node is
+     * first smoothly brought into the centre along which Arcball is revolving, preventing
+     * from sudden changes of view (and lost of focus from the user.
+     */
+    class AnimatedCenteringBeforeArcBallControl extends ArcballCameraControl {
+        //a bunch of necessary c'tors (originally defined in the ArcballCameraControl class)
+        public AnimatedCenteringBeforeArcBallControl(@NotNull String name, @NotNull Function0<? extends Camera> n, int w, int h, @NotNull Function0<? extends Vector3f> target) {
+            super(name, n, w, h, target);
+        }
+
+        public AnimatedCenteringBeforeArcBallControl(@NotNull String name, @NotNull Supplier<Camera> n, int w, int h, @NotNull Supplier<Vector3f> target) {
+            super(name, n, w, h, target);
+        }
+
+        public AnimatedCenteringBeforeArcBallControl(@NotNull String name, @NotNull Function0<? extends Camera> n, int w, int h, @NotNull Vector3f target) {
+            super(name, n, w, h, target);
+        }
+
+        public AnimatedCenteringBeforeArcBallControl(@NotNull String name, @NotNull Supplier<Camera> n, int w, int h, @NotNull Vector3f target) {
+            super(name, n, w, h, target);
+        }
+
+        @Override
+        public void init( int x, int y )
+        {
+            centerOnPosition( targetArcball.getTarget().invoke() );
+            super.init(x,y);
+        }
+
+        @Override
+        public void scroll(double wheelRotation, boolean isHorizontal, int x, int y)
+        {
+            centerOnPosition( targetArcball.getTarget().invoke() );
+            super.scroll(wheelRotation,isHorizontal,x,y);
+        }
     }
 
     /*
