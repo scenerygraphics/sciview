@@ -104,6 +104,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.service.SciJavaService;
 import org.scijava.thread.ThreadService;
 import org.scijava.ui.behaviour.ClickBehaviour;
+import org.scijava.ui.behaviour.DragBehaviour;
 import org.scijava.ui.behaviour.InputTrigger;
 import org.scijava.ui.swing.menu.SwingJMenuBarCreator;
 import org.scijava.util.ColorRGB;
@@ -1032,7 +1033,12 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         h.addKeyBinding("move_up_veryfast",   "ctrl shift C");
         h.addKeyBinding("move_down_veryfast", "ctrl shift X");
 
-        //TODO: R, shift+R, shift-button2 VLADO Vlado vlado
+        h.addBehaviour( "rotate_CW",    new RotateCameraControl(+0.1f) );
+        h.addKeyBinding("rotate_CW",    "R");
+        h.addBehaviour( "rotate_CCW",   new RotateCameraControl(-0.1f) );
+        h.addKeyBinding("rotate_CCW",   "shift R");
+        h.addBehaviour( "rotate_mouse", h.getBehaviour("rotate_CW"));
+        h.addKeyBinding("rotate_mouse", "ctrl button3");
 
         h.addBehaviour(  "enable_decrease", new enableDecrease() );
         h.addKeyBinding( "enable_decrease", "MINUS" );
@@ -1113,6 +1119,43 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         {
             centerOnPosition( targetArcball.getTarget().invoke() );
             super.scroll(wheelRotation,isHorizontal,x,y);
+        }
+    }
+
+    class RotateCameraControl implements ClickBehaviour, DragBehaviour
+    {
+        final Quaternionf rotQ_CW, rotQ_CCW;
+        RotateCameraControl(final float byFixedAngInRad) {
+            rotQ_CW  = new Quaternionf().rotateAxis(+byFixedAngInRad,0,0,-1);
+            rotQ_CCW = new Quaternionf().rotateAxis(-byFixedAngInRad,0,0,-1);
+        }
+
+        @Override
+        public void click(int x, int y) {
+            final Camera cam = getCamera();
+            rotQ_CW.mul(cam.getRotation(),cam.getRotation()).normalize();
+        }
+
+        private final int minMouseMovementDelta = 2;
+        private int lastX;
+
+        @Override
+        public void init(int x, int y) {
+            lastX = x;
+        }
+
+        @Override
+        public void drag(int x, int y) {
+            final Camera cam = getCamera();
+            if (x > lastX+minMouseMovementDelta)
+                rotQ_CW.mul(cam.getRotation(),cam.getRotation()).normalize();
+            else if(x < lastX-minMouseMovementDelta)
+                rotQ_CCW.mul(cam.getRotation(),cam.getRotation()).normalize();
+            lastX = x;
+        }
+
+        @Override
+        public void end(int x, int y) {
         }
     }
 
