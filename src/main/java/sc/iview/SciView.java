@@ -697,7 +697,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             return;
         }
 
-        centerOnPosition( currentNode.getPosition() );
+        //center the on the same spot as ArcBall does
+        centerOnPosition( currentNode.getMaximumBoundingBox().getBoundingSphere().getOrigin() );
     }
 
     /**
