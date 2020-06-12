@@ -107,6 +107,7 @@ import org.scijava.util.VersionUtils;
 import sc.iview.commands.view.NodePropertyEditor;
 import sc.iview.controls.behaviours.CameraTranslateControl;
 import sc.iview.controls.behaviours.NodeTranslateControl;
+import sc.iview.controls.behaviours.NodeRotateControl;
 import sc.iview.event.NodeActivatedEvent;
 import sc.iview.event.NodeAddedEvent;
 import sc.iview.event.NodeChangedEvent;
@@ -905,6 +906,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         NodeTranslateControl nodeTranslate = new NodeTranslateControl(this, 0.005f);
         h.addBehaviour(  "mouse_control_nodetranslate", nodeTranslate );
         h.addKeyBinding( "mouse_control_nodetranslate", "ctrl button1" );
+        h.addBehaviour(  "mouse_control_noderotate", new NodeRotateControl(this) );
+        h.addKeyBinding( "mouse_control_noderotate", "ctrl shift button1" );
         h.addBehaviour(  "scroll_nodetranslate", nodeTranslate );
         h.addKeyBinding( "scroll_nodetranslate", "ctrl scroll" );
 
