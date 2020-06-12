@@ -287,13 +287,6 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         resetFPSInputs();
     }
 
-    /**
-     * Place the camera such that all objects in the scene are within the field of view
-     */
-    public void fitCameraToScene() {
-        centerOnNode(getScene());
-    }
-
     public ArrayList<PointLight> getLights() {
         return lights;
     }
@@ -633,13 +626,6 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /*
-     * Center the camera on the scene such that all objects are within the field of view
-     */
-    public void centerOnScene() {
-        centerOnNode(getScene());
-    }
-
-    /*
      * Get the InputHandler that is managing mouse, input, VR controls, etc.
      */
     public InputHandler getSceneryInputHandler() {
@@ -679,19 +665,35 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         return bb;
     }
 
-    /*
+    /**
+     * Place the camera such that all objects in the scene are within the field of view
+     */
+    public void fitCameraToScene() {
+        centerOnNode(getScene());
+        //TODO: smooth zoom in/out VLADO vlado Vlado
+    }
+
+    /**
+     * Center the camera on the scene
+     */
+    public void centerOnScene() {
+        centerOnNode(getScene());
+    }
+
+    /**
+     * Center the camera on the scene
+     */
+    public void centerOnActiveNode() {
+        if (activeNode == null) return;
+        centerOnNode(activeNode);
+    }
+
+    /**
      * Center the camera on the specified Node
      */
     public void centerOnNode( Node currentNode ) {
-        centerOnNode(currentNode,notAbstractBranchingFunction);
-    }
-
-    /*
-     * Center the camera on the specified Node
-     */
-    public void centerOnNode( Node currentNode, Function<Node,List<Node>> branchFunction ) {
-        if( currentNode == null ) {
-            log.info("Cannot center on node. CurrentNode is null" );
+        if (currentNode == null) {
+            log.info("Cannot center on node. CurrentNode is null");
             return;
         }
 
