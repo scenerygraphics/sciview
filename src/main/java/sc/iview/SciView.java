@@ -902,7 +902,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         // Mouse: node-translate controls
         setObjectSelectionMode();
-        NodeTranslateControl nodeTranslate = new NodeTranslateControl(this, 0.0005f);
+        NodeTranslateControl nodeTranslate = new NodeTranslateControl(this, 0.005f);
         h.addBehaviour(  "mouse_control_nodetranslate", nodeTranslate );
         h.addKeyBinding( "mouse_control_nodetranslate", "ctrl button1" );
         h.addBehaviour(  "scroll_nodetranslate", nodeTranslate );
