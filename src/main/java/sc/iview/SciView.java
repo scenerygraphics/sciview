@@ -697,32 +697,65 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             return;
         }
 
-        OrientedBoundingBox bb = getSubgraphBoundingBox(currentNode, branchFunction);
+        centerOnPosition( currentNode.getPosition() );
+    }
 
-        // TODO: find the widest dimensions of BB and align to that normal
+    /**
+     * Center the camera on the specified Node
+     */
+    public void centerOnPosition( Vector3f currentPos ) {
+        //current and desired directions in world coords
+        final Vector3f currViewDir = new Vector3f(camera.getTarget()).sub(camera.getPosition());
+        final Vector3f wantViewDir = new Vector3f(currentPos).sub(camera.getPosition());
 
-        System.out.println("CurrentNode BoundingBox " + bb + " " + bb.getBoundingSphere().getOrigin() + " " + bb.getBoundingSphere().getRadius());
+        //current and desired directions as the camera sees them
+        camera.getTransformation().transformDirection(currViewDir).normalize();
+        camera.getTransformation().transformDirection(wantViewDir).normalize();
 
-        if( bb == null ) return;
+        //we gonna rotate directly to match the current view direction with the desired one,
+        //which means to rotate by this angle:
+        float totalDeltaAng = (float)Math.acos( currViewDir.dot(wantViewDir) );
+        //
+        //if the needed angle is less than 2 deg, we do nothing...
+        if (totalDeltaAng > -0.035 && totalDeltaAng < 0.035) return;
+        //
+        //here's the axis along which we will rotate
+        currViewDir.cross(wantViewDir);
 
-        getCamera().setTarget( bb.getBoundingSphere().getOrigin() );
-        getCamera().setTargeted( true );
+        //animation options: control delay between animation frames -- fluency
+        final long rotPauseyPerStep = 30; //miliseconds
 
-        // Set forward direction to point from camera at active node
-        Vector3f forward = bb.getBoundingSphere().getOrigin().sub( getCamera().getPosition() ).normalize();
+        //animation options: control max number of steps -- upper limit on total time for animation
+        final int rotMaxSteps = 999999;  //effectively disabled....
 
-        float distance = (float) (bb.getBoundingSphere().getRadius() / Math.tan( getCamera().getFov() / 360 * Math.PI ));
+        //how many steps when max update/move is 5 deg -- smoothness
+        int rotSteps = (int)Math.ceil( Math.abs(totalDeltaAng) / 0.087 );
+        if (rotSteps > rotMaxSteps) rotSteps = rotMaxSteps;
 
-        headlight.setLightRadius(distance * 1.1f);
+        log.debug("centering by deltaAng="+ 180.0f*totalDeltaAng/3.14159f+" deg over "+rotSteps+" steps");
 
-        // Solve for the proper rotation
-        Quaternionf rotation = new Quaternionf().lookAlong(forward, new Vector3f(0,1,0));
+        //angular progress aux variables
+        float angCurPos = 0, angNextPos, angDelta;
 
-        getCamera().setRotation( rotation.normalize() );
-        getCamera().setPosition( bb.getBoundingSphere().getOrigin().add( getCamera().getForward().mul( distance * -1 ) ) );
+        camera.setTargeted(false);
+        for (int i = 1; i <= rotSteps; ++i) {
+            //this emulates ease-in ease-out animation, both vars are in [0:1]
+            float timeProgress = (float)i / rotSteps;
+            float angProgress = ((timeProgress *= 2) <= 1 ? //two cubics connected smoothly into S-shape curve from [0,0] to [1,1]
+                    timeProgress * timeProgress * timeProgress :
+                    (timeProgress -= 2) * timeProgress * timeProgress + 2) / 2;
 
-        getCamera().setDirty(true);
-        getCamera().setNeedsUpdate(true);
+            angNextPos = angProgress * totalDeltaAng;    //where I should be by now
+            angDelta = angNextPos - angCurPos;           //how much I must travel to get there
+            angCurPos = angNextPos;                      //suppose we already got there...
+
+            new Quaternionf().rotateAxis(-angDelta,currViewDir).mul(camera.getRotation(),camera.getRotation());
+            try {
+                Thread.sleep(rotPauseyPerStep);
+            } catch (InterruptedException e) {
+                i = rotSteps;
+            }
+        }
     }
 
     public float getFPSSpeed() {
@@ -1432,7 +1465,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     public Node setActiveCenteredNode( Node n ) {
         //activate...
         Node ret = setActiveNode(n);
-        //...and center
+        //...and center it
         if (ret != null) centerOnNode(ret);
         return ret;
     }
