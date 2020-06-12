@@ -1,9 +1,6 @@
 package sc.iview.controls.behaviours;
 
-import cleargl.GLVector;
-import com.jogamp.opengl.math.Quaternion;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
+import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.DragBehaviour;
 import sc.iview.SciView;
 
@@ -15,7 +12,7 @@ import sc.iview.SciView;
  */
 public class CameraTranslateControl implements DragBehaviour {
     protected SciView sciView;
-    private boolean firstEntered;
+    private boolean firstEntered = true;
     private int lastX;
     private int lastY;
 
@@ -28,6 +25,14 @@ public class CameraTranslateControl implements DragBehaviour {
     }
 
     protected float dragSpeed;
+
+    //easy 1st threshold is "3", very hard to hit threshold is "30"
+    //if dragSpeed == 1.0,  we essentially use slow and fast movements
+    //if dragSpeed == 10.0, we essentially use fast and very-fast movements
+    protected float dragX_SlowSpeedLimit = 3f;
+    protected float dragX_FastSpeedLimit = 30f;
+    protected float dragY_SlowSpeedLimit = 3f;
+    protected float dragY_FastSpeedLimit = 30f;
 
     public CameraTranslateControl( SciView sciView, float dragSpeed ) {
         this.sciView = sciView;
@@ -46,22 +51,60 @@ public class CameraTranslateControl implements DragBehaviour {
             lastX = x;
             lastY = y;
             firstEntered = false;
+
+            //set up (the current) shortcuts to the FPS movement routines
+            move_left_slow     = (ClickBehaviour)sciView.getSceneryInputHandler().getBehaviour("move_left");
+            move_left_fast     = (ClickBehaviour)sciView.getSceneryInputHandler().getBehaviour("move_left_fast");
+            move_left_veryfast = (ClickBehaviour)sciView.getSceneryInputHandler().getBehaviour("move_left_veryfast");
+
+            move_right_slow     = (ClickBehaviour)sciView.getSceneryInputHandler().getBehaviour("move_right");
+            move_right_fast     = (ClickBehaviour)sciView.getSceneryInputHandler().getBehaviour("move_right_fast");
+            move_right_veryfast = (ClickBehaviour)sciView.getSceneryInputHandler().getBehaviour("move_right_veryfast");
+
+            move_forward_slow     = (ClickBehaviour)sciView.getSceneryInputHandler().getBehaviour("move_forward");
+            move_forward_fast     = (ClickBehaviour)sciView.getSceneryInputHandler().getBehaviour("move_forward_fast");
+            move_forward_veryfast = (ClickBehaviour)sciView.getSceneryInputHandler().getBehaviour("move_forward_veryfast");
+
+            move_backward_slow     = (ClickBehaviour)sciView.getSceneryInputHandler().getBehaviour("move_back");
+            move_backward_fast     = (ClickBehaviour)sciView.getSceneryInputHandler().getBehaviour("move_back_fast");
+            move_backward_veryfast = (ClickBehaviour)sciView.getSceneryInputHandler().getBehaviour("move_back_veryfast");
         }
     }
 
-    @Override public void drag( int x, int y ) {
+    private ClickBehaviour move_left_slow,     move_left_fast,     move_left_veryfast;
+    private ClickBehaviour move_right_slow,    move_right_fast,    move_right_veryfast;
+    private ClickBehaviour move_forward_slow,  move_forward_fast,  move_forward_veryfast;
+    private ClickBehaviour move_backward_slow, move_backward_fast, move_backward_veryfast;
 
-        if(!sciView.getCamera().getLock().tryLock()) {
-            return;
+    @Override public void drag( int x, int y ) {
+        final float dx = dragSpeed*(x-lastX);
+        final float dy = dragSpeed*(lastY-y);
+        //System.out.println(dx+",\t"+dy);
+
+        if (dx > 0) {
+            if (dx <= dragX_SlowSpeedLimit) move_right_slow.click(x,y);
+            else if (dx <= dragX_FastSpeedLimit) move_right_fast.click(x,y);
+            else move_right_veryfast.click(x,y);
+        }
+        if (dx < 0) {
+            if (dx >= -dragX_SlowSpeedLimit) move_left_slow.click(x,y);
+            else if (dx >= -dragX_FastSpeedLimit) move_left_fast.click(x,y);
+            else move_left_veryfast.click(x,y);
         }
 
-        Vector3f translationVector = new Vector3f((x - lastX) * getDragSpeed(), (y - lastY) * getDragSpeed(), 0);
+        if (dy > 0) {
+            if (dy <= dragY_SlowSpeedLimit) move_forward_slow.click(x,y);
+            else if (dy <= dragY_FastSpeedLimit) move_forward_fast.click(x,y);
+            else move_forward_veryfast.click(x,y);
+        }
+        if (dy < 0) {
+            if (dy >= -dragY_SlowSpeedLimit) move_backward_slow.click(x,y);
+            else if (dy >= -dragY_FastSpeedLimit) move_backward_fast.click(x,y);
+            else move_backward_veryfast.click(x,y);
+        }
 
-        ( new Quaternionf( sciView.getCamera().getRotation() ) ).conjugate().transform( translationVector );
-        translationVector.y *= -1;
-        sciView.getCamera().setPosition( sciView.getCamera().getPosition().add( new Vector3f( translationVector.x(), translationVector.y(), translationVector.z() ) ) );
-
-        sciView.getCamera().getLock().unlock();
+        lastX = x;
+        lastY = y;
     }
 
     @Override public void end( int x, int y ) {
