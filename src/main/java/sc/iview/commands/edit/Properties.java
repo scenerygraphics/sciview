@@ -527,7 +527,6 @@ public class Properties extends InteractiveCommand {
 
         	if(active && scene != null) {
 				scene.setActiveObserver( ( Camera ) currentSceneNode );
-
 			}
 		}
 
