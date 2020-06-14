@@ -28,7 +28,15 @@
  */
 package sc.iview;
 
+import bdv.BigDataViewer;
+import bdv.cache.CacheControl;
+import bdv.tools.brightness.ConverterSetup;
 import bdv.util.AxisOrder;
+import bdv.util.RandomAccessibleIntervalSource;
+import bdv.util.RandomAccessibleIntervalSource4D;
+import bdv.util.volatiles.VolatileView;
+import bdv.util.volatiles.VolatileViewData;
+import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import cleargl.GLVector;
 import graphics.scenery.Box;
@@ -46,6 +54,7 @@ import graphics.scenery.controls.behaviours.MovementCommand;
 import graphics.scenery.controls.behaviours.SelectCommand;
 import graphics.scenery.utils.*;
 import graphics.scenery.volumes.Colormap;
+import graphics.scenery.volumes.RAIVolume;
 import graphics.scenery.volumes.TransferFunction;
 import graphics.scenery.volumes.Volume;
 import io.scif.SCIFIOService;
@@ -62,11 +71,15 @@ import net.imagej.lut.LUTService;
 import net.imagej.ops.OpService;
 import net.imagej.units.UnitService;
 import net.imglib2.*;
+import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
 import net.imglib2.display.ColorTable;
 import net.imglib2.img.Img;
+import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.view.Views;
 import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -208,6 +221,14 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     private boolean isClosed = false;
     private Function<Node,List<Node>> notAbstractBranchingFunction = node -> node.getChildren().stream().filter(notAbstractNode).collect(Collectors.toList());
 
+    // If true, then when a new node is added to the scene, the camera will refocus on this node by default
+    private boolean centerOnNewNodes;
+
+    // If true, then when a new node is added the thread will block until the node is added to the scene. This is required for
+    //   centerOnNewNodes
+    private boolean blockOnNewNodes;
+    private PointLight headlight;
+
     public SciView( Context context ) {
         super( "SciView", 1280, 720, false, context );
         context.inject( this );
@@ -273,6 +294,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         centerOnNode(getScene());
     }
 
+    public ArrayList<PointLight> getLights() {
+        return lights;
+    }
+
     /**
      * Reset the scene to initial conditions
      */
@@ -290,7 +315,19 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             deleteNode(n, false);
         }
 
-        // Add initial objects
+        // Setup camera
+        Camera cam;
+        if( getCamera() == null ) {
+            cam = new DetachedHeadCamera();
+            this.camera = cam;
+            getScene().addChild( cam );
+        } else {
+            cam = getCamera();
+        }
+        cam.setPosition( new Vector3f( 0.0f, 5.0f, 5.0f ) );
+        cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 1000.0f );
+
+        // Setup lights
         Vector3f[] tetrahedron = new Vector3f[4];
         tetrahedron[0] = new Vector3f( 1.0f, 0f, -1.0f/(float)Math.sqrt(2.0f) );
         tetrahedron[1] = new Vector3f( -1.0f,0f,-1.0f/(float)Math.sqrt(2.0) );
@@ -305,26 +342,35 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             light.setEmissionColor( new Vector3f( 1.0f, 1.0f, 1.0f ) );
             light.setIntensity( 1.0f );
             lights.add( light );
+            //camera.addChild( light );
             getScene().addChild( light );
         }
 
-        Camera cam;
-        if( getCamera() == null ) {
-            cam = new DetachedHeadCamera();
-            this.camera = cam;
-            getScene().addChild( cam );
-        } else {
-            cam = getCamera();
-        }
-        cam.setPosition( new Vector3f( 0.0f, 5.0f, 5.0f ) );
-        cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 1000.0f );
-        cam.setActive( true );
+        // Make a headlight for the camera
+        headlight = new PointLight(150.0f);
+        headlight.setPosition( new Vector3f(0f, 0f, -1f).mul(25.0f) );
+        headlight.setEmissionColor( new Vector3f( 1.0f, 1.0f, 1.0f ) );
+        headlight.setIntensity( 0.5f );
+        headlight.setName("headlight");
+
+
+        Icosphere lightSphere = new Icosphere(1.0f, 2);
+        headlight.addChild(lightSphere);
+        lightSphere.getMaterial().setDiffuse(headlight.getEmissionColor());
+        lightSphere.getMaterial().setSpecular(headlight.getEmissionColor());
+        lightSphere.getMaterial().setAmbient(headlight.getEmissionColor());
+        lightSphere.getMaterial().setWireframe(true);
+        lightSphere.setVisible(false);
+        //lights.add( light );
+        camera.setNearPlaneDistance(0.001f);
+        camera.addChild( headlight );
 
         floor = new Box( new Vector3f( 500f, 0.2f, 500f ) );
         floor.setName( "Floor" );
         floor.setPosition( new Vector3f( 0f, -1f, 0f ) );
         floor.getMaterial().setDiffuse( new Vector3f( 1.0f, 1.0f, 1.0f ) );
         getScene().addChild( floor );
+
     }
 
     /**
@@ -348,7 +394,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         System.getProperties().stringPropertyNames().forEach(name -> {
             if(name.startsWith("scenery.LogLevel")) {
-                LogbackUtils.setLogLevel(name.substring(17), System.getProperty(name, "info"));
+                LogbackUtils.setLogLevel("", System.getProperty(name, "info"));
             }
         });
 
@@ -405,7 +451,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         frame.setJMenuBar(swingMenuBar);
 
         p.setLayout(new OverlayLayout(p));
-        p.setBackground(new java.awt.Color(50, 48, 47));
+        p.setBackground(new Color(50, 48, 47));
         p.add(panel, BorderLayout.CENTER);
         panel.setVisible(true);
 
@@ -436,6 +482,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         mainSplitPane.setDividerLocation( getWindowWidth()/3 * 2 );
         mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
         mainSplitPane.setDividerSize(1);
+        mainSplitPane.setResizeWeight(0.9);
 
         interpreterPane = new REPLPane(getScijavaContext());
 
@@ -446,6 +493,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         interpreterSplitPane.setDividerLocation( getWindowHeight()/10 * 7 );
         interpreterSplitPane.setBorder(BorderFactory.createEmptyBorder());
         interpreterSplitPane.setDividerSize(1);
+        interpreterSplitPane.setResizeWeight(0.9);
 
         initializeInterpreter();
 
@@ -643,19 +691,28 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * Center the camera on the specified Node
      */
     public void centerOnNode( Node currentNode, Function<Node,List<Node>> branchFunction ) {
-        if( currentNode == null ) return;
+        if( currentNode == null ) {
+            log.info("Cannot center on node. CurrentNode is null" );
+            return;
+        }
 
         OrientedBoundingBox bb = getSubgraphBoundingBox(currentNode, branchFunction);
-        //log.debug("Centering on: " + currentNode + " bb: " + bb.getMin() + " to " + bb.getMax());
+
+        // TODO: find the widest dimensions of BB and align to that normal
+
+        System.out.println("CurrentNode BoundingBox " + bb + " " + bb.getBoundingSphere().getOrigin() + " " + bb.getBoundingSphere().getRadius());
+
         if( bb == null ) return;
 
         getCamera().setTarget( bb.getBoundingSphere().getOrigin() );
         getCamera().setTargeted( true );
 
         // Set forward direction to point from camera at active node
-        Vector3f forward = bb.getBoundingSphere().getOrigin().sub( getCamera().getPosition() ).normalize().mul( -1 );
+        Vector3f forward = bb.getBoundingSphere().getOrigin().sub( getCamera().getPosition() ).normalize();
 
-        float distance = (float) (bb.getBoundingSphere().getRadius() / Math.tan( getCamera().getFov() / 360 * java.lang.Math.PI ));
+        float distance = (float) (bb.getBoundingSphere().getRadius() / Math.tan( getCamera().getFov() / 360 * Math.PI ));
+
+        headlight.setLightRadius(distance * 1.1f);
 
         // Solve for the proper rotation
         Quaternionf rotation = new Quaternionf().lookAlong(forward, new Vector3f(0,1,0));
@@ -755,7 +812,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         }
         h.addBehaviour( "object_selection_mode",
                                         new SelectCommand( "objectSelector", getRenderer(), getScene(),
-                                                           () -> getScene().findObserver(), true, ignoredObjects,
+                                                           () -> getScene().findObserver(), false, ignoredObjects,
                                                            selectAction ) );
         h.addKeyBinding( "object_selection_mode", "double-click button1" );
     }
@@ -1174,8 +1231,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         final Object data = io.open( source );
         if( data instanceof net.imagej.mesh.Mesh ) addMesh( ( net.imagej.mesh.Mesh ) data );
-        else if( data instanceof graphics.scenery.Mesh ) addMesh( ( graphics.scenery.Mesh ) data );
-        else if( data instanceof graphics.scenery.PointCloud ) addPointCloud( ( graphics.scenery.PointCloud ) data );
+        else if( data instanceof Mesh ) addMesh( ( Mesh ) data );
+        else if( data instanceof PointCloud ) addPointCloud( ( PointCloud ) data );
         else if( data instanceof Dataset ) addVolume( ( Dataset ) data );
         else if( data instanceof RandomAccessibleInterval ) addVolume( ( ( RandomAccessibleInterval ) data ), source );
         else if( data instanceof List ) {
@@ -1283,10 +1340,18 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         objectService.addObject(n);
 
+        if( blockOnNewNodes ) {
+            blockWhile(sciView -> (sciView.find(n.getName()) == null), 20);
+            //System.out.println("find(name) " + find(n.getName()) );
+        }
+
         if( activePublish ) {
-//            setActiveNode(n);
-//            if (floor.getVisible())
-//                updateFloorPosition();
+            // Set new node as active and center
+            if( getCenterOnNewNodes() ) {
+                setActiveNode(n);
+                centerOnNode(n);
+            }
+
             eventService.publish(new NodeAddedEvent(n));
         }
         return n;
@@ -1481,6 +1546,16 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
+     * Take a screenshot and return it as an Img
+     * @return an Img of type UnsignedByteType
+     */
+    public Img<ARGBType> getARGBScreenshot() {
+        Img<UnsignedByteType> screenshot = getScreenshot();
+
+        return Utils.convertToARGB(screenshot);
+    }
+
+    /**
      * @param name The name of the node to find.
      * @return the node object or null, if the node has not been found.
      */
@@ -1563,6 +1638,12 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
 
+    public void close() {
+        super.close();
+
+        frame.dispose();
+    }
+
     /**
      * Move the current active camera to the specified position
      * @param position
@@ -1634,9 +1715,17 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @return a Node corresponding to the volume
      */
     public <T extends RealType<T>> Node addVolume( RandomAccessibleInterval<T> image, String name, String extra ) {
-        long[] pos = new long[]{10, 10, 10};
-
         return addVolume( image, name, 1, 1, 1 );
+    }
+
+    /**
+     * Add a RandomAccessibleInterval to the image
+     * @param image
+     * @param <T>
+     * @return a Node corresponding to the volume
+     */
+    public <T extends RealType<T>> Node addVolume(RandomAccessibleInterval<T> image, String name) {
+        return addVolume(image, name, 1f, 1f, 1f);
     }
 
     /**
@@ -1740,12 +1829,14 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param <T> Type of the dataset.
      * @return THe node corresponding to the volume just added.
      */
-    public <T extends RealType<T>> Node addVolume(SourceAndConverter<T> sac, String name,
+    public <T extends RealType<T>> Node addVolume(SourceAndConverter<T> sac,
+                                                  int numTimepoints,
+                                                  String name,
                                                   float... voxelDimensions ) {
-        Volume v = Volume.fromSourceAndConverter(sac, sac.getSpimSource().getType(), name, getHub());
+        List<SourceAndConverter<T>> sources = new ArrayList<>();
+        sources.add(sac);
 
-        getScene().addChild(v);
-        return v;
+        return addVolume(sources, numTimepoints, name, voxelDimensions);
     }
 
     /**
@@ -1772,58 +1863,132 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         imageRA.setPosition(minPt);
         T voxelType = imageRA.get().createVariable();
 
-        Volume v = Volume.fromRAI(image, voxelType, AxisOrder.DEFAULT, name, getHub(), new VolumeViewerOptions());
+        ArrayList<ConverterSetup> converterSetups = new ArrayList();
+        ArrayList<RandomAccessibleInterval<T>> stacks = AxisOrder.splitInputStackIntoSourceStacks(image, AxisOrder.getAxisOrder(AxisOrder.DEFAULT, image, false));
+        AffineTransform3D sourceTransform = new AffineTransform3D();
+        ArrayList<SourceAndConverter<T>> sources = new ArrayList();
+
+        int numTimepoints = 1;
+        for (RandomAccessibleInterval stack : stacks) {
+            Source<T> s;
+            if (stack.numDimensions() > 3) {
+                numTimepoints = (int) (stack.max(3) + 1);
+                s = new RandomAccessibleIntervalSource4D<T>(stack, voxelType, sourceTransform, name);
+            } else {
+                s = new RandomAccessibleIntervalSource<T>(stack, voxelType, sourceTransform, name);
+            }
+            SourceAndConverter<T> source = BigDataViewer.wrapWithTransformedSource(
+                new SourceAndConverter<T>(s, BigDataViewer.createConverterToARGB(voxelType)));
+            converterSetups.add(BigDataViewer.createConverterSetup(source, Volume.Companion.getSetupId().getAndIncrement()));
+            sources.add(source);
+        }
+
+        Node v = addVolume(sources, numTimepoints, name, voxelDimensions);
+
+        v.getMetadata().put("RandomAccessibleInterval", image);
+
+        return v;
+    }
+
+    /**
+     * Adds a SourceAndConverter to the scene.
+     *
+     * This method actually instantiates the volume.
+     *
+     * @param sources The list of SourceAndConverter to add
+     * @param name Name of the dataset
+     * @param voxelDimensions Array with voxel dimensions.
+     * @param <T> Type of the dataset.
+     * @return THe node corresponding to the volume just added.
+     */
+    public <T extends RealType<T>> Node addVolume(List<SourceAndConverter<T>> sources,
+                                                  ArrayList<ConverterSetup> converterSetups,
+                                                  int numTimepoints,
+                                                  String name,
+                                                  float... voxelDimensions ) {
+
+        CacheControl cacheControl = null;
+
+//        RandomAccessibleInterval<T> image =
+//                ((RandomAccessibleIntervalSource4D) sources.get(0).getSpimSource()).
+//                .getSource(0, 0);
+        RandomAccessibleInterval<T> image = sources.get(0).getSpimSource().getSource(0, 0);
+
+        if (image instanceof VolatileView) {
+            VolatileViewData<T, Volatile<T>> viewData  = ((VolatileView<T, Volatile<T>>) image).getVolatileViewData();
+            cacheControl = viewData.getCacheControl();
+        }
+
+        long[] dimensions = new long[image.numDimensions()];
+        image.dimensions( dimensions );
+
+        long[] minPt = new long[image.numDimensions()];
+
+        // Get type at min point
+        RandomAccess<T> imageRA = image.randomAccess();
+        image.min(minPt);
+        imageRA.setPosition(minPt);
+        T voxelType = imageRA.get().createVariable();
+
+        System.out.println("addVolume " + image.numDimensions() + " interval " + ((Interval) image) );
+
+        //int numTimepoints = 1;
+        if( image.numDimensions() > 3 ) {
+            numTimepoints = (int) image.dimension(3);
+        }
+
+        Volume.VolumeDataSource.RAISource<T> ds = new Volume.VolumeDataSource.RAISource<T>(voxelType, sources, converterSetups, numTimepoints, cacheControl);
+        VolumeViewerOptions options = new VolumeViewerOptions();
+
+        Volume v = new RAIVolume(ds, options, getHub());
+        v.setName(name);
+
+        v.getMetadata().put("sources", sources);
+
+        TransferFunction tf = v.getTransferFunction();
+        float rampMin = 0f;
+        float rampMax = 0.1f;
+        tf.clear();
+        tf.addControlPoint(0.0f, 0.0f);
+        tf.addControlPoint(rampMin, 0.0f);
+        tf.addControlPoint(1.0f, rampMax);
+
         BoundingGrid bg = new BoundingGrid();
         bg.setNode(v);
 
-        getScene().addChild( v );
+        return addNode(v);
+    }
 
-//        @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
-//        float minVal, maxVal;
-//
-//        if( voxelType == UnsignedByteType.class ) {
-//            minVal = 0;
-//            maxVal = 255;
-//        } else if( voxelType == UnsignedShortType.class ) {
-//            minVal = 0;
-//            maxVal = 65535;
-//        } else if( voxelType == FloatType.class ) {
-//            minVal = 0;
-//            maxVal = 1;
-//        } else if( voxelType == VolatileUnsignedByteType.class ) {
-//            minVal = 0;
-//            maxVal = 255;
-//        } else if( voxelType == VolatileUnsignedShortType.class ) {
-//            minVal = 0;
-//            maxVal = 65535;
-//        } else if( voxelType == VolatileFloatType.class ) {
-//            minVal = 0;
-//            maxVal = 1;
-//        } else {
-//            log.debug( "Type: " + voxelType +
-//                       " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
-//            return null;
-//        }
-//
-//        updateVolume( image, name, voxelDimensions, v );
+    private void blockWhile(Function<SciView, Boolean> predicate, int waitTime) {
+        while( predicate.apply(this) ) {
+            try {
+                Thread.sleep(waitTime);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-        // TODO fixme
-//        v.setTrangemin( minVal );
-//        v.setTrangemax( maxVal );
-        v.setTransferFunction(TransferFunction.ramp(0.0f, 0.4f));
-
-        try {
-            setColormap( v, lutService.loadLUT( lutService.findLUTs().get( "WCIF/ICA.lut" ) ) );
-        } catch( IOException e ) {
-            e.printStackTrace();
+    /**
+     * Adds a SourceAndConverter to the scene.
+     *
+     * @param sources The list of SourceAndConverter to add
+     * @param name Name of the dataset
+     * @param voxelDimensions Array with voxel dimensions.
+     * @param <T> Type of the dataset.
+     * @return THe node corresponding to the volume just added.
+     */
+    public <T extends RealType<T>> Node addVolume(List<SourceAndConverter<T>> sources,
+                                                  int numTimepoints,
+                                                  String name,
+                                                  float... voxelDimensions ) {
+        int setupId = 0;
+        ArrayList<ConverterSetup> converterSetups = new ArrayList<>();
+        for( SourceAndConverter source: sources ) {
+            converterSetups.add(BigDataViewer.createConverterSetup(source, setupId++));
         }
 
-        setActiveNode( v );
-        eventService.publish( new NodeAddedEvent( v ) );
-
-        objectService.addObject( v );
-
-        return v;
+        return addVolume(sources, converterSetups, numTimepoints, name, voxelDimensions);
     }
 
     /**
@@ -1836,62 +2001,29 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param <T>
      * @return a Node corresponding to the input volume
      */
-//    public <T extends RealType<T>> Node updateVolume( IterableInterval<T> image, String name,
-//                                                                       float[] voxelDimensions, Volume v ) {
-//        //log.debug( "Update Volume" );
-//
-//        long[] dimensions = new long[3];
-//        image.dimensions( dimensions );
-//
-//        @SuppressWarnings("unchecked") Class<T> voxelType = ( Class<T> ) image.firstElement().getClass();
-//        int bytesPerVoxel = image.firstElement().getBitsPerPixel() / 8;
-//        NativeTypeEnum nType;
-//
-//        if( voxelType == UnsignedByteType.class || voxelType == VolatileUnsignedByteType.class ) {
-//            nType = NativeTypeEnum.UnsignedByte;
-//        } else if( voxelType == UnsignedShortType.class || voxelType == VolatileUnsignedShortType.class ) {
-//            nType = NativeTypeEnum.UnsignedShort;
-//        } else if( voxelType == FloatType.class || voxelType == VolatileFloatType.class ) {
-//            nType = NativeTypeEnum.Float;
-//        } else {
-//            log.debug( "Type: " + voxelType +
-//                       " cannot be displayed as a volume. Convert to UnsignedByteType, UnsignedShortType, or FloatType." );
-//            return null;
-//        }
-//
-//        // Make and populate a ByteBuffer with the content of the Dataset
-//        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
-//                ( int ) ( bytesPerVoxel * dimensions[0] * dimensions[1] * dimensions[2] ) );
-//        Cursor<T> cursor = image.cursor();
-//
-//        while( cursor.hasNext() ) {
-//            cursor.fwd();
-//            // TODO should we check if volatiles are valid
-//            if( voxelType == UnsignedByteType.class ) {
-//                byteBuffer.put( ( byte ) ( ( ( UnsignedByteType ) cursor.get() ).get() ) );
-//            } else if( voxelType == VolatileUnsignedByteType.class ) {
-//                byteBuffer.put( ( byte ) ( ( ( VolatileUnsignedByteType ) cursor.get() ).get().get() ) );
-//            } else if( voxelType == UnsignedShortType.class ) {
-//                byteBuffer.putShort( ( short ) Math.abs( ( ( UnsignedShortType ) cursor.get() ).getShort() ) );
-//            } else if( voxelType == VolatileUnsignedShortType.class ) {
-//                byteBuffer.putShort( ( short ) Math.abs( ( ( VolatileUnsignedShortType ) cursor.get() ).get().getShort() ) );
-//            } else if( voxelType == FloatType.class ) {
-//                byteBuffer.putFloat( ( ( FloatType ) cursor.get() ).get() );
-//            } else if( voxelType == VolatileFloatType.class ) {
-//                byteBuffer.putFloat( ( ( VolatileFloatType ) cursor.get() ).get().get() );
-//            }
-//        }
-//        byteBuffer.flip();
-//
-//        v.readFromBuffer( name, byteBuffer, dimensions[0], dimensions[1], dimensions[2], voxelDimensions[0],
-//                          voxelDimensions[1], voxelDimensions[2], nType, bytesPerVoxel );
-//
-//        v.setDirty( true );
-//        v.setNeedsUpdate( true );
-//        v.setNeedsUpdateWorld( true );
-//
-//        return v;
-//    }
+    public <T extends RealType<T>> Node updateVolume( IterableInterval<T> image, String name,
+                                                                       float[] voxelDimensions, Volume v ) {
+        List<SourceAndConverter<T>> sacs = (List<SourceAndConverter<T>>) v.getMetadata().get("sources");
+
+        RandomAccessibleInterval<T> source = sacs.get(0).getSpimSource().getSource(0, 0);// hard coded to timepoint and mipmap 0
+
+        Cursor<T> sCur = Views.iterable(source).cursor();
+        Cursor<T> iCur = image.cursor();
+        while( sCur.hasNext() ) {
+            sCur.fwd();
+            iCur.fwd();
+            sCur.get().set(iCur.get());
+        }
+
+        v.getVolumeManager().notifyUpdate(v);
+        v.getVolumeManager().requestRepaint();
+        //v.getCacheControls().clear();
+        //v.setDirty( true );
+        v.setNeedsUpdate( true );
+        //v.setNeedsUpdateWorld( true );
+
+        return v;
+    }
 
     /**
      *
@@ -1920,11 +2052,11 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         stopAnimation();
     }
 
-    public Settings settings() {
+    public Settings getScenerySettings() {
         return this.getSettings();
     }
 
-    public Statistics statistics() {
+    public Statistics getSceneryStatistics() {
         return this.getStats();
     }
 
@@ -2090,14 +2222,43 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         return axes.length;
     }
 
+    public void setCamera(Camera camera) {
+        this.camera = camera;
+        setActiveObserver(camera);
+    }
+
+    public void setActiveObserver(Camera screenshotCam) {
+        getScene().setActiveObserver(screenshotCam);
+    }
+
+    public Camera getActiveObserver() {
+        return getScene().getActiveObserver();
+    }
+
+    public void setCenterOnNewNodes(boolean centerOnNewNodes) {
+        this.centerOnNewNodes = centerOnNewNodes;
+    }
+
+    public boolean getCenterOnNewNodes() {
+        return centerOnNewNodes;
+    }
+
+    public void setBlockOnNewNodes(boolean blockOnNewNodes) {
+        this.blockOnNewNodes = blockOnNewNodes;
+    }
+
+    public boolean getBlockOnNewNodes() {
+        return blockOnNewNodes;
+    }
+
     public class TransparentSlider extends JSlider {
 
         public TransparentSlider() {
             // Important, we taking over the filling of the
             // component...
             setOpaque(false);
-            setBackground(java.awt.Color.DARK_GRAY);
-            setForeground(java.awt.Color.LIGHT_GRAY);
+            setBackground(Color.DARK_GRAY);
+            setForeground(Color.LIGHT_GRAY);
         }
 
         @Override

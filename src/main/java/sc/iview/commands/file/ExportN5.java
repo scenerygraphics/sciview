@@ -28,32 +28,40 @@
  */
 package sc.iview.commands.file;
 
-import static sc.iview.commands.MenuWeights.FILE;
-import static sc.iview.commands.MenuWeights.FILE_EXPORT_STL;
-
-import java.io.File;
-
+import graphics.scenery.Mesh;
+import graphics.scenery.Node;
+import org.janelia.saalfeldlab.n5.N5FSReader;
+import org.janelia.saalfeldlab.n5.N5FSWriter;
+import org.janelia.saalfeldlab.n5.N5Writer;
 import org.scijava.command.Command;
+import org.scijava.command.CommandService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.FileWidget;
-
 import sc.iview.SciView;
+import sc.iview.commands.demo.MeshDemo;
+import sc.iview.io.N5;
+import sc.iview.process.MeshConverter;
 
-import graphics.scenery.Mesh;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+
+import static sc.iview.commands.MenuWeights.FILE;
+import static sc.iview.commands.MenuWeights.FILE_EXPORT_STL;
 
 /**
- * Command to export a STL of the currently active Node
+ * Command to export the currently active Node to N5
  *
  * @author Kyle Harrington
  *
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "File", weight = FILE), //
-                 @Menu(label = "Export STL...", weight = FILE_EXPORT_STL) })
-public class ExportSTL implements Command {
+                 @Menu(label = "Export Node as N5...", weight = FILE_EXPORT_STL) })
+public class ExportN5 implements Command {
 
     @Parameter
     private LogService logService;
@@ -62,7 +70,10 @@ public class ExportSTL implements Command {
     private SciView sciView;
 
     @Parameter(style = FileWidget.SAVE_STYLE)
-    private File stlFile = new File( "" );
+    private File n5File = new File( "" );
+
+    @Parameter(label = "Dataset")
+    private String dataset = "/myDataset";
 
     @Override
     public void run() {
@@ -71,12 +82,34 @@ public class ExportSTL implements Command {
 
             if( mesh != null ) {
                 try {
-                    sciView.writeSCMesh( stlFile.getAbsolutePath(), mesh );
+                    if( !n5File.exists() )
+                        throw new IOException("N5 path does not exist");
+                    N5Writer n5 = new N5FSWriter(n5File.getAbsolutePath());
+
+                    N5.save(MeshConverter.toImageJ(mesh), n5, dataset );
                 } catch( final Exception e ) {
                     logService.trace( e );
                 }
             }
+
+        } else {
+            logService.warn("Node is " + sciView.getActiveNode().getNodeType() + " cannot export to N5.");
         }
     }
 
+    public static void main(String... args) throws Exception {
+        SciView sv = SciView.create();
+
+        CommandService command = sv.getScijavaContext().getService(CommandService.class);
+
+        HashMap<String, Object> argmap = new HashMap<>();
+
+        command.run(MeshDemo.class, true, argmap);
+
+        argmap.put("n5File", "/tmp/sciview/test.n5");
+        argmap.put("dataset", "/testMesh");
+        Thread.sleep(1000);
+
+        command.run(ExportN5.class, true, argmap);
+    }
 }

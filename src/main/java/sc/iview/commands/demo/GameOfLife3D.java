@@ -46,6 +46,7 @@ import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.joml.Vector3f;
 import org.scijava.command.Command;
+import org.scijava.command.CommandService;
 import org.scijava.command.InteractiveCommand;
 import org.scijava.event.EventHandler;
 import org.scijava.plugin.Menu;
@@ -57,6 +58,8 @@ import sc.iview.SciView;
 import sc.iview.event.NodeRemovedEvent;
 
 import javax.swing.*;
+
+import java.util.HashMap;
 
 import static sc.iview.commands.MenuWeights.DEMO;
 import static sc.iview.commands.MenuWeights.DEMO_GAME_OF_LIFE;
@@ -322,18 +325,20 @@ public class GameOfLife3D implements Command {
             sciView.centerOnNode(volume);
         } else {
             // NB: Name must be unique each time.
-            //sciView.updateVolume( field, name + "-" + ++tick, voxelDims, volume );
+            sciView.updateVolume( field, name + "-" + ++tick, voxelDims, volume );
 
-            RandomAccessibleIntervalSource<UnsignedByteType> newSource = new RandomAccessibleIntervalSource<UnsignedByteType>(field, new UnsignedByteType(), name + "-" + ++tick);
-
-            SourceAndConverter<UnsignedByteType> sourceAndConverter = BigDataViewer.wrapWithTransformedSource(
-                    new SourceAndConverter<>(newSource, BigDataViewer.createConverterToARGB(new UnsignedByteType())));
-
-            ((Volume.VolumeDataSource.RAISource) volume.getDataSource()).getSources().set(0, sourceAndConverter);
-
-            volume.setDirty(true);
-            volume.setNeedsUpdate(true);
-            volume.getVolumeManager().requestRepaint();
+//            RandomAccessibleIntervalSource<UnsignedByteType> newSource = new RandomAccessibleIntervalSource<UnsignedByteType>(field, new UnsignedByteType(), name + "-" + ++tick);
+//
+//            SourceAndConverter<UnsignedByteType> sourceAndConverter = BigDataViewer.wrapWithTransformedSource(
+//                    new SourceAndConverter<>(newSource, BigDataViewer.createConverterToARGB(new UnsignedByteType())));
+//
+//            ((Volume.VolumeDataSource.RAISource) volume.getDataSource()).getSources().set(0, sourceAndConverter);
+//
+//            volume.getVolumeManager().notifyUpdate(volume);
+//
+//            volume.setDirty(true);
+//            volume.setNeedsUpdate(true);
+//            volume.getVolumeManager().requestRepaint();
             //volume.getCacheControl().prepareNextFrame();
         }
     }
@@ -361,5 +366,15 @@ public class GameOfLife3D implements Command {
      */
     public Volume getVolume() {
         return volume;
+    }
+
+    public static void main(String... args) throws Exception {
+        SciView sv = SciView.create();
+
+        CommandService command = sv.getScijavaContext().getService(CommandService.class);
+
+        HashMap<String, Object> argmap = new HashMap<>();
+
+        command.run(GameOfLife3D.class, true, argmap);
     }
 }

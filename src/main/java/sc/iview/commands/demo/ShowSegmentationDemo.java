@@ -122,6 +122,8 @@ public class ShowSegmentationDemo implements Command {
             // Make the segmentation mesh a child of the parent
             v.addChild(isoSurfaceMesh);
         }
+
+        sciView.centerOnNode(v);
     }
 
     // Generate a demo image with a bunch of spheres at random positions

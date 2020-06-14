@@ -28,91 +28,87 @@
  */
 package sc.iview.commands.demo;
 
-import cleargl.GLVector;
-import graphics.scenery.Material;
+import bdv.BigDataViewer;
+import bdv.tools.brightness.ConverterSetup;
+import bdv.util.*;
+import bdv.viewer.SourceAndConverter;
 import graphics.scenery.Node;
-import graphics.scenery.TextBoard;
+import graphics.scenery.volumes.Volume;
+import io.scif.services.DatasetIOService;
+import net.imagej.Dataset;
 import net.imagej.mesh.Mesh;
+import net.imagej.ops.OpService;
+import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
+import net.imglib2.display.ColorConverter;
+import net.imglib2.img.Img;
+import net.imglib2.type.logic.BitType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
-import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
+import sc.iview.process.MeshConverter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
-import static sc.iview.commands.MenuWeights.*;
+import static sc.iview.commands.MenuWeights.DEMO;
+import static sc.iview.commands.MenuWeights.DEMO_VOLUME_RENDER;
 
 /**
- * A demo of text annotations
+ * A demo of slicing a BDV plane through a volume
  *
  * @author Kyle Harrington
  */
-@Plugin(type = Command.class, label = "Mesh Demo", menuRoot = "SciView", //
+@Plugin(type = Command.class, label = "BigDataViewer Slicing Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Text Demo", weight = DEMO_TEXT) })
-public class TextDemo implements Command {
+                 @Menu(label = "BigDataViewer Slicing", weight = DEMO_VOLUME_RENDER) })
+public class BDVSlicingDemo implements Command {
 
     @Parameter
-    private IOService io;
+    private DatasetIOService datasetIO;
 
     @Parameter
     private LogService log;
 
     @Parameter
-    private SciView sciView;
+    private OpService ops;
 
     @Parameter
-    private CommandService commandService;
+    private SciView sciView;
 
     @Override
     public void run() {
-        final Mesh m;
-        String filePath = "/WieseRobert_simplified_Cip1.stl";
+        final Dataset cube;
         try {
-            File meshFile = ResourceLoader.createFile( getClass(), filePath );
-            m = (Mesh) io.open( meshFile.getAbsolutePath() );
+            File cubeFile = ResourceLoader.createFile( getClass(), "/cored_cube_var2_8bit.tif" );
+
+            cube = datasetIO.open( cubeFile.getAbsolutePath() );
         }
         catch (IOException exc) {
             log.error( exc );
             return;
         }
 
-        Node msh = sciView.addMesh( m );
-        msh.setName( filePath );
+        Volume v = (Volume) sciView.addVolume( cube, new float[] { 1, 1, 1 } );
+        v.setPixelToWorldRatio(0.1f);// FIXME
+        v.setName( "Volume Render Demo" );
+        v.setDirty(true);
+        v.setNeedsUpdate(true);
 
-        //msh.fitInto( 15.0f, true );
+        List<SourceAndConverter<UnsignedByteType>> sources = (List<SourceAndConverter<UnsignedByteType>>) v.getMetadata().get("sources");
 
-        Material mat = new Material();
-        mat.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
-        mat.setDiffuse( new Vector3f( 0.8f, 0.5f, 0.4f ) );
-        mat.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-        //mat.setDoubleSided( true );
+        BdvFunctions.show(sources.get(0).getSpimSource(), new BdvOptions().frameTitle("slice of " + v.getName()));
 
-        msh.setMaterial( mat );
-
-        msh.setNeedsUpdate( true );
-        msh.setDirty( true );
-
-        TextBoard board = new TextBoard();
-        board.setText("This mesh was contributed by Robert Wiese!");
-        board.setName("TextBoard");
-        board.setTransparent(0);
-        board.setFontColor(new Vector4f(0, 0, 0, 0));
-        board.setBackgroundColor(new Vector4f(100,100,0, 0));
-        board.setPosition(msh.getPosition().add(new Vector3f(0,10,0)));
-        board.setScale(new Vector3f(10.0f,10.0f,10.0f));
-
-        sciView.addNode(board,false);
-
-        sciView.centerOnNode( msh );
+        sciView.setActiveNode(v);
+        sciView.centerOnNode( sciView.getActiveNode() );
     }
 
     public static void main(String... args) throws Exception {
@@ -120,8 +116,8 @@ public class TextDemo implements Command {
 
         CommandService command = sv.getScijavaContext().getService(CommandService.class);
 
-        HashMap<String, Object> argmap = new HashMap<>();
+        HashMap<String, Object> argmap = new HashMap<String, Object>();
 
-        command.run(TextDemo.class, true, argmap);
+        command.run(BDVSlicingDemo.class, true, argmap);
     }
 }
