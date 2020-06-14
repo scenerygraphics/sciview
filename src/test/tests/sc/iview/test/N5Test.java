@@ -14,8 +14,11 @@ import org.janelia.saalfeldlab.n5.N5FSReader;
 import org.janelia.saalfeldlab.n5.N5FSWriter;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import sc.iview.SciView;
+import sc.iview.commands.demo.ResourceLoader;
 import sc.iview.io.N5;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,7 +39,7 @@ public class N5Test {
 		mesh = getMesh();
 	}
 
-    private static Mesh getMesh() {
+    private static Mesh generateMesh() {
         ImageJ imagej = new ImageJ();
 
 	    // Generate an image
@@ -48,6 +51,21 @@ public class N5Test {
 
         // Run marching cubes
         return imagej.op().geom().marchingCubes(img);
+    }
+
+    private static Mesh getMesh() {
+        ImageJ imagej = new ImageJ();
+
+        final Mesh m;
+        try {
+            File meshFile = ResourceLoader.createFile( SciView.class, "/WieseRobert_simplified_Cip1.stl" );
+            m = (Mesh) imagej.io().open( meshFile.getAbsolutePath() );
+            return m;
+        }
+        catch (IOException exc) {
+            imagej.log().error( exc );
+            return null;
+        }
     }
 
     @Test
