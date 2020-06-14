@@ -165,7 +165,6 @@
 		<dependency>
 			<groupId>graphics.scenery</groupId>
 			<artifactId>scenery</artifactId>
-			<version>${scenery.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.clearvolume</groupId>
@@ -174,7 +173,6 @@
 		<dependency>
 			<groupId>net.clearcontrol</groupId>
 			<artifactId>coremem</artifactId>
-			<version>${coremem.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jogamp.jogl</groupId>
@@ -186,7 +184,6 @@
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-common</artifactId>
-			<version>${scijava-common.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
@@ -195,22 +192,18 @@
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>script-editor</artifactId>
-			<version>${script-editor.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-ui-swing</artifactId>
-			<version>${scijava-ui-swing.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-ui-awt</artifactId>
-			<version>${scijava-ui-awt.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-search</artifactId>
-			<version>${scijava-search.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.miglayout</groupId>
@@ -242,7 +235,6 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-launcher</artifactId>
-			<version>${imagej-launcher.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
@@ -251,12 +243,10 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-ui-swing</artifactId>
-			<version>${imagej-ui-swing.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-legacy</artifactId>
-			<version>${imagej-legacy.version}</version>
 		</dependency>
 
 		<!-- ImgLib2 dependencies -->
@@ -306,12 +296,6 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>imagej-ui-swing</artifactId>
-			<scope>runtime</scope>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
 			<scope>runtime</scope>
@@ -348,7 +332,6 @@
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>spim_data</artifactId>
-			<version>${spim_data.version}</version>
 		</dependency>
 	</dependencies>
 
