@@ -108,15 +108,10 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
-		<scenery.version>c4f0602</scenery.version>
-		<cleargl.version>2.2.10</cleargl.version>
-		<coremem.version>0.4.6</coremem.version>
+		<scenery.version>4e67655</scenery.version>
 
-		<kotlin.version>1.4-M1</kotlin.version>
-		<kotlinx-coroutines-core.version>1.3.5-1.4-M1</kotlinx-coroutines-core.version>
-
-		<lwjgl.version>3.2.3</lwjgl.version>
-		<joml.version>1.9.22</joml.version>
+		<kotlin.version>1.4-M2</kotlin.version>
+		<kotlinx-coroutines-core.version>1.3.7-1.4-M2</kotlinx-coroutines-core.version>
 	</properties>
 
 	<repositories>
