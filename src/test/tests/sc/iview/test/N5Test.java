@@ -17,7 +17,6 @@ import org.janelia.saalfeldlab.n5.N5FSWriter;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import sc.iview.SciView;
 import sc.iview.commands.demo.MeshDemo;
 import sc.iview.commands.demo.ResourceLoader;
 import sc.iview.io.N5;
