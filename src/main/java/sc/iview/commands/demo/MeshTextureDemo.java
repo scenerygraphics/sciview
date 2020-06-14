@@ -35,12 +35,14 @@ import kotlin.Triple;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.joml.Vector3i;
 import org.scijava.command.Command;
+import org.scijava.command.CommandService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 
 import static sc.iview.commands.MenuWeights.DEMO;
 import static sc.iview.commands.MenuWeights.DEMO_MESH_TEXTURE;
@@ -84,8 +86,6 @@ public class MeshTextureDemo implements Command {
         Vector3i dims = new Vector3i( width, height, 1 );
         int nChannels = 1;
 
-        // TODO: Use BufferUtils, or ByteBuffer.allocateDirect?
-        // Whatever we do, should we do the same everywhere?
         ByteBuffer bb = BufferUtils.Companion.allocateByte( width * height * nChannels );
 
         for( int x = 0; x < width; x++ ) {
@@ -102,5 +102,15 @@ public class MeshTextureDemo implements Command {
 				new Triple(Texture.RepeatMode.Repeat,
 				    Texture.RepeatMode.Repeat,
 				    Texture.RepeatMode.ClampToEdge));
+    }
+
+    public static void main(String... args) throws Exception {
+        SciView sv = SciView.create();
+
+        CommandService command = sv.getScijavaContext().getService(CommandService.class);
+
+        HashMap<String, Object> argmap = new HashMap<>();
+
+        command.run(MeshTextureDemo.class, true, argmap);
     }
 }
