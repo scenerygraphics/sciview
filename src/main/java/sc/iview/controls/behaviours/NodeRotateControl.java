@@ -52,10 +52,10 @@ public class NodeRotateControl implements DragBehaviour {
         float frameYaw   = mouseSpeedMultiplier*(x - lastX) * 0.0174533f;
         float framePitch = mouseSpeedMultiplier*(y - lastY) * 0.0174533f;
 
-        new Quaternionf().rotateXYZ(0.0f, frameYaw, 0.0f)
+        new Quaternionf().rotateAxis(frameYaw, getCamera().getUp())
                 .mul(targetedNode.getRotation(),targetedNode.getRotation())
                 .normalize();
-        new Quaternionf().rotateXYZ(framePitch, 0.0f, 0.0f)
+        new Quaternionf().rotateAxis(framePitch, getCamera().getRight())
                 .mul(targetedNode.getRotation(),targetedNode.getRotation())
                 .normalize();
         targetedNode.setNeedsUpdate(true);
