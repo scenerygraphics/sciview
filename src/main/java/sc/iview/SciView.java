@@ -716,6 +716,12 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         //current and desired directions in world coords
         final Vector3f currViewDir = new Vector3f(camera.getTarget()).sub(camera.getPosition());
         final Vector3f wantViewDir = new Vector3f(currentPos).sub(camera.getPosition());
+        if (wantViewDir.lengthSquared() < 0.01)
+        {
+            //ill defined task, happens typically when cam is inside the node which we want center on
+            log.info("Camera is on the spot you want to look at. Please, move the camera away first.");
+            return;
+        }
 
         //current and desired directions as the camera sees them
         camera.getTransformation().transformDirection(currViewDir).normalize();
@@ -726,10 +732,14 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         float totalDeltaAng = (float)Math.acos( currViewDir.dot(wantViewDir) );
         //
         //if the needed angle is less than 2 deg, we do nothing...
-        if (totalDeltaAng > -0.035 && totalDeltaAng < 0.035) return;
+        if (totalDeltaAng < 0.035) return;
         //
         //here's the axis along which we will rotate
-        currViewDir.cross(wantViewDir);
+        if (totalDeltaAng < 3.13) currViewDir.cross(wantViewDir);
+        else currViewDir.set(camera.getUp());
+        //NB: if the angle is nearly 180 deg, there is infinite number of axes that
+        //    allow the required "flip" to happen (and cross() did not choose any),
+        //    so we provide own rotation axis: a vertical axis
 
         //animation options: control delay between animation frames -- fluency
         final long rotPausePerStep = 30; //miliseconds
