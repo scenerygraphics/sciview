@@ -1021,11 +1021,20 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         h.addBehaviour( "rotate_mouse", h.getBehaviour("rotate_CW"));
         h.addKeyBinding("rotate_mouse", "ctrl button3");
 
-        h.addBehaviour(  "enable_decrease", new enableDecrease() );
-        h.addKeyBinding( "enable_decrease", "MINUS" );
+        h.addBehaviour( "move_step_decrease", (ClickBehaviour)(x,y) -> setFPSSpeed( getFPSSpeedSlow() - 0.01f ) );
+        h.addKeyBinding("move_step_decrease", "MINUS");
+        h.addBehaviour( "move_step_increase", (ClickBehaviour)(x,y) -> setFPSSpeed( getFPSSpeedSlow() + 0.01f ) );
+        h.addKeyBinding("move_step_increase", "EQUALS" );
 
-        h.addBehaviour(  "enable_increase", new enableIncrease() );
-        h.addKeyBinding( "enable_increase", "EQUALS" );
+        h.addBehaviour( "mouse_step_decrease", (ClickBehaviour)(x,y) -> setMouseSpeed( getMouseSpeed() - 0.02f ) );
+        h.addKeyBinding("mouse_step_decrease", "M MINUS");
+        h.addBehaviour( "mouse_step_increase", (ClickBehaviour)(x,y) -> setMouseSpeed( getMouseSpeed() + 0.02f ) );
+        h.addKeyBinding("mouse_step_increase", "M EQUALS" );
+
+        h.addBehaviour( "mouse_scroll_decrease", (ClickBehaviour)(x,y) -> setMouseScrollSpeed( getMouseScrollSpeed() - 0.3f ) );
+        h.addKeyBinding("mouse_scroll_decrease", "S MINUS");
+        h.addBehaviour( "mouse_scroll_increase", (ClickBehaviour)(x,y) -> setMouseScrollSpeed( getMouseScrollSpeed() + 0.3f ) );
+        h.addKeyBinding("mouse_scroll_increase", "S EQUALS" );
 
         // Extra keyboard controls
         h.addBehaviour(  "show_help", new showHelpDisplay() );
@@ -2558,26 +2567,6 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             super.paintComponent(g);
         }
 
-    }
-
-    class enableIncrease implements ClickBehaviour {
-
-        @Override public void click( int x, int y ) {
-            setFPSSpeed( getFPSSpeedSlow() + 0.01f );
-            setMouseSpeed( getMouseSpeed() + 0.05f );
-
-            resetFPSBehaviours();
-        }
-    }
-
-    class enableDecrease implements ClickBehaviour {
-
-        @Override public void click( int x, int y ) {
-            setFPSSpeed( getFPSSpeedSlow() - 0.01f );
-            setMouseSpeed( getMouseSpeed() - 0.05f );
-
-            resetFPSBehaviours();
-        }
     }
 
     class showHelpDisplay implements ClickBehaviour {
