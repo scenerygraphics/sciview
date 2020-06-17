@@ -834,12 +834,13 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         currViewDir.cross(wantViewDir);
 
         //animation options: control delay between animation frames -- fluency
-        final long rotPauseyPerStep = 30; //miliseconds
+        final long rotPausePerStep = 30; //miliseconds
 
         //animation options: control max number of steps -- upper limit on total time for animation
         final int rotMaxSteps = 999999;  //effectively disabled....
 
-        //how many steps when max update/move is 5 deg -- smoothness
+        //animation options: the hardcoded 5 deg (0.087 rad) -- smoothness
+        //how many steps when max update/move is 5 deg
         int rotSteps = (int)Math.ceil( Math.abs(totalDeltaAng) / 0.087 );
         if (rotSteps > rotMaxSteps) rotSteps = rotMaxSteps;
 
@@ -862,7 +863,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
             new Quaternionf().rotateAxis(-angDelta,currViewDir).mul(camera.getRotation(),camera.getRotation());
             try {
-                Thread.sleep(rotPauseyPerStep);
+                Thread.sleep(rotPausePerStep);
             } catch (InterruptedException e) {
                 i = rotSteps;
             }
