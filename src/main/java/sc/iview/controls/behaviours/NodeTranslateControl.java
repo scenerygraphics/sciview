@@ -47,21 +47,8 @@ public class NodeTranslateControl implements DragBehaviour, ScrollBehaviour {
     private int lastX;
     private int lastY;
 
-    public float getDragSpeed() {
-        return dragXySpeed;
-    }
-
-    public void setDragSpeed( float dragSpeed ) {
-        this.dragXySpeed = dragSpeed;
-        this.scrollSpeed = 10 * dragSpeed;
-    }
-
-    protected float dragXySpeed;
-    protected float scrollSpeed;
-
-    public NodeTranslateControl( SciView sciView, float dragSpeed ) {
+    public NodeTranslateControl( SciView sciView) {
         this.sciView = sciView;
-        setDragSpeed(dragSpeed);
     }
 
     /**
@@ -84,9 +71,9 @@ public class NodeTranslateControl implements DragBehaviour, ScrollBehaviour {
         final Node targetedNode = sciView.getActiveNode();
         if (targetedNode == null || !targetedNode.getLock().tryLock()) return;
 
-        sciView.getCamera().getRight().mul(( x - lastX ) * dragXySpeed, dragPosUpdater);
+        sciView.getCamera().getRight().mul((x - lastX) * sciView.getFPSSpeedSlow() * sciView.getMouseSpeed(), dragPosUpdater);
         targetedNode.getPosition().add(dragPosUpdater);
-        sciView.getCamera().getUp().mul(   ( lastY - y ) * dragXySpeed, dragPosUpdater);
+        sciView.getCamera().getUp().mul(   (lastY - y) * sciView.getFPSSpeedSlow() * sciView.getMouseSpeed(), dragPosUpdater);
         targetedNode.getPosition().add(dragPosUpdater);
         targetedNode.setNeedsUpdate(true);
 
@@ -106,7 +93,7 @@ public class NodeTranslateControl implements DragBehaviour, ScrollBehaviour {
         final Node targetedNode = sciView.getActiveNode();
         if (targetedNode == null || !targetedNode.getLock().tryLock()) return;
 
-        sciView.getCamera().getForward().mul(-1f * (float)wheelRotation * scrollSpeed, scrollPosUpdater);
+        sciView.getCamera().getForward().mul(+1f * (float)wheelRotation * 0.005f, scrollPosUpdater);
         targetedNode.getPosition().add(scrollPosUpdater);
         targetedNode.setNeedsUpdate(true);
 

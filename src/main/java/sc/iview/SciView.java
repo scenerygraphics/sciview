@@ -1014,13 +1014,13 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         // Mouse: node-translate controls
         setObjectSelectionMode();
-        NodeTranslateControl nodeTranslate = new NodeTranslateControl(this, 0.005f);
-        h.addBehaviour(  "mouse_control_nodetranslate", nodeTranslate );
+        final NodeTranslateControl nodeTranslateControl = new NodeTranslateControl(this);
+        h.addBehaviour(  "mouse_control_nodetranslate", nodeTranslateControl);
         h.addKeyBinding( "mouse_control_nodetranslate", "ctrl button1" );
+        h.addBehaviour(  "mouse_scroll_nodetranslate", nodeTranslateControl);
+        h.addKeyBinding( "mouse_scroll_nodetranslate", "ctrl scroll" );
         h.addBehaviour(  "mouse_control_noderotate", new NodeRotateControl(this) );
         h.addKeyBinding( "mouse_control_noderotate", "ctrl shift button1" );
-        h.addBehaviour(  "scroll_nodetranslate", nodeTranslate );
-        h.addKeyBinding( "scroll_nodetranslate", "ctrl scroll" );
 
         // Mouse: within-scene navigation: ArcBall and FPS
         enableArcBallControl();
