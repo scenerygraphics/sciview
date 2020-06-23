@@ -1049,19 +1049,18 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             target = getActiveNode().getPosition();
         }
 
+        //setup ArcballCameraControl from scenery, register it with SciView's controlsParameters
         Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
         targetArcball = new AnimatedCenteringBeforeArcBallControl( "mouse_control_arcball", cameraSupplier,
                                                   getRenderer().getWindow().getWidth(),
                                                   getRenderer().getWindow().getHeight(), target );
         targetArcball.setMaximumDistance( Float.MAX_VALUE );
-        targetArcball.setMouseSpeedMultiplier( mouseSpeedMult );
-        targetArcball.setScrollSpeedMultiplier( 0.05f );
-        targetArcball.setDistance( getCamera().getPosition().sub( target ).length() );
+        controlsParameters.registerArcballCameraControl( targetArcball );
 
         h.addBehaviour(  "mouse_control_arcball", targetArcball );
         h.addKeyBinding( "mouse_control_arcball", "shift button1" );
-        h.addBehaviour(  "scroll_arcball", targetArcball );
-        h.addKeyBinding( "scroll_arcball", "shift scroll" );
+        h.addBehaviour(  "mouse_scroll_arcball", targetArcball );
+        h.addKeyBinding( "mouse_scroll_arcball", "shift scroll" );
     }
 
     /*
@@ -1119,6 +1118,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
         fpsControl = new FPSCameraControl( "mouse_control", cameraSupplier, getRenderer().getWindow().getWidth(),
                                            getRenderer().getWindow().getHeight() );
+        controlsParameters.registerFpsCameraControl( fpsControl );
 
         h.addBehaviour(  "mouse_control", fpsControl );
         h.addKeyBinding( "mouse_control", "button1" );
