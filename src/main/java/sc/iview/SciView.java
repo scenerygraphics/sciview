@@ -211,10 +211,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     /**
      * Speeds for input controls
      */
-    private float fpsSpeedSlow     = 0.05f;
-    private float fpsSpeedFast     = 1.0f;
-    private float fpsSpeedVeryFast = 50.0f;
-    private float mouseSpeedMult   = 0.25f;
+    final public ControlsParameters controlsParameters = new ControlsParameters();
 
     private Display<?> scijavaDisplay;
     private SplashLabel splashLabel;
@@ -877,45 +874,75 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         }
     }
 
+    //a couple of shortcut methods to readout controls params
     public float getFPSSpeedSlow() {
-        return fpsSpeedSlow;
+        return controlsParameters.getFpsSpeedSlow();
     }
     public float getFPSSpeedFast() {
-        return fpsSpeedFast;
+        return controlsParameters.getFpsSpeedFast();
     }
     public float getFPSSpeedVeryFast() {
-        return fpsSpeedVeryFast;
-    }
-
-    private float speedWithinBounds(float newspeed, final float minBound, final float maxBound)
-    {
-        if( newspeed < minBound ) newspeed = minBound;
-        else if( newspeed > maxBound ) newspeed = maxBound;
-        return newspeed;
-    }
-    public void setFPSSpeed( float newBaseSpeed ) {
-        fpsSpeedSlow     = speedWithinBounds(newBaseSpeed, 0.01f,30f);
-        fpsSpeedFast     = fpsSpeedSlow * 20;
-        fpsSpeedVeryFast = fpsSpeedFast * 50;
-        log.debug( "FPS speeds: slow=" + fpsSpeedSlow + ", fast=" + fpsSpeedFast + ", very fast=" + fpsSpeedVeryFast );
-    }
-    public void setFPSSpeedSlow( float slowSpeed ) {
-        fpsSpeedSlow = speedWithinBounds(slowSpeed, 0.01f,30f);
-    }
-    public void setFPSSpeedFast( float fastSpeed ) {
-        fpsSpeedFast = speedWithinBounds(fastSpeed, 0.2f,600f);
-    }
-    public void setFPSSpeedVeryFast( float veryFastSpeed ) {
-        fpsSpeedVeryFast = speedWithinBounds(veryFastSpeed, 40f,2000f);
+        return controlsParameters.getFpsSpeedVeryFast();
     }
 
     public float getMouseSpeed() {
-        return mouseSpeedMult;
+        return controlsParameters.getMouseSpeedMult();
+    }
+    public float getMouseScrollSpeed() {
+        return controlsParameters.getMouseScrollMult();
     }
 
-    public void setMouseSpeed( float newspeed ) {
-        mouseSpeedMult = speedWithinBounds(newspeed, 0.1f,3.0f);
-        log.debug( "Mouse speed: " + mouseSpeedMult );
+    //a couple of setters with scene sensible boundary checks
+    public void setFPSSpeedSlow( float slowSpeed ) {
+        controlsParameters.setFpsSpeedSlow( paramWithinBounds(slowSpeed, FPSSPEED_MINBOUND_SLOW,FPSSPEED_MAXBOUND_SLOW) );
+    }
+    public void setFPSSpeedFast( float fastSpeed ) {
+        controlsParameters.setFpsSpeedFast( paramWithinBounds(fastSpeed, FPSSPEED_MINBOUND_FAST,FPSSPEED_MAXBOUND_FAST) );
+    }
+    public void setFPSSpeedVeryFast( float veryFastSpeed ) {
+        controlsParameters.setFpsSpeedVeryFast( paramWithinBounds(veryFastSpeed, FPSSPEED_MINBOUND_VERYFAST,FPSSPEED_MAXBOUND_VERYFAST) );
+    }
+
+    public void setFPSSpeed( float newBaseSpeed ) {
+        // we don't want to escape bounds checking
+        // (so we call "our" methods rather than directly the controlsParameters)
+        setFPSSpeedSlow(       1f * newBaseSpeed );
+        setFPSSpeedFast(      20f * newBaseSpeed );
+        setFPSSpeedVeryFast( 500f * newBaseSpeed );
+
+        //report what's been set in the end
+        log.debug( "FPS speeds: slow=" + controlsParameters.getFpsSpeedSlow()
+                + ", fast=" + controlsParameters.getFpsSpeedFast()
+                + ", very fast=" + controlsParameters.getFpsSpeedVeryFast() );
+    }
+
+    public void setMouseSpeed( float newSpeed ) {
+        controlsParameters.setMouseSpeedMult( paramWithinBounds(newSpeed, MOUSESPEED_MINBOUND,MOUSESPEED_MAXBOUND) );
+        log.debug( "Mouse movement speed: " + controlsParameters.getMouseSpeedMult() );
+    }
+    public void setMouseScrollSpeed( float newSpeed ) {
+        controlsParameters.setMouseScrollMult( paramWithinBounds(newSpeed, MOUSESCROLL_MINBOUND,MOUSESCROLL_MAXBOUND) );
+        log.debug( "Mouse scroll speed: " + controlsParameters.getMouseScrollMult() );
+    }
+
+    //bounds for the controls
+    public static final float FPSSPEED_MINBOUND_SLOW = 0.01f;
+    public static final float FPSSPEED_MAXBOUND_SLOW = 30.0f;
+    public static final float FPSSPEED_MINBOUND_FAST = 0.2f;
+    public static final float FPSSPEED_MAXBOUND_FAST = 600f;
+    public static final float FPSSPEED_MINBOUND_VERYFAST = 10f;
+    public static final float FPSSPEED_MAXBOUND_VERYFAST = 2000f;
+
+    public static final float MOUSESPEED_MINBOUND = 0.1f;
+    public static final float MOUSESPEED_MAXBOUND = 3.0f;
+    public static final float MOUSESCROLL_MINBOUND = 0.3f;
+    public static final float MOUSESCROLL_MAXBOUND = 10.0f;
+
+    private float paramWithinBounds(float param, final float minBound, final float maxBound)
+    {
+        if( param < minBound ) param = minBound;
+        else if( param > maxBound ) param = maxBound;
+        return param;
     }
 
     /*
