@@ -82,7 +82,7 @@ public class ControlsParameters
         //synchronize with the current state of the controls
         if (arcballCameraControl != null) {
             arcballCameraControl.setMouseSpeedMultiplier(mouseSpeedMult);
-            arcballCameraControl.setScrollSpeedMultiplier(mouseScrollMult);
+            arcballCameraControl.setScrollSpeedMultiplier(fpsSpeedSlow * mouseScrollMult);
         }
     }
 
@@ -153,6 +153,11 @@ public class ControlsParameters
     public void setFpsSpeedSlow(float fpsSpeedSlow) {
         this.fpsSpeedSlow = fpsSpeedSlow;
         slowStepMovers.forEach( m -> m.setSpeed( fpsSpeedSlow ) );
+
+        //notify the scenery controls
+        if (arcballCameraControl != null) {
+            arcballCameraControl.setScrollSpeedMultiplier(fpsSpeedSlow * mouseScrollMult);
+        }
     }
 
     public void setFpsSpeedFast(float fpsSpeedFast) {
@@ -182,7 +187,7 @@ public class ControlsParameters
 
         //notify the scenery controls
         if (arcballCameraControl != null) {
-            arcballCameraControl.setScrollSpeedMultiplier(mouseScrollMult);
+            arcballCameraControl.setScrollSpeedMultiplier(fpsSpeedSlow * mouseScrollMult);
         }
     }
 

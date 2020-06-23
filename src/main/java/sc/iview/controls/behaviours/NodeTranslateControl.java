@@ -93,7 +93,7 @@ public class NodeTranslateControl implements DragBehaviour, ScrollBehaviour {
         final Node targetedNode = sciView.getActiveNode();
         if (targetedNode == null || !targetedNode.getLock().tryLock()) return;
 
-        sciView.getCamera().getForward().mul(+1f * (float)wheelRotation * 0.005f, scrollPosUpdater);
+        sciView.getCamera().getForward().mul((float)wheelRotation * sciView.getFPSSpeedSlow() * sciView.getMouseScrollSpeed(), scrollPosUpdater);
         targetedNode.getPosition().add(scrollPosUpdater);
         targetedNode.setNeedsUpdate(true);
 
