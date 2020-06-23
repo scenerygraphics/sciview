@@ -68,6 +68,9 @@ public class CameraTranslateControl implements DragBehaviour {
             move_backward_slow     = (ClickBehaviour)sciView.getSceneryInputHandler().getBehaviour("move_back");
             move_backward_fast     = (ClickBehaviour)sciView.getSceneryInputHandler().getBehaviour("move_back_fast");
             move_backward_veryfast = (ClickBehaviour)sciView.getSceneryInputHandler().getBehaviour("move_back_veryfast");
+
+            //make sure all moves are always defined
+            replaceNullBehavioursWith( noMovement );
         }
     }
 
@@ -75,6 +78,11 @@ public class CameraTranslateControl implements DragBehaviour {
     private ClickBehaviour move_right_slow,    move_right_fast,    move_right_veryfast;
     private ClickBehaviour move_forward_slow,  move_forward_fast,  move_forward_veryfast;
     private ClickBehaviour move_backward_slow, move_backward_fast, move_backward_veryfast;
+
+    private static ClickBehaviour noMovement = new ClickBehaviour() {
+        @Override
+        public void click(int x, int y) { /* intentionally empty */ }
+    };
 
     @Override public void drag( int x, int y ) {
         final float dx = dragSpeed*(x-lastX);
@@ -109,5 +117,24 @@ public class CameraTranslateControl implements DragBehaviour {
 
     @Override public void end( int x, int y ) {
         firstEntered = true;
+    }
+
+    private void replaceNullBehavioursWith(final ClickBehaviour defaultBehaviour)
+    {
+        if (move_left_slow == null) move_left_slow = defaultBehaviour;
+        if (move_left_fast == null) move_left_fast = defaultBehaviour;
+        if (move_left_veryfast == null) move_left_veryfast = defaultBehaviour;
+
+        if (move_right_slow == null) move_right_slow = defaultBehaviour;
+        if (move_right_fast == null) move_right_fast = defaultBehaviour;
+        if (move_right_veryfast == null) move_right_veryfast = defaultBehaviour;
+
+        if (move_forward_slow == null) move_forward_slow = defaultBehaviour;
+        if (move_forward_fast == null) move_forward_fast = defaultBehaviour;
+        if (move_forward_veryfast == null) move_forward_veryfast = defaultBehaviour;
+
+        if (move_backward_slow == null) move_backward_slow = defaultBehaviour;
+        if (move_backward_fast == null) move_backward_fast = defaultBehaviour;
+        if (move_backward_veryfast == null) move_backward_veryfast = defaultBehaviour;
     }
 }
