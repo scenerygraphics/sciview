@@ -46,14 +46,8 @@ public class NodeRotateControl implements DragBehaviour {
     private int lastX;
     private int lastY;
 
-    private float mouseSpeedMultiplier = 0.25f;
-
     public NodeRotateControl( SciView sciView) {
         this.sciView = sciView;
-    }
-
-    public Camera getCamera() {
-        return sciView.getCamera();
     }
 
     /**
@@ -76,13 +70,13 @@ public class NodeRotateControl implements DragBehaviour {
         final Node targetedNode = sciView.getActiveNode();
         if (targetedNode == null || !targetedNode.getLock().tryLock()) return;
 
-        float frameYaw   = mouseSpeedMultiplier * (x - lastX) * 0.0174533f; // 0.017 = PI/180
-        float framePitch = mouseSpeedMultiplier * (y - lastY) * 0.0174533f;
+        float frameYaw   = sciView.getMouseSpeed() * (x - lastX) * 0.0174533f; // 0.017 = PI/180
+        float framePitch = sciView.getMouseSpeed() * (y - lastY) * 0.0174533f;
 
-        new Quaternionf().rotateAxis(frameYaw, getCamera().getUp())
+        new Quaternionf().rotateAxis(frameYaw, sciView.getCamera().getUp())
                 .mul(targetedNode.getRotation(),targetedNode.getRotation())
                 .normalize();
-        new Quaternionf().rotateAxis(framePitch, getCamera().getRight())
+        new Quaternionf().rotateAxis(framePitch, sciView.getCamera().getRight())
                 .mul(targetedNode.getRotation(),targetedNode.getRotation())
                 .normalize();
         targetedNode.setNeedsUpdate(true);
