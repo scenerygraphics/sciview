@@ -668,7 +668,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
-     * Place the camera such that all objects in the scene are within the field of view
+     * Place the scene into the center of camera view, and zoom in/out such
+     * that the whole scene is in the view (everything would be visible if it
+     * would not be potentially occluded).
      */
     public void fitCameraToScene() {
         centerOnNode(getScene());
@@ -676,14 +678,14 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
-     * Center the camera on the scene
+     * Place the scene into the center of camera view.
      */
     public void centerOnScene() {
         centerOnNode(getScene());
     }
 
     /**
-     * Center the camera on the scene
+     * Place the active node into the center of camera view.
      */
     public void centerOnActiveNode() {
         if (activeNode == null) return;
@@ -691,11 +693,11 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
-     * Center the camera on the specified Node
+     * Place the specified node into the center of camera view.
      */
     public void centerOnNode( Node currentNode ) {
         if (currentNode == null) {
-            log.info("Cannot center on node. CurrentNode is null");
+            log.info("Cannot center on null node.");
             return;
         }
 
@@ -843,6 +845,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         return param;
     }
 
+
     public void setObjectSelectionMode() {
         Function3<Scene.RaycastResult, Integer, Integer, Unit> selectAction = (nearest,x,y) -> {
             if( !nearest.getMatches().isEmpty() ) {
@@ -884,14 +887,15 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         h.addKeyBinding( "object_selection_mode", "double-click button1" );
     }
 
+
     /*
      * Initial configuration of the scenery InputHandler
      * This is automatically called and should not be used directly
      */
     @Override public void inputSetup() {
         final InputHandler h = getInputHandler();
-        if(h == null) {
-            getLogger().error("InputHandler is null, cannot run input setup.");
+        if ( h == null ) {
+            getLogger().error( "InputHandler is null, cannot run input setup." );
             return;
         }
 
@@ -912,6 +916,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         enableArcBallControl();
         enableFPSControl();
 
+        // whole-scene rolling
         h.addBehaviour( "rotate_CW",    new SceneRollControl(this,+0.05f) ); //2.8 deg
         h.addKeyBinding("rotate_CW",    "R");
         h.addBehaviour( "rotate_CCW",   new SceneRollControl(this,-0.05f) );
@@ -919,6 +924,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         h.addBehaviour( "rotate_mouse", h.getBehaviour("rotate_CW"));
         h.addKeyBinding("rotate_mouse", "ctrl button3");
 
+        // adjusters of various controls sensitivities
         h.addBehaviour( "move_step_decrease", (ClickBehaviour)(x,y) -> setFPSSpeed( getFPSSpeedSlow() - 0.01f ) );
         h.addKeyBinding("move_step_decrease", "MINUS");
         h.addBehaviour( "move_step_increase", (ClickBehaviour)(x,y) -> setFPSSpeed( getFPSSpeedSlow() + 0.01f ) );
@@ -934,7 +940,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         h.addBehaviour( "mouse_scroll_increase", (ClickBehaviour)(x,y) -> setMouseScrollSpeed( getMouseScrollSpeed() + 0.3f ) );
         h.addKeyBinding("mouse_scroll_increase", "S EQUALS" );
 
-        // Extra keyboard controls
+        // help window
         h.addBehaviour(  "show_help", new showHelpDisplay() );
         h.addKeyBinding( "show_help", "F1" );
     }
@@ -944,8 +950,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      */
     private void enableArcBallControl() {
         final InputHandler h = getInputHandler();
-        if(h == null) {
-            getLogger().error("InputHandler is null, cannot setup arcball.");
+        if ( h == null ) {
+            getLogger().error( "InputHandler is null, cannot setup arcball control." );
             return;
         }
 
@@ -1014,8 +1020,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      */
     private void enableFPSControl() {
         final InputHandler h = getInputHandler();
-        if(h == null) {
-            getLogger().error("InputHandler is null, cannot setup fps control.");
+        if ( h == null ) {
+            getLogger().error( "InputHandler is null, cannot setup fps control." );
             return;
         }
 
