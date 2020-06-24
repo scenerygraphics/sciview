@@ -29,65 +29,48 @@
 package sc.iview.controls.behaviours;
 
 import sc.iview.SciView;
-import graphics.scenery.Node;
+import graphics.scenery.Camera;
 import org.joml.Quaternionf;
+import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.DragBehaviour;
 
-/**
- * Control behavior for rotating a Node
- *
- * @author Vladimir Ulman
- *
- */
-public class NodeRotateControl implements DragBehaviour {
-
+public class SceneRollControl implements ClickBehaviour, DragBehaviour
+{
     protected final SciView sciView;
-    private boolean firstEntered = true;
-    private int lastX;
-    private int lastY;
 
-    public NodeRotateControl( SciView sciView) {
+    public SceneRollControl(final SciView sciView, final float byFixedAngInRad) {
         this.sciView = sciView;
+        rotQ_CW  = new Quaternionf().rotateAxis(+byFixedAngInRad,0,0,-1);
+        rotQ_CCW = new Quaternionf().rotateAxis(-byFixedAngInRad,0,0,-1);
     }
 
-    /**
-     * This function is called upon mouse down and initializes the camera control
-     * with the current window size.
-     *
-     * x position in window
-     * y position in window
-     */
-    @Override public void init( int x, int y ) {
-        if (sciView.getActiveNode() == null) return;
-        if (firstEntered) {
-            lastX = x;
-            lastY = y;
-            firstEntered = false;
-        }
+    final Quaternionf rotQ_CW, rotQ_CCW;
+
+    @Override
+    public void click(int x, int y) {
+        final Camera cam = sciView.getCamera();
+        rotQ_CW.mul(cam.getRotation(),cam.getRotation()).normalize();
     }
 
-    @Override public void drag( int x, int y ) {
-        final Node targetedNode = sciView.getActiveNode();
-        if (targetedNode == null || !targetedNode.getLock().tryLock()) return;
+    private final int minMouseMovementDelta = 2;
+    private int lastX;
 
-        float frameYaw   = sciView.getMouseSpeed() * (x - lastX) * 0.0174533f; // 0.017 = PI/180
-        float framePitch = sciView.getMouseSpeed() * (y - lastY) * 0.0174533f;
-
-        new Quaternionf().rotateAxis(frameYaw, sciView.getCamera().getUp())
-                .mul(targetedNode.getRotation(),targetedNode.getRotation())
-                .normalize();
-        new Quaternionf().rotateAxis(framePitch, sciView.getCamera().getRight())
-                .mul(targetedNode.getRotation(),targetedNode.getRotation())
-                .normalize();
-        targetedNode.setNeedsUpdate(true);
-
-        targetedNode.getLock().unlock();
-
+    @Override
+    public void init(int x, int y) {
         lastX = x;
-        lastY = y;
     }
 
-    @Override public void end( int x, int y ) {
-        firstEntered = true;
+    @Override
+    public void drag(int x, int y) {
+        final Camera cam = sciView.getCamera();
+        if (x > lastX+minMouseMovementDelta)
+            rotQ_CW.mul(cam.getRotation(),cam.getRotation()).normalize();
+        else if(x < lastX-minMouseMovementDelta)
+            rotQ_CCW.mul(cam.getRotation(),cam.getRotation()).normalize();
+        lastX = x;
+    }
+
+    @Override
+    public void end(int x, int y) {
     }
 }

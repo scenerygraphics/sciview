@@ -99,16 +99,13 @@ import org.scijava.plugin.Parameter;
 import org.scijava.service.SciJavaService;
 import org.scijava.thread.ThreadService;
 import org.scijava.ui.behaviour.ClickBehaviour;
-import org.scijava.ui.behaviour.DragBehaviour;
 import org.scijava.ui.behaviour.InputTrigger;
 import org.scijava.ui.swing.menu.SwingJMenuBarCreator;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.Colors;
 import org.scijava.util.VersionUtils;
 import sc.iview.commands.view.NodePropertyEditor;
-import sc.iview.controls.behaviours.CameraTranslateControl;
-import sc.iview.controls.behaviours.NodeTranslateControl;
-import sc.iview.controls.behaviours.NodeRotateControl;
+import sc.iview.controls.behaviours.*;
 import sc.iview.event.NodeActivatedEvent;
 import sc.iview.event.NodeAddedEvent;
 import sc.iview.event.NodeChangedEvent;
@@ -209,10 +206,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     /**
      * Speeds for input controls
      */
-    private float fpsSpeedSlow     = 0.05f;
-    private float fpsSpeedFast     = 1.0f;
-    private float fpsSpeedVeryFast = 50.0f;
-    private float mouseSpeedMult   = 0.25f;
+    final public ControlsParameters controlsParameters = new ControlsParameters();
 
     private Display<?> scijavaDisplay;
     private SplashLabel splashLabel;
@@ -674,7 +668,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
-     * Place the camera such that all objects in the scene are within the field of view
+     * Place the scene into the center of camera view, and zoom in/out such
+     * that the whole scene is in the view (everything would be visible if it
+     * would not be potentially occluded).
      */
     public void fitCameraToScene() {
         centerOnNode(getScene());
@@ -682,14 +678,14 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
-     * Center the camera on the scene
+     * Place the scene into the center of camera view.
      */
     public void centerOnScene() {
         centerOnNode(getScene());
     }
 
     /**
-     * Center the camera on the scene
+     * Place the active node into the center of camera view.
      */
     public void centerOnActiveNode() {
         if (activeNode == null) return;
@@ -697,11 +693,11 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
-     * Center the camera on the specified Node
+     * Place the specified node into the center of camera view.
      */
     public void centerOnNode( Node currentNode ) {
         if (currentNode == null) {
-            log.info("Cannot center on node. CurrentNode is null");
+            log.info("Cannot center on null node.");
             return;
         }
 
@@ -778,85 +774,77 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         }
     }
 
+    //a couple of shortcut methods to readout controls params
     public float getFPSSpeedSlow() {
-        return fpsSpeedSlow;
+        return controlsParameters.getFpsSpeedSlow();
     }
     public float getFPSSpeedFast() {
-        return fpsSpeedFast;
+        return controlsParameters.getFpsSpeedFast();
     }
     public float getFPSSpeedVeryFast() {
-        return fpsSpeedVeryFast;
-    }
-
-    private float speedWithinBounds(float newspeed, final float minBound, final float maxBound)
-    {
-        if( newspeed < minBound ) newspeed = minBound;
-        else if( newspeed > maxBound ) newspeed = maxBound;
-        return newspeed;
-    }
-    public void setFPSSpeed( float newBaseSpeed ) {
-        fpsSpeedSlow     = speedWithinBounds(newBaseSpeed, 0.01f,30f);
-        fpsSpeedFast     = fpsSpeedSlow * 20;
-        fpsSpeedVeryFast = fpsSpeedFast * 50;
-        log.debug( "FPS speeds: slow=" + fpsSpeedSlow + ", fast=" + fpsSpeedFast + ", very fast=" + fpsSpeedVeryFast );
-    }
-    public void setFPSSpeedSlow( float slowSpeed ) {
-        fpsSpeedSlow = speedWithinBounds(slowSpeed, 0.01f,30f);
-    }
-    public void setFPSSpeedFast( float fastSpeed ) {
-        fpsSpeedFast = speedWithinBounds(fastSpeed, 0.2f,600f);
-    }
-    public void setFPSSpeedVeryFast( float veryFastSpeed ) {
-        fpsSpeedVeryFast = speedWithinBounds(veryFastSpeed, 40f,2000f);
+        return controlsParameters.getFpsSpeedVeryFast();
     }
 
     public float getMouseSpeed() {
-        return mouseSpeedMult;
+        return controlsParameters.getMouseSpeedMult();
+    }
+    public float getMouseScrollSpeed() {
+        return controlsParameters.getMouseScrollMult();
     }
 
-    public void setMouseSpeed( float newspeed ) {
-        mouseSpeedMult = speedWithinBounds(newspeed, 0.1f,3.0f);
-        log.debug( "Mouse speed: " + mouseSpeedMult );
+    //a couple of setters with scene sensible boundary checks
+    public void setFPSSpeedSlow( float slowSpeed ) {
+        controlsParameters.setFpsSpeedSlow( paramWithinBounds(slowSpeed, FPSSPEED_MINBOUND_SLOW,FPSSPEED_MAXBOUND_SLOW) );
+    }
+    public void setFPSSpeedFast( float fastSpeed ) {
+        controlsParameters.setFpsSpeedFast( paramWithinBounds(fastSpeed, FPSSPEED_MINBOUND_FAST,FPSSPEED_MAXBOUND_FAST) );
+    }
+    public void setFPSSpeedVeryFast( float veryFastSpeed ) {
+        controlsParameters.setFpsSpeedVeryFast( paramWithinBounds(veryFastSpeed, FPSSPEED_MINBOUND_VERYFAST,FPSSPEED_MAXBOUND_VERYFAST) );
     }
 
-    /*
-     * Reset first-person-shooter (FPS) style behaviour in the input handler.
-     * The main deal here is to provide new camera movement objects with the
-     * fresh delta-move constants.
-     */
-    public void resetFPSBehaviours() {
-        final InputHandler h = getInputHandler();
-        if(h == null) {
-            getLogger().error("InputHandler is null, cannot change bindings.");
-            return;
-        }
+    public void setFPSSpeed( float newBaseSpeed ) {
+        // we don't want to escape bounds checking
+        // (so we call "our" methods rather than directly the controlsParameters)
+        setFPSSpeedSlow(       1f * newBaseSpeed );
+        setFPSSpeedFast(      20f * newBaseSpeed );
+        setFPSSpeedVeryFast( 500f * newBaseSpeed );
 
-        //'WASD' from Scenery
-        h.addBehaviour( "move_forward", new MovementCommand( "move_forward",  "forward", () -> getScene().findObserver(), fpsSpeedSlow ) );
-        h.addBehaviour( "move_back",    new MovementCommand( "move_backward", "back",    () -> getScene().findObserver(), fpsSpeedSlow ) );
-        h.addBehaviour( "move_left",    new MovementCommand( "move_left",     "left",    () -> getScene().findObserver(), fpsSpeedSlow ) );
-        h.addBehaviour( "move_right",   new MovementCommand( "move_right",    "right",   () -> getScene().findObserver(), fpsSpeedSlow ) );
-
-        //shift+'WASD' from Scenery
-        h.addBehaviour( "move_forward_fast", new MovementCommand( "move_forward",  "forward", () -> getScene().findObserver(), fpsSpeedFast ) );
-        h.addBehaviour( "move_back_fast",    new MovementCommand( "move_backward", "back",    () -> getScene().findObserver(), fpsSpeedFast ) );
-        h.addBehaviour( "move_left_fast",    new MovementCommand( "move_left",     "left",    () -> getScene().findObserver(), fpsSpeedFast ) );
-        h.addBehaviour( "move_right_fast",   new MovementCommand( "move_right",    "right",   () -> getScene().findObserver(), fpsSpeedFast ) );
-
-        //shift+ctrl+'WASD' defined here in inputSetup()
-        h.addBehaviour("move_forward_veryfast", new MovementCommand( "move_forward", "forward", () -> getScene().findObserver(), fpsSpeedVeryFast ));
-        h.addBehaviour("move_back_veryfast",    new MovementCommand( "move_back",    "back",    () -> getScene().findObserver(), fpsSpeedVeryFast ));
-        h.addBehaviour("move_left_veryfast",    new MovementCommand( "move_left",    "left",    () -> getScene().findObserver(), fpsSpeedVeryFast ));
-        h.addBehaviour("move_right_veryfast",   new MovementCommand( "move_right",   "right",   () -> getScene().findObserver(), fpsSpeedVeryFast ));
-
-        //[[ctrl]+shift]+'XC'
-        h.addBehaviour("move_up_slow",       new MovementCommand( "move_up",   "up",   () -> getScene().findObserver(), fpsSpeedSlow ));
-        h.addBehaviour("move_down_slow",     new MovementCommand( "move_down", "down", () -> getScene().findObserver(), fpsSpeedSlow ));
-        h.addBehaviour("move_up_fast",       new MovementCommand( "move_up",   "up",   () -> getScene().findObserver(), fpsSpeedFast ));
-        h.addBehaviour("move_down_fast",     new MovementCommand( "move_down", "down", () -> getScene().findObserver(), fpsSpeedFast ));
-        h.addBehaviour("move_up_veryfast",   new MovementCommand( "move_up",   "up",   () -> getScene().findObserver(), fpsSpeedVeryFast ));
-        h.addBehaviour("move_down_veryfast", new MovementCommand( "move_down", "down", () -> getScene().findObserver(), fpsSpeedVeryFast ));
+        //report what's been set in the end
+        log.debug( "FPS speeds: slow=" + controlsParameters.getFpsSpeedSlow()
+                + ", fast=" + controlsParameters.getFpsSpeedFast()
+                + ", very fast=" + controlsParameters.getFpsSpeedVeryFast() );
     }
+
+    public void setMouseSpeed( float newSpeed ) {
+        controlsParameters.setMouseSpeedMult( paramWithinBounds(newSpeed, MOUSESPEED_MINBOUND,MOUSESPEED_MAXBOUND) );
+        log.debug( "Mouse movement speed: " + controlsParameters.getMouseSpeedMult() );
+    }
+    public void setMouseScrollSpeed( float newSpeed ) {
+        controlsParameters.setMouseScrollMult( paramWithinBounds(newSpeed, MOUSESCROLL_MINBOUND,MOUSESCROLL_MAXBOUND) );
+        log.debug( "Mouse scroll speed: " + controlsParameters.getMouseScrollMult() );
+    }
+
+    //bounds for the controls
+    public static final float FPSSPEED_MINBOUND_SLOW = 0.01f;
+    public static final float FPSSPEED_MAXBOUND_SLOW = 30.0f;
+    public static final float FPSSPEED_MINBOUND_FAST = 0.2f;
+    public static final float FPSSPEED_MAXBOUND_FAST = 600f;
+    public static final float FPSSPEED_MINBOUND_VERYFAST = 10f;
+    public static final float FPSSPEED_MAXBOUND_VERYFAST = 2000f;
+
+    public static final float MOUSESPEED_MINBOUND = 0.1f;
+    public static final float MOUSESPEED_MAXBOUND = 3.0f;
+    public static final float MOUSESCROLL_MINBOUND = 0.3f;
+    public static final float MOUSESCROLL_MAXBOUND = 10.0f;
+
+    private float paramWithinBounds(float param, final float minBound, final float maxBound)
+    {
+        if( param < minBound ) param = minBound;
+        else if( param > maxBound ) param = maxBound;
+        return param;
+    }
+
 
     public void setObjectSelectionMode() {
         Function3<Scene.RaycastResult, Integer, Integer, Unit> selectAction = (nearest,x,y) -> {
@@ -899,63 +887,60 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         h.addKeyBinding( "object_selection_mode", "double-click button1" );
     }
 
+
     /*
      * Initial configuration of the scenery InputHandler
      * This is automatically called and should not be used directly
      */
     @Override public void inputSetup() {
         final InputHandler h = getInputHandler();
-        if(h == null) {
-            getLogger().error("InputHandler is null, cannot run input setup.");
+        if ( h == null ) {
+            getLogger().error( "InputHandler is null, cannot run input setup." );
             return;
         }
 
         // TODO: Maybe get rid of this?
         h.useDefaultBindings( "" );
 
-        // Mouse: node-translate controls
+        // node-selection and node-manipulation (translate & rotate) controls
         setObjectSelectionMode();
-        NodeTranslateControl nodeTranslate = new NodeTranslateControl(this, 0.005f);
-        h.addBehaviour(  "mouse_control_nodetranslate", nodeTranslate );
+        final NodeTranslateControl nodeTranslateControl = new NodeTranslateControl(this);
+        h.addBehaviour(  "mouse_control_nodetranslate", nodeTranslateControl);
         h.addKeyBinding( "mouse_control_nodetranslate", "ctrl button1" );
+        h.addBehaviour(  "mouse_scroll_nodetranslate", nodeTranslateControl);
+        h.addKeyBinding( "mouse_scroll_nodetranslate", "ctrl scroll" );
         h.addBehaviour(  "mouse_control_noderotate", new NodeRotateControl(this) );
         h.addKeyBinding( "mouse_control_noderotate", "ctrl shift button1" );
-        h.addBehaviour(  "scroll_nodetranslate", nodeTranslate );
-        h.addKeyBinding( "scroll_nodetranslate", "ctrl scroll" );
 
-        // Mouse: within-scene navigation: ArcBall and FPS
+        // within-scene navigation: ArcBall and FPS
         enableArcBallControl();
         enableFPSControl();
 
-        // Keyboard for FPS-control:
-        // behaviours defined already in resetFPSBehaviours() called from enableFPSControl() just above,
-        // 'WASD' and shift+'WASD' keys are registered already in scenery
-        h.addKeyBinding("move_forward_veryfast", "ctrl shift W");
-        h.addKeyBinding("move_back_veryfast",    "ctrl shift S");
-        h.addKeyBinding("move_left_veryfast",    "ctrl shift A");
-        h.addKeyBinding("move_right_veryfast",   "ctrl shift D");
-
-        h.addKeyBinding("move_up_slow",       "C");
-        h.addKeyBinding("move_down_slow",     "X");
-        h.addKeyBinding("move_up_fast",       "shift C");
-        h.addKeyBinding("move_down_fast",     "shift X");
-        h.addKeyBinding("move_up_veryfast",   "ctrl shift C");
-        h.addKeyBinding("move_down_veryfast", "ctrl shift X");
-
-        h.addBehaviour( "rotate_CW",    new RotateCameraControl(+0.1f) );
+        // whole-scene rolling
+        h.addBehaviour( "rotate_CW",    new SceneRollControl(this,+0.05f) ); //2.8 deg
         h.addKeyBinding("rotate_CW",    "R");
-        h.addBehaviour( "rotate_CCW",   new RotateCameraControl(-0.1f) );
+        h.addBehaviour( "rotate_CCW",   new SceneRollControl(this,-0.05f) );
         h.addKeyBinding("rotate_CCW",   "shift R");
         h.addBehaviour( "rotate_mouse", h.getBehaviour("rotate_CW"));
         h.addKeyBinding("rotate_mouse", "ctrl button3");
 
-        h.addBehaviour(  "enable_decrease", new enableDecrease() );
-        h.addKeyBinding( "enable_decrease", "MINUS" );
+        // adjusters of various controls sensitivities
+        h.addBehaviour( "move_step_decrease", (ClickBehaviour)(x,y) -> setFPSSpeed( getFPSSpeedSlow() - 0.01f ) );
+        h.addKeyBinding("move_step_decrease", "MINUS");
+        h.addBehaviour( "move_step_increase", (ClickBehaviour)(x,y) -> setFPSSpeed( getFPSSpeedSlow() + 0.01f ) );
+        h.addKeyBinding("move_step_increase", "EQUALS" );
 
-        h.addBehaviour(  "enable_increase", new enableIncrease() );
-        h.addKeyBinding( "enable_increase", "EQUALS" );
+        h.addBehaviour( "mouse_step_decrease", (ClickBehaviour)(x,y) -> setMouseSpeed( getMouseSpeed() - 0.02f ) );
+        h.addKeyBinding("mouse_step_decrease", "M MINUS");
+        h.addBehaviour( "mouse_step_increase", (ClickBehaviour)(x,y) -> setMouseSpeed( getMouseSpeed() + 0.02f ) );
+        h.addKeyBinding("mouse_step_increase", "M EQUALS" );
 
-        // Extra keyboard controls
+        h.addBehaviour( "mouse_scroll_decrease", (ClickBehaviour)(x,y) -> setMouseScrollSpeed( getMouseScrollSpeed() - 0.3f ) );
+        h.addKeyBinding("mouse_scroll_decrease", "S MINUS");
+        h.addBehaviour( "mouse_scroll_increase", (ClickBehaviour)(x,y) -> setMouseScrollSpeed( getMouseScrollSpeed() + 0.3f ) );
+        h.addKeyBinding("mouse_scroll_increase", "S EQUALS" );
+
+        // help window
         h.addBehaviour(  "show_help", new showHelpDisplay() );
         h.addKeyBinding( "show_help", "F1" );
     }
@@ -965,8 +950,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      */
     private void enableArcBallControl() {
         final InputHandler h = getInputHandler();
-        if(h == null) {
-            getLogger().error("InputHandler is null, cannot setup arcball.");
+        if ( h == null ) {
+            getLogger().error( "InputHandler is null, cannot setup arcball control." );
             return;
         }
 
@@ -977,19 +962,18 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             target = getActiveNode().getPosition();
         }
 
+        //setup ArcballCameraControl from scenery, register it with SciView's controlsParameters
         Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
         targetArcball = new AnimatedCenteringBeforeArcBallControl( "mouse_control_arcball", cameraSupplier,
                                                   getRenderer().getWindow().getWidth(),
                                                   getRenderer().getWindow().getHeight(), target );
         targetArcball.setMaximumDistance( Float.MAX_VALUE );
-        targetArcball.setMouseSpeedMultiplier( mouseSpeedMult );
-        targetArcball.setScrollSpeedMultiplier( 0.05f );
-        targetArcball.setDistance( getCamera().getPosition().sub( target ).length() );
+        controlsParameters.registerArcballCameraControl( targetArcball );
 
         h.addBehaviour(  "mouse_control_arcball", targetArcball );
         h.addKeyBinding( "mouse_control_arcball", "shift button1" );
-        h.addBehaviour(  "scroll_arcball", targetArcball );
-        h.addKeyBinding( "scroll_arcball", "shift scroll" );
+        h.addBehaviour(  "mouse_scroll_arcball", targetArcball );
+        h.addKeyBinding( "mouse_scroll_arcball", "shift scroll" );
     }
 
     /*
@@ -1031,56 +1015,23 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         }
     }
 
-    class RotateCameraControl implements ClickBehaviour, DragBehaviour
-    {
-        final Quaternionf rotQ_CW, rotQ_CCW;
-        RotateCameraControl(final float byFixedAngInRad) {
-            rotQ_CW  = new Quaternionf().rotateAxis(+byFixedAngInRad,0,0,-1);
-            rotQ_CCW = new Quaternionf().rotateAxis(-byFixedAngInRad,0,0,-1);
-        }
-
-        @Override
-        public void click(int x, int y) {
-            final Camera cam = getCamera();
-            rotQ_CW.mul(cam.getRotation(),cam.getRotation()).normalize();
-        }
-
-        private final int minMouseMovementDelta = 2;
-        private int lastX;
-
-        @Override
-        public void init(int x, int y) {
-            lastX = x;
-        }
-
-        @Override
-        public void drag(int x, int y) {
-            final Camera cam = getCamera();
-            if (x > lastX+minMouseMovementDelta)
-                rotQ_CW.mul(cam.getRotation(),cam.getRotation()).normalize();
-            else if(x < lastX-minMouseMovementDelta)
-                rotQ_CCW.mul(cam.getRotation(),cam.getRotation()).normalize();
-            lastX = x;
-        }
-
-        @Override
-        public void end(int x, int y) {
-        }
-    }
-
     /*
      * Enable FPS style controls
      */
     private void enableFPSControl() {
         final InputHandler h = getInputHandler();
-        if(h == null) {
-            getLogger().error("InputHandler is null, cannot setup fps control.");
+        if ( h == null ) {
+            getLogger().error( "InputHandler is null, cannot setup fps control." );
             return;
         }
 
+        // Mouse look around (Lclick) and move around (Rclick)
+        //
+        //setup FPSCameraControl from scenery, register it with SciView's controlsParameters
         Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
         fpsControl = new FPSCameraControl( "mouse_control", cameraSupplier, getRenderer().getWindow().getWidth(),
                                            getRenderer().getWindow().getHeight() );
+        controlsParameters.registerFpsCameraControl( fpsControl );
 
         h.addBehaviour(  "mouse_control", fpsControl );
         h.addKeyBinding( "mouse_control", "button1" );
@@ -1090,10 +1041,89 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         h.addKeyBinding( "mouse_control_cameratranslate", "button3" );
         //
         //fast and very fast camera motion
-        h.addBehaviour(  "mouse_control_cameratranslateF", new CameraTranslateControl( this, 10f ) );
-        h.addKeyBinding( "mouse_control_cameratranslateF", "shift button3" );
+        h.addBehaviour(  "mouse_control_cameratranslate_fast", new CameraTranslateControl( this, 10f ) );
+        h.addKeyBinding( "mouse_control_cameratranslate_fast", "shift button3" );
 
-        resetFPSBehaviours();
+        // Keyboard move around (WASD keys)
+        //
+        //override 'WASD' from Scenery
+        MovementCommand mcW,mcA,mcS,mcD;
+        mcW = new MovementCommand( "move_forward",  "forward", () -> getScene().findObserver(), controlsParameters.getFpsSpeedSlow() );
+        mcS = new MovementCommand( "move_backward", "back",    () -> getScene().findObserver(), controlsParameters.getFpsSpeedSlow() );
+        mcA = new MovementCommand( "move_left",     "left",    () -> getScene().findObserver(), controlsParameters.getFpsSpeedSlow() );
+        mcD = new MovementCommand( "move_right",    "right",   () -> getScene().findObserver(), controlsParameters.getFpsSpeedSlow() );
+        controlsParameters.registerSlowStepMover( mcW );
+        controlsParameters.registerSlowStepMover( mcS );
+        controlsParameters.registerSlowStepMover( mcA );
+        controlsParameters.registerSlowStepMover( mcD );
+        h.addBehaviour( "move_forward", mcW );
+        h.addBehaviour( "move_back",    mcS );
+        h.addBehaviour( "move_left",    mcA );
+        h.addBehaviour( "move_right",   mcD );
+        // 'WASD' keys are registered already in scenery
+
+        //override shift+'WASD' from Scenery
+        mcW = new MovementCommand( "move_forward_fast",  "forward", () -> getScene().findObserver(), controlsParameters.getFpsSpeedFast() );
+        mcS = new MovementCommand( "move_backward_fast", "back",    () -> getScene().findObserver(), controlsParameters.getFpsSpeedFast() );
+        mcA = new MovementCommand( "move_left_fast",     "left",    () -> getScene().findObserver(), controlsParameters.getFpsSpeedFast() );
+        mcD = new MovementCommand( "move_right_fast",    "right",   () -> getScene().findObserver(), controlsParameters.getFpsSpeedFast() );
+        controlsParameters.registerFastStepMover( mcW );
+        controlsParameters.registerFastStepMover( mcS );
+        controlsParameters.registerFastStepMover( mcA );
+        controlsParameters.registerFastStepMover( mcD );
+        h.addBehaviour( "move_forward_fast", mcW );
+        h.addBehaviour( "move_back_fast",    mcS );
+        h.addBehaviour( "move_left_fast",    mcA );
+        h.addBehaviour( "move_right_fast",   mcD );
+        // shift+'WASD' keys are registered already in scenery
+
+        //define additionally shift+ctrl+'WASD'
+        mcW = new MovementCommand( "move_forward_veryfast", "forward", () -> getScene().findObserver(), controlsParameters.getFpsSpeedVeryFast() );
+        mcS = new MovementCommand( "move_back_veryfast",    "back",    () -> getScene().findObserver(), controlsParameters.getFpsSpeedVeryFast() );
+        mcA = new MovementCommand( "move_left_veryfast",    "left",    () -> getScene().findObserver(), controlsParameters.getFpsSpeedVeryFast() );
+        mcD = new MovementCommand( "move_right_veryfast",   "right",   () -> getScene().findObserver(), controlsParameters.getFpsSpeedVeryFast() );
+        controlsParameters.registerVeryFastStepMover( mcW );
+        controlsParameters.registerVeryFastStepMover( mcS );
+        controlsParameters.registerVeryFastStepMover( mcA );
+        controlsParameters.registerVeryFastStepMover( mcD );
+        h.addBehaviour(  "move_forward_veryfast", mcW );
+        h.addBehaviour(  "move_back_veryfast",    mcS );
+        h.addBehaviour(  "move_left_veryfast",    mcA );
+        h.addBehaviour(  "move_right_veryfast",   mcD );
+        h.addKeyBinding( "move_forward_veryfast", "ctrl shift W" );
+        h.addKeyBinding( "move_back_veryfast",    "ctrl shift S" );
+        h.addKeyBinding( "move_left_veryfast",    "ctrl shift A" );
+        h.addKeyBinding( "move_right_veryfast",   "ctrl shift D" );
+
+        // Keyboard only move up/down (XC keys)
+        //
+        //[[ctrl]+shift]+'XC'
+        mcW = new MovementCommand( "move_up_slow",   "up",   () -> getScene().findObserver(), controlsParameters.getFpsSpeedSlow() );
+        mcS = new MovementCommand( "move_down_slow", "down", () -> getScene().findObserver(), controlsParameters.getFpsSpeedSlow() );
+        controlsParameters.registerSlowStepMover( mcW );
+        controlsParameters.registerSlowStepMover( mcS );
+        h.addBehaviour(  "move_up_slow",   mcW );
+        h.addBehaviour(  "move_down_slow", mcS );
+        h.addKeyBinding( "move_up_slow",   "C" );
+        h.addKeyBinding( "move_down_slow", "X" );
+
+        mcW = new MovementCommand( "move_up_fast",   "up",   () -> getScene().findObserver(), controlsParameters.getFpsSpeedFast() );
+        mcS = new MovementCommand( "move_down_fast", "down", () -> getScene().findObserver(), controlsParameters.getFpsSpeedFast() );
+        controlsParameters.registerFastStepMover( mcW );
+        controlsParameters.registerFastStepMover( mcS );
+        h.addBehaviour(  "move_up_fast",   mcW );
+        h.addBehaviour(  "move_down_fast", mcS );
+        h.addKeyBinding( "move_up_fast",   "shift C" );
+        h.addKeyBinding( "move_down_fast", "shift X" );
+
+        mcW = new MovementCommand( "move_up_veryfast",   "up",   () -> getScene().findObserver(), controlsParameters.getFpsSpeedVeryFast() );
+        mcS = new MovementCommand( "move_down_veryfast", "down", () -> getScene().findObserver(), controlsParameters.getFpsSpeedVeryFast() );
+        controlsParameters.registerVeryFastStepMover( mcW );
+        controlsParameters.registerVeryFastStepMover( mcS );
+        h.addBehaviour(  "move_up_veryfast",   mcW );
+        h.addBehaviour(  "move_down_veryfast", mcS );
+        h.addKeyBinding( "move_up_veryfast",   "ctrl shift C" );
+        h.addKeyBinding( "move_down_veryfast", "ctrl shift X" );
     }
 
     /**
@@ -2422,26 +2452,6 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             super.paintComponent(g);
         }
 
-    }
-
-    class enableIncrease implements ClickBehaviour {
-
-        @Override public void click( int x, int y ) {
-            setFPSSpeed( getFPSSpeedSlow() + 0.01f );
-            setMouseSpeed( getMouseSpeed() + 0.05f );
-
-            resetFPSBehaviours();
-        }
-    }
-
-    class enableDecrease implements ClickBehaviour {
-
-        @Override public void click( int x, int y ) {
-            setFPSSpeed( getFPSSpeedSlow() - 0.01f );
-            setMouseSpeed( getMouseSpeed() - 0.05f );
-
-            resetFPSBehaviours();
-        }
     }
 
     class showHelpDisplay implements ClickBehaviour {
