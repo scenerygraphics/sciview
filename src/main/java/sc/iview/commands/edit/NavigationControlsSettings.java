@@ -7,6 +7,7 @@ import org.scijava.module.MutableModuleItem;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.prefs.PrefService;
 import org.scijava.widget.NumberWidget;
 import sc.iview.SciView;
 
@@ -97,7 +98,23 @@ public class NavigationControlsSettings extends InteractiveCommand
         menuItem.setMaximumValue(SciView.MOUSESCROLL_MAXBOUND);
         menuItem.setStepSize(mouseScrollIncr);
 
-        updateDialogSpeedsAndMouseParams();
+        //backup the current state of SciView before we eventually override it
+        //so that there is something to return to with the "first toggle"
+        orig_fpsSlowSpeed = sciView.controlsParameters.getFpsSpeedSlow();
+        orig_fpsFastSpeed = sciView.controlsParameters.getFpsSpeedFast();
+        orig_fpsVeryFastSpeed = sciView.controlsParameters.getFpsSpeedVeryFast();
+        orig_mouseMoveSensitivity = sciView.controlsParameters.getMouseSpeedMult();
+        orig_mouseScrollSensitivity = sciView.controlsParameters.getMouseScrollMult();
+
+        //try to retrieve stored dialog state and push it to SciView
+        //so that the SciView and dialog states match
+        final PrefService ps = getContext().getService(PrefService.class);
+        if (ps == null) return;
+        sciView.setFPSSpeedSlow(     ps.getFloat( NavigationControlsSettings.class, "fpsSlowSpeed", orig_fpsSlowSpeed) );
+        sciView.setFPSSpeedFast(     ps.getFloat( NavigationControlsSettings.class, "fpsFastSpeed", orig_fpsFastSpeed) );
+        sciView.setFPSSpeedVeryFast( ps.getFloat( NavigationControlsSettings.class, "fpsVeryFastSpeed", orig_fpsVeryFastSpeed) );
+        sciView.setMouseSpeed(       ps.getFloat( NavigationControlsSettings.class, "mouseMoveSensitivity", orig_mouseMoveSensitivity) );
+        sciView.setMouseScrollSpeed( ps.getFloat( NavigationControlsSettings.class, "mouseScrollSensitivity", orig_mouseScrollSensitivity) );
     }
 
     //updates GUI with fresh values
@@ -145,5 +162,32 @@ public class NavigationControlsSettings extends InteractiveCommand
     {
         sciView.setMouseScrollSpeed( mouseScrollSensitivity );
         //updateDialogSpeedsAndMouseParams();
+    }
+
+
+    @Parameter(label = "Click to re-read current state:", callback = "refreshDialog",
+            description = "Changing its state triggers the dialog update -- useful when, e.g., step size is changed which keyboard shortcuts.")
+    private boolean refreshToggle = false;
+    private boolean firstHitOfRefreshToggle = true; //the "first toggle" flag
+
+    private float orig_fpsSlowSpeed, orig_fpsFastSpeed, orig_fpsVeryFastSpeed;
+    private float orig_mouseMoveSensitivity, orig_mouseScrollSensitivity;
+
+    private void refreshDialog()
+    {
+        //only the "first toggle" will restore values in SciView
+        //as they were at the time this dialog started,
+        if (firstHitOfRefreshToggle)
+        {
+            sciView.setFPSSpeedSlow( orig_fpsSlowSpeed );
+            sciView.setFPSSpeedFast( orig_fpsFastSpeed );
+            sciView.setFPSSpeedVeryFast( orig_fpsVeryFastSpeed );
+            sciView.setMouseSpeed( orig_mouseMoveSensitivity );
+            sciView.setMouseScrollSpeed( orig_mouseScrollSensitivity );
+            firstHitOfRefreshToggle = false;
+        }
+
+        //in any case, update the dialog to the current state of SciView
+        updateDialogSpeedsAndMouseParams();
     }
 }
