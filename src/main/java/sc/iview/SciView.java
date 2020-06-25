@@ -91,6 +91,7 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.system.Platform;
 import org.scijava.Context;
+import org.scijava.command.CommandService;
 import org.scijava.display.Display;
 import org.scijava.display.DisplayService;
 import org.scijava.event.EventHandler;
@@ -110,6 +111,7 @@ import org.scijava.ui.swing.menu.SwingJMenuBarCreator;
 import org.scijava.util.ColorRGB;
 import org.scijava.util.Colors;
 import org.scijava.util.VersionUtils;
+import sc.iview.commands.help.Help;
 import sc.iview.commands.view.NodePropertyEditor;
 import sc.iview.controls.behaviours.*;
 import sc.iview.event.NodeActivatedEvent;
@@ -2655,13 +2657,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     class showHelpDisplay implements ClickBehaviour {
 
         @Override public void click( int x, int y ) {
-            StringBuilder helpString = new StringBuilder("SciView help:\n\n");
-            for( InputTrigger trigger : getInputHandler().getAllBindings().keySet() ) {
-                helpString.append(trigger).append("\t-\t").append(getInputHandler().getAllBindings().get(trigger)).append("\n");
-            }
-            // HACK: Make the console pop via stderr.
-            // Later, we will use a nicer dialog box or some such.
-            log.warn(helpString.toString());
+            // show nice dialog box with the help
+            getScijavaContext().getService(CommandService.class).run(Help.class,true);
         }
     }
 
