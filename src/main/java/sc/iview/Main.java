@@ -28,6 +28,9 @@
  */
 package sc.iview;
 
+import net.imagej.ImageJ;
+import org.scijava.log.LogService;
+
 /**
  * Entry point for testing SciView functionality.
  * 
@@ -35,6 +38,12 @@ package sc.iview;
  */
 public class Main {
     public static void main( String... args ) throws Exception {
-        SciView.create();
+        //crank up the Fiji itself, and make it visible (to allow any dialogs to pop up)
+        final ImageJ ij = new ImageJ();
+        ij.ui().showUI();
+
+        //crank up the SciView and setup logging so that service messages are visible
+        ij.log().setLevel("sc.iview",LogService.DEBUG);
+        ij.getContext().service(SciViewService.class).getOrCreateActiveSciView();
     }
 }
