@@ -1071,9 +1071,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             getLogger().error( "InputHandler is null, cannot run input setup." );
             return;
         }
-
-        // TODO: Maybe get rid of this?
-        h.useDefaultBindings( "" );
+        //when we get here, the Behaviours and key bindings from scenery are already in place
 
         // node-selection and node-manipulation (translate & rotate) controls
         setObjectSelectionMode();
