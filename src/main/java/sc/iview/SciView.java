@@ -1073,6 +1073,14 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         }
         //when we get here, the Behaviours and key bindings from scenery are already in place
 
+        //possibly, disable some (unused?) controls from scenery
+        /*
+        h.removeBehaviour( "gamepad_camera_control");
+        h.removeKeyBinding("gamepad_camera_control");
+        h.removeBehaviour( "gamepad_movement_control");
+        h.removeKeyBinding("gamepad_movement_control");
+        */
+
         // node-selection and node-manipulation (translate & rotate) controls
         setObjectSelectionMode();
         final NodeTranslateControl nodeTranslateControl = new NodeTranslateControl(this);
