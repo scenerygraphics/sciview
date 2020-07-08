@@ -35,6 +35,8 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
 import org.scijava.ui.behaviour.InputTrigger;
+import graphics.scenery.controls.InputHandler;
+import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import sc.iview.SciView;
 
 import static sc.iview.commands.MenuWeights.HELP;
@@ -69,5 +71,40 @@ public class Help implements Command {
     @Override
     public void run() {
         uiService.showDialog( "<html>" + USAGE_TEXT + "<br><br>" + getKeybinds() + "", "SciView Usage");
+    }
+
+    public static String getKeybindingsAsPlainTxtFrom(final InputHandler inputHandler) {
+        int maxLength = 0; //to aid space-padding per item
+        for ( String actionName : inputHandler.getAllBehaviours() )
+            maxLength = Math.max( actionName.length(), maxLength );
+
+        char[] rightSpacePadding = new char[maxLength];
+        for (int i = 0; i < maxLength; ++i) rightSpacePadding[i] = ' ';
+
+        final StringBuilder helpString = new StringBuilder("SciView Input Controls Overview:\n\n");
+        for ( String actionName : inputHandler.getAllBehaviours() )
+            helpString
+                    .append( actionName )
+                    .append( rightSpacePadding,0,maxLength-actionName.length() )
+                    .append("\t-\t")
+                    .append( InputTriggerConfig.prettyPrintInputs( inputHandler.getKeyBindings( actionName ) ) )
+                    .append("\n");
+
+        return helpString.toString();
+    }
+
+    public static String getKeybindingsAsHtmlFrom(final InputHandler inputHandler) {
+        final StringBuilder helpString = new StringBuilder("SciView Input Controls Overview:<br>\n");
+        helpString.append("<table><tr><th>Action Name</th><th>Binding</th></tr>\n");
+        for ( String actionName : inputHandler.getAllBehaviours() )
+            helpString
+                    .append("<tr><td>")
+                    .append( actionName )
+                    .append("</td><td>")
+                    .append( InputTriggerConfig.prettyPrintInputs( inputHandler.getKeyBindings( actionName ) ) )
+                    .append("</td></tr>\n");
+        helpString.append("</table>\n");
+
+        return helpString.toString();
     }
 }
