@@ -98,6 +98,7 @@ import org.scijava.object.ObjectService;
 import org.scijava.plugin.Parameter;
 import org.scijava.service.SciJavaService;
 import org.scijava.thread.ThreadService;
+import org.scijava.ui.behaviour.Behaviour;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.InputTrigger;
 import org.scijava.ui.swing.menu.SwingJMenuBarCreator;
@@ -206,7 +207,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     /**
      * Speeds for input controls
      */
-    final public ControlsParameters controlsParameters = new ControlsParameters();
+    public ControlsParameters controlsParameters = new ControlsParameters();
 
     private Display<?> scijavaDisplay;
     private SplashLabel splashLabel;
@@ -271,23 +272,94 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
-     * This pushes the current input setup onto a stack that allows them to be restored with restoreControls
+     * This pushes the current input setup onto a stack that allows them to be restored with restoreControls.
+     * It stacks in particular: all keybindings, all Behaviours, and all step sizes and mouse sensitivities
+     * (which are held together in {@link ControlsParameters}).
+     *
+     * <em>Word of warning:</em> The stashing memorizes <em>references only</em> on currently used controls
+     * (such as, e.g., {@link MovementCommand}, {@link FPSCameraControl} or {@link NodeTranslateControl}),
+     * it <em>does not</em> create an extra copy of any control. That said, if you modify any control
+     * object despite it was already stashed with this method, the change will be visible in the "stored"
+     * control and will not go away after the restore... To be on the safe side for now at least, <em>create
+     * new and modified</em> controls rather than directly changing them.
      */
     public void stashControls() {
-        HashMap<String, Object> controlState = new HashMap<String, Object>();
+        final InputHandler inputHandler = getInputHandler();
+        if (inputHandler == null) {
+            getLogger().error( "InputHandler is null, cannot store controls" );
+            return;
+        }
+
+        final HashMap<String, Object> controlState = new HashMap<>();
+
+        //behaviours:
+        for ( String actionName: inputHandler.getAllBehaviours() )
+            controlState.put( STASH_BEHAVIOUR_KEY+actionName, inputHandler.getBehaviour(actionName) );
+
+        //bindings:
+        for ( String actionName: inputHandler.getAllBehaviours() )
+            for ( InputTrigger trigger : inputHandler.getKeyBindings(actionName) )
+                controlState.put( STASH_BINDING_KEY+actionName, trigger.toString() );
+
+        //finally, stash the control parameters
+        controlState.put( STASH_CONTROLSPARAMS_KEY, controlsParameters );
+
+        //...and stash it!
         controlStack.push(controlState);
     }
 
     /**
-     * This pops/restores the previously stashed controls. Emits a warning if there are no stashed controls
+     * This pops/restores the previously stashed controls. Emits a warning if there are no stashed controls.
+     * It first clears all controls, and then resets in particular: all keybindings, all Behaviours,
+     * and all step sizes and mouse sensitivities (which are held together in {@link ControlsParameters}).
+     *
+     * <em>Some recent changes may not be removed</em> with this restore --
+     * see discussion in the docs of {@link SciView#stashControls()} for more details.
      */
     public void restoreControls() {
-        HashMap<String, Object> controlState = controlStack.pop();
+        if (controlStack.empty()) {
+            getLogger().warn("Not restoring controls, the controls stash stack is empty!");
+            return;
+        }
 
-        // This isnt how it should work
-        setObjectSelectionMode();
-        resetFPSBehaviours();
+        final InputHandler inputHandler = getInputHandler();
+        if (inputHandler == null) {
+            getLogger().error( "InputHandler is null, cannot restore controls" );
+            return;
+        }
+
+        //clear the input handler entirely
+        for ( String actionName : inputHandler.getAllBehaviours() ) {
+            inputHandler.removeKeyBinding( actionName );
+            inputHandler.removeBehaviour( actionName );
+        }
+
+        //retrieve the most recent stash with controls
+        final HashMap<String, Object> controlState = controlStack.pop();
+        for (Map.Entry<String, Object> control : controlState.entrySet()) {
+            String key;
+            if (control.getKey().startsWith(STASH_BEHAVIOUR_KEY)) {
+                //processing behaviour
+                key = control.getKey().substring(STASH_BEHAVIOUR_KEY.length());
+                inputHandler.addBehaviour( key, (Behaviour)control.getValue() );
+            }
+            else
+            if (control.getKey().startsWith(STASH_BINDING_KEY)) {
+                //processing key binding
+                key = control.getKey().substring(STASH_BINDING_KEY.length());
+                inputHandler.addKeyBinding( key, (String)control.getValue() );
+            }
+            else
+            if (control.getKey().startsWith(STASH_CONTROLSPARAMS_KEY)) {
+                //processing mouse sensitivities and step sizes...
+                controlsParameters = (ControlsParameters)control.getValue();
+            }
+        }
     }
+
+    private static final String STASH_BEHAVIOUR_KEY = "behaviour:";
+    private static final String STASH_BINDING_KEY = "binding:";
+    private static final String STASH_CONTROLSPARAMS_KEY = "parameters:";
 
     public ArrayList<PointLight> getLights() {
         return lights;
