@@ -28,6 +28,7 @@
  */
 package sc.iview;
 
+import graphics.scenery.SceneryBase;
 import net.imagej.ImageJ;
 import org.scijava.log.LogService;
 
@@ -39,6 +40,7 @@ import org.scijava.log.LogService;
 public class Main {
     public static void main( String... args ) throws Exception {
         //crank up the Fiji itself, and make it visible (to allow any dialogs to pop up)
+        SceneryBase.xinitThreads();
         final ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
