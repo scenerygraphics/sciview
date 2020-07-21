@@ -55,7 +55,8 @@ public final class MenuWeights {
     public static final double EDIT_ADD_POINT_LIGHT = 3;
     public static final double EDIT_ADD_LABEL_IMAGE = 4;
     public static final double EDIT_ADD_VOLUME = 5;
-	public static final double EDIT_ADD_CAMERA = 6;
+    public static final double EDIT_ADD_CAMERA = 6;
+    public static final double EDIT_ADD_COMPASS = 49;
     public static final double EDIT_TOGGLE_FLOOR = 50;
     public static final double EDIT_DELETE_OBJECT = 100;
     public static final double EDIT_SCIVIEW_SETTINGS = 200;
