@@ -68,14 +68,16 @@ public class AddOrientationCompass implements Command {
     @Parameter
     private float AXESBARRADIUS = 1.0f;
 
-    @Parameter
-    private Vector3f xColor = new Vector3f(1f,0f,0f);
+    // colorblindfriendly pallate values based on https://pymolwiki.org/index.php/Colorblindfriendly
 
     @Parameter
-    private Vector3f yColor = new Vector3f(0f,1f,0f);
+    private Vector3f xColor = new Vector3f(204/255f,71/255f,97/255f);// color = magenta
 
     @Parameter
-    private Vector3f zColor = new Vector3f(0f,0f,1f);
+    private Vector3f yColor = new Vector3f(240/255f,228/255f,66/255f);// color = yellow
+
+    @Parameter
+    private Vector3f zColor = new Vector3f(0f,114/255f,178/255f);// color = blue
 
     private Node makeAxis( float axisLength, float angleX, float angleY, float angleZ, Vector3f color ) {
         Cylinder axisNode = new Cylinder(AXESBARRADIUS, axisLength,4);
