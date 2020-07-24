@@ -63,13 +63,19 @@ public class AddOrientationCompass implements Command {
     private SciView sciView;
 
     @Parameter
-    private float xAxisLength = 10.0f;
-    @Parameter
-    private float yAxisLength = xAxisLength;
-    @Parameter
-    private float zAxisLength = xAxisLength;
+    private float axisLength = 10.0f;
 
-    static final float AXESBARRADIUS = 1.0f;
+    @Parameter
+    private float AXESBARRADIUS = 1.0f;
+
+    @Parameter
+    private Vector3f xColor = new Vector3f(1f,0f,0f);
+
+    @Parameter
+    private Vector3f yColor = new Vector3f(0f,1f,0f);
+
+    @Parameter
+    private Vector3f zColor = new Vector3f(0f,0f,1f);
 
     private Node makeAxis( float axisLength, float angleX, float angleY, float angleZ, Vector3f color ) {
         Cylinder axisNode = new Cylinder(AXESBARRADIUS, axisLength,4);
@@ -91,18 +97,18 @@ public class AddOrientationCompass implements Command {
 
         //NB: RGB colors ~ XYZ axes
         //x axis:
-        Node axisNode = makeAxis( xAxisLength, 0,0,(float)(-0.5*Math.PI), new Vector3f(1f,0f,0f) );
+        Node axisNode = makeAxis( axisLength, 0,0,(float)(-0.5*Math.PI), xColor );
         axisNode.setName("compass axis: X");
         root.addChild( axisNode );
 
         //y axis:
-        axisNode = makeAxis( yAxisLength, 0,0, 0, new Vector3f(0f,1f,0f) );
+        axisNode = makeAxis( axisLength, 0,0, 0, yColor );
 
         axisNode.setName("compass axis: Y");
         root.addChild( axisNode );
 
         //z axis:
-        axisNode = makeAxis( zAxisLength, (float)(0.5*Math.PI),0,0, new Vector3f(0f,0f,1f) );
+        axisNode = makeAxis( axisLength, (float)(0.5*Math.PI),0,0, zColor );
         axisNode.setName("compass axis: Z");
         root.addChild( axisNode );
 
@@ -115,17 +121,10 @@ public class AddOrientationCompass implements Command {
             root.setWantsComposeModel(false);
 
             root.getModel().identity();
-            //root.getModel().set( sciView.getCamera().getModel() );
 
-            //root.getModel().mul( new Quaternionf(sciView.getCamera().getRotation()).invert().get(new Matrix4f()) );
             root.getModel().translate( root.getPosition() );
-//            root.getModel().mul( new Quaternionf().lookAlong(
-//                    sciView.getCamera().getForward(),
-//                    new Vector3f(0, 1, 0)).get(new Matrix4f()) );
             root.getModel().mul(
                     new Quaternionf(sciView.getCamera().getRotation()).invert().conjugate().get(new Matrix4f()) );
-
-            //root.getModel().mul( sciView.getCamera().get(new Matrix4f()) );
 
             root.setNeedsUpdate(false);
             root.setNeedsUpdateWorld(false);
