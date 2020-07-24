@@ -32,6 +32,7 @@ import graphics.scenery.Cylinder;
 import graphics.scenery.Node;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
 import org.scijava.plugin.Menu;
@@ -95,18 +96,20 @@ public class AddOrientationCompass implements Command {
         sciView.addNode( root );
 
         sciView.getCamera().addChild(root);
-        //root.setPosition( new Vector3f(-25, 0, -100));
+        root.setPosition( new Vector3f(-25, 0, -100));
 
         root.getUpdate().add(() -> {
             root.setWantsComposeModel(false);
+
             root.getModel().identity();
 
-            root.getModel().translate(
-                    sciView.getCamera().getPosition().add(
-                            root.getPosition() ) );
-            root.getModel().mul( new Quaternionf().get(new Matrix4f()) );
+            //root.getModel().mul( new Quaternionf(sciView.getCamera().getRotation()).invert().get(new Matrix4f()) );
+            root.getModel().translate( root.getPosition() );
+            root.getModel().mul( new Quaternionf().lookAlong(
+                    sciView.getCamera().getForward(),
+                    new Vector3f(0, 1, 0)).get(new Matrix4f()) );
 
-//                logger.info("Updating pose of $controller, ${node.model}")
+            //root.getModel().mul( sciView.getCamera().get(new Matrix4f()) );
 
             root.setNeedsUpdate(false);
             root.setNeedsUpdateWorld(false);
