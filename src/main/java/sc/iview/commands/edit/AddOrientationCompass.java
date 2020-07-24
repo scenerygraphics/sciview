@@ -29,7 +29,9 @@
 package sc.iview.commands.edit;
 
 import graphics.scenery.Cylinder;
+import graphics.scenery.Icosphere;
 import graphics.scenery.Node;
+import graphics.scenery.Sphere;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -39,6 +41,7 @@ import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
+import sc.iview.node.Line3D;
 
 import java.util.HashMap;
 
@@ -60,13 +63,27 @@ public class AddOrientationCompass implements Command {
     private SciView sciView;
 
     @Parameter
-    private float xAxisLength = 30.0f;
+    private float xAxisLength = 10.0f;
     @Parameter
-    private float yAxisLength = 30.0f;
+    private float yAxisLength = xAxisLength;
     @Parameter
-    private float zAxisLength = 30.0f;
+    private float zAxisLength = xAxisLength;
 
     static final float AXESBARRADIUS = 1.0f;
+
+    private Node makeAxis( float axisLength, float angleX, float angleY, float angleZ, Vector3f color ) {
+        Cylinder axisNode = new Cylinder(AXESBARRADIUS, axisLength,4);
+        axisNode.setName("compass axis: X");
+        axisNode.setRotation( new Quaternionf().rotateXYZ( angleX, angleY, angleZ ) );
+        axisNode.getMaterial().getDiffuse().set(color);
+
+        Icosphere axisCap = new Icosphere(AXESBARRADIUS, 2);
+        axisCap.setPosition(new Vector3f(0, axisLength, 0));
+        axisCap.getMaterial().getDiffuse().set(color);
+
+        axisNode.addChild(axisCap);
+        return axisNode;
+    }
 
     @Override
     public void run() {
@@ -74,40 +91,39 @@ public class AddOrientationCompass implements Command {
 
         //NB: RGB colors ~ XYZ axes
         //x axis:
-        Cylinder axisNode = new Cylinder(AXESBARRADIUS,xAxisLength,4);
+        Node axisNode = makeAxis( xAxisLength, 0,0,(float)(-0.5*Math.PI), new Vector3f(1f,0f,0f) );
         axisNode.setName("compass axis: X");
-        axisNode.getMaterial().getDiffuse().set(1f,0f,0f);
-        axisNode.setRotation( new Quaternionf().rotateXYZ(0,0,(float)(-0.5*Math.PI)) );
         root.addChild( axisNode );
 
         //y axis:
-        axisNode = new Cylinder(AXESBARRADIUS,yAxisLength,4);
+        axisNode = makeAxis( yAxisLength, 0,0, 0, new Vector3f(0f,1f,0f) );
+
         axisNode.setName("compass axis: Y");
-        axisNode.getMaterial().getDiffuse().set(0f,1f,0f);
         root.addChild( axisNode );
 
         //z axis:
-        axisNode = new Cylinder(AXESBARRADIUS,zAxisLength,4);
+        axisNode = makeAxis( zAxisLength, (float)(0.5*Math.PI),0,0, new Vector3f(0f,0f,1f) );
         axisNode.setName("compass axis: Z");
-        axisNode.getMaterial().getDiffuse().set(0f,0f,1f);
-        axisNode.setRotation( new Quaternionf().rotateXYZ((float)(0.5*Math.PI),0,0) );
         root.addChild( axisNode );
 
         sciView.addNode( root );
 
         sciView.getCamera().addChild(root);
-        root.setPosition( new Vector3f(-25, 0, -100));
+        root.setPosition( new Vector3f(-58, 30, -90));
 
         root.getUpdate().add(() -> {
             root.setWantsComposeModel(false);
 
             root.getModel().identity();
+            //root.getModel().set( sciView.getCamera().getModel() );
 
             //root.getModel().mul( new Quaternionf(sciView.getCamera().getRotation()).invert().get(new Matrix4f()) );
             root.getModel().translate( root.getPosition() );
-            root.getModel().mul( new Quaternionf().lookAlong(
-                    sciView.getCamera().getForward(),
-                    new Vector3f(0, 1, 0)).get(new Matrix4f()) );
+//            root.getModel().mul( new Quaternionf().lookAlong(
+//                    sciView.getCamera().getForward(),
+//                    new Vector3f(0, 1, 0)).get(new Matrix4f()) );
+            root.getModel().mul(
+                    new Quaternionf(sciView.getCamera().getRotation()).invert().conjugate().get(new Matrix4f()) );
 
             //root.getModel().mul( sciView.getCamera().get(new Matrix4f()) );
 
