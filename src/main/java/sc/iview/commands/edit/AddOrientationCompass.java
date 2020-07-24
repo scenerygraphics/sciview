@@ -28,10 +28,7 @@
  */
 package sc.iview.commands.edit;
 
-import graphics.scenery.Cylinder;
-import graphics.scenery.Icosphere;
-import graphics.scenery.Node;
-import graphics.scenery.Sphere;
+import graphics.scenery.*;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -68,26 +65,28 @@ public class AddOrientationCompass implements Command {
     @Parameter
     private float AXESBARRADIUS = 1.0f;
 
-    // colorblindfriendly pallate values based on https://pymolwiki.org/index.php/Colorblindfriendly
+    @Parameter
+    private Vector3f xColor = new Vector3f(1f,0f,0f);
 
     @Parameter
-    private Vector3f xColor = new Vector3f(204/255f,71/255f,97/255f);// color = magenta
+    private Vector3f yColor = new Vector3f(0f,1f,0f);
 
     @Parameter
-    private Vector3f yColor = new Vector3f(240/255f,228/255f,66/255f);// color = yellow
-
-    @Parameter
-    private Vector3f zColor = new Vector3f(0f,114/255f,178/255f);// color = blue
+    private Vector3f zColor = new Vector3f(0f,0f,1f);
 
     private Node makeAxis( float axisLength, float angleX, float angleY, float angleZ, Vector3f color ) {
         Cylinder axisNode = new Cylinder(AXESBARRADIUS, axisLength,4);
         axisNode.setName("compass axis: X");
         axisNode.setRotation( new Quaternionf().rotateXYZ( angleX, angleY, angleZ ) );
         axisNode.getMaterial().getDiffuse().set(color);
+        axisNode.getMaterial().setDepthTest(Material.DepthTest.Always);
+        axisNode.getMaterial().getBlending().setTransparent(true);
 
         Icosphere axisCap = new Icosphere(AXESBARRADIUS, 2);
         axisCap.setPosition(new Vector3f(0, axisLength, 0));
         axisCap.getMaterial().getDiffuse().set(color);
+        axisCap.getMaterial().setDepthTest(Material.DepthTest.Always);
+        axisCap.getMaterial().getBlending().setTransparent(true);
 
         axisNode.addChild(axisCap);
         return axisNode;
