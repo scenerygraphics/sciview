@@ -47,7 +47,7 @@ import java.util.jar.Manifest;
 /**
  * Splash label class to show logo, version, and git hashes.
  *
- * @author Ulrik Guenther <hello@ulrik.is>
+ * @author Ulrik Guenther
  */
 public class SplashLabel extends JComponent implements ItemListener {
     private Logger logger = LoggerFactory.getLogger("SciView");

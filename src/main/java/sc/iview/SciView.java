@@ -260,6 +260,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     /**
      * Toggle video recording with scenery's video recording mechanism
      * Note: this video recording may skip frames because it is asynchronous
+     *
+     * @param filename destination for saving video
+     * @param overwrite should the file be replaced, otherwise a unique incrementing counter will be appended
      */
     public void toggleRecordVideo(String filename, boolean overwrite) {
         if( getRenderer() instanceof  OpenGLRenderer )
@@ -599,7 +602,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Return the current SceneryJPanel. This is necessary for custom context menus
-     * @return
+     * @return panel the current SceneryJPanel
      */
     public SceneryJPanel getSceneryJPanel() {
         return panel;
@@ -950,7 +953,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a box at the specific position and unit size
-     * @param position
+     * @param position position to put the box
      * @return the Node corresponding to the box
      */
     public Node addBox( Vector3 position ) {
@@ -959,8 +962,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a box at the specified position and with the specified size
-     * @param position
-     * @param size
+     * @param position position to put the box
+     * @param size size of the box
      * @return the Node corresponding to the box
      */
     public Node addBox( Vector3 position, Vector3 size ) {
@@ -969,10 +972,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a box at the specified position with specified size, color, and normals on the inside/outside
-     * @param position
-     * @param size
-     * @param color
-     * @param inside
+     * @param position position to put the box
+     * @param size size of the box
+     * @param color color of the box
+     * @param inside are normals inside the box?
      * @return the Node corresponding to the box
      */
     public Node addBox( final Vector3 position, final Vector3 size, final ColorRGB color,
@@ -1000,8 +1003,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a sphere at the specified position with a given radius
-     * @param position
-     * @param radius
+     * @param position position to put the sphere
+     * @param radius radius of the sphere
      * @return the Node corresponding to the sphere
      */
     public Node addSphere( Vector3 position, float radius ) {
@@ -1010,9 +1013,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a sphere at the specified positoin with a given radius and color
-     * @param position
-     * @param radius
-     * @param color
+     * @param position position to put the sphere
+     * @param radius radius the sphere
+     * @param color color of the sphere
      * @return  the Node corresponding to the sphere
      */
     public Node addSphere( final Vector3 position, final float radius, final ColorRGB color ) {
@@ -1030,10 +1033,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a Cylinder at the given position with radius, height, and number of faces/segments
-     * @param position
-     * @param radius
-     * @param height
-     * @param num_segments
+     * @param position position of the cylinder
+     * @param radius radius of the cylinder
+     * @param height height of the cylinder
+     * @param num_segments number of segments to represent the cylinder
      * @return  the Node corresponding to the cylinder
      */
     public Node addCylinder( final Vector3 position, final float radius, final float height, final int num_segments ) {
@@ -1044,10 +1047,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a Cone at the given position with radius, height, and number of faces/segments
-     * @param position
-     * @param radius
-     * @param height
-     * @param num_segments
+     * @param position position to put the cone
+     * @param radius radius of the cone
+     * @param height height of the cone
+     * @param num_segments number of segments used to represent cone
      * @return  the Node corresponding to the cone
      */
     public Node addCone( final Vector3 position, final float radius, final float height, final int num_segments ) {
@@ -1066,8 +1069,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a line from start to stop
-     * @param start
-     * @param stop
+     * @param start start position of line
+     * @param stop stop position of line
      * @return  the Node corresponding to the line
      */
     public Node addLine( Vector3 start, Vector3 stop ) {
@@ -1076,9 +1079,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a line from start to stop with the given color
-     * @param start
-     * @param stop
-     * @param color
+     * @param start start position of line
+     * @param stop stop position of line
+     * @param color color of line
      * @return the Node corresponding to the line
      */
     public Node addLine( Vector3 start, Vector3 stop, ColorRGB color ) {
@@ -1087,9 +1090,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a multi-segment line that goes through the supplied points with a single color and edge width
-     * @param points
-     * @param color
-     * @param edgeWidth
+     * @param points points along line including first and terminal points
+     * @param color color of line
+     * @param edgeWidth width of line segments
      * @return the Node corresponding to the line
      */
     public Node addLine( final Vector3[] points, final ColorRGB color, final double edgeWidth ) {
@@ -1150,8 +1153,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Write a scenery mesh as an stl to the given file
-     * @param filename
-     * @param scMesh
+     * @param filename filename of the stl
+     * @param scMesh mesh to save
      */
     public void writeSCMesh( String filename, Mesh scMesh ) {
         File f = new File( filename );
@@ -1186,7 +1189,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Return the default point size to use for point clouds
-     * @return
+     * @return default point size used for point clouds
      */
     public float getDefaultPointSize() {
         return 0.025f;
@@ -1194,6 +1197,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Create an array of normal vectors from a set of vertices corresponding to triangles
+     *
+     * @param verts vertices to use for computing normals, assumed to be ordered as triangles
+     * @return array of normals
      */
     public float[] makeNormalsFromVertices( ArrayList<RealPoint> verts ) {
         float[] normals = new float[verts.size()];// div3 * 3coords
@@ -1220,7 +1226,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Open a file specified by the source path. The file can be anything that SciView knows about: mesh, volume, point cloud
-     * @param source
+     * @param source string of a data source
      * @throws IOException
      */
     public void open( final String source ) throws IOException {
@@ -1260,7 +1266,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add the given points to the scene as a PointCloud
-     * @param points
+     * @param points points to use in a PointCloud
      * @return a Node corresponding to the PointCloud
      */
     public Node addPointCloud( Collection<? extends RealLocalizable> points ) {
@@ -1269,8 +1275,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add the given points to the scene as a PointCloud with a given name
-     * @param points
-     * @param name
+     * @param points points to use in a PointCloud
+     * @param name name of the PointCloud
      * @return
      */
     public Node addPointCloud( final Collection<? extends RealLocalizable> points,
@@ -1307,7 +1313,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a PointCloud to the scene
-     * @param pointCloud
+     * @param pointCloud existing PointCloud to add to scene
      * @return a Node corresponding to the PointCloud
      */
     public Node addPointCloud( final PointCloud pointCloud ) {
@@ -1322,7 +1328,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a Node to the scene and publish it to the eventservice
-     * @param n
+     * @param n node to add to scene
      * @return a Node corresponding to the Node
      */
     public Node addNode( final Node n ) {
@@ -1331,8 +1337,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add Node n to the scene and set it as the active node/publish it to the event service if activePublish is true
-     * @param n
-     * @param activePublish
+     * @param n node to add to scene
+     * @param activePublish flag to specify whether the node becomes active *and* is published in the inspector/services
      * @return a Node corresponding to the Node
      */
     public Node addNode( final Node n, final boolean activePublish ) {
@@ -1359,7 +1365,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a scenery Mesh to the scene
-     * @param scMesh
+     * @param scMesh scenery mesh to add to scene
      * @return a Node corresponding to the mesh
      */
     public Node addMesh( final Mesh scMesh ) {
@@ -1378,7 +1384,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add an ImageJ mesh to the scene
-     * @param mesh
+     * @param mesh net.imagej.mesh to add to scene
      * @return a Node corresponding to the mesh
      */
     public Node addMesh( net.imagej.mesh.Mesh mesh ) {
@@ -1390,7 +1396,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     /**
      * [Deprecated: use deleteNode]
      * Remove a Mesh from the scene
-     * @param scMesh
+     * @param scMesh mesh to remove from scene
      */
     public void removeMesh( Mesh scMesh ) {
         getScene().removeChild( scMesh );
@@ -1405,7 +1411,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Set the currently active node
-     * @param n
+     * @param n existing node that should become active focus of this SciView
      * @return the currently active node
      */
     public Node setActiveNode( Node n ) {
@@ -1473,8 +1479,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Create an animation thread with the given fps speed and the specified action
-     * @param fps
-     * @param action
+     * @param fps frames per second at which this action should be run
+     * @param action Runnable that contains code to run fps times per second
      * @return a Future corresponding to the thread
      */
     public synchronized Future<?> animate(int fps, Runnable action ) {
@@ -1515,7 +1521,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Take a screenshot and save it to the specified path
-     * @param path
+     * @param path path for saving the screenshot
      */
     public void takeScreenshot( String path ) {
         getRenderer().screenshot( path, false );
@@ -1601,7 +1607,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Delete the specified node, this event is published
-     * @param node
+     * @param node node to delete from scene
      */
     public void deleteNode( Node node ) {
         deleteNode( node, true );
@@ -1609,8 +1615,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Delete a specified node and control whether the event is published
-     * @param node
-     * @param activePublish
+     * @param node node to delete from scene
+     * @param activePublish whether the deletion should be published
      */
     public void deleteNode( Node node, boolean activePublish ) {
         for( Node child : node.getChildren() ) {
@@ -1646,7 +1652,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Move the current active camera to the specified position
-     * @param position
+     * @param position position to move the camera to
      */
     public void moveCamera( float[] position ) {
         getCamera().setPosition( new Vector3f( position[0], position[1], position[2] ) );
@@ -1654,7 +1660,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Move the current active camera to the specified position
-     * @param position
+     * @param position position to move the camera to
      */
     public void moveCamera( double[] position ) {
         getCamera().setPosition( new Vector3f( ( float ) position[0], ( float ) position[1], ( float ) position[2] ) );
@@ -1670,7 +1676,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a child to the scene. you probably want addNode
-     * @param node
+     * @param node node to add as a child to the scene
      */
     public void addChild( Node node ) {
         getScene().addChild( node );
@@ -1678,7 +1684,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a Dataset to the scene as a volume. Voxel resolution and name are extracted from the Dataset itself
-     * @param image
+     * @param image image to add as a volume
      * @return a Node corresponding to the Volume
      */
     public Node addVolume( Dataset image ) {
@@ -1697,8 +1703,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a Dataset as a Volume with the specified voxel dimensions
-     * @param image
-     * @param voxelDimensions
+     * @param image image to add as a volume
+     * @param voxelDimensions dimensions of voxels in volume
      * @return a Node corresponding to the Volume
      */
     @SuppressWarnings({ "rawtypes", "unchecked" }) public Node addVolume( Dataset image, float[] voxelDimensions ) {
@@ -1708,10 +1714,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a RandomAccessibleInterval to the image
-     * @param image
-     * @param name
+     * @param image image to add as a volume
+     * @param name name of image
      * @param extra, kludge argument to prevent matching issues
-     * @param <T>
+     * @param <T> pixel type of image
      * @return a Node corresponding to the volume
      */
     public <T extends RealType<T>> Node addVolume( RandomAccessibleInterval<T> image, String name, String extra ) {
@@ -1720,8 +1726,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a RandomAccessibleInterval to the image
-     * @param image
-     * @param <T>
+     * @param image image to add as a volume
+     * @param <T> pixel type of image
      * @return a Node corresponding to the volume
      */
     public <T extends RealType<T>> Node addVolume(RandomAccessibleInterval<T> image, String name) {
@@ -1730,8 +1736,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add a RandomAccessibleInterval to the image
-     * @param image
-     * @param <T>
+     * @param image image to add as a volume
+     * @param <T> pixel type of image
      * @return a Node corresponding to the volume
      */
     public <T extends RealType<T>> Node addVolume( RandomAccessibleInterval<T> image, float[] voxelDimensions ) {
@@ -1756,9 +1762,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Add an IterableInterval as a Volume
-     * @param image
-     * @param name
-     * @param <T>
+     * @param image image to add as a volume
+     * @param name name of image
+     * @param <T> pixel type of image
      * @return a Node corresponding to the Volume
      */
     public <T extends RealType<T>> Node addVolume( IterableInterval<T> image, String name ) throws Exception {
@@ -1771,8 +1777,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Set the colormap using an ImageJ LUT name
-     * @param n
-     * @param lutName
+     * @param n node to apply colormap to
+     * @param lutName name of LUT according to imagej LUTService
      */
     public void setColormap( Node n, String lutName ) {
         try {
@@ -1784,8 +1790,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Set the ColorMap of node n to the supplied colorTable
-     * @param n
-     * @param colorTable
+     * @param n node to apply colortable to
+     * @param colorTable ColorTable to use
      */
     public void setColormap( Node n, ColorTable colorTable ) {
         final int copies = 16;
@@ -1842,10 +1848,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     /**
      * Add an IterableInterval to the image with the specified voxelDimensions and name
      * This version of addVolume does most of the work
-     * @param image
-     * @param name
-     * @param voxelDimensions
-     * @param <T>
+     * @param image image to add as a volume
+     * @param name name of image
+     * @param voxelDimensions dimensions of voxel in volume
+     * @param <T> pixel type of image
      * @return a Node corresponding to the Volume
      */
     public <T extends RealType<T>> Node addVolume( RandomAccessibleInterval<T> image, String name,
@@ -1959,6 +1965,12 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         return addNode(v);
     }
 
+    /**
+     * Block while predicate is true
+     *
+     * @param predicate predicate function that returns true as long as this function should block
+     * @param waitTime wait time before predicate re-evaluation
+     */
     private void blockWhile(Function<SciView, Boolean> predicate, int waitTime) {
         while( predicate.apply(this) ) {
             try {
@@ -1994,11 +2006,11 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     /**
      * Update a volume with the given IterableInterval.
      * This method actually populates the volume
-     * @param image
-     * @param name
-     * @param voxelDimensions
-     * @param v
-     * @param <T>
+     * @param image image to update into volume
+     * @param name name of image
+     * @param voxelDimensions dimensions of voxel in volume
+     * @param v existing volume to update
+     * @param <T> pixel type of image
      * @return a Node corresponding to the input volume
      */
     public <T extends RealType<T>> Node updateVolume( IterableInterval<T> image, String name,
@@ -2035,7 +2047,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Set the status of PushMode, which only updates the render panel when there is a change in the scene
-     * @param push
+     * @param push true if push mode should be used
      * @return current PushMode status
      */
     public boolean setPushMode( boolean push ) {
@@ -2124,9 +2136,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Utility function to generate GLVector in cases like usage from Python
-     * @param x
-     * @param y
-     * @param z
+     * @param x x coord
+     * @param y y coord
+     * @param z z coord
      * @return a GLVector of x,y,z
      */
     static public GLVector getGLVector(float x, float y, float z) {
@@ -2135,11 +2147,11 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Set the rotation of Node N by generating a quaternion from the supplied arguments
-     * @param n
-     * @param x
-     * @param y
-     * @param z
-     * @param w
+     * @param n node to set rotation for
+     * @param x x coord of rotation quat
+     * @param y y coord of rotation quat
+     * @param z z coord of rotation quat
+     * @param w w coord of rotation quat
      */
     public void setRotation(Node n, float x, float y, float z, float w) {
         n.setRotation(new Quaternionf(x,y,z,w));
@@ -2314,7 +2326,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     /**
      * Return a list of all nodes that match a given predicate function
      * @param nodeMatchPredicate, returns true if a node is a match
-     * @return
+     * @return list of nodes that match the predicate
      */
     public List<Node> findNodes(Function1<Node, Boolean> nodeMatchPredicate) {
         return getScene().discover(getScene(), nodeMatchPredicate, false);
@@ -2329,6 +2341,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     /**
      * Static launching method
+     *
+     * @return a newly created SciView
      */
     public static SciView create() throws Exception {
         SceneryBase.xinitThreads();
@@ -2345,6 +2359,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     /**
      * Static launching method
      * [DEPRECATED] use SciView.create() instead
+     *
+     * @return a newly created SciView
      */
     @Deprecated
     public static SciView createSciView() throws Exception {

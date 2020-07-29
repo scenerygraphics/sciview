@@ -59,12 +59,12 @@ public class N5 {
 
     /**
      * Save an ImageJ mesh into n5
-     * @param mesh
-     * @param n5
-     * @param dataset
-     * @param vertexBlockSize
-     * @param triangleBlockSize
-     * @param compression
+     * @param mesh input mesh
+     * @param n5 n5 writer
+     * @param dataset dataset in n5
+     * @param vertexBlockSize size of blocks for vertices to be stored
+     * @param triangleBlockSize size of blocks for triangle indices to be stored
+     * @param compression compression algorithm
      * @throws IOException
      */
     public static void save(Mesh mesh, N5Writer n5, String dataset, int[] vertexBlockSize, int[] triangleBlockSize, Compression compression) throws IOException {
