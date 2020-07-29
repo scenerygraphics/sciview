@@ -63,7 +63,8 @@ if ( branch == 'master' and not is_PR and travis_secure ) or \
 ## - message begin with SV_IJ_DEPLOY_PRIMARY
 ## - release
 
-if ( branch == 'master' and not is_PR and travis_secure and release_properties_exists ) or \
+# TODO: check branch == <pom-release-version>
+if ( not is_PR and travis_secure and release_properties_exists ) or \
     ( '[SV_IJ_DEPLOY_PRIMARY]' in commit_message ):
     print('Upload to SciView')
     subprocess.call(['sh', 'sciview_deploy.sh'])
