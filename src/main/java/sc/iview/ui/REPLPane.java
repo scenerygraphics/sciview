@@ -51,6 +51,7 @@ import java.io.Writer;
  * @author Curtis Rueden
  * @author Johannes Schindelin
  * @author Ulrik Guenther
+ * @author Kyle Harrington
  */
 public class REPLPane implements UIComponent<JComponent> {
 
@@ -109,12 +110,18 @@ public class REPLPane implements UIComponent<JComponent> {
 
   // -- InterpreterPane methods --
 
-  /** Gets the associated script REPL. */
+  /** Gets the associated script REPL.
+   *
+   * @return REPL for use
+   */
   public ScriptREPL getREPL() {
     return repl;
   }
 
-  /** Prints a message to the output panel. */
+  /** Prints a message to the output panel.
+   *
+   * @param string to show in REPL
+   */
   public void print(final String string) {
     final Writer writer = output.getOutputWriter();
     try {
