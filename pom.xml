@@ -228,6 +228,10 @@
 			<groupId>io.scif</groupId>
 			<artifactId>scifio</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>io.scif</groupId>
+			<artifactId>scifio-bf-compat</artifactId>
+		</dependency>
 
 		<!-- ImgLib2 dependencies -->
 		<dependency>
