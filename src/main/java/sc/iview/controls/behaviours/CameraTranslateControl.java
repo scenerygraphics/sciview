@@ -39,7 +39,7 @@ import sc.iview.SciView;
  *
  */
 public class CameraTranslateControl implements DragBehaviour {
-    protected SciView sciView;
+    protected final SciView sciView;
     private boolean firstEntered = true;
     private int lastX;
     private int lastY;

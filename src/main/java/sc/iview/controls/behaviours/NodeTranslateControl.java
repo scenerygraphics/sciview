@@ -38,11 +38,11 @@ import org.scijava.ui.behaviour.ScrollBehaviour;
  * Control behavior for moving a Node
  *
  * @author Kyle Harrington
- *
+ * @author Vladimir Ulman
  */
 public class NodeTranslateControl implements DragBehaviour, ScrollBehaviour {
 
-    protected SciView sciView;
+    protected final SciView sciView;
     private boolean firstEntered = true;
     private int lastX;
     private int lastY;
@@ -89,12 +89,6 @@ public class NodeTranslateControl implements DragBehaviour, ScrollBehaviour {
         sciView.getCamera().getUp().mul(   ( lastY - y ) * dragXySpeed, dragPosUpdater);
         targetedNode.getPosition().add(dragPosUpdater);
         targetedNode.setNeedsUpdate(true);
-        //nothing works...
-        //we need to have "targetedNode.getMaximumBoundingBox().getBoundingSphere().getOrigin()" updated
-        //so that shift+mouse rotates around the fresh coord...
-        //
-        //targetedNode.updateWorld(false,false);
-        //targetedNode.setBoundingBox( targetedNode.generateBoundingBox() );
 
         targetedNode.getLock().unlock();
 
@@ -114,7 +108,7 @@ public class NodeTranslateControl implements DragBehaviour, ScrollBehaviour {
 
         sciView.getCamera().getForward().mul(-1f * (float)wheelRotation * scrollSpeed, scrollPosUpdater);
         targetedNode.getPosition().add(scrollPosUpdater);
-        targetedNode.setNeedsUpdate(true); //to be consistent with how it is done in drag() above
+        targetedNode.setNeedsUpdate(true);
 
         targetedNode.getLock().unlock();
     }
