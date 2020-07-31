@@ -202,7 +202,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         tree.getSelectionModel().setSelectionMode( TreeSelectionModel.SINGLE_TREE_SELECTION );
         tree.addTreeSelectionListener( e -> {
             final Node sceneNode = sceneNode( e.getNewLeadSelectionPath() );
-//            sciView.setActiveNode( sceneNode );
+            sciView.setActiveNode( sceneNode );
             updateProperties( sceneNode );
         } );
 
@@ -218,8 +218,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
                     }
 
                     Node node = (Node)n.getUserObject();
-                    sciView.setActiveNode( node );
-                    sciView.centerOnNode( node );
+                    sciView.setActiveCenteredNode( node );
                 } else if(e.getButton() == MouseEvent.BUTTON3) {
                     int x = e.getX();
                     int y = e.getY();
