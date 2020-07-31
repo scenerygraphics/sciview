@@ -115,7 +115,7 @@ import sc.iview.event.NodeAddedEvent;
 import sc.iview.event.NodeChangedEvent;
 import sc.iview.event.NodeRemovedEvent;
 import sc.iview.process.MeshConverter;
-import sc.iview.ui.ContextPopUp;
+import sc.iview.ui.ContextPopUpNodeChooser;
 import sc.iview.ui.REPLPane;
 import sc.iview.vector.JOMLVector3;
 import sc.iview.vector.Vector3;
@@ -892,15 +892,13 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     public void setObjectSelectionMode() {
         Function3<Scene.RaycastResult, Integer, Integer, Unit> selectAction = (nearest,x,y) -> {
             if( !nearest.getMatches().isEmpty() ) {
-                setActiveNode( nearest.getMatches().get( 0 ).getNode() );
-                log.info( "Selected node: " + getActiveNode().getName() + " at " + x + "," + y);
-
-                // Setup the context menu for this node
-                ContextPopUp menu = new ContextPopUp(nearest.getMatches().get(0).getNode());
-                menu.show(panel, x, y);
-
-                // copy reference on the last result into "public domain"
+                // copy reference on the last object picking result into "public domain"
+                // (this must happen before the ContextPopUpNodeChooser menu!)
                 objectSelectionLastResult = nearest;
+
+                // Setup the context menu for this picking
+                // (in the menu, the user will chose node herself)
+                new ContextPopUpNodeChooser(this).show(panel,x,y);
             }
             return Unit.INSTANCE;
         };
