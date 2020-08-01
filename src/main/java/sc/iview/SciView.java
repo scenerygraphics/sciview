@@ -63,6 +63,7 @@ import graphics.scenery.volumes.TransferFunction;
 import graphics.scenery.volumes.Volume;
 import io.scif.SCIFIOService;
 import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function1;
 import kotlin.jvm.functions.Function3;
 import net.imagej.Dataset;
@@ -84,6 +85,7 @@ import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.view.Views;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -158,7 +160,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     /**
      * Mouse controls for FPS movement and Arcball rotation
      */
-    protected ArcballCameraControl targetArcball;
+    protected AnimatedCenteringBeforeArcBallControl targetArcball;
     protected FPSCameraControl fpsControl;
     /**
      * The floor that orients the user in the scene
@@ -293,13 +295,6 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         // This isnt how it should work
         setObjectSelectionMode();
         resetFPSInputs();
-    }
-
-    /**
-     * Place the camera such that all objects in the scene are within the field of view
-     */
-    public void fitCameraToScene() {
-        centerOnNode(getScene());
     }
 
     public ArrayList<PointLight> getLights() {
@@ -735,13 +730,6 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /*
-     * Center the camera on the scene such that all objects are within the field of view
-     */
-    public void centerOnScene() {
-        centerOnNode(getScene());
-    }
-
-    /*
      * Get the InputHandler that is managing mouse, input, VR controls, etc.
      */
     public InputHandler getSceneryInputHandler() {
@@ -781,55 +769,98 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         return bb;
     }
 
-    /*
+    /**
+     * Place the camera such that all objects in the scene are within the field of view
+     */
+    public void fitCameraToScene() {
+        centerOnNode(getScene());
+        //TODO: smooth zoom in/out VLADO vlado Vlado
+    }
+
+    /**
+     * Center the camera on the scene
+     */
+    public void centerOnScene() {
+        centerOnNode(getScene());
+    }
+
+    /**
+     * Center the camera on the scene
+     */
+    public void centerOnActiveNode() {
+        if (activeNode == null) return;
+        centerOnNode(activeNode);
+    }
+
+    /**
      * Center the camera on the specified Node
      */
     public void centerOnNode( Node currentNode ) {
-        centerOnNode(currentNode,notAbstractBranchingFunction);
+        if (currentNode == null) {
+            log.info("Cannot center on node. CurrentNode is null");
+            return;
+        }
+
+        //center the on the same spot as ArcBall does
+        centerOnPosition( currentNode.getMaximumBoundingBox().getBoundingSphere().getOrigin() );
     }
 
-    /*
+    /**
      * Center the camera on the specified Node
      */
-    public void centerOnNode( Node currentNode, Function<Node,List<Node>> branchFunction ) {
-        if( currentNode == null ) {
-            log.info("Cannot center on node. CurrentNode is null" );
-            return;
+    public void centerOnPosition( Vector3f currentPos ) {
+        //current and desired directions in world coords
+        final Vector3f currViewDir = new Vector3f(camera.getTarget()).sub(camera.getPosition());
+        final Vector3f wantViewDir = new Vector3f(currentPos).sub(camera.getPosition());
+
+        //current and desired directions as the camera sees them
+        camera.getTransformation().transformDirection(currViewDir).normalize();
+        camera.getTransformation().transformDirection(wantViewDir).normalize();
+
+        //we gonna rotate directly to match the current view direction with the desired one,
+        //which means to rotate by this angle:
+        float totalDeltaAng = (float)Math.acos( currViewDir.dot(wantViewDir) );
+        //
+        //if the needed angle is less than 2 deg, we do nothing...
+        if (totalDeltaAng > -0.035 && totalDeltaAng < 0.035) return;
+        //
+        //here's the axis along which we will rotate
+        currViewDir.cross(wantViewDir);
+
+        //animation options: control delay between animation frames -- fluency
+        final long rotPauseyPerStep = 30; //miliseconds
+
+        //animation options: control max number of steps -- upper limit on total time for animation
+        final int rotMaxSteps = 999999;  //effectively disabled....
+
+        //how many steps when max update/move is 5 deg -- smoothness
+        int rotSteps = (int)Math.ceil( Math.abs(totalDeltaAng) / 0.087 );
+        if (rotSteps > rotMaxSteps) rotSteps = rotMaxSteps;
+
+        log.debug("centering by deltaAng="+ 180.0f*totalDeltaAng/3.14159f+" deg over "+rotSteps+" steps");
+
+        //angular progress aux variables
+        float angCurPos = 0, angNextPos, angDelta;
+
+        camera.setTargeted(false);
+        for (int i = 1; i <= rotSteps; ++i) {
+            //this emulates ease-in ease-out animation, both vars are in [0:1]
+            float timeProgress = (float)i / rotSteps;
+            float angProgress = ((timeProgress *= 2) <= 1 ? //two cubics connected smoothly into S-shape curve from [0,0] to [1,1]
+                    timeProgress * timeProgress * timeProgress :
+                    (timeProgress -= 2) * timeProgress * timeProgress + 2) / 2;
+
+            angNextPos = angProgress * totalDeltaAng;    //where I should be by now
+            angDelta = angNextPos - angCurPos;           //how much I must travel to get there
+            angCurPos = angNextPos;                      //suppose we already got there...
+
+            new Quaternionf().rotateAxis(-angDelta,currViewDir).mul(camera.getRotation(),camera.getRotation());
+            try {
+                Thread.sleep(rotPauseyPerStep);
+            } catch (InterruptedException e) {
+                i = rotSteps;
+            }
         }
-
-        OrientedBoundingBox bb = getSubgraphBoundingBox(currentNode, branchFunction);
-
-        // TODO: find the widest dimensions of BB and align to that normal
-
-        if( bb == null ) return;
-        System.out.println("CurrentNode BoundingBox " + bb + " " + bb.getBoundingSphere().getOrigin() + " " + bb.getBoundingSphere().getRadius());
-
-        if(Float.isNaN(bb.getBoundingSphere().getOrigin().x()) ||
-                Float.isNaN(bb.getBoundingSphere().getOrigin().y()) ||
-                Float.isNaN(bb.getBoundingSphere().getOrigin().z()) ||
-                Float.isNaN(bb.getBoundingSphere().getRadius())) {
-            log.warn("Bounding box contains NaN, not adjusting camera.");
-            return;
-        }
-
-        getCamera().setTarget( bb.getBoundingSphere().getOrigin() );
-        getCamera().setTargeted( true );
-
-        // Set forward direction to point from camera at active node
-        Vector3f forward = bb.getBoundingSphere().getOrigin().sub( getCamera().getPosition() ).normalize();
-
-        float distance = (float) (bb.getBoundingSphere().getRadius() / Math.tan( getCamera().getFov() / 360 * Math.PI ));
-
-        headlight.setLightRadius(distance * 1.1f);
-
-        // Solve for the proper rotation
-        Quaternionf rotation = new Quaternionf().lookAlong(forward, new Vector3f(0,1,0));
-
-        getCamera().setRotation( rotation.normalize() );
-        getCamera().setPosition( bb.getBoundingSphere().getOrigin().add( getCamera().getForward().mul( distance * -1.33f ) ) );
-
-//        getCamera().setDirty(true);
-//        getCamera().setNeedsUpdate(true);
     }
 
     public float getFPSSpeed() {
@@ -1014,7 +1045,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         mouseSpeed = getMouseSpeed();
 
         Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
-        targetArcball = new ArcballCameraControl( "mouse_control_arcball", cameraSupplier,
+        targetArcball = new AnimatedCenteringBeforeArcBallControl( "mouse_control_arcball", cameraSupplier,
                                                   getRenderer().getWindow().getWidth(),
                                                   getRenderer().getWindow().getHeight(), target );
         targetArcball.setMaximumDistance( Float.MAX_VALUE );
@@ -1028,6 +1059,45 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         h.addKeyBinding( "mouse_control_arcball", "shift button1" );
         h.addBehaviour( "scroll_arcball", targetArcball );
         h.addKeyBinding( "scroll_arcball", "shift scroll" );
+    }
+
+    /*
+     * A wrapping class for the {@ArcballCameraControl} that calls {@link CenterOnPosition()}
+     * before the actual Arcball camera movement takes place. This way, the targeted node is
+     * first smoothly brought into the centre along which Arcball is revolving, preventing
+     * from sudden changes of view (and lost of focus from the user.
+     */
+    class AnimatedCenteringBeforeArcBallControl extends ArcballCameraControl {
+        //a bunch of necessary c'tors (originally defined in the ArcballCameraControl class)
+        public AnimatedCenteringBeforeArcBallControl(@NotNull String name, @NotNull Function0<? extends Camera> n, int w, int h, @NotNull Function0<? extends Vector3f> target) {
+            super(name, n, w, h, target);
+        }
+
+        public AnimatedCenteringBeforeArcBallControl(@NotNull String name, @NotNull Supplier<Camera> n, int w, int h, @NotNull Supplier<Vector3f> target) {
+            super(name, n, w, h, target);
+        }
+
+        public AnimatedCenteringBeforeArcBallControl(@NotNull String name, @NotNull Function0<? extends Camera> n, int w, int h, @NotNull Vector3f target) {
+            super(name, n, w, h, target);
+        }
+
+        public AnimatedCenteringBeforeArcBallControl(@NotNull String name, @NotNull Supplier<Camera> n, int w, int h, @NotNull Vector3f target) {
+            super(name, n, w, h, target);
+        }
+
+        @Override
+        public void init( int x, int y )
+        {
+            centerOnPosition( targetArcball.getTarget().invoke() );
+            super.init(x,y);
+        }
+
+        @Override
+        public void scroll(double wheelRotation, boolean isHorizontal, int x, int y)
+        {
+            centerOnPosition( targetArcball.getTarget().invoke() );
+            super.scroll(wheelRotation,isHorizontal,x,y);
+        }
     }
 
     /*
@@ -1543,7 +1613,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     public Node setActiveCenteredNode( Node n ) {
         //activate...
         Node ret = setActiveNode(n);
-        //...and center
+        //...and center it
         if (ret != null) centerOnNode(ret);
         return ret;
     }
