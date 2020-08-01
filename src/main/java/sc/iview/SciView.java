@@ -115,7 +115,7 @@ import sc.iview.event.NodeAddedEvent;
 import sc.iview.event.NodeChangedEvent;
 import sc.iview.event.NodeRemovedEvent;
 import sc.iview.process.MeshConverter;
-import sc.iview.ui.ContextPopUp;
+import sc.iview.ui.ContextPopUpNodeChooser;
 import sc.iview.ui.REPLPane;
 import sc.iview.vector.JOMLVector3;
 import sc.iview.vector.Vector3;
@@ -610,8 +610,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             nodePropertyEditor.rebuildTree();
             getLogger().info("Done initializing SciView");
 
-            // subscribe to Node{Added, Removed, Changed} events
-            eventService.subscribe(this);
+            // subscribe to Node{Added, Removed, Changed} events happens automagically owing to the annotations
             frame.getGlassPane().setVisible(false);
             panel.setVisible(true);
 
@@ -893,19 +892,20 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     public void setObjectSelectionMode() {
         Function3<Scene.RaycastResult, Integer, Integer, Unit> selectAction = (nearest,x,y) -> {
             if( !nearest.getMatches().isEmpty() ) {
-                setActiveNode( nearest.getMatches().get( 0 ).getNode() );
-                nodePropertyEditor.trySelectNode( getActiveNode() );
-                log.info( "Selected node: " + getActiveNode().getName() + " at " + x + "," + y);
+                // copy reference on the last object picking result into "public domain"
+                // (this must happen before the ContextPopUpNodeChooser menu!)
+                objectSelectionLastResult = nearest;
 
-                // Setup the context menu for this node
-
-                ContextPopUp menu = new ContextPopUp(nearest.getMatches().get(0).getNode());
-                menu.show(panel, x, y);
+                // Setup the context menu for this picking
+                // (in the menu, the user will chose node herself)
+                new ContextPopUpNodeChooser(this).show(panel,x,y);
             }
             return Unit.INSTANCE;
         };
         setObjectSelectionMode(selectAction);
     }
+
+    public Scene.RaycastResult objectSelectionLastResult;
 
     /*
      * Set the action used during object selection
@@ -914,6 +914,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         final InputHandler h = getInputHandler();
         List<Class<?>> ignoredObjects = new ArrayList<>();
         ignoredObjects.add( BoundingGrid.class );
+        ignoredObjects.add( Camera.class ); //do not mess with "scene params", allow only "scene data" to be selected
+        ignoredObjects.add( DetachedHeadCamera.class );
+        ignoredObjects.add( DirectionalLight.class );
+        ignoredObjects.add( PointLight.class );
 
         if(h == null) {
             getLogger().error("InputHandler is null, cannot change object selection mode.");
@@ -1457,15 +1461,11 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             //System.out.println("find(name) " + find(n.getName()) );
         }
 
-        if( activePublish ) {
-            // Set new node as active and center
-            if( getCenterOnNewNodes() ) {
-                setActiveNode(n);
-                centerOnNode(n);
-            }
+        // Set new node as active and centered?
+        setActiveNode(n);
+        if( centerOnNewNodes ) centerOnNode(n);
+        if( activePublish ) eventService.publish(new NodeAddedEvent(n));
 
-            eventService.publish(new NodeAddedEvent(n));
-        }
         return n;
     }
 
@@ -1516,7 +1516,12 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
-     * Set the currently active node
+     * Activate the node (without centering view on it). The node becomes a target
+     * of the Arcball camera movement, will become subject of the node dragging
+     * (ctrl[+shift]+mouse-left-click-and-drag), will be selected in the scene graph
+     * inspector (the {@link NodePropertyEditor})
+     * and {@link sc.iview.event.NodeActivatedEvent} will be published.
+     *
      * @param n existing node that should become active focus of this SciView
      * @return the currently active node
      */
@@ -1524,9 +1529,23 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         if( activeNode == n ) return activeNode;
         activeNode = n;
         targetArcball.setTarget( n == null ? () -> new Vector3f( 0, 0, 0 ) : () -> n.getMaximumBoundingBox().getBoundingSphere().getOrigin());
+        nodePropertyEditor.trySelectNode( activeNode );
         eventService.publish( new NodeActivatedEvent( activeNode ) );
 
         return activeNode;
+    }
+
+    /**
+     * Activate the node, and center the view on it.
+     * @param n
+     * @return the currently active node
+     */
+    public Node setActiveCenteredNode( Node n ) {
+        //activate...
+        Node ret = setActiveNode(n);
+        //...and center
+        if (ret != null) centerOnNode(ret);
+        return ret;
     }
 
     @EventHandler
@@ -1541,7 +1560,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     @EventHandler
     protected void onNodeChanged(NodeChangedEvent event) {
-    	nodePropertyEditor.rebuildTree();
+        nodePropertyEditor.rebuildTree();
     }
 
     @EventHandler
@@ -1722,10 +1741,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         objectService.removeObject(node);
         node.getParent().removeChild( node );
-        if( activePublish ) {
-            eventService.publish(new NodeRemovedEvent(node));
-            if (activeNode == node) setActiveNode(null);
-        }
+        if (activeNode == node) setActiveNode(null); //maintain consistency
+        if( activePublish ) eventService.publish(new NodeRemovedEvent(node));
     }
 
     /**
