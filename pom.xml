@@ -146,13 +146,6 @@
 			<version>${jogl.version}</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.jetbrains.intellij.deps/trove4j -->
-		<dependency>
-			<groupId>org.jetbrains.intellij.deps</groupId>
-			<artifactId>trove4j</artifactId>
-			<version>1.0.20200330</version>
-		</dependency>
-
 		<dependency>
 			<groupId>com.formdev</groupId>
 			<artifactId>flatlaf</artifactId>
