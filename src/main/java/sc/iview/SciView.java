@@ -327,11 +327,12 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         if( getCamera() == null ) {
             cam = new DetachedHeadCamera();
             this.camera = cam;
+            cam.setPosition(new Vector3f(0.0f, 1.65f, 0.0f));
             getScene().addChild( cam );
         } else {
             cam = getCamera();
         }
-        cam.setPosition( new Vector3f( 0.0f, 5.0f, 5.0f ) );
+        cam.setPosition( new Vector3f( 0.0f, 1.65f, 5.0f ) );
         cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 1000.0f );
 
         // Setup lights
@@ -369,13 +370,13 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         lightSphere.getMaterial().setWireframe(true);
         lightSphere.setVisible(false);
         //lights.add( light );
-        camera.setNearPlaneDistance(0.001f);
+        camera.setNearPlaneDistance(0.01f);
+        camera.setFarPlaneDistance(1000.0f);
         camera.addChild( headlight );
 
-        floor = new Box( new Vector3f( 500f, 0.2f, 500f ) );
+        floor = new InfinitePlane();//new Box( new Vector3f( 500f, 0.2f, 500f ) );
+        ((InfinitePlane)floor).setType(InfinitePlane.Type.Grid);
         floor.setName( "Floor" );
-        floor.setPosition( new Vector3f( 0f, -1f, 0f ) );
-        floor.getMaterial().setDiffuse( new Vector3f( 1.0f, 1.0f, 1.0f ) );
         getScene().addChild( floor );
 
     }
@@ -726,7 +727,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * Return a bounding box around a subgraph of the scenegraph
      */
     public OrientedBoundingBox getSubgraphBoundingBox( Node n, Function<Node,List<Node>> branchFunction ) {
-        if(n.getBoundingBox() == null && n.getChildren().size() == 0) {
+        if(n.getBoundingBox() == null && n.getChildren().size() != 0) {
             return n.getMaximumBoundingBox().asWorld();
         }
 
@@ -770,6 +771,14 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         if( bb == null ) return;
         System.out.println("CurrentNode BoundingBox " + bb + " " + bb.getBoundingSphere().getOrigin() + " " + bb.getBoundingSphere().getRadius());
 
+        if(Float.isNaN(bb.getBoundingSphere().getOrigin().x()) ||
+                Float.isNaN(bb.getBoundingSphere().getOrigin().y()) ||
+                Float.isNaN(bb.getBoundingSphere().getOrigin().z()) ||
+                Float.isNaN(bb.getBoundingSphere().getRadius())) {
+            log.warn("Bounding box contains NaN, not adjusting camera.");
+            return;
+        }
+
         getCamera().setTarget( bb.getBoundingSphere().getOrigin() );
         getCamera().setTargeted( true );
 
@@ -784,10 +793,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         Quaternionf rotation = new Quaternionf().lookAlong(forward, new Vector3f(0,1,0));
 
         getCamera().setRotation( rotation.normalize() );
-        getCamera().setPosition( bb.getBoundingSphere().getOrigin().add( getCamera().getForward().mul( distance * -1 ) ) );
+        getCamera().setPosition( bb.getBoundingSphere().getOrigin().add( getCamera().getForward().mul( distance * -1.33f ) ) );
 
-        getCamera().setDirty(true);
-        getCamera().setNeedsUpdate(true);
+//        getCamera().setDirty(true);
+//        getCamera().setNeedsUpdate(true);
     }
 
     public float getFPSSpeed() {
