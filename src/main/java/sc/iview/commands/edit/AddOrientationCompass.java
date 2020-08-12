@@ -31,6 +31,7 @@ package sc.iview.commands.edit;
 import graphics.scenery.*;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
@@ -60,10 +61,10 @@ public class AddOrientationCompass implements Command {
     private SciView sciView;
 
     @Parameter
-    private float axisLength = 10.0f;
+    private float axisLength = 0.1f;
 
     @Parameter
-    private float AXESBARRADIUS = 1.0f;
+    private float AXESBARRADIUS = 0.001f;
 
     @Parameter
     private Vector3f xColor = new Vector3f(1f,0f,0f);
@@ -116,19 +117,11 @@ public class AddOrientationCompass implements Command {
         sciView.addNode( root );
 
         sciView.getCamera().addChild(root);
-        root.setPosition( new Vector3f(-58, 30, -90));
 
         root.getUpdate().add(() -> {
-            root.setWantsComposeModel(false);
-
-            root.getModel().identity();
-
-            root.getModel().translate( root.getPosition() );
-            root.getModel().mul(
-                    new Quaternionf(sciView.getCamera().getRotation()).invert().conjugate().get(new Matrix4f()) );
-
-            root.setNeedsUpdate(false);
-            root.setNeedsUpdateWorld(false);
+            final Camera cam = sciView.getCamera();
+            root.setPosition(cam.viewportToView(new Vector2f(-0.9f, 0.7f)));
+            root.setRotation(new Quaternionf(sciView.getCamera().getRotation()).conjugate());
             return null;
         });
 
