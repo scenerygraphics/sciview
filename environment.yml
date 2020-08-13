@@ -13,7 +13,8 @@ dependencies:
   - maven
   - git
   - openjdk >=8.0.192,<8.1.0a0
-#  - pip
-#  - pip:
+  - pip
+  - pip:
+      - pyinstaller
 #    - tensorflow
 #    - keras
