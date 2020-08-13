@@ -41,6 +41,29 @@ build_var1 = os.environ['encrypted_eb7aa63bf7ac_key']
 build_var2 = os.environ['encrypted_eb7aa63bf7ac_iv']
 subprocess.call(['sh', 'travis-build.sh', build_var1, build_var2])
 
+# Function for building executable with conda
+def build_conda():
+    from pathlib import Path
+    home = str(Path.home())
+
+    print('------ BUILD CONDA -----')
+    
+    script_name = 'Miniconda3-latest-Linux-x86_64.sh'
+    miniconda_dir = '%s/miniconda' % home
+    subprocess.call(['curl', '-fsLO', 'https://repo.continuum.io/miniconda/%s' % script_name])
+    subprocess.call(['bash', script_name, '-b', '-p', miniconda_dir])
+    subprocess.call(['source', '%s/etc/profile.d/conda.sh' % miniconda_dir])
+    subprocess.call(['hash', '-r'])
+    subprocess.call(['conda', 'config', '--set', 'always_yes', 'yes', '--set', 'changeps1', 'no'])
+    subprocess.call(['conda', 'update', '-q', 'conda'])
+    # Useful for debugging any issues with conda
+    subprocess.call(['conda', 'info', '-a'])
+
+    # Replace dep1 dep2 ... with your dependencies
+    subprocess.call(['conda', 'env', 'create', '-f', 'environment.yml'])
+    subprocess.call(['conda', 'activate', 'sciview'])
+build_conda()
+
 # Update sites
 print('')
 print('')
@@ -54,6 +77,7 @@ print('Checking if upload to update site needed')
 
 if ( branch == 'master' and not is_PR and travis_secure ) or \
     ( '[SV_IJ_DEPLOY_UNSTABLE]' in commit_message ):
+    
     print('Upload to SciView-Unstable')
     subprocess.call(['sh', 'sciview_deploy_unstable.sh'])
 
