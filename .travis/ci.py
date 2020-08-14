@@ -68,7 +68,23 @@ subprocess.call(['sh', 'travis-build.sh', build_var1, build_var2])
 def package_conda():
     subprocess.call(['sh', 'populate_fiji.sh'])
     subprocess.call(['pyinstaller', '--onefile', '--add-data', 'Fiji.app/jars:jars', 'src/main/python/sciview.py'])
-    subprocess.call(['./dist/sciview/sciview'])
+
+    platform = subprocess.check_output(['uname', '-s'])
+    arch = subprocess.check_output(['uname', '-m'])
+
+    if platform == 'Linux' and arch == 'x86_64':
+        exe_name = 'sciview-linux64'
+    elif platform == 'Linux':
+        exe_name = 'sciview-linux32'
+    elif platform == 'Darwin':
+        exe_name = 'sciview-macos'
+    elif platform.startswith('MING'):
+        exe_name = 'sciview-win32'
+    elif platform.startswith('MSYS_NT'):
+        exe_name = 'sciview-win32'
+
+    subprocess.call(['mv', 'dist/sciview', exe_name])
+
 package_conda()
 
 # Update sites
