@@ -40,7 +40,7 @@ print('Starting build')
 #subprocess.call(['curl', '-fsLO', 'https://raw.githubusercontent.com/scijava/scijava-scripts/master/travis-build.sh'])
 build_var1 = os.environ['encrypted_eb7aa63bf7ac_key']
 build_var2 = os.environ['encrypted_eb7aa63bf7ac_iv']
-subprocess.call(['sh', 'travis-build.sh', build_var1, build_var2])
+subprocess.call(['bash', 'travis-build.sh', build_var1, build_var2])
 
 # Setup conda environment
 # def build_conda():
