@@ -66,8 +66,8 @@ subprocess.call(['sh', 'travis-build.sh', build_var1, build_var2])
 # build_conda()
 
 def package_conda():
-    subprocess.call(['pyinstaller src/main/python/sciview.py'])
-    subprocess.call(['sh', 'populate_fiji.sh', 'dist/sciview/'])    
+    subprocess.call(['sh', 'populate_fiji.sh'])
+    subprocess.call(['pyinstaller', '--onefile', '--add-data', 'Fiji.app/jars:jars', 'src/main/python/sciview.py'])
     subprocess.call(['./dist/sciview/sciview'])
 package_conda()
 
