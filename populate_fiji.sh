@@ -39,6 +39,15 @@ deleteNatives() {
     die "Delete failed"
 }
 
+case "$(uname -s),$(uname -m)" in
+    Linux,x86_64) launcher=ImageJ-linux64 ;;
+    Linux,*) launcher=ImageJ-linux32 ;;
+    Darwin,*) launcher=Contents/MacOS/ImageJ-macosx ;;
+    MING*,*) launcher=ImageJ-win32.exe ;;
+    MSYS_NT*,*) launcher=ImageJ-win32.exe ;;
+    *) die "Unknown platform" ;;
+esac
+
 # -- Check if we have a path given, in that case we do not download a new Fiji, but use the path given --
 if [ -z "$1" ]
 then
@@ -46,15 +55,7 @@ then
     echo "--> If you want to install into a pre-existing Fiji installation, run as"
     echo "     $0 path/to/Fiji.app"
     # -- Determine correct ImageJ launcher executable --
-    
-    case "$(uname -s),$(uname -m)" in
-      Linux,x86_64) launcher=ImageJ-linux64 ;;
-      Linux,*) launcher=ImageJ-linux32 ;;
-      Darwin,*) launcher=Contents/MacOS/ImageJ-macosx ;;
-      MING*,*) launcher=ImageJ-win32.exe ;;
-      MSYS_NT*,*) launcher=ImageJ-win32.exe ;;
-      *) die "Unknown platform" ;;
-    esac
+   
     
     # -- Roll out a fresh Fiji --
     
@@ -121,6 +122,7 @@ installWithGroupId "$ffmpegGAV:jar:macosx-x86_64" $FijiDirectory/jars/macosx
 wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-linux64.exe" -O $FijiDirectory/ImageJ-linux64 ||
     die "Could not get linux64 launcher"
 chmod +x $FijiDirectory/ImageJ-linux64
+mkdir -p $FijiDirectory/Contents/MacOS/
 wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-macosx.exe" -O $FijiDirectory/Contents/MacOS/ImageJ-macosx ||
     die "Could not get macOS launcher"
 chmod +x $FijiDirectory/Contents/MacOS/ImageJ-macosx
@@ -186,7 +188,8 @@ done
 
 echo
 echo "--> Testing installation with command: sc.iview.commands.help.About"
-OUT_TEST=$(Fiji.app/$launcher  --headless --run sc.iview.commands.help.About)
+EXE="$FijiDirectory//$launcher"
+OUT_TEST=$($EXE --headless --run sc.iview.commands.help.About)
 echo $OUT_TEST
 
 if [ -z "$OUT_TEST" ]
