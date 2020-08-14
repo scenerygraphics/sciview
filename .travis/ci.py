@@ -43,15 +43,15 @@ def package_conda():
 
     print(['platform, arch', platform, arch])
     
-    if platform == 'Linux' and arch == 'x86_64':
+    if 'Linux' in platform and 'x86_64' in arch:
         exe_name = 'sciview-linux64'
-    elif platform == 'Linux':
+    elif 'Linux' in platform:
         exe_name = 'sciview-linux32'
-    elif platform == 'Darwin':
+    elif 'Darwin' in platform:
         exe_name = 'sciview-macos'
-    elif platform[:4] == 'MING':
+    elif 'MING' in platform:
         exe_name = 'sciview-win32'
-    elif platform[:7] == 'MSYS_NT':
+    elif 'MSYS_NT' in platform:
         exe_name = 'sciview-win32'
 
     subprocess.call(['mv', 'dist/sciview', exe_name])
