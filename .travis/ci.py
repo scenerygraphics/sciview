@@ -41,6 +41,8 @@ def package_conda():
     platform = subprocess.check_output(['uname', '-s'])
     arch = subprocess.check_output(['uname', '-m'])
 
+    print(['platform, arch', platform, arch])
+    
     if platform == 'Linux' and arch == 'x86_64':
         exe_name = 'sciview-linux64'
     elif platform == 'Linux':
