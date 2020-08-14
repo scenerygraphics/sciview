@@ -38,8 +38,8 @@ def package_conda():
     subprocess.call(['sh', 'populate_fiji.sh'])
     subprocess.call(['pyinstaller', '--onefile', '--add-data', 'Fiji.app/jars:jars', 'src/main/python/sciview.py'])
 
-    platform = subprocess.check_output(['uname', '-s'])
-    arch = subprocess.check_output(['uname', '-m'])
+    platform = subprocess.check_output(['uname', '-s']).decode('UTF-8')
+    arch = subprocess.check_output(['uname', '-m']).decode('UTF-8')
 
     print(['platform, arch', platform, arch])
     
