@@ -7,7 +7,9 @@ branches:
 install: true
 script:
 #- ".travis/build.sh"
-- "python .travis/ci.py"
+- "python .travis/pre_ci.py"
+- "conda activate sciview"
+- "conda activate sciview; python .travis/ci.py"
 cache:
   directories:
   - "~/.m2/repository"
@@ -23,8 +25,8 @@ deploy:
   api_key:
     secure: aiqqiUxuF4Sw7heg3DkflU6XDZ9iTvf8CTRvo7/UNJRREfh57umUXsay1BIapMAQsb29ZHAnDD4B2G/6YP1ODHhJR2l+P/w42oMWoPdmZY+cC34/JbIv5snA9eUjCtqvrRMpwlW+W52ZD8eCMGe05eMsodG3QZB4pdCE6blaOLHswq/bgpm9fb3E1XxEFHi2GHaygJvfJb1qvMB70NvD+I5mlbGoHuLsyqoTg7wQMc73dh9q9hSmsS8RIic8oY7mW6usxWJXA9P576F+ZwjTe34xMnqGfLaeoxP/WLXU/zzdPIvt+0hlCkgPBH1TJbGsGrwO0cJ3GG+cs/wf2sZd4x8VTzrihnVHejsdUTWtzJjRS+KRB5Bb/c7tpMm3nZ94N/n/U4sZNHPGL2nGq2RmWCloP4v2iMEYGAD7WXIHwYINI10skoB8N6RX0SIr09IStFu098vASHWrVIAjV2d64ZqgtOnQz+B6nCBHO6s5sNy4tetF3EQsDGF3b+1NugQFNXW+6lacDMutHuQBXoSDa9FT8v7w8nkUC32RXq4G0HRny2SxSAGzPjsRk8y0ZrXNKW6myGMnBVe8Tey4rja0gXndtXLSt9G24Vnfal9QdvGynmYSmb5tnEqXnn6DZnuAbuIFZzO8jtLrulmmPB02bItnOYhHa9m0nfIV7t0/wic=
   file: sciview-linux64
-#  on:
-#    repo: scenerygraphics/sciview
+  on:
+    repo: scenerygraphics/sciview
 #    branches:
 #      only:
 #        - master
