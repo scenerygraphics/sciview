@@ -208,6 +208,10 @@ then
 	conda activate "$condaEnv"
 	checkSuccess $?
 
+	echo
+	echo "== Run CI code =="
+	python3 .travis/ci.py
+
 	echo travis_fold:end:scijava-conda
 fi
 

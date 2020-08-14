@@ -8,8 +8,8 @@ install: true
 script:
 #- ".travis/build.sh"
 - "python3 .travis/pre_ci.py"
-- "conda activate scijava-conda"
-- "conda activate scijava-conda; python3 .travis/ci.py"
+# .travis/ci.py is now called from travis_build.sh, which is called by pre_ci.py ^^^
+#- "conda activate scijava-conda; python3 .travis/ci.py"
 cache:
   directories:
   - "~/.m2/repository"
