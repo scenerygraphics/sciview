@@ -54,6 +54,8 @@ def package_conda():
     elif 'MSYS_NT' in platform:
         exe_name = 'sciview-win32'
 
+    print(['exe:', exe_name])
+
     subprocess.call(['mv', 'dist/sciview', exe_name])
 
 package_conda()
