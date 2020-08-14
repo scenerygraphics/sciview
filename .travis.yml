@@ -7,9 +7,9 @@ branches:
 install: true
 script:
 #- ".travis/build.sh"
-- "python .travis/pre_ci.py"
+- "python3 .travis/pre_ci.py"
 - "conda activate sciview"
-- "conda activate sciview; python .travis/ci.py"
+- "conda activate sciview; python3 .travis/ci.py"
 cache:
   directories:
   - "~/.m2/repository"
