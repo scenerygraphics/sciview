@@ -1,29 +1,26 @@
-language: python
-python:
-  - "3.8"
-#install:
-#  - pip install -r requirements.txt
-  
-#language: java
-#jdk: openjdk8
-
-os:
-  - linux
-  - osx
-
 branches:
   only:
   - master
   - "/.*-[0-9]+\\..*/"
-install: true
-script:
-#- ".travis/build.sh"
-- "python3 .travis/pre_ci.py"
-# .travis/ci.py is now called from travis_build.sh, which is called by pre_ci.py ^^^
-#- "conda activate scijava-conda; python3 .travis/ci.py"
+install: true  
 cache:
   directories:
   - "~/.m2/repository"
+
+matrix:
+  include:      
+    - name: "Python 3.6.5 on macOS 10.13"
+      os: osx
+      osx_image: xcode9.4  # Python 3.6.5 running on macOS 10.13
+      language: shell  # 'language: python' is an error on Travis CI macOS
+      script: bash travis-build.sh
+
+    - name: "Python on linux64"
+      language: python
+      python: "3.8"
+      os: linux
+      script: bash travis-build.sh
+
 env:
   global:
   - secure: MwnwzR75uME7xFJ1gjX4Adu1iuU6mOTz/iOTo6B6hYCsZk1pK/zCmtn3L2TYMW3G2uXJCVgdrzeNpeXt98YG5sPdIh9K3xCRAqkfzMBMK1m5zJ5M+Sjcr/GAZD89qhidDtqkZ+ldWO3kapaq9fsME0Lv6wPIgWXKPlolqapr9ZgyficZkv30aaRAXDRj/RhF5JAVDOJO63OqRnkgmdUk+o2+F0JZM44P/lPsXVaqh9YFH8VSq64MkSucC5Fmkb2FTnJDdCqQDVft06z7obUrbuMGePSSeSkDXgRJx2g07tX2GAY9LW2RkT7nlZOCcLKlUXEm9gdtGyphF6ygGqTVUcByyFmFdGy9SbaRTN266iZr7XCoeZVkmNBrGcTqIvwxSNhPj5aOO9jmhLO5gnJwUmpYmentWVj5ZfXIGKDL+QhedjM5YMjTtyE6zLZuBJ7uJfBF1b3YuJtdklZWDqFmV2kHImVgeRiS2P9VI/35/r39htU+mNt6B0nMzImgVB9GGRU9zMkUuP1fs/UEtqpkXhRYK82zIFG1caY9QgmEZHKUvgjZs/ObLTSqWoF838OOGb+LDlZAOviSN6dXCUdraZOBDkkC6VS4k+oKUKDujwfzZyuGvpa/8Ziu6HuAg9g4YxtKc4jjY0isy2OWpL+FWv4ziZaA1045K9NxHxZqGeE=
@@ -31,6 +28,7 @@ env:
   - secure: AhDAOBC/KNkU6JBh3wXNhs6ExY6WaqQEKxfZ15nTsiHy1ZuTTEkGy26lTx1GD+Cp19QpzaO6u9KxrE8jLPioTEd1424s+82LjBnoyM2oL8eir+lkEWnGkdLRxWG1q1coY124wXiklGRpfo5fLxuDvLMzq1QQAJ4CytryK3ODhfuIDCSy9sjZlyqLz9nnZ2pJKG/EqBq3/u1n4J+/TsBjoWFaKX/wMT+PsdBGjCCpsVD9Zun6LzV4hwXT6MRBG0gT8wEM1kMgjlDUpIGV7VO/h05wSttYqOwqRMNXvWo6A4T4IB2zMKnVqFRNIFKWX5E8XpgccP1h+PCt2hjsJkYHnK4oeIWfgvLU6hkaMg5VlhbxQ+LlcTqG4dOm9zyz3wShYG4OcwTe7OjCjoPxbnHnFS56LAGHXWsH/VkzwPBOqyzhr7Mo6EMQPKcNTTJnK6xmty/i8/2A/Q24bEvjwZJMQ6JZpU2jBX4RyWHRhnbIgEMjWR4EvLVID/SbfYiUBB9eks4WvcZ2T9jMXd9WEr2PBjAqaprZ7Z9+qmPkT5W8AnMK8yJC4X5nOcDTidwopE9YiHJlnlEAB+3fiNqqHikIpx2bnNZAYFTDaZmazIJuYPnUMCPjW0fMA3FNjXb0iXs4L2KnACZFpyFHDT8GOawKXkH7ej+gqKvCn8p3cycB9PA=
   - secure: YuUwyKl4sl/TQFmj1NW7RNC4qk0mzo1ihXKVU3AukYb3UFQ2JaEz6xuv6V9idLPggJjXVPqqVfi1pzirL1JR6EeeYOGCzq1Qu8shYJptr39+SxLXAUz3iqyktroPpQJLFjUYHBoflkulKRK5HkIghJ5o8FGk+8WzyxTivL4As7Ks7793Y2UIrqlzuaSFIdsrnYbEcDZmWnBQ1fS19Nat23tGGrHD0MlaHgGv4uQHWz/yaj04l8ishdRb3XqQADf7JbJ/DzKYUN77xOOebV/mfJuvHQt4tRu9t7gtmwfNzar4m928mLIYXDDTsJPZfpp83gUGdhjDwx1bQ9gE9rG7JSp+zEOK0FvvOYcEQrwiuHWLvHbUX0riJsO0uxRcsQ5E6btm9VdmuT10mXaIz2ljgDYL2fbeM63Vl3C/jGv+ivh6bcaDlTQMMj5JDs8iqIwtTo6uiEd1r7ez0gccj1WODhrxMx0wr/c3FF3D9VZlJBNTa6Cxk3xXHhb8C89QAUnI6IvaweHEeesInB43w0ciRhwA7BUd/x0+/poBZoXhePwBM6r+VJBWR4vu9wgzkl11O98znvOlKGvl8Mx4JgYwmcS7wEfGRuwOYj+WAYzcWGcSXRE3RE3Ls8ojDiA76TvvdtzDsR2DFJmOkmTo0G5iRsGNjhgShXUWe+d1IL0fWDA=
   - secure: N4sCMFTnQnOWRH3+7TtivIYZegTpkiLX5dOuJNwv28/hfL65mmrR6yEfPWO939wymuMNtfafRuVpNMyHTXnrKrBRoUrjtXyIyRdUCCejFrem2NT6KZAdOmRIPZ3KyP2IUOwSgSeZqrEFjmYWOmV2cPiY8hD/41cw2BTTeGUBHHa90ORTPPHeEztD/9aZbahAbZZ4Y9Y125EArW0gAVXkInOS482jlq5nAzZ5kjtAEfcsOHlbr7PMGKy6mceU6eVq+pCzme6B4W1BB21p/bdeH1gE34AY49WrBsAvfSu0UG2dd5nLpFIYq1j2p8K+QxRF49KbqOptmnlHm/TQPCCQALjlsaGZqEoarIY3HbT6aQJpl620vUuUKNcvuxogFE3rj1N09yRdmuJJkODk0rLV+FSfKRrGuNPuwfJ9OVM+uKIL86kqvr6vuQ8in1jDMlHiq4pp0xnuaVWaXn/qjWKrVdtRdaB3Eehleha3cBJ5aHgcW5tvt3uMwGr7ULhhLKRFqo+Kx6y7PgPBQLViRrcn4wKG3MRGyOIeuxeXFKYMLdD1ffDlKznkC94Tby+ZMbG6KONJaOryewUNO/eEsQveq3ZHA4B8rnPbnpPzYmXeiNHkGBgahXoKoGze1waRXHJw1IYt3NG31zjjET+kc/0XdrWxFRxnjudpEcjWWwtXj/o=
+
 deploy:
   provider: releases
   skip_cleanup: true  
