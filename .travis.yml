@@ -33,6 +33,6 @@ deploy:
   file: sciview-linux64
   on:
     repo: scenerygraphics/sciview
-#    branches:
-#      only:
-#        - master
+    branches:
+      only:
+        - master
