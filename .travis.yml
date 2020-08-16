@@ -1,5 +1,10 @@
 language: java
 jdk: openjdk8
+
+os:
+  - linux
+  - osx
+
 branches:
   only:
   - master
