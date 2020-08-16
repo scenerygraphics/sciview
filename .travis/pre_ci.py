@@ -11,14 +11,14 @@ if is_PR:
     print('Fetching PR information')
     branch = os.environ['TRAVIS_PULL_REQUEST_BRANCH']
 
-    import requests
-    import json
-    r = requests.get('https://api.github.com/repos/scenerygraphics/sciview/pulls/%d/commits' % int(PR))
+    # import requests
+    # import json
+    # r = requests.get('https://api.github.com/repos/scenerygraphics/sciview/pulls/%d/commits' % int(PR))
 
-    if r.ok:
-        commits = json.loads(r.text or r.content)
-        commit_message = commits[-1]['commit']['message']
-        print('Commit message: %s' % commit_message)
+    # if r.ok:
+    #     commits = json.loads(r.text or r.content)
+    #     commit_message = commits[-1]['commit']['message']
+    #     print('Commit message: %s' % commit_message)
 else:
     branch = os.environ['TRAVIS_BRANCH']
     commit_message = os.environ['TRAVIS_COMMIT_MESSAGE']
