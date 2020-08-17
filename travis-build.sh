@@ -23,6 +23,10 @@ checkSuccess() {
 	test $success -eq 0 && success=$key
 }
 
+echo "= Setup conda environment ="
+wget https://raw.githubusercontent.com/trichter/conda4travis/latest/conda4travis.sh -O conda4travis.sh
+source conda4travis.sh
+
 # Build Maven projects.
 if [ -f pom.xml ]
 then
@@ -187,10 +191,10 @@ fi
 if [ -f environment.yml ]
 then
 	echo travis_fold:start:scijava-conda
-	echo "= Conda setup ="
+#	echo "= Conda setup ="
 
-	wget https://raw.githubusercontent.com/trichter/conda4travis/latest/conda4travis.sh -O conda4travis.sh
-	source conda4travis.sh
+#	wget https://raw.githubusercontent.com/trichter/conda4travis/latest/conda4travis.sh -O conda4travis.sh
+#	source conda4travis.sh
 	
 	# condaDir=$HOME/miniconda
 	# condaSh=$condaDir/etc/profile.d/conda.sh
