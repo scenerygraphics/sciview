@@ -27,6 +27,11 @@ echo "= Setup conda environment ="
 wget https://raw.githubusercontent.com/trichter/conda4travis/latest/conda4travis.sh -O conda4travis.sh
 source conda4travis.sh
 
+condaEnv=sciview
+test -d "$condaDir/envs/$condaEnv" && condaAction=update || condaAction=create
+conda env "$condaAction" -n "$condaEnv" -f environment.yml &&
+conda activate "$condaEnv"
+
 # Build Maven projects.
 if [ -f pom.xml ]
 then
