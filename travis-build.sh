@@ -189,20 +189,27 @@ then
 	echo travis_fold:start:scijava-conda
 	echo "= Conda setup ="
 
-	condaDir=$HOME/miniconda
-	condaSh=$condaDir/etc/profile.d/conda.sh
-	if [ ! -f "$condaSh" ]; then
-		echo
-		echo "== Installing conda =="
-		if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-		    wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh
-		else
-		    wget -q https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-		fi
-		rm -rf "$condaDir"
-		bash miniconda.sh -b -p "$condaDir"
-		checkSuccess $?
-	fi
+	wget https://raw.githubusercontent.com/trichter/conda4travis/latest/conda4travis.sh -O conda4travis.sh
+	source conda4travis.sh
+	
+	# condaDir=$HOME/miniconda
+	# condaSh=$condaDir/etc/profile.d/conda.sh
+	# if [ ! -f "$condaSh" ]; then
+	# 	echo
+	# 	echo "== Installing conda =="
+	# 	rm -rf "$condaDir"		
+	# 	if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+	# 	    wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh
+	# 	    bash miniconda.sh -b -p "$condaDir"		    
+	# 	elif [ "$TRAVIS_OS_NAME" == "windows" ]; then
+	# 	    wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe -O miniconda.exe
+		    
+	# 	else
+	# 	    wget -q https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+	# 	    bash miniconda.sh -b -p "$condaDir"
+	# 	fi
+	# 	checkSuccess $?
+	# fi
 
 	echo
 	echo "== Updating conda =="
