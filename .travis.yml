@@ -26,8 +26,8 @@ matrix:
       os: linux
       script: bash travis-build.sh
 
-    - name: "Python 3.8 on windows"
-      language: python
+    - name: "Shell on windows"
+      language: shell
       python: "3.8"
       os: windows
       script: bash travis-build.sh      
@@ -48,7 +48,7 @@ deploy:
   file:
     - sciview-linux64
     - sciview-macos
-    - sciview-win64
+    - sciview-win32
   on:
     repo: scenerygraphics/sciview
     branches:

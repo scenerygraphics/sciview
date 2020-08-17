@@ -211,13 +211,13 @@ then
 	# 	checkSuccess $?
 	# fi
 
-	echo
-	echo "== Updating conda =="
-	. "$condaSh" &&
-	conda config --set always_yes yes --set changeps1 no &&
-	conda update -q conda &&
-	conda info -a
-	checkSuccess $?
+	# echo
+	# echo "== Updating conda =="
+	# . "$condaSh" &&
+	# conda config --set always_yes yes --set changeps1 no &&
+	# conda update -q conda &&
+	# conda info -a
+	# checkSuccess $?
 
 	echo
 	echo "== Configuring environment =="
