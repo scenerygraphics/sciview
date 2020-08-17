@@ -4,15 +4,23 @@
 # travis-build.sh - A script to build and/or release SciJava-based projects.
 #
 
+# take args from CLI
+#key=$1
+#iv=$2
+
+# hardcoded for sciview config
+key=$encrypted_eb7aa63bf7ac_key
+iv=$encrypted_eb7aa63bf7ac_iv
+
 dir="$(dirname "$0")"
 
 success=0
 checkSuccess() {
 	# Log non-zero exit code.
-	test $1 -eq 0 || echo "==> FAILED: EXIT CODE $1" 1>&2
+	test $key -eq 0 || echo "==> FAILED: EXIT CODE $key" 1>&2
 
 	# Record the first non-zero exit code.
-	test $success -eq 0 && success=$1
+	test $success -eq 0 && success=$key
 }
 
 # Build Maven projects.
@@ -124,8 +132,8 @@ EOL
 
 	# Import the GPG signing key.
 	keyFile=.travis/signingkey.asc
-	key=$1
-	iv=$2
+	key=$key
+	iv=$iv
 	if [ "$key" -a "$iv" -a -f "$keyFile.enc" ]
 	then
 		# NB: Key and iv values were given as arguments.
@@ -186,7 +194,11 @@ then
 	if [ ! -f "$condaSh" ]; then
 		echo
 		echo "== Installing conda =="
-		wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+		if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+		    wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh
+		else
+		    wget -q https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+		fi
 		rm -rf "$condaDir"
 		bash miniconda.sh -b -p "$condaDir"
 		checkSuccess $?
