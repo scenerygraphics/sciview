@@ -38,6 +38,8 @@ import bdv.util.volatiles.VolatileView;
 import bdv.util.volatiles.VolatileViewData;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
+import ch.systemsx.cisd.hdf5.HDF5Factory;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import cleargl.GLVector;
 import com.intellij.ui.tabs.JBTabsPosition;
 import com.intellij.ui.tabs.TabInfo;
@@ -81,9 +83,12 @@ import net.imglib2.img.Img;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.view.Views;
 import org.intellij.lang.annotations.JdkConstants;
+import org.janelia.saalfeldlab.n5.hdf5.N5HDF5Reader;
+import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
 import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -395,10 +400,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 //                getLogger().info("Could not load Darcula Look and Feel");
 //            }
 //        }
+        final String logLevel = System.getProperty("scenery.LogLevel", "info");
+        log.setLevel(LogLevel.value(logLevel));
 
-        log.setLevel(LogLevel.WARN);
-
-        LogbackUtils.setLogLevel(null, System.getProperty("scenery.LogLevel", "info"));
+        LogbackUtils.setLogLevel(null, logLevel);
 
         System.getProperties().stringPropertyNames().forEach(name -> {
             if(name.startsWith("scenery.LogLevel")) {
@@ -507,15 +512,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
             @Override
             public void mouseClicked(MouseEvent e) {
                 if(e.getClickCount() == 2) {
-                    if(!hidden) {
-                        previousPosition = mainSplitPane.getDividerLocation();
-                        // TODO: remove hard-coded tab width
-                        mainSplitPane.setDividerLocation(frame.getSize().width - 36);
-                        hidden = true;
-                    } else {
-                        mainSplitPane.setDividerLocation(previousPosition);
-                        hidden = false;
-                    }
+                    toggleSidebar();
                 }
             }
 
@@ -546,10 +543,11 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
                 p,
                 tp.getComponent()
         );
-        mainSplitPane.setDividerLocation( getWindowWidth()/3 * 2 );
+        mainSplitPane.setDividerLocation(frame.getSize().width - 36);
         mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
         mainSplitPane.setDividerSize(1);
         mainSplitPane.setResizeWeight(0.9);
+        sidebarHidden = true;
 
         //frame.add(mainSplitPane, BorderLayout.CENTER);
         frame.add(mainSplitPane, BorderLayout.CENTER);
@@ -615,8 +613,28 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
                         }
                         return null;
                     });
-
         });
+    }
+
+    private boolean sidebarHidden = false;
+    private int previousSidebarPosition = 0;
+
+    public boolean toggleSidebar() {
+        if(!sidebarHidden) {
+            previousSidebarPosition = mainSplitPane.getDividerLocation();
+            // TODO: remove hard-coded tab width
+            mainSplitPane.setDividerLocation(frame.getSize().width - 36);
+            sidebarHidden = true;
+        } else {
+            if(previousSidebarPosition == 0) {
+                previousSidebarPosition = getWindowWidth()/3 * 2;
+            }
+
+            mainSplitPane.setDividerLocation(previousSidebarPosition);
+            sidebarHidden = false;
+        }
+
+        return sidebarHidden;
     }
 
     private ImageIcon getScaledImageIcon(final URL resource, int width, int height) {
@@ -1518,25 +1536,16 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     public void toggleInspectorWindow()
     {
-        boolean currentlyVisible = inspector.isVisible();
-        if(currentlyVisible) {
-            inspector.setVisible(false);
-            mainSplitPane.setDividerLocation(getWindowWidth());
-        }
-        else {
-            inspector.setVisible(true);
-            mainSplitPane.setDividerLocation(getWindowWidth()/4 * 3);
-        }
-
+        toggleSidebar();
     }
 
     public void setInspectorWindowVisibility(boolean visible)
     {
-        inspector.setVisible(visible);
-        if( visible )
-            mainSplitPane.setDividerLocation(getWindowWidth()/4 * 3);
-        else
-            mainSplitPane.setDividerLocation(getWindowWidth());
+//        inspector.setVisible(visible);
+//        if( visible )
+//            mainSplitPane.setDividerLocation(getWindowWidth()/4 * 3);
+//        else
+//            mainSplitPane.setDividerLocation(getWindowWidth());
     }
 
     public void setInterpreterWindowVisibility(boolean visible)
