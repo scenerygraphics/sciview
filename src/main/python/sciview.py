@@ -21,4 +21,4 @@ classpath += ':%s' % resource_path( './jars/macosx/*' )
 classpath += ':%s' % resource_path( './jars/win32/*' )
 classpath += ':%s' % resource_path( './jars/win64/*' )
 
-subprocess.call(['java', '-cp', classpath, 'sc.iview.Main'])
+subprocess.call(['java', '-cp', classpath, '-DsciviewStandalone=true', 'sc.iview.Main'])

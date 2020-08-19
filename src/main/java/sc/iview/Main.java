@@ -36,5 +36,10 @@ package sc.iview;
 public class Main {
     public static void main( String... args ) throws Exception {
         SciView.create();
+
+        if(System.getProperty("sciviewStandalone", "false").equals("true")) {
+            System.exit(0);
+        }
+
     }
 }
