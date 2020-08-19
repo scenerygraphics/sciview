@@ -15,6 +15,8 @@ if is_PR:
     import json
     r = requests.get('https://api.github.com/repos/scenerygraphics/sciview/pulls/%d/commits' % int(PR))
 
+    commit_message = ''
+
     if r.ok:
         commits = json.loads(r.text or r.content)
         commit_message = commits[-1]['commit']['message']
