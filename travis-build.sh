@@ -32,6 +32,9 @@ test -d "$condaDir/envs/$condaEnv" && condaAction=update || condaAction=create
 conda env "$condaAction" -n "$condaEnv" -f environment.yml &&
 conda activate "$condaEnv"
 
+echo "= Java version ="
+java -version
+
 # Build Maven projects.
 if [ -f pom.xml ]
 then
