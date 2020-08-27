@@ -47,3 +47,11 @@ In case you use sciview or scenery in a scientific publication, please cite this
 **Triggering uploads to the update site:**
 
 Add either `[SV_IJ_DEPLOY_UNSTABLE]` or `[SV_IJ_DEPLOY_PRIMARY]` to a commit message
+
+## Acknowledgements
+
+This software contains the following 3rd party libraries:
+
+* IntelliJ UI code, by JetBrains (licensed under the Apache Software License 2.0), see `src/main/java/com/intellij`
+* trove4j, by the Trove4j team (licensed under the Lesser GNU Public License 3.0), see `src/main/java/gnu`
+

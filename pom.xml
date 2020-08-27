@@ -108,10 +108,11 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
-		<scenery.version>5778367</scenery.version>
+		<scenery.version>0797d5d2</scenery.version>
 
-		<kotlin.version>1.4-M3</kotlin.version>
-		<kotlinx-coroutines-core.version>1.3.7-1.4-M3</kotlinx-coroutines-core.version>
+		<kotlin.version>1.4.0</kotlin.version>
+		<kotlinx-coroutines-core.version>1.3.9</kotlinx-coroutines-core.version>
+		<kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
 
 	</properties>
 
@@ -144,6 +145,12 @@
 			<groupId>org.jogamp.jogl</groupId>
 			<artifactId>jogl-all</artifactId>
 			<version>${jogl.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.formdev</groupId>
+			<artifactId>flatlaf</artifactId>
+			<version>0.38</version>
 		</dependency>
 
 		<!-- SciJava dependencies -->
@@ -303,17 +310,32 @@
 		</dependency>
 		<dependency>
 			<groupId>org.janelia.saalfeldlab</groupId>
+			<artifactId>n5-hdf5</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.janelia.saalfeldlab</groupId>
 			<artifactId>n5-imglib2</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>spim_data</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-stdlib-jdk8</artifactId>
+			<version>${kotlin.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-test-junit</artifactId>
+			<version>${kotlin.version}</version>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>
-		<sourceDirectory>src/main/java</sourceDirectory>
-        <testSourceDirectory>src/test/tests</testSourceDirectory>
+		<testSourceDirectory>src/test/tests</testSourceDirectory>
 		<plugins>
 			<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -324,6 +346,86 @@
                     <reuseForks>true</reuseForks>
                 </configuration>
             </plugin>
+			<plugin>
+				<groupId>org.jetbrains.kotlin</groupId>
+				<artifactId>kotlin-maven-plugin</artifactId>
+				<version>${kotlin.version}</version>
+				<executions>
+					<execution>
+						<id>compile</id>
+						<phase>compile</phase>
+						<goals> <goal>compile</goal> </goals>
+						<configuration>
+							<sourceDirs>
+								<source>src/main/java</source>
+								<source>target/generated-sources/kapt</source>
+								<source>target/generated-sources/kaptKotlin</source>
+							</sourceDirs>
+							<jvmTarget>${kotlin.compiler.jvmTarget}</jvmTarget>
+							<args>
+								<arg>-Werror</arg>
+								<arg>-Xopt-in=kotlin.RequiresOptIn</arg>
+							</args>
+						</configuration>
+					</execution>
+					<execution>
+						<id>test-compile</id>
+						<phase>test-compile</phase>
+						<goals> <goal>test-compile</goal> </goals>
+						<configuration>
+							<sourceDirs>
+								<sourceDir>${project.basedir}/src/test/tests</sourceDir>
+							</sourceDirs>
+						</configuration>
+					</execution>
+					<execution>
+						<id>kapt</id>
+						<goals>
+							<goal>kapt</goal>
+						</goals>
+						<configuration>
+							<sourceDirs>
+								<sourceDir>src/main/kotlin</sourceDir>
+								<sourceDir>src/main/java</sourceDir>
+							</sourceDirs>
+							<annotationProcessorPaths>
+								<annotationProcessorPath>
+									<groupId>org.scijava</groupId>
+									<artifactId>scijava-common</artifactId>
+									<version>${scijava-common.version}}</version>
+								</annotationProcessorPath>
+							</annotationProcessorPaths>
+						</configuration>
+					</execution>
+				</executions>
+				<configuration>
+					<jvmTarget>${kotlin.compiler.jvmTarget}</jvmTarget>
+					<args>
+						<arg>-Werror</arg>
+						<arg>-Xopt-in=kotlin.RequiresOptIn</arg>
+					</args>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>compile</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>testCompile</id>
+						<phase>test-compile</phase>
+						<goals>
+							<goal>testCompile</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 

@@ -28,6 +28,10 @@
  */
 package sc.iview;
 
+import com.formdev.flatlaf.FlatLightLaf;
+
+import javax.swing.*;
+
 /**
  * Entry point for testing SciView functionality.
  * 
@@ -35,6 +39,14 @@ package sc.iview;
  */
 public class Main {
     public static void main( String... args ) throws Exception {
+        FlatLightLaf.install();
+
+        try {
+            UIManager.setLookAndFeel( new FlatLightLaf() );
+        } catch( Exception ex ) {
+            System.err.println( "Failed to initialize Flat Light LaF, falling back to Swing default." );
+        }
+
         SciView.create();
     }
 }

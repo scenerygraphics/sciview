@@ -38,7 +38,12 @@ import bdv.util.volatiles.VolatileView;
 import bdv.util.volatiles.VolatileViewData;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
+import ch.systemsx.cisd.hdf5.HDF5Factory;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import cleargl.GLVector;
+import com.intellij.ui.tabs.JBTabsPosition;
+import com.intellij.ui.tabs.TabInfo;
+import com.intellij.ui.tabs.impl.JBEditorTabs;
 import graphics.scenery.Box;
 import graphics.scenery.*;
 import graphics.scenery.backends.RenderedImage;
@@ -78,8 +83,12 @@ import net.imglib2.img.Img;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.view.Views;
+import org.intellij.lang.annotations.JdkConstants;
+import org.janelia.saalfeldlab.n5.hdf5.N5HDF5Reader;
+import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
 import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -120,13 +129,13 @@ import javax.imageio.ImageIO;
 import javax.script.ScriptException;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import java.awt.Image;
+import java.awt.event.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.*;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.List;
@@ -323,11 +332,12 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         if( getCamera() == null ) {
             cam = new DetachedHeadCamera();
             this.camera = cam;
+            cam.setPosition(new Vector3f(0.0f, 1.65f, 0.0f));
             getScene().addChild( cam );
         } else {
             cam = getCamera();
         }
-        cam.setPosition( new Vector3f( 0.0f, 5.0f, 5.0f ) );
+        cam.setPosition( new Vector3f( 0.0f, 1.65f, 5.0f ) );
         cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 1000.0f );
 
         // Setup lights
@@ -365,13 +375,13 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         lightSphere.getMaterial().setWireframe(true);
         lightSphere.setVisible(false);
         //lights.add( light );
-        camera.setNearPlaneDistance(0.001f);
+        camera.setNearPlaneDistance(0.01f);
+        camera.setFarPlaneDistance(1000.0f);
         camera.addChild( headlight );
 
-        floor = new Box( new Vector3f( 500f, 0.2f, 500f ) );
+        floor = new InfinitePlane();//new Box( new Vector3f( 500f, 0.2f, 500f ) );
+        ((InfinitePlane)floor).setType(InfinitePlane.Type.Grid);
         floor.setName( "Floor" );
-        floor.setPosition( new Vector3f( 0f, -1f, 0f ) );
-        floor.getMaterial().setDiffuse( new Vector3f( 1.0f, 1.0f, 1.0f ) );
         getScene().addChild( floor );
 
     }
@@ -390,10 +400,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 //                getLogger().info("Could not load Darcula Look and Feel");
 //            }
 //        }
+        final String logLevel = System.getProperty("scenery.LogLevel", "info");
+        log.setLevel(LogLevel.value(logLevel));
 
-        log.setLevel(LogLevel.WARN);
-
-        LogbackUtils.setLogLevel(null, System.getProperty("scenery.LogLevel", "info"));
+        LogbackUtils.setLogLevel(null, logLevel);
 
         System.getProperties().stringPropertyNames().forEach(name -> {
             if(name.startsWith("scenery.LogLevel")) {
@@ -464,6 +474,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         inspectorTree.setToggleClickCount(0);// This disables expanding menus on double click
         JPanel inspectorProperties = nodePropertyEditor.getProps();
 
+        JBEditorTabs tp = new JBEditorTabs(null);
+        tp.setTabsPosition(JBTabsPosition.right);
+        tp.setSideComponentVertical(true);
+
         inspector = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
                 new JScrollPane( inspectorTree ),
                 new JScrollPane( inspectorProperties ));
@@ -471,6 +485,11 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         inspector.setContinuousLayout(true);
         inspector.setBorder(BorderFactory.createEmptyBorder());
         inspector.setDividerSize(1);
+        ImageIcon inspectorIcon = getScaledImageIcon(this.getClass().getResource("toolbox.png"), 16, 16);
+
+        TabInfo tiInspector = new TabInfo(inspector, inspectorIcon);
+        tiInspector.setText("");
+        tp.addTab(tiInspector);
 
         // We need to get the surface scale here before initialising scenery's renderer, as
         // the information is needed already at initialisation time.
@@ -478,30 +497,60 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         final Vector2f surfaceScale = new Vector2f((float)dt.getScaleX(), (float)dt.getScaleY());
         getSettings().set("Renderer.SurfaceScale", surfaceScale);
 
-        mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
-                p,
-                inspector
-        );
-        mainSplitPane.setDividerLocation( getWindowWidth()/3 * 2 );
-        mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
-        mainSplitPane.setDividerSize(1);
-        mainSplitPane.setResizeWeight(0.9);
-
         interpreterPane = new REPLPane(getScijavaContext());
-
         interpreterPane.getComponent().setBorder(BorderFactory.createEmptyBorder());
-        interpreterSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
-                mainSplitPane,
-                interpreterPane.getComponent());
-        interpreterSplitPane.setDividerLocation( getWindowHeight()/10 * 7 );
-        interpreterSplitPane.setBorder(BorderFactory.createEmptyBorder());
-        interpreterSplitPane.setDividerSize(1);
-        interpreterSplitPane.setResizeWeight(0.9);
+        ImageIcon interpreterIcon = getScaledImageIcon(this.getClass().getResource("terminal.png"), 16, 16);
+
+        TabInfo tiREPL = new TabInfo(interpreterPane.getComponent(), interpreterIcon);
+        tiREPL.setText("");
+        tp.addTab(tiREPL);
+
+        tp.addTabMouseListener(new MouseListener() {
+            private boolean hidden = false;
+            private int previousPosition = 0;
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(e.getClickCount() == 2) {
+                    toggleSidebar();
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
 
         initializeInterpreter();
 
+        mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
+                p,
+                tp.getComponent()
+        );
+        mainSplitPane.setDividerLocation(frame.getSize().width - 36);
+        mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
+        mainSplitPane.setDividerSize(1);
+        mainSplitPane.setResizeWeight(0.9);
+        sidebarHidden = true;
+
         //frame.add(mainSplitPane, BorderLayout.CENTER);
-        frame.add(interpreterSplitPane, BorderLayout.CENTER);
+        frame.add(mainSplitPane, BorderLayout.CENTER);
 
         SciView sciView = this;
         frame.addWindowListener(new WindowAdapter() {
@@ -564,8 +613,42 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
                         }
                         return null;
                     });
-
         });
+    }
+
+    private boolean sidebarHidden = false;
+    private int previousSidebarPosition = 0;
+
+    public boolean toggleSidebar() {
+        if(!sidebarHidden) {
+            previousSidebarPosition = mainSplitPane.getDividerLocation();
+            // TODO: remove hard-coded tab width
+            mainSplitPane.setDividerLocation(frame.getSize().width - 36);
+            sidebarHidden = true;
+        } else {
+            if(previousSidebarPosition == 0) {
+                previousSidebarPosition = getWindowWidth()/3 * 2;
+            }
+
+            mainSplitPane.setDividerLocation(previousSidebarPosition);
+            sidebarHidden = false;
+        }
+
+        return sidebarHidden;
+    }
+
+    private ImageIcon getScaledImageIcon(final URL resource, int width, int height) {
+        final ImageIcon first = new ImageIcon(resource);
+        final Image image = first.getImage();
+
+        BufferedImage resizedImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = resizedImg.createGraphics();
+
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2.drawImage(first.getImage(), 0, 0, width, height, null);
+        g2.dispose();
+
+        return new ImageIcon(resizedImg);
     }
 
     private void initializeInterpreter() {
@@ -662,7 +745,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * Return a bounding box around a subgraph of the scenegraph
      */
     public OrientedBoundingBox getSubgraphBoundingBox( Node n, Function<Node,List<Node>> branchFunction ) {
-        if(n.getBoundingBox() == null && n.getChildren().size() == 0) {
+        if(n.getBoundingBox() == null && n.getChildren().size() != 0) {
             return n.getMaximumBoundingBox().asWorld();
         }
 
@@ -703,9 +786,16 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         // TODO: find the widest dimensions of BB and align to that normal
 
+        if( bb == null ) return;
         System.out.println("CurrentNode BoundingBox " + bb + " " + bb.getBoundingSphere().getOrigin() + " " + bb.getBoundingSphere().getRadius());
 
-        if( bb == null ) return;
+        if(Float.isNaN(bb.getBoundingSphere().getOrigin().x()) ||
+                Float.isNaN(bb.getBoundingSphere().getOrigin().y()) ||
+                Float.isNaN(bb.getBoundingSphere().getOrigin().z()) ||
+                Float.isNaN(bb.getBoundingSphere().getRadius())) {
+            log.warn("Bounding box contains NaN, not adjusting camera.");
+            return;
+        }
 
         getCamera().setTarget( bb.getBoundingSphere().getOrigin() );
         getCamera().setTargeted( true );
@@ -721,10 +811,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         Quaternionf rotation = new Quaternionf().lookAlong(forward, new Vector3f(0,1,0));
 
         getCamera().setRotation( rotation.normalize() );
-        getCamera().setPosition( bb.getBoundingSphere().getOrigin().add( getCamera().getForward().mul( distance * -1 ) ) );
+        getCamera().setPosition( bb.getBoundingSphere().getOrigin().add( getCamera().getForward().mul( distance * -1.33f ) ) );
 
-        getCamera().setDirty(true);
-        getCamera().setNeedsUpdate(true);
+//        getCamera().setDirty(true);
+//        getCamera().setNeedsUpdate(true);
     }
 
     public float getFPSSpeed() {
@@ -1446,34 +1536,25 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
     public void toggleInspectorWindow()
     {
-        boolean currentlyVisible = inspector.isVisible();
-        if(currentlyVisible) {
-            inspector.setVisible(false);
-            mainSplitPane.setDividerLocation(getWindowWidth());
-        }
-        else {
-            inspector.setVisible(true);
-            mainSplitPane.setDividerLocation(getWindowWidth()/4 * 3);
-        }
-
+        toggleSidebar();
     }
 
     public void setInspectorWindowVisibility(boolean visible)
     {
-        inspector.setVisible(visible);
-        if( visible )
-            mainSplitPane.setDividerLocation(getWindowWidth()/4 * 3);
-        else
-            mainSplitPane.setDividerLocation(getWindowWidth());
+//        inspector.setVisible(visible);
+//        if( visible )
+//            mainSplitPane.setDividerLocation(getWindowWidth()/4 * 3);
+//        else
+//            mainSplitPane.setDividerLocation(getWindowWidth());
     }
 
     public void setInterpreterWindowVisibility(boolean visible)
     {
-        interpreterPane.getComponent().setVisible(visible);
-        if( visible )
-            interpreterSplitPane.setDividerLocation(getWindowHeight()/10 * 6);
-        else
-            interpreterSplitPane.setDividerLocation(getWindowHeight());
+//        interpreterPane.getComponent().setVisible(visible);
+//        if( visible )
+//            interpreterSplitPane.setDividerLocation(getWindowHeight()/10 * 6);
+//        else
+//            interpreterSplitPane.setDividerLocation(getWindowHeight());
     }
 
 

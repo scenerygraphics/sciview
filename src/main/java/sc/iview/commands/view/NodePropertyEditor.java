@@ -28,13 +28,17 @@
  */
 package sc.iview.commands.view;
 
+import com.intellij.ui.components.JBPanel;
 import graphics.scenery.Camera;
 import graphics.scenery.Node;
+
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import graphics.scenery.Scene;
 import net.miginfocom.swing.MigLayout;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import org.scijava.Context;
 import org.scijava.command.CommandInfo;
 import org.scijava.command.CommandService;
@@ -91,7 +95,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     private JPanel panel;
     private DefaultTreeModel treeModel;
     private JTree tree;
-    private JPanel props;
+    private JBPanel props;
 
     public static String USAGE_TEXT =
                     "Single-clicking a node in the tree above selects it, while double-clicking centers the 3D view on the node.<br><br>" +
@@ -175,7 +179,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
 
         createTree();
 
-        props = new JPanel();
+        props = new JBPanel();
         props.setLayout( new MigLayout( "inset 0", "[grow,fill]", "[grow,fill]" ) );
         updateProperties( null );
 
@@ -216,6 +220,52 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
                     Node node = (Node)n.getUserObject();
                     sciView.setActiveNode( node );
                     sciView.centerOnNode( node );
+                } else if(e.getButton() == MouseEvent.BUTTON3) {
+                    int x = e.getX();
+                    int y = e.getY();
+                    JTree tree = (JTree)e.getSource();
+                    TreePath path = tree.getPathForLocation(x, y);
+                    if (path == null)
+                        return;
+
+                    tree.setSelectionPath(path);
+
+                    SceneryTreeNode obj = (SceneryTreeNode)path.getLastPathComponent();
+
+                    JPopupMenu popup = new JPopupMenu();
+
+                    JMenuItem labelItem = new JMenuItem(obj.getNode().getName());
+                    labelItem.setEnabled(false);
+                    popup.add(labelItem);
+
+                    if(obj.getNode() instanceof Camera) {
+                        JMenuItem resetItem = new JMenuItem("Reset camera");
+                        resetItem.setForeground(Color.RED);
+                        resetItem.addActionListener(l -> {
+                            obj.getNode().setPosition(new Vector3f(0.0f));
+                            obj.getNode().setRotation(new Quaternionf(0.0f, 0.0f, 0.0f, 1.0f));
+                        });
+                        popup.add(resetItem);
+                    }
+                    JMenuItem hideShow = new JMenuItem("Hide");
+                    if(obj.getNode().getVisible()) {
+                        hideShow.setText("Hide");
+                    } else {
+                        hideShow.setText("Show");
+                    }
+                    hideShow.addActionListener(l -> {
+                        obj.getNode().setVisible(!obj.getNode().getVisible());
+                    });
+                    popup.add(hideShow);
+
+                    JMenuItem removeItem = new JMenuItem("Remove");
+                    removeItem.setForeground(Color.RED);
+                    removeItem.addActionListener(l -> {
+                        sciView.deleteNode(obj.getNode(), true);
+                    });
+                    popup.add(removeItem);
+
+                    popup.show(tree, x, y);
                 } else {
                     TreePath path = tree.getPathForLocation(e.getX(), e.getY());
                     if (path != null && e.getX() / 1.2 < tree.getPathBounds(path).x + 16) {
@@ -231,6 +281,8 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
                         e.consume();
                     }
                 }
+
+
             }
         });
     }
