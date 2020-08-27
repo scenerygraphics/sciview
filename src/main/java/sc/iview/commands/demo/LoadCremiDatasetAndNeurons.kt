@@ -34,6 +34,7 @@ import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import org.scijava.ui.UIService
 import org.scijava.widget.FileWidget
+import sc.iview.SciView
 import sc.iview.SciViewService
 import sc.iview.commands.MenuWeights
 import sc.iview.process.MeshConverter
@@ -42,8 +43,8 @@ import java.io.IOException
 
 typealias NeuronsAndImage = Triple<HashMap<Long, Long>, RandomAccessibleInterval<UnsignedLongType>, RandomAccessibleInterval<UnsignedByteType>>
 
-@Plugin(type = Command::class, label = "Cremi Dataset rendering demo", menuRoot = "SciView", menu = [Menu(label = "Demo", weight = MenuWeights.DEMO), Menu(label = "Cremi", weight = MenuWeights.DEMO_VOLUME_RENDER)])
-class CremiDemo : Command {
+@Plugin(type = Command::class, label = "Cremi Dataset rendering demo", menuRoot = "SciView", menu = [Menu(label = "Demo", weight = MenuWeights.DEMO), Menu(label = "Load Cremi dataset and neuron labels", weight = MenuWeights.DEMO_VOLUME_RENDER)])
+class LoadCremiDatasetAndNeurons: Command {
     @Parameter
     private lateinit var ui: UIService
 
@@ -54,7 +55,7 @@ class CremiDemo : Command {
     private lateinit var ops: OpService
 
     @Parameter
-    private lateinit var sciview: SciViewService
+    private lateinit var sciview: SciView
 
     @Parameter
     private lateinit var lut: LUTService
@@ -106,14 +107,18 @@ class CremiDemo : Command {
             cursor.get().set(0)
         }
 
-        val volume = sciview.activeSciView.addVolume(nai.third, files.first().name) as? Volume
+        val volume = sciview.addVolume(nai.third, files.first().name) as? Volume
         volume?.origin = Origin.FrontBottomLeft
         volume?.scale = Vector3f(0.04f, 0.04f, 2.5f)
         volume?.transferFunction = TransferFunction.ramp(0.3f, 0.1f, 0.1f)
         // min 20, max 180, color map fire
-        volume?.converterSetups?.get(0)?.setDisplayRange(20.0, 180.0)
-        val colormap = lut.loadLUT(lut.findLUTs().get("Fire.lut"))
+        volume?.transferFunction?.addControlPoint(0.8f, 0.01f)
+        volume?.converterSetups?.get(0)?.setDisplayRange(20.0, 220.0)
+        val colormap = lut.loadLUT(lut.findLUTs().get("Grays.lut"))
+        val colormapNeurons = lut.loadLUT(lut.findLUTs().get("Fire.lut"))
+
         volume?.colormap = Colormap.fromColorTable(colormap)
+
 
         val rai = nai.second
         log.info("Got ${nai.first.size} labels")
@@ -127,7 +132,7 @@ class CremiDemo : Command {
         val regions = LabelRegions(labeling)
         log.info("Created ${regions.count()} regions")
 
-        val largestNeuronLabels = nai.first.entries.sortedByDescending { p -> p.value }.take(10).map { kv -> kv.key }
+        val largestNeuronLabels = nai.first.entries.sortedByDescending { p -> p.value }.take(50).shuffled().take(10).map { kv -> kv.key }
 
         log.info("Largest neuron labels are ${largestNeuronLabels.joinToString(",")}")
 
@@ -141,13 +146,13 @@ class CremiDemo : Command {
             // Convert the mesh into a scenery mesh for visualization
             val mesh = MeshConverter.toScenery(m, false)
             mesh.scale = Vector3f(0.01f, 0.01f, 0.06f)
-            mesh.material.diffuse = colormap.lookupARGB(0.0, 255.0, kotlin.random.Random.nextDouble(0.0, 255.0)).toRGBColor().xyz()
+            mesh.material.diffuse = colormapNeurons.lookupARGB(0.0, 255.0, kotlin.random.Random.nextDouble(0.0, 255.0)).toRGBColor().xyz()
             mesh.material.roughness = 0.0f
 
             // marching cubes produces CW meshes, not CCW as expected by default
             mesh.material.cullingMode = Material.CullingMode.Front
             mesh.name = "Neuron $i"
-            sciview.activeSciView.addNode(mesh)
+            sciview.addNode(mesh)
         }
     }
 
