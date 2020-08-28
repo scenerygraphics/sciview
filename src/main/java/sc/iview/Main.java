@@ -29,6 +29,7 @@
 package sc.iview;
 
 import com.formdev.flatlaf.FlatLightLaf;
+import graphics.scenery.SceneryBase;
 
 import javax.swing.*;
 
@@ -39,6 +40,7 @@ import javax.swing.*;
  */
 public class Main {
     public static void main( String... args ) throws Exception {
+        SceneryBase.xinitThreads();
         FlatLightLaf.install();
 
         try {
