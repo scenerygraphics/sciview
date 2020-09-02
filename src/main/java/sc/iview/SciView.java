@@ -885,33 +885,33 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * Center the camera on the specified Node
      */
     public void centerOnPosition( Vector3f currentPos ) {
-        //current and desired directions in world coords
-        final Vector3f currViewDir = new Vector3f(camera.getTarget()).sub(camera.getPosition());
-        final Vector3f wantViewDir = new Vector3f(currentPos).sub(camera.getPosition());
-        if (wantViewDir.lengthSquared() < 0.01)
+        //desired view direction in world coords
+        final Vector3f worldDirVec = new Vector3f(currentPos).sub(camera.getPosition());
+        if (worldDirVec.lengthSquared() < 0.01)
         {
             //ill defined task, happens typically when cam is inside the node which we want center on
             log.info("Camera is on the spot you want to look at. Please, move the camera away first.");
             return;
         }
 
-        //current and desired directions as the camera sees them
-        camera.getTransformation().transformDirection(currViewDir).normalize();
-        camera.getTransformation().transformDirection(wantViewDir).normalize();
+        Vector2f camForwardXZ = new Vector2f(camera.getForward().x, camera.getForward().z);
+        Vector2f wantLookAtXZ = new Vector2f(worldDirVec.x, worldDirVec.z);
+        double totalYawAng = camForwardXZ.normalize().dot( wantLookAtXZ.normalize() );
+        //while mathematically impossible, cumulated numerical inaccuracies have different opinion
+        totalYawAng = totalYawAng > 1 ? 0 : Math.acos( totalYawAng );
 
-        //we gonna rotate directly to match the current view direction with the desired one,
-        //which means to rotate by this angle:
-        float totalDeltaAng = (float)Math.acos( currViewDir.dot(wantViewDir) );
-        //
-        //if the needed angle is less than 2 deg, we do nothing...
-        if (totalDeltaAng < 0.035) return;
-        //
-        //here's the axis along which we will rotate
-        if (totalDeltaAng < 3.13) currViewDir.cross(wantViewDir);
-        else currViewDir.set(camera.getUp());
-        //NB: if the angle is nearly 180 deg, there is infinite number of axes that
-        //    allow the required "flip" to happen (and cross() did not choose any),
-        //    so we provide own rotation axis: a vertical axis
+        //switch direction?
+        camForwardXZ.set(camForwardXZ.y, -camForwardXZ.x);
+        if ( wantLookAtXZ.dot(camForwardXZ) > 0) totalYawAng *= -1;
+
+        final Vector3f camForwardYed = new Vector3f( camera.getForward() );
+        new Quaternionf().rotateXYZ(0,-(float)totalYawAng,0).normalize().transform( camForwardYed );
+        double totalPitchAng = camForwardYed.normalize().dot( worldDirVec.normalize() );
+        totalPitchAng = totalPitchAng > 1 ? 0 : Math.acos( totalPitchAng );
+
+        //switch direction?
+        if (camera.getForward().y > worldDirVec.y) totalPitchAng *= -1;
+        if (camera.getUp().y < 0) totalPitchAng *= -1;
 
         //animation options: control delay between animation frames -- fluency
         final long rotPausePerStep = 30; //miliseconds
@@ -921,27 +921,38 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 
         //animation options: the hardcoded 5 deg (0.087 rad) -- smoothness
         //how many steps when max update/move is 5 deg
-        int rotSteps = (int)Math.ceil( Math.abs(totalDeltaAng) / 0.087 );
+        float totalDeltaAng = (float)Math.max( Math.abs(totalPitchAng), Math.abs(totalYawAng) );
+        int rotSteps = (int)Math.ceil( totalDeltaAng / 0.087 );
         if (rotSteps > rotMaxSteps) rotSteps = rotMaxSteps;
 
-        log.debug("centering by deltaAng="+ 180.0f*totalDeltaAng/3.14159f+" deg over "+rotSteps+" steps");
+        /*
+        log.info("centering over "+rotSteps+" steps the pitch " + 180*totalPitchAng/Math.PI
+                + " and the yaw " + 180*totalYawAng/Math.PI);
+        */
 
         //angular progress aux variables
-        float angCurPos = 0, angNextPos, angDelta;
+        double donePitchAng = 0, doneYawAng = 0;
+        float deltaAng;
 
         camera.setTargeted(false);
         for (int i = 1; i <= rotSteps; ++i) {
             //this emulates ease-in ease-out animation, both vars are in [0:1]
             float timeProgress = (float)i / rotSteps;
-            float angProgress = ((timeProgress *= 2) <= 1 ? //two cubics connected smoothly into S-shape curve from [0,0] to [1,1]
+            final float angProgress = ((timeProgress *= 2) <= 1 ? //two cubics connected smoothly into S-shape curve from [0,0] to [1,1]
                     timeProgress * timeProgress * timeProgress :
                     (timeProgress -= 2) * timeProgress * timeProgress + 2) / 2;
 
-            angNextPos = angProgress * totalDeltaAng;    //where I should be by now
-            angDelta = angNextPos - angCurPos;           //how much I must travel to get there
-            angCurPos = angNextPos;                      //suppose we already got there...
+            //rotate now by this ang: "where should I be by now" minus "where I got last time"
+            deltaAng = (float)(angProgress * totalPitchAng - donePitchAng);
+            Quaternionf pitchQ = new Quaternionf().rotateXYZ(-deltaAng, 0f, 0f).normalize();
 
-            new Quaternionf().rotateAxis(-angDelta,currViewDir).mul(camera.getRotation(),camera.getRotation());
+            deltaAng = (float)(angProgress * totalYawAng - doneYawAng);
+            Quaternionf yawQ = new Quaternionf().rotateXYZ(0f, deltaAng, 0f).normalize();
+
+            camera.setRotation( pitchQ.mul(camera.getRotation()).mul(yawQ).normalize() );
+            donePitchAng = angProgress * totalPitchAng;
+            doneYawAng   = angProgress * totalYawAng;
+
             try {
                 Thread.sleep(rotPausePerStep);
             } catch (InterruptedException e) {
