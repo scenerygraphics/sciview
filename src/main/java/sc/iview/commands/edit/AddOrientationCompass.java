@@ -29,19 +29,14 @@
 package sc.iview.commands.edit;
 
 import graphics.scenery.*;
-import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.scijava.command.Command;
-import org.scijava.command.CommandService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
-import sc.iview.node.Line3D;
-
-import java.util.HashMap;
 
 import static sc.iview.commands.MenuWeights.EDIT;
 import static sc.iview.commands.MenuWeights.EDIT_ADD_COMPASS;
@@ -50,6 +45,7 @@ import static sc.iview.commands.MenuWeights.EDIT_ADD_COMPASS;
  * Command to orientation compass (R,G,B cylinders oriented along X,Y,Z axes, respectively) to the scene
  *
  * @author Vladimir Ulman
+ * @author Kyle Harrington
  *
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
@@ -60,30 +56,39 @@ public class AddOrientationCompass implements Command {
     @Parameter
     private SciView sciView;
 
-    @Parameter
+    @Parameter(label = "Length of each bar:", stepSize = "0.1", min = "0")
     private float axisLength = 0.1f;
 
-    @Parameter
-    private float AXESBARRADIUS = 0.001f;
+    @Parameter(label = "Thickness of each bar:", stepSize = "0.001", min = "0")
+    private float axisBarRadius = 0.001f;
 
-    @Parameter
+    //@Parameter -- waits until scijava can offer color-picker dialog
     private Vector3f xColor = new Vector3f(1f,0f,0f);
+    //NB: RGB colors ~ XYZ axes
 
-    @Parameter
+    //@Parameter
     private Vector3f yColor = new Vector3f(0f,1f,0f);
 
-    @Parameter
+    //@Parameter
     private Vector3f zColor = new Vector3f(0f,0f,1f);
 
+    @Parameter(label = "Show in overlay in top-left corner:")
+    boolean attachToCam = true;
+
+    @Parameter(label = "Show as controllable node in the scene:")
+    boolean showInTheScene = false;
+
+
     private Node makeAxis( float axisLength, float angleX, float angleY, float angleZ, Vector3f color ) {
-        Cylinder axisNode = new Cylinder(AXESBARRADIUS, axisLength,4);
-        axisNode.setName("compass axis: X");
+        Cylinder axisNode = new Cylinder(axisBarRadius, axisLength,4);
+        axisNode.setName("compass bar");
         axisNode.setRotation( new Quaternionf().rotateXYZ( angleX, angleY, angleZ ) );
         axisNode.getMaterial().getDiffuse().set(color);
         axisNode.getMaterial().setDepthTest(Material.DepthTest.Always);
         axisNode.getMaterial().getBlending().setTransparent(true);
 
-        Icosphere axisCap = new Icosphere(AXESBARRADIUS, 2);
+        Icosphere axisCap = new Icosphere(axisBarRadius, 2);
+        axisCap.setName("cap of the bar");
         axisCap.setPosition(new Vector3f(0, axisLength, 0));
         axisCap.getMaterial().getDiffuse().set(color);
         axisCap.getMaterial().setDepthTest(Material.DepthTest.Always);
@@ -93,11 +98,9 @@ public class AddOrientationCompass implements Command {
         return axisNode;
     }
 
-    @Override
-    public void run() {
+    private Node createCompass() {
         final Node root = new Node("Scene orientation compass");
 
-        //NB: RGB colors ~ XYZ axes
         //x axis:
         Node axisNode = makeAxis( axisLength, 0,0,(float)(-0.5*Math.PI), xColor );
         axisNode.setName("compass axis: X");
@@ -105,7 +108,6 @@ public class AddOrientationCompass implements Command {
 
         //y axis:
         axisNode = makeAxis( axisLength, 0,0, 0, yColor );
-
         axisNode.setName("compass axis: Y");
         root.addChild( axisNode );
 
@@ -113,27 +115,22 @@ public class AddOrientationCompass implements Command {
         axisNode = makeAxis( axisLength, (float)(0.5*Math.PI),0,0, zColor );
         axisNode.setName("compass axis: Z");
         root.addChild( axisNode );
-
-        sciView.addNode( root );
-
-        sciView.getCamera().addChild(root);
-
-        root.getUpdate().add(() -> {
-            final Camera cam = sciView.getCamera();
-            root.setPosition(cam.viewportToView(new Vector2f(-0.9f, 0.7f)));
-            root.setRotation(new Quaternionf(sciView.getCamera().getRotation()).conjugate());
-            return null;
-        });
-
+        return root;
     }
 
-    public static void main(String... args) throws Exception {
-        SciView sv = SciView.create();
+    @Override
+    public void run() {
+        if (showInTheScene) sciView.addNode( createCompass() );
+        if (attachToCam) {
+            final Node compass = createCompass();
+            sciView.getCamera().addChild( compass );
 
-        CommandService command = sv.getScijavaContext().getService(CommandService.class);
-
-        HashMap<String, Object> argmap = new HashMap<>();
-
-        command.run(AddOrientationCompass.class, true, argmap);
+            compass.getUpdate().add(() -> {
+                final Camera cam = sciView.getCamera();
+                compass.setPosition(cam.viewportToView(new Vector2f(-0.9f, 0.7f)));
+                compass.setRotation(new Quaternionf(sciView.getCamera().getRotation()).conjugate());
+                return null;
+            });
+        }
     }
 }
