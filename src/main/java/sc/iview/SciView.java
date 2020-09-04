@@ -92,6 +92,7 @@ import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
 import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
+import org.lwjgl.system.Platform;
 import org.scijava.Context;
 import org.scijava.display.Display;
 import org.scijava.display.DisplayService;
@@ -434,6 +435,23 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         } catch (ClassNotFoundException cnfe) {
             // Didn't find the launcher, so we're probably good.
             getLogger().info("imagej-launcher not found, not touching renderer preferences.");
+        }
+
+        // TODO: check for jdk 8 v. jdk 11 on linux and choose renderer accordingly
+        if( Platform.get() == Platform.LINUX ) {
+            String version = System.getProperty("java.version");
+            if( version.startsWith("1.") ) {
+                version = version.substring(2, 3);
+            } else {
+                int dot = version.indexOf(".");
+                if (dot != -1) {
+                    version = version.substring(0, dot);
+                }
+            }
+
+            // If Linux and JDK 8, then use OpenGLRenderer
+            if( version.equals("8") )
+                System.setProperty("scenery.Renderer", "OpenGLRenderer");
         }
 
         int x, y;
