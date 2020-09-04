@@ -108,7 +108,7 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
-		<scenery.version>0797d5d2</scenery.version>
+		<scenery.version>b5c63ad</scenery.version>
 
 		<kotlin.version>1.4.0</kotlin.version>
 		<kotlinx-coroutines-core.version>1.3.9</kotlinx-coroutines-core.version>
