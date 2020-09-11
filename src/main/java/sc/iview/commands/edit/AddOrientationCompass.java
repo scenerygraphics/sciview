@@ -29,14 +29,16 @@
 package sc.iview.commands.edit;
 
 import graphics.scenery.*;
-import org.joml.Quaternionf;
-import org.joml.Vector2f;
 import org.joml.Vector3f;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.scijava.command.Command;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
+
+import java.lang.Math;
 
 import static sc.iview.commands.MenuWeights.EDIT;
 import static sc.iview.commands.MenuWeights.EDIT_ADD_COMPASS;
@@ -118,17 +120,76 @@ public class AddOrientationCompass implements Command {
         return root;
     }
 
+    private Node createBox() {
+        final Node root = new Node("Scene representing box");
+
+        // X - red edges
+        final float halfPI = (float)(0.5*Math.PI);
+        final float edgeLen = 0.05f;
+        final float edgeRadius = 0.0008f;
+        for (int i = 0; i < 4; ++i)
+        {
+            final Node n = new Cylinder(edgeRadius,edgeLen,4);
+            n.getPosition().set( -0.5f * edgeLen );
+            n.getPosition().add( new Vector3f(0, i%2 *edgeLen, i < 2 ? 0 : edgeLen) );
+            n.setRotation( new Quaternionf().rotateXYZ(0,0,-halfPI).normalize() );
+            n.setName("box edge: X");
+            n.getMaterial().getDiffuse().set( new Vector3f(1,0,0) );
+            n.getMaterial().setDepthTest(Material.DepthTest.Always);
+            //n.getMaterial().getBlending().setTransparent(true);
+            root.addChild( n );
+        }
+
+        // Y - green edges
+        for (int i = 0; i < 4; ++i)
+        {
+            final Node n = new Cylinder(edgeRadius,edgeLen,4);
+            n.getPosition().set( -0.5f * edgeLen );
+            n.getPosition().add( new Vector3f(i%2 *edgeLen, 0, i < 2 ? 0 : edgeLen) );
+            n.setName("box edge: Y");
+            n.getMaterial().getDiffuse().set( new Vector3f(0,1,0) );
+            n.getMaterial().setDepthTest(Material.DepthTest.Always);
+            //n.getMaterial().getBlending().setTransparent(true);
+            root.addChild( n );
+        }
+
+        // Z - blue edges
+        for (int i = 0; i < 4; ++i)
+        {
+            final Node n = new Cylinder(edgeRadius,edgeLen,4);
+            n.getPosition().set( -0.5f * edgeLen );
+            n.getPosition().add( new Vector3f(i%2 *edgeLen, i < 2 ? 0 : edgeLen, 0) );
+            n.setRotation( new Quaternionf().rotateXYZ(halfPI,0,0).normalize() );
+            n.setName("box edge: Z");
+            n.getMaterial().getDiffuse().set( new Vector3f(0,0,1) );
+            n.getMaterial().setDepthTest(Material.DepthTest.Always);
+            //n.getMaterial().getBlending().setTransparent(true);
+            root.addChild( n );
+        }
+
+        return root;
+    }
+
     @Override
     public void run() {
         if (showInTheScene) sciView.addNode( createCompass() );
         if (attachToCam) {
-            final Node compass = createCompass();
+            final Node compass = createBox();
             sciView.getCamera().addChild( compass );
+            compass.setWantsComposeModel(false);
+
+            final float xStretch = sciView.getCamera().getProjection().m00();
+            final float yStretch = sciView.getCamera().getProjection().m11();
+            //
+            final Matrix4f positionDaBox = new Matrix4f();
+            positionDaBox.set(1,0,0,0,  //1st col
+                              0,1,0,0,  //2nd col
+                              0,0,1,0,
+                          -0.9f/xStretch,+0.85f/yStretch,-1.0f,1);
 
             compass.getUpdate().add(() -> {
-                final Camera cam = sciView.getCamera();
-                compass.setPosition(cam.viewportToView(new Vector2f(-0.9f, 0.7f)));
-                compass.setRotation(new Quaternionf(sciView.getCamera().getRotation()).conjugate());
+                sciView.getCamera().getRotation().get( compass.getModel() );
+                compass.getModel().mulLocal( positionDaBox );
                 return null;
             });
         }
