@@ -38,9 +38,8 @@ import bdv.util.volatiles.VolatileView;
 import bdv.util.volatiles.VolatileViewData;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
-import ch.systemsx.cisd.hdf5.HDF5Factory;
-import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import cleargl.GLVector;
+import com.formdev.flatlaf.FlatLightLaf;
 import com.intellij.ui.tabs.JBTabsPosition;
 import com.intellij.ui.tabs.TabInfo;
 import com.intellij.ui.tabs.impl.JBEditorTabs;
@@ -75,20 +74,16 @@ import net.imagej.interval.CalibratedRealInterval;
 import net.imagej.lut.LUTService;
 import net.imagej.ops.OpService;
 import net.imagej.units.UnitService;
-import net.imglib2.*;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
+import net.imglib2.*;
 import net.imglib2.display.ColorTable;
 import net.imglib2.img.Img;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.view.Views;
-import org.intellij.lang.annotations.JdkConstants;
-import org.janelia.saalfeldlab.n5.hdf5.N5HDF5Reader;
-import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
 import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -129,8 +124,8 @@ import tpietzsch.example2.VolumeViewerOptions;
 import javax.imageio.ImageIO;
 import javax.script.ScriptException;
 import javax.swing.*;
-import java.awt.*;
 import java.awt.Image;
+import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
@@ -2445,6 +2440,13 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      */
     public static SciView create() throws Exception {
         SceneryBase.xinitThreads();
+
+        FlatLightLaf.install();
+        try {
+            UIManager.setLookAndFeel( new FlatLightLaf() );
+        } catch( Exception ex ) {
+            System.err.println( "Failed to initialize Flat Light LaF, falling back to Swing default." );
+        }
 
         System.setProperty( "scijava.log.level:sc.iview", "debug" );
         Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
