@@ -33,7 +33,9 @@ import graphics.scenery.volumes.Colormap;
 import graphics.scenery.volumes.Volume;
 import kotlin.jvm.Volatile;
 import net.imagej.lut.LUTService;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.display.ColorTable;
+import net.imglib2.type.numeric.RealType;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -391,9 +393,14 @@ public class Properties extends InteractiveCommand {
             final MutableModuleItem<String> lutNameItem = getInfo().getMutableInput("colormapName", String.class );
             lutNameItem.setChoices( new ArrayList( lutService.findLUTs().keySet() ) );
 
+            RandomAccessibleInterval<RealType> rai = (RandomAccessibleInterval<RealType>) currentSceneNode.getMetadata().get("RandomAccessibleInterval");
+
             timepoint = ((graphics.scenery.volumes.Volume)currentSceneNode).getCurrentTimepoint();
             getInfo().getMutableInput("timepoint", Integer.class).setMinimumValue(0);
-            getInfo().getMutableInput("timepoint", Integer.class).setMaximumValue(((graphics.scenery.volumes.Volume) currentSceneNode).getMaxTimepoint());
+            getInfo().getMutableInput("timepoint", Integer.class).setMaximumValue(
+                    rai.numDimensions() > 3 ?
+                    ((graphics.scenery.volumes.Volume) currentSceneNode).getMaxTimepoint() :
+                    0 );
 
             min = (int)((Volume)currentSceneNode).getConverterSetups().get(0).getDisplayRangeMin();
             max = (int)((Volume)currentSceneNode).getConverterSetups().get(0).getDisplayRangeMax();
