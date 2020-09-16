@@ -29,40 +29,24 @@
 package sc.iview.commands.demo;
 
 import bdv.util.BdvFunctions;
-import graphics.scenery.Node;
 import graphics.scenery.numerics.OpenSimplexNoise;
 import graphics.scenery.volumes.Volume;
-import ij.IJ;
-import io.scif.services.DatasetIOService;
-import net.imagej.Dataset;
-import net.imagej.ImageJ;
-import net.imagej.mesh.Mesh;
 import net.imagej.ops.OpService;
-import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
 import net.imglib2.*;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
-import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.position.FunctionRandomAccessible;
-import net.imglib2.type.Type;
-import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.view.Views;
-import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
-import org.scijava.display.DisplayService;
 import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.ui.UIService;
 import sc.iview.SciView;
-import sc.iview.process.MeshConverter;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.function.BiConsumer;
@@ -95,18 +79,6 @@ public class VolumeTimeseriesDemo implements Command {
     @Override
     public void run() {
         final RandomAccessibleInterval<UnsignedByteType> dataset = makeDataset();
-
-//        try {
-//            ioService.save(
-//                    ImageJFunctions.wrap(dataset,"test"),
-//                    "/home/kharrington/Data/sciview/test_volumetimeseries.tif");
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
-        IJ.saveAsTiff(
-                ImageJFunctions.wrap(dataset,"test"),
-                "/home/kharrington/Data/sciview/test_volumetimeseries.tif");
 
         //ImageJFunctions.wrap(dataset, "test");
         BdvFunctions.show(dataset, "test");
