@@ -26,68 +26,45 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.controls.behaviours;
+package sc.iview.controls.behaviours
 
-import cleargl.GLVector;
-import graphics.scenery.Camera;
-import graphics.scenery.Cylinder;
-import graphics.scenery.Material;
-import graphics.scenery.Node;
-import org.joml.Vector3f;
-import org.scijava.ui.behaviour.DragBehaviour;
-import org.scijava.ui.behaviour.ScrollBehaviour;
-import sc.iview.SciView;
-
-import java.util.ArrayList;
-import java.util.List;
+import graphics.scenery.Camera
+import graphics.scenery.Cylinder
+import graphics.scenery.Material
+import graphics.scenery.Node
+import org.joml.Vector3f
+import org.scijava.ui.behaviour.DragBehaviour
+import org.scijava.ui.behaviour.ScrollBehaviour
+import sc.iview.SciView
+import java.util.*
 
 /**
  * Control behavior for moving a Node
  *
  * @author Kyle Harrington
- *
  */
-public class NodeTranslateControl implements DragBehaviour, ScrollBehaviour {
+class NodeTranslateControl(protected var sciView: SciView, var dragSpeed: Float) : DragBehaviour, ScrollBehaviour {
+    private var firstEntered = true
+    private var lastX = 0
+    private var lastY = 0
+    protected var axes // Tracking the rendered axes
+            : MutableList<Node>? = null
+    val camera: Camera
+        get() = sciView.camera
 
-    protected SciView sciView;
-    private boolean firstEntered = true;
-    private int lastX;
-    private int lastY;
+    // Object mode
+    val lRAxis: Vector3f
+        get() =// Object mode
+            camera.forward.cross(camera.up).normalize()
 
-    protected List<Node> axes;// Tracking the rendered axes
-
-    public float getDragSpeed() {
-        return dragSpeed;
-    }
-
-    public void setDragSpeed( float dragSpeed ) {
-        this.dragSpeed = dragSpeed;
-    }
-
-    protected float dragSpeed;
-
-    public NodeTranslateControl( SciView sciView, float dragSpeed ) {
-        this.sciView = sciView;
-        this.dragSpeed = dragSpeed;
-    }
-
-    public Camera getCamera() {
-        return sciView.getCamera();
-    }
-
-    public Vector3f getLRAxis() {
+    fun getUDAxis(): Vector3f {
         // Object mode
-        return getCamera().getForward().cross(getCamera().getUp()).normalize();
+        return camera.up
     }
 
-    public Vector3f getUDAxis() {
+    fun getFBAxis(): Vector3f {
         // Object mode
-        return getCamera().getUp();
-    }
-
-    public Vector3f getFBAxis() {
-        // Object mode
-        return getCamera().getForward();
+        return camera.forward
     }
 
     /**
@@ -97,92 +74,86 @@ public class NodeTranslateControl implements DragBehaviour, ScrollBehaviour {
      * x position in window
      * y position in window
      */
-    @Override public void init( int x, int y ) {
-        getCamera().setTargeted(true);
-        getCamera().setTarget(sciView.getActiveNode().getPosition());
-
+    override fun init(x: Int, y: Int) {
+        camera.targeted = true
+        camera.target = sciView.activeNode.position
         if (firstEntered) {
-            lastX = x;
-            lastY = y;
-            firstEntered = false;
-            axes = new ArrayList<>();
+            lastX = x
+            lastY = y
+            firstEntered = false
+            axes = ArrayList()
 
             // Draw a line along the axis
-            int lineLengths = 50;// Should be proportional to something about the view?
+            val lineLengths = 50 // Should be proportional to something about the view?
 
             // Axis orthogonal to camera lookAt (along viewplane)
-            Vector3f leftPoint = getCamera().getTarget().add(getLRAxis().mul(lineLengths));
-            Vector3f rightPoint = getCamera().getTarget().add(getLRAxis().mul(-1 * lineLengths));
-            Cylinder cylinder = new Cylinder(1, lineLengths * 2, 20);
-            cylinder.orientBetweenPoints(leftPoint,rightPoint);
-            cylinder.setName("L-R axis");
-            Material mat = new Material();
-            mat.setDiffuse(new Vector3f(1,0,0));
-            mat.setAmbient(new Vector3f(1,0,0));
-            cylinder.setMaterial(mat);
-            cylinder.setPosition(sciView.getActiveNode().getMaximumBoundingBox().getBoundingSphere().getOrigin().add(getLRAxis().mul(lineLengths)));
-            sciView.addNode(cylinder, false);
-            axes.add(cylinder);
+            val leftPoint = camera.target.add(lRAxis.mul(lineLengths.toFloat()))
+            val rightPoint = camera.target.add(lRAxis.mul(-1 * lineLengths.toFloat()))
+            var cylinder = Cylinder(1.0f, (lineLengths * 2).toFloat(), 20)
+            cylinder.orientBetweenPoints(leftPoint, rightPoint)
+            cylinder.name = "L-R axis"
+            var mat = Material()
+            mat.diffuse = Vector3f(1.0f, 0.0f, 0.0f)
+            mat.ambient = Vector3f(1.0f, 0.0f, 0.0f)
+            cylinder.material = mat
+            cylinder.position = sciView.activeNode.getMaximumBoundingBox().getBoundingSphere().origin.add(lRAxis.mul(lineLengths.toFloat()))
+            sciView.addNode(cylinder, false)
+            (axes as ArrayList<Node>).add(cylinder)
 
             // Axis orthogonal to camera lookAt (along viewplane)
-            Vector3f upPoint = getCamera().getTarget().add(getUDAxis().mul(lineLengths));
-            Vector3f downPoint = getCamera().getTarget().add(getUDAxis().mul(-1 * lineLengths));
-            cylinder = new Cylinder(1, lineLengths * 2, 20);
-            cylinder.orientBetweenPoints(upPoint,downPoint);
-            cylinder.setName("U-D axis");
-            mat = new Material();
-            mat.setDiffuse(new Vector3f(0.25f,1f,0.25f));
-            mat.setAmbient(new Vector3f(0.25f,1f,0.25f));
-            cylinder.setMaterial(mat);
-            cylinder.setPosition(sciView.getActiveNode().getMaximumBoundingBox().getBoundingSphere().getOrigin().add(getUDAxis().mul(lineLengths)));
-            sciView.addNode(cylinder, false);
-            axes.add(cylinder);
+            val upPoint = camera.target.add(getUDAxis().mul(lineLengths.toFloat()))
+            val downPoint = camera.target.add(getUDAxis().mul(-1 * lineLengths.toFloat()))
+            cylinder = Cylinder(1.0f, (lineLengths * 2).toFloat(), 20)
+            cylinder.orientBetweenPoints(upPoint, downPoint)
+            cylinder.name = "U-D axis"
+            mat = Material()
+            mat.diffuse = Vector3f(0.25f, 1f, 0.25f)
+            mat.ambient = Vector3f(0.25f, 1f, 0.25f)
+            cylinder.material = mat
+            cylinder.position = sciView.activeNode.getMaximumBoundingBox().getBoundingSphere().origin.add(getUDAxis().mul(lineLengths.toFloat()))
+            sciView.addNode(cylinder, false)
+            (axes as ArrayList<Node>).add(cylinder)
 
             // Axis orthogonal to camera lookAt (along viewplane)
-            Vector3f frontPoint = getCamera().getTarget().add(getFBAxis().mul(lineLengths));
-            Vector3f backPoint = getCamera().getTarget().add(getFBAxis().mul(-1 * lineLengths));
-            cylinder = new Cylinder(1, lineLengths * 2, 20);
-            cylinder.orientBetweenPoints(frontPoint,backPoint);
-            cylinder.setName("F-B axis");
-            mat = new Material();
-            mat.setDiffuse(new Vector3f(0f,0.5f,1f));
-            mat.setAmbient(new Vector3f(0f,0.5f,1f));
-            cylinder.setMaterial(mat);
-            cylinder.setPosition(sciView.getActiveNode().getMaximumBoundingBox().getBoundingSphere().getOrigin().add(getFBAxis().mul(lineLengths)));
-            sciView.addNode(cylinder, false);
-            axes.add(cylinder);
+            val frontPoint = camera.target.add(getFBAxis().mul(lineLengths.toFloat()))
+            val backPoint = camera.target.add(getFBAxis().mul(-1 * lineLengths.toFloat()))
+            cylinder = Cylinder(1.0f, (lineLengths * 2).toFloat(), 20)
+            cylinder.orientBetweenPoints(frontPoint, backPoint)
+            cylinder.name = "F-B axis"
+            mat = Material()
+            mat.diffuse = Vector3f(0f, 0.5f, 1f)
+            mat.ambient = Vector3f(0f, 0.5f, 1f)
+            cylinder.material = mat
+            cylinder.position = sciView.activeNode.getMaximumBoundingBox().getBoundingSphere().origin.add(getFBAxis().mul(lineLengths.toFloat()))
+            sciView.addNode(cylinder, false)
+            (axes as ArrayList<Node>).add(cylinder)
         }
     }
 
-    @Override public void drag( int x, int y ) {
-        if( sciView.getActiveNode() == null || !sciView.getActiveNode().getLock().tryLock()) {
-            return;
+    override fun drag(x: Int, y: Int) {
+        if (sciView.activeNode == null || !sciView.activeNode.lock.tryLock()) {
+            return
         }
-
-        sciView.getActiveNode().setPosition(sciView.getActiveNode().getPosition().add(
-                getLRAxis().mul(( x - lastX ) * getDragSpeed())).add(
-                        getUDAxis().mul(-1 * ( y - lastY ) * getDragSpeed())));
-
-        sciView.getActiveNode().getLock().unlock();
+        sciView.activeNode.position = sciView.activeNode.position.add(
+                lRAxis.mul((x - lastX) * dragSpeed)).add(
+                getUDAxis().mul(-1 * (y - lastY) * dragSpeed))
+        sciView.activeNode.lock.unlock()
     }
 
-    @Override public void end( int x, int y ) {
-        firstEntered = true;
+    override fun end(x: Int, y: Int) {
+        firstEntered = true
         // Clean up axes
-        for( Node n : axes ) {
-            sciView.deleteNode( n, false );
+        for (n in axes!!) {
+            sciView.deleteNode(n, false)
         }
     }
 
-    @Override
-    public void scroll(double wheelRotation, boolean isHorizontal, int x, int y) {
-        if( sciView.getActiveNode() == null || !sciView.getActiveNode().getLock().tryLock()) {
-            return;
+    override fun scroll(wheelRotation: Double, isHorizontal: Boolean, x: Int, y: Int) {
+        if (sciView.activeNode == null || !sciView.activeNode.lock.tryLock()) {
+            return
         }
-
-        sciView.getActiveNode().setPosition(sciView.getActiveNode().getPosition().add(
-                getFBAxis().mul((float) wheelRotation * getDragSpeed())));
-
-        sciView.getActiveNode().getLock().unlock();
+        sciView.activeNode.position = sciView.activeNode.position.add(
+                getFBAxis().mul(wheelRotation.toFloat() * dragSpeed))
+        sciView.activeNode.lock.unlock()
     }
 }
