@@ -26,15 +26,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview;
+package sc.iview
 
 /**
  * Entry point for testing SciView functionality.
- * 
+ *
  * @author Kyle Harrington
  */
-public class Main {
-    public static void main( String... args ) throws Exception {
-        SciView.create();
+object Main {
+    @Throws(Exception::class)
+    @JvmStatic
+    fun main(args: Array<String>) {
+        SciView.create()
     }
 }
