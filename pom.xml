@@ -111,10 +111,9 @@
 		<scenery.version>b5c63ad</scenery.version>
 <!--		<scijava-common.version>2.84.0</scijava-common.version>-->
 
-		<kotlin.version>1.4.0</kotlin.version>
+		<kotlin.version>1.4.10</kotlin.version>
 		<kotlinx-coroutines-core.version>1.3.9</kotlinx-coroutines-core.version>
 		<kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
-		<kotlin-maven-plugin.version>${kotlin.version}</kotlin-maven-plugin.version>
 	</properties>
 
     <repositories>
@@ -348,6 +347,7 @@
 
 	<build>
 		<testSourceDirectory>src/test/tests</testSourceDirectory>
+		<sourceDirectory>src/main/kotlin</sourceDirectory>
 		<plugins>
 			<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -358,66 +358,67 @@
                     <reuseForks>true</reuseForks>
                 </configuration>
             </plugin>
-<!--			<plugin>-->
-<!--				<groupId>org.jetbrains.kotlin</groupId>-->
-<!--				<artifactId>kotlin-maven-plugin</artifactId>-->
-<!--				<version>${kotlin-maven-plugin.version}</version>-->
-<!--				<executions>-->
-<!--					<execution>-->
-<!--						<id>compile</id>-->
-<!--						<phase>compile</phase>-->
-<!--						<goals> <goal>compile</goal> </goals>-->
-<!--						<configuration>-->
-<!--							<sourceDirs>-->
-<!--								<source>src/main/java</source>-->
-<!--								<source>target/generated-sources/kapt</source>-->
-<!--								<source>target/generated-sources/kaptKotlin</source>-->
-<!--							</sourceDirs>-->
-<!--							<jvmTarget>${kotlin.compiler.jvmTarget}</jvmTarget>-->
-<!--							<args>-->
-<!--								<arg>-Werror</arg>-->
-<!--								<arg>-Xopt-in=kotlin.RequiresOptIn</arg>-->
-<!--							</args>-->
-<!--						</configuration>-->
-<!--					</execution>-->
-<!--					<execution>-->
-<!--						<id>test-compile</id>-->
-<!--						<phase>test-compile</phase>-->
-<!--						<goals> <goal>test-compile</goal> </goals>-->
-<!--						<configuration>-->
-<!--							<sourceDirs>-->
-<!--								<sourceDir>${project.basedir}/src/test/tests</sourceDir>-->
-<!--							</sourceDirs>-->
-<!--						</configuration>-->
-<!--					</execution>-->
-<!--					<execution>-->
-<!--						<id>kapt</id>-->
-<!--						<goals>-->
-<!--							<goal>kapt</goal>-->
-<!--						</goals>-->
-<!--						<configuration>-->
-<!--							<sourceDirs>-->
-<!--								<sourceDir>src/main/kotlin</sourceDir>-->
-<!--								<sourceDir>src/main/java</sourceDir>-->
-<!--							</sourceDirs>-->
-<!--							<annotationProcessorPaths>-->
-<!--								<annotationProcessorPath>-->
-<!--									<groupId>org.scijava</groupId>-->
-<!--									<artifactId>scijava-common</artifactId>-->
-<!--									<version>${scijava-common.version}}</version>-->
-<!--								</annotationProcessorPath>-->
-<!--							</annotationProcessorPaths>-->
-<!--						</configuration>-->
-<!--					</execution>-->
-<!--				</executions>-->
-<!--				<configuration>-->
-<!--					<jvmTarget>${kotlin.compiler.jvmTarget}</jvmTarget>-->
-<!--					<args>-->
-<!--						<arg>-Werror</arg>-->
-<!--						<arg>-Xopt-in=kotlin.RequiresOptIn</arg>-->
-<!--					</args>-->
-<!--				</configuration>-->
-<!--			</plugin>-->
+			<plugin>
+				<groupId>org.jetbrains.kotlin</groupId>
+				<artifactId>kotlin-maven-plugin</artifactId>
+				<version>${kotlin.version}</version>
+				<executions>
+					<execution>
+						<id>kapt</id>
+						<goals>
+							<goal>kapt</goal>
+						</goals>
+						<configuration>
+							<sourceDirs>
+								<sourceDir>src/main/kotlin</sourceDir>
+								<sourceDir>src/main/java</sourceDir>
+							</sourceDirs>
+							<annotationProcessorPaths>
+								<annotationProcessorPath>
+									<groupId>org.scijava</groupId>
+									<artifactId>scijava-common</artifactId>
+									<version>${scijava-common.version}</version>
+								</annotationProcessorPath>
+							</annotationProcessorPaths>
+						</configuration>
+					</execution>
+					<execution>
+						<id>compile</id>
+						<phase>compile</phase>
+						<goals> <goal>compile</goal> </goals>
+						<configuration>
+							<sourceDirs>
+								<source>src/main/kotlin</source>
+								<source>src/main/java</source>
+								<source>target/generated-sources/kapt</source>
+								<source>target/generated-sources/kaptKotlin</source>
+							</sourceDirs>
+							<jvmTarget>${kotlin.compiler.jvmTarget}</jvmTarget>
+							<args>
+								<arg>-Werror</arg>
+								<arg>-Xopt-in=kotlin.RequiresOptIn</arg>
+							</args>
+						</configuration>
+					</execution>
+					<execution>
+						<id>test-compile</id>
+						<phase>test-compile</phase>
+						<goals> <goal>test-compile</goal> </goals>
+						<configuration>
+							<sourceDirs>
+								<sourceDir>${project.basedir}/src/test/tests</sourceDir>
+							</sourceDirs>
+						</configuration>
+					</execution>
+				</executions>
+				<configuration>
+					<jvmTarget>${kotlin.compiler.jvmTarget}</jvmTarget>
+					<args>
+						<arg>-Werror</arg>
+						<arg>-Xopt-in=kotlin.RequiresOptIn</arg>
+					</args>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
