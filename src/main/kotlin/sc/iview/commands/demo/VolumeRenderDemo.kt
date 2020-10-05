@@ -26,34 +26,28 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo;
+package sc.iview.commands.demo
 
-import graphics.scenery.Node;
-import graphics.scenery.volumes.Volume;
-import io.scif.services.DatasetIOService;
-import net.imagej.Dataset;
-import net.imagej.mesh.Mesh;
-import net.imagej.ops.OpService;
-import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
-import net.imglib2.img.Img;
-import net.imglib2.type.logic.BitType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
-import org.joml.Vector3f;
-import org.scijava.command.Command;
-import org.scijava.command.CommandService;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import sc.iview.SciView;
-import sc.iview.process.MeshConverter;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_VOLUME_RENDER;
+import graphics.scenery.volumes.Volume
+import io.scif.services.DatasetIOService
+import net.imagej.Dataset
+import net.imagej.ops.OpService
+import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator
+import net.imglib2.img.Img
+import net.imglib2.type.logic.BitType
+import net.imglib2.type.numeric.integer.UnsignedByteType
+import org.scijava.command.Command
+import org.scijava.command.CommandService
+import org.scijava.log.LogService
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.DEMO
+import sc.iview.commands.MenuWeights.DEMO_VOLUME_RENDER
+import sc.iview.process.MeshConverter
+import java.io.IOException
+import java.util.*
 
 /**
  * A demo of volume rendering.
@@ -61,73 +55,61 @@ import static sc.iview.commands.MenuWeights.DEMO_VOLUME_RENDER;
  * @author Kyle Harrington
  * @author Curtis Rueden
  */
-@Plugin(type = Command.class, label = "Volume Render/Isosurface Demo", menuRoot = "SciView", //
-        menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Volume Render/Isosurface", weight = DEMO_VOLUME_RENDER) })
-public class VolumeRenderDemo implements Command {
+@Plugin(type = Command::class, label = "Volume Render/Isosurface Demo", menuRoot = "SciView", menu = [Menu(label = "Demo", weight = DEMO), Menu(label = "Volume Render/Isosurface", weight = DEMO_VOLUME_RENDER)])
+class VolumeRenderDemo : Command {
+    @Parameter
+    private lateinit var datasetIO: DatasetIOService
 
     @Parameter
-    private DatasetIOService datasetIO;
+    private lateinit var log: LogService
 
     @Parameter
-    private LogService log;
+    private lateinit var ops: OpService
 
     @Parameter
-    private OpService ops;
-
-    @Parameter
-    private SciView sciView;
+    private lateinit var sciView: SciView
 
     @Parameter(label = "Show isosurface")
-    private boolean iso = true;
+    private var iso: Boolean = true
 
-    @Override
-    public void run() {
-        final Dataset cube;
-        try {
-            File cubeFile = ResourceLoader.createFile( getClass(), "/cored_cube_var2_8bit.tif" );
-
-            cube = datasetIO.open( cubeFile.getAbsolutePath() );
+    override fun run() {
+        val cube: Dataset
+        cube = try {
+            val cubeFile = ResourceLoader.createFile(javaClass, "/cored_cube_var2_8bit.tif")
+            datasetIO.open(cubeFile.absolutePath)
+        } catch (exc: IOException) {
+            log.error(exc)
+            return
         }
-        catch (IOException exc) {
-            log.error( exc );
-            return;
-        }
-
-        Volume v = (Volume) sciView.addVolume( cube, new float[] { 1, 1, 1 } );
-        v.setPixelToWorldRatio(0.05f);
-        v.setName( "Volume Render Demo" );
-        v.setDirty(true);
-        v.setNeedsUpdate(true);
-
+        val v = sciView.addVolume(cube, floatArrayOf(1f, 1f, 1f)) as Volume
+        v.pixelToWorldRatio = 0.05f
+        v.name = "Volume Render Demo"
+        v.dirty = true
+        v.needsUpdate = true
         if (iso) {
-            int isoLevel = 1;
+            val isoLevel = 1
 
-            @SuppressWarnings("unchecked")
-            Img<UnsignedByteType> cubeImg = ( Img<UnsignedByteType> ) cube.getImgPlus().getImg();
-
-            Img<BitType> bitImg = ( Img<BitType> ) ops.threshold().apply( cubeImg, new UnsignedByteType( isoLevel ) );
-
-            Mesh m = ops.geom().marchingCubes( bitImg, isoLevel, new BitTypeVertexInterpolator() );
-
-            graphics.scenery.Mesh isoSurfaceMesh = MeshConverter.toScenery(m,false);
-            v.addChild(isoSurfaceMesh);
-
-            isoSurfaceMesh.setName( "Volume Render Demo Isosurface" );
+            @Suppress("UNCHECKED_CAST")
+            val cubeImg = cube.imgPlus.img as Img<UnsignedByteType>
+            val bitImg = ops.threshold().apply(cubeImg, UnsignedByteType(isoLevel)) as Img<BitType>
+            val m = ops.geom().marchingCubes(bitImg, isoLevel.toDouble(), BitTypeVertexInterpolator())
+            val isoSurfaceMesh = MeshConverter.toScenery(m, false)
+            v.addChild(isoSurfaceMesh)
+            isoSurfaceMesh.name = "Volume Render Demo Isosurface"
         }
-
-        sciView.setActiveNode(v);
-        sciView.centerOnNode( sciView.getActiveNode() );
+        sciView.activeNode = v
+        sciView.centerOnNode(sciView.activeNode)
     }
 
-    public static void main(String... args) throws Exception {
-        SciView sv = SciView.create();
-
-        CommandService command = sv.getScijavaContext().getService(CommandService.class);
-
-        HashMap<String, Object> argmap = new HashMap<String, Object>();
-        argmap.put("iso",true);
-
-        command.run(VolumeRenderDemo.class, true, argmap);
+    companion object {
+        @Throws(Exception::class)
+        @JvmStatic
+        fun main(args: Array<String>) {
+            val sv = SciView.create()
+            val command = sv.scijavaContext!!.getService(CommandService::class.java)
+            val argmap = HashMap<String, Any>()
+            argmap["iso"] = true
+            command.run(VolumeRenderDemo::class.java, true, argmap)
+        }
     }
 }

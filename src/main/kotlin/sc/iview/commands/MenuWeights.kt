@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands;
+package sc.iview.commands
 
 /**
  * Constants for coherent menu ordering.
@@ -34,66 +34,55 @@ package sc.iview.commands;
  * @author Curtis Rueden
  * @author Kyle Harrington
  */
-public final class MenuWeights {
-    private MenuWeights() {
-        // NB: Prevent instantiation of utility class.
-    }
-
-    public static final double FILE = 0;
-    public static final double EDIT = 1;
-    public static final double PROCESS = 2;
-    public static final double VIEW = 3;
-    public static final double DEMO = 4;
-    public static final double HELP = 4;
-
-    public static final double FILE_OPEN = 0;
-    public static final double FILE_EXPORT_STL = 100;
-
-    public static final double EDIT_ADD_BOX = 0;
-    public static final double EDIT_ADD_SPHERE = 1;
-    public static final double EDIT_ADD_LINE = 2;
-    public static final double EDIT_ADD_POINT_LIGHT = 3;
-    public static final double EDIT_ADD_LABEL_IMAGE = 4;
-    public static final double EDIT_ADD_VOLUME = 5;
-    public static final double EDIT_ADD_CAMERA = 6;
-    public static final double EDIT_ADD_COMPASS = 49;
-    public static final double EDIT_TOGGLE_FLOOR = 50;
-    public static final double EDIT_DELETE_OBJECT = 100;
-    public static final double EDIT_SCIVIEW_SETTINGS = 200;
-
-    public static final double PROCESS_ISOSURFACE = 0;
-    public static final double PROCESS_CONVEX_HULL = 1;
-    public static final double PROCESS_MESH_TO_IMAGE = 2;
-    public static final double PROCESS_INTERACTIVE_CONVEX_MESH = 3;
-    public static final double PROCESS_DRAW_LINES = 4;
-
-    public static final double VIEW_ROTATE = 0;
-    public static final double VIEW_STOP_ANIMATION = 1;
-    public static final double VIEW_TOGGLE_UNLIMITED_FRAMERATE = 2;
-    public static final double VIEW_SET_SUPERSAMPLING_FACTOR = 3;
-    public static final double VIEW_SET_FAR_PLANE = 4;
-    public static final double VIEW_START_RECORDING_VIDEO = 98;
-    public static final double VIEW_STOP_RECORDING_VIDEO = 99;
-    public static final double VIEW_SCREENSHOT = 100;
-    public static final double VIEW_SET_LUT = 101;
-    public static final double VIEW_TOGGLE_BOUNDING_GRID = 102;
-    public static final double VIEW_CENTER_ON_ACTIVE_NODE = 103;
-    public static final double VIEW_RESET_CAMERA_ROTATION = 202;
-    public static final double VIEW_RESET_CAMERA_POSITION = 203;
-    public static final double VIEW_SAVE_CAMERA_CONFIGURATION = 204;
-    public static final double VIEW_TOGGLE_INSPECTOR = 302;
-    public static final double VIEW_RENDER_TO_OPENVR = 303;
-    public static final double VIEW_SET_TRANSFER_FUNCTION = 400;
-
-
-    public static final double DEMO_LINES = 0;
-    public static final double DEMO_MESH = 1;
-    public static final double DEMO_MESH_TEXTURE = 2;
-    public static final double DEMO_VOLUME_RENDER = 3;
-    public static final double DEMO_GAME_OF_LIFE = 4;
-    public static final double DEMO_TEXT = 5;
-    public static final double DEMO_EMBRYO = 6;
-
-    public static final double HELP_HELP = 0;
-    public static final double HELP_ABOUT = 200;
+object MenuWeights {
+    const val FILE = 0.0
+    const val EDIT = 1.0
+    const val PROCESS = 2.0
+    const val VIEW = 3.0
+    const val DEMO = 4.0
+    const val HELP = 4.0
+    const val FILE_OPEN = 0.0
+    const val FILE_EXPORT_STL = 100.0
+    const val EDIT_ADD_BOX = 0.0
+    const val EDIT_ADD_SPHERE = 1.0
+    const val EDIT_ADD_LINE = 2.0
+    const val EDIT_ADD_POINT_LIGHT = 3.0
+    const val EDIT_ADD_LABEL_IMAGE = 4.0
+    const val EDIT_ADD_VOLUME = 5.0
+    const val EDIT_ADD_CAMERA = 6.0
+    const val EDIT_ADD_COMPASS = 49.0
+    const val EDIT_TOGGLE_FLOOR = 50.0
+    const val EDIT_DELETE_OBJECT = 100.0
+    const val EDIT_SCIVIEW_SETTINGS = 200.0
+    const val PROCESS_ISOSURFACE = 0.0
+    const val PROCESS_CONVEX_HULL = 1.0
+    const val PROCESS_MESH_TO_IMAGE = 2.0
+    const val PROCESS_INTERACTIVE_CONVEX_MESH = 3.0
+    const val PROCESS_DRAW_LINES = 4.0
+    const val VIEW_ROTATE = 0.0
+    const val VIEW_STOP_ANIMATION = 1.0
+    const val VIEW_TOGGLE_UNLIMITED_FRAMERATE = 2.0
+    const val VIEW_SET_SUPERSAMPLING_FACTOR = 3.0
+    const val VIEW_SET_FAR_PLANE = 4.0
+    const val VIEW_START_RECORDING_VIDEO = 98.0
+    const val VIEW_STOP_RECORDING_VIDEO = 99.0
+    const val VIEW_SCREENSHOT = 100.0
+    const val VIEW_SET_LUT = 101.0
+    const val VIEW_TOGGLE_BOUNDING_GRID = 102.0
+    const val VIEW_CENTER_ON_ACTIVE_NODE = 103.0
+    const val VIEW_RESET_CAMERA_ROTATION = 202.0
+    const val VIEW_RESET_CAMERA_POSITION = 203.0
+    const val VIEW_SAVE_CAMERA_CONFIGURATION = 204.0
+    const val VIEW_TOGGLE_INSPECTOR = 302.0
+    const val VIEW_RENDER_TO_OPENVR = 303.0
+    const val VIEW_SET_TRANSFER_FUNCTION = 400.0
+    const val DEMO_LINES = 0.0
+    const val DEMO_MESH = 1.0
+    const val DEMO_MESH_TEXTURE = 2.0
+    const val DEMO_VOLUME_RENDER = 3.0
+    const val DEMO_GAME_OF_LIFE = 4.0
+    const val DEMO_TEXT = 5.0
+    const val DEMO_EMBRYO = 6.0
+    const val HELP_HELP = 0.0
+    const val HELP_ABOUT = 200.0
 }

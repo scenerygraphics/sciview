@@ -26,55 +26,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands;
+package sc.iview.commands
 
-import org.scijava.ItemIO;
-import org.scijava.command.Command;
-import org.scijava.display.DisplayService;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import org.scijava.ui.UIService;
-
-import sc.iview.SciView;
-import sc.iview.SciViewService;
-import sc.iview.display.SciViewDisplay;
+import org.scijava.ItemIO
+import org.scijava.command.Command
+import org.scijava.display.DisplayService
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import org.scijava.ui.UIService
+import sc.iview.SciView
+import sc.iview.SciViewService
+import sc.iview.display.SciViewDisplay
 
 /**
  * Command to launch SciView
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuPath = "Plugins>SciView")
-public class LaunchViewer implements Command {
+@Plugin(type = Command::class, menuPath = "Plugins>SciView")
+class LaunchViewer : Command {
+    @Parameter
+    private lateinit var displayService: DisplayService
 
     @Parameter
-    private DisplayService displayService;
-
-    @Parameter
-    private SciViewService sciViewService;
-
-    @Parameter(required = false)
-    private UIService uiService;
+    private lateinit var sciViewService: SciViewService
 
     @Parameter(type = ItemIO.OUTPUT)
-    private SciView sciView = null;
-
-    @Override
-    public void run() {
-        final SciViewDisplay display = displayService.getActiveDisplay(SciViewDisplay.class);
+    private var sciView: SciView? = null
+    override fun run() {
+        val display = displayService.getActiveDisplay(SciViewDisplay::class.java)
         try {
             if (display == null) {
-                sciView = sciViewService.getOrCreateActiveSciView();
-            }
-            else
-                sciViewService.createSciView();
-        } catch (Exception e) {
-            e.printStackTrace();
+                sciView = sciViewService.orCreateActiveSciView
+            } else sciViewService.createSciView()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-
-//        else if (uiService != null)
-//            uiService.showDialog( "The SciView window is already open. For now, only one SciView window is supported.", "SciView" );
     }
 
 }
