@@ -588,9 +588,6 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
                 getWindowWidth(), getWindowHeight(),
                 sceneryPanel[0]) );
 
-        // Enable push rendering by default
-        getRenderer().setPushMode( true );
-
         getHub().add( SceneryElement.Renderer, getRenderer() );
 
         reset();
@@ -626,6 +623,12 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
                         }
                         return null;
                     });
+
+            // Enable push rendering by default
+            getRenderer().setPushMode( true );
+
+            sciView.getCamera().setPosition(1.65, 1);
+
         });
     }
 
