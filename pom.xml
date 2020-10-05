@@ -388,8 +388,8 @@
 						<goals> <goal>compile</goal> </goals>
 						<configuration>
 							<sourceDirs>
-								<source>src/main/java</source>
 								<source>src/main/kotlin</source>
+								<source>src/main/java</source>
 								<source>target/generated-sources/kapt</source>
 								<source>target/generated-sources/kaptKotlin</source>
 							</sourceDirs>
