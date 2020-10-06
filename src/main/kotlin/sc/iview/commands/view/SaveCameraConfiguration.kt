@@ -26,73 +26,54 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.commands.view
 
-import com.google.common.io.Files;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
-import org.scijava.command.Command;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import org.scijava.script.ScriptService;
-import sc.iview.SciView;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-
-import static sc.iview.commands.MenuWeights.VIEW;
-import static sc.iview.commands.MenuWeights.VIEW_SAVE_CAMERA_CONFIGURATION;
+import com.google.common.io.Files
+import org.scijava.command.Command
+import org.scijava.log.LogService
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import org.scijava.script.ScriptService
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.VIEW
+import sc.iview.commands.MenuWeights.VIEW_SAVE_CAMERA_CONFIGURATION
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileWriter
+import java.io.IOException
 
 /**
  * Save the current camera configuration to file.
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-menu = {@Menu(label = "View", weight = VIEW), //
-        @Menu(label = "Save Camera Configuration", weight = VIEW_SAVE_CAMERA_CONFIGURATION)})
-public class SaveCameraConfiguration implements Command {
+@Suppress("UnstableApiUsage")
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Save Camera Configuration", weight = VIEW_SAVE_CAMERA_CONFIGURATION)])
+class SaveCameraConfiguration : Command {
+    @Parameter
+    private lateinit var sciView: SciView
 
     @Parameter
-    private LogService logService;
+    private lateinit var saveFile: File
 
-    @Parameter
-    private SciView sciView;
-
-    @Parameter
-    private File saveFile;
-
-    @Parameter
-    private ScriptService scriptService;
-
-    @Override
-    public void run() {
+    override fun run() {
         try {
-            FileWriter fw = new FileWriter(saveFile);
-            BufferedWriter bw = new BufferedWriter(fw);
-
-            if( !Files.getFileExtension(saveFile.getAbsolutePath()).equalsIgnoreCase("clj") )
-                throw new IOException("File must be Clojure (extension = .clj)");
-
-            Vector3f pos = sciView.getCamera().getPosition();
-            Quaternionf rot = sciView.getCamera().getRotation();
-
-            String scriptContents = "; @SciView sciView\n\n";
-            scriptContents += "(.setPosition (.getCamera sciView) (cleargl.GLVector. (float-array [" + pos.x() + " " + pos.y() + " " + pos.z() + "])))\n";
-            scriptContents += "(.setRotation (.getCamera sciView) (com.jogamp.opengl.math.Quaternion. " + rot.x() + " " + rot.y() + " " + rot.z() + " " + rot.w() + "))\n";
-
-            bw.write(scriptContents);
-
-            bw.close();
-            fw.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            val fw = FileWriter(saveFile)
+            val bw = BufferedWriter(fw)
+            if (!Files.getFileExtension(saveFile.absolutePath).equals("clj", ignoreCase = true)) throw IOException("File must be Clojure (extension = .clj)")
+            val pos = sciView.camera.position
+            val rot = sciView.camera.rotation
+            var scriptContents = "; @SciView sciView\n\n"
+            scriptContents += """(.setPosition (.getCamera sciView) (cleargl.GLVector. (float-array [${pos.x()} ${pos.y()} ${pos.z()}])))
+"""
+            scriptContents += """(.setRotation (.getCamera sciView) (com.jogamp.opengl.math.Quaternion. ${rot.x()} ${rot.y()} ${rot.z()} ${rot.w()}))
+"""
+            bw.write(scriptContents)
+            bw.close()
+            fw.close()
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
     }
-
 }

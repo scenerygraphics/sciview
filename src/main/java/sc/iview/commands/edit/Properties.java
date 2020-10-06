@@ -316,11 +316,11 @@ public class Properties extends InteractiveCommand {
                 while(playing) {
                     try {
                         int nextTimepoint = v.getCurrentTimepoint() + 1;
-                        if(nextTimepoint >= v.getMaxTimepoint()) {
+                        if(nextTimepoint >= v.getTimepointCount()) {
                             nextTimepoint = 0;
                         }
 
-                        v.goToTimePoint(nextTimepoint);
+                        v.goToTimepoint(nextTimepoint);
 
                         Thread.sleep(1000L/playSpeed);
                     } catch (InterruptedException e) {
@@ -399,7 +399,7 @@ public class Properties extends InteractiveCommand {
             getInfo().getMutableInput("timepoint", Integer.class).setMinimumValue(0);
             getInfo().getMutableInput("timepoint", Integer.class).setMaximumValue(
                     rai.numDimensions() > 3 ?
-                    ((graphics.scenery.volumes.Volume) currentSceneNode).getMaxTimepoint() :
+                    ((graphics.scenery.volumes.Volume) currentSceneNode).getTimepointCount() :
                     0 );
 
             min = (int)((Volume)currentSceneNode).getConverterSetups().get(0).getDisplayRangeMin();
@@ -526,7 +526,7 @@ public class Properties extends InteractiveCommand {
                 System.err.println("Could not load LUT " + colormapName);
             }
 
-            ((graphics.scenery.volumes.Volume) currentSceneNode).goToTimePoint(timepoint);
+            ((graphics.scenery.volumes.Volume) currentSceneNode).goToTimepoint(timepoint);
             ((Volume) currentSceneNode).getConverterSetups().get(0).setDisplayRange(min, max);
         }
 

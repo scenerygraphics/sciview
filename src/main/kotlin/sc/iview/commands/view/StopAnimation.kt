@@ -26,34 +26,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.commands.view
 
-import static sc.iview.commands.MenuWeights.VIEW;
-import static sc.iview.commands.MenuWeights.VIEW_STOP_ANIMATION;
-
-import org.scijava.command.Command;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-
-import sc.iview.SciView;
+import org.scijava.command.Command
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.VIEW
+import sc.iview.commands.MenuWeights.VIEW_STOP_ANIMATION
 
 /**
  * Command to stop all current animations
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "View", weight = VIEW), //
-                 @Menu(label = "Stop Animation", weight = VIEW_STOP_ANIMATION) })
-public class StopAnimation implements Command {
-
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Stop Animation", weight = VIEW_STOP_ANIMATION)])
+class StopAnimation : Command {
     @Parameter
-    private SciView sciView;
+    private lateinit var sciView: SciView
 
-    @Override
-    public void run() {
-        sciView.stopAnimation();
+    override fun run() {
+        sciView.stopAnimation()
     }
 }

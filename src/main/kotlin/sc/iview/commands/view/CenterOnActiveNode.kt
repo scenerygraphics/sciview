@@ -26,46 +26,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.commands.view
 
-import graphics.scenery.Mesh;
-import graphics.scenery.Node;
-import org.scijava.command.Command;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import sc.iview.SciView;
-
-import static sc.iview.commands.MenuWeights.VIEW;
-import static sc.iview.commands.MenuWeights.VIEW_CENTER_ON_ACTIVE_NODE;
+import graphics.scenery.Mesh
+import org.scijava.command.Command
+import org.scijava.log.LogService
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.VIEW
+import sc.iview.commands.MenuWeights.VIEW_CENTER_ON_ACTIVE_NODE
 
 /**
  * Command to center the camera on the currently active Node
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-menu = {@Menu(label = "View", weight = VIEW), //
-        @Menu(label = "Center On Active Node", weight = VIEW_CENTER_ON_ACTIVE_NODE)})
-public class CenterOnActiveNode implements Command {
-
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Center On Active Node", weight = VIEW_CENTER_ON_ACTIVE_NODE)])
+class CenterOnActiveNode : Command {
     @Parameter
-    private LogService logService;
+    private lateinit var sciView: SciView
 
-    @Parameter
-    private SciView sciView;
-
-    @Override
-    public void run() {
-        if( sciView.getActiveNode() instanceof Mesh ) {
-            Node currentNode = sciView.getActiveNode();
-
-            sciView.centerOnNode( currentNode );
-
+    override fun run() {
+        if (sciView.activeNode is Mesh) {
+            val currentNode = sciView.activeNode
+            sciView.centerOnNode(currentNode)
         }
-
     }
-
 }

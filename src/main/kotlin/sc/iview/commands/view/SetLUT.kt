@@ -26,74 +26,66 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.commands.view
 
-import graphics.scenery.Node;
-import net.imagej.lut.LUTService;
-import net.imglib2.display.AbstractArrayColorTable;
-import net.imglib2.display.ColorTable;
-import org.scijava.command.Command;
-import org.scijava.command.DynamicCommand;
-import org.scijava.module.MutableModuleItem;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import sc.iview.SciView;
-
-import java.io.IOException;
-import java.util.ArrayList;
-
-import static sc.iview.commands.MenuWeights.VIEW;
-import static sc.iview.commands.MenuWeights.VIEW_SET_LUT;
+import graphics.scenery.Node
+import net.imagej.lut.LUTService
+import net.imglib2.display.AbstractArrayColorTable
+import net.imglib2.display.ColorTable
+import org.scijava.command.Command
+import org.scijava.command.DynamicCommand
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.VIEW
+import sc.iview.commands.MenuWeights.VIEW_SET_LUT
+import java.io.IOException
+import java.util.*
 
 /**
  * Command to set the currently used Look Up Table (LUT). This is a colormap for the volume.
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "View", weight = VIEW), //
-                 @Menu(label = "Set LUT", weight = VIEW_SET_LUT) })
-public class SetLUT extends DynamicCommand {
+@Suppress("TYPE_INFERENCE_ONLY_INPUT_TYPES_WARNING")
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Set LUT", weight = VIEW_SET_LUT)])
+class SetLUT : DynamicCommand() {
+    @Parameter
+    private lateinit var sciView: SciView
 
     @Parameter
-    private SciView sciView;
-
-    @Parameter
-    private LUTService lutService;
+    private lateinit var lutService: LUTService
 
     @Parameter(label = "Node")
-    private Node node;
+    private lateinit var node: Node
 
-    @Parameter(label = "Selected LUT", choices = {}, callback = "lutNameChanged")
-    private String lutName;
+    @Parameter(label = "Selected LUT", choices = [], callback = "lutNameChanged")
+    private lateinit var lutName: String
 
     @Parameter(label = "LUT Selection")
-    private ColorTable colorTable;
+    private lateinit var colorTable: ColorTable
 
-    protected void lutNameChanged() {
-        final MutableModuleItem<String> lutNameItem = getInfo().getMutableInput("lutName", String.class);
+    protected fun lutNameChanged() {
+        val lutNameItem = info.getMutableInput("lutName", String::class.java)
         try {
-            colorTable = lutService.loadLUT( lutService.findLUTs().get( lutName ) );
-        } catch (IOException e) {
-            e.printStackTrace();
+            colorTable = lutService.loadLUT(lutService.findLUTs()[lutNameItem])
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
     }
 
-    @Override
-    public void initialize() {
+    override fun initialize() {
         try {
-            colorTable = lutService.loadLUT( lutService.findLUTs().get( "Red.lut" ) );
-        } catch (IOException e) {
-            e.printStackTrace();
+            colorTable = lutService.loadLUT(lutService.findLUTs()["Red.lut"])
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
-        final MutableModuleItem<String> lutNameItem = getInfo().getMutableInput("lutName", String.class );
-        lutNameItem.setChoices( new ArrayList( lutService.findLUTs().keySet() ) );
+        val lutNameItem = info.getMutableInput("lutName", String::class.java)
+        lutNameItem.choices = ArrayList(lutService.findLUTs().keys)
     }
 
-    @Override
-    public void run() {
-        sciView.setColormap( node, (AbstractArrayColorTable) colorTable);
+    override fun run() {
+        sciView.setColormap(node, colorTable as AbstractArrayColorTable<*>?)
     }
 }

@@ -26,42 +26,31 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.commands.view
 
-import org.scijava.command.Command;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import sc.iview.SciView;
-
-import static sc.iview.commands.MenuWeights.*;
+import org.scijava.command.Command
+import org.scijava.log.LogService
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.VIEW
+import sc.iview.commands.MenuWeights.VIEW_SET_SUPERSAMPLING_FACTOR
 
 /**
  * Command to set scenery's Supersampling Factor
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = {@Menu(label = "View", weight = VIEW), //
-                @Menu(label = "Set Supersampling Factor", weight = VIEW_SET_SUPERSAMPLING_FACTOR)})
-public class SetSupersamplingFactor implements Command {
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Set Supersampling Factor", weight = VIEW_SET_SUPERSAMPLING_FACTOR)])
+class SetSupersamplingFactor : Command {
+    @Parameter
+    private lateinit var sciView: SciView
 
     @Parameter
-    private LogService logService;
+    private var supersamplingFactor = 1.0
 
-    @Parameter
-    private SciView sciView;
-
-    @Parameter
-    private double supersamplingFactor = 1.0;
-
-    @Override
-    public void run() {
-
-        sciView.getSceneryRenderer().getSettings().set("Renderer.SupersamplingFactor",supersamplingFactor);
-
+    override fun run() {
+        sciView.sceneryRenderer.settings.set("Renderer.SupersamplingFactor", supersamplingFactor)
     }
-
 }

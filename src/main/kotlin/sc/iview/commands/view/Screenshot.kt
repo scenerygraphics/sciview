@@ -26,66 +26,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.commands.view
 
-import graphics.scenery.backends.RenderedImage;
-import net.imagej.Dataset;
-import net.imagej.ImgPlus;
-import net.imagej.ops.OpService;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
-import net.imglib2.img.display.imagej.ImageJFunctions;
-import net.imglib2.type.numeric.ARGBType;
-import org.scijava.ItemIO;
-import org.scijava.command.Command;
-import org.scijava.io.IOService;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import org.scijava.ui.UIService;
-import sc.iview.SciView;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
-import java.io.File;
-import java.io.IOException;
-
-import static sc.iview.commands.MenuWeights.VIEW;
-import static sc.iview.commands.MenuWeights.VIEW_SCREENSHOT;
+import net.imagej.ImgPlus
+import net.imagej.ops.OpService
+import org.scijava.ItemIO
+import org.scijava.command.Command
+import org.scijava.io.IOService
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import org.scijava.ui.UIService
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.VIEW
+import sc.iview.commands.MenuWeights.VIEW_SCREENSHOT
 
 /**
  * Command to take a screenshot. The screenshot is opened in ImageJ.
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "View", weight = VIEW), //
-                 @Menu(label = "Screenshot", weight = VIEW_SCREENSHOT) })
-public class Screenshot implements Command {
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Screenshot", weight = VIEW_SCREENSHOT)])
+class Screenshot : Command {
+    @Parameter
+    private lateinit var sciView: SciView
 
     @Parameter
-    private SciView sciView;
-
-    @Parameter
-    private OpService opService;
-
-    @Parameter
-    private IOService ioService;
-
-    @Parameter
-    private UIService uiService;
+    private lateinit var uiService: UIService
 
     @Parameter(type = ItemIO.OUTPUT)
-    private ImgPlus img;
+    private var img: ImgPlus<*>? = null
 
-    @Override
-    public void run() {
-        Img<ARGBType> screenshot = sciView.getARGBScreenshot();
-
-        img = new ImgPlus<>(screenshot);
-
-        uiService.show(img);
+    override fun run() {
+        val screenshot = sciView.argbScreenshot
+        img = ImgPlus(screenshot)
+        uiService.show(img)
     }
 }
