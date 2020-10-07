@@ -26,122 +26,118 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview;
+package sc.iview
 
-import bdv.BigDataViewer;
-import bdv.cache.CacheControl;
-import bdv.tools.brightness.ConverterSetup;
-import bdv.util.AxisOrder;
-import bdv.util.RandomAccessibleIntervalSource;
-import bdv.util.RandomAccessibleIntervalSource4D;
-import bdv.util.volatiles.VolatileView;
-import bdv.util.volatiles.VolatileViewData;
-import bdv.viewer.Source;
-import bdv.viewer.SourceAndConverter;
-import cleargl.GLVector;
-import com.formdev.flatlaf.FlatLightLaf;
-import com.intellij.ui.tabs.JBTabsPosition;
-import com.intellij.ui.tabs.TabInfo;
-import com.intellij.ui.tabs.impl.JBEditorTabs;
-import graphics.scenery.Box;
-import graphics.scenery.*;
-import graphics.scenery.backends.RenderedImage;
-import graphics.scenery.backends.Renderer;
-import graphics.scenery.backends.opengl.OpenGLRenderer;
-import graphics.scenery.backends.vulkan.VulkanRenderer;
-import graphics.scenery.controls.InputHandler;
-import graphics.scenery.controls.OpenVRHMD;
-import graphics.scenery.controls.TrackerInput;
-import graphics.scenery.controls.behaviours.ArcballCameraControl;
-import graphics.scenery.controls.behaviours.FPSCameraControl;
-import graphics.scenery.controls.behaviours.MovementCommand;
-import graphics.scenery.controls.behaviours.SelectCommand;
-import graphics.scenery.utils.*;
-import graphics.scenery.volumes.Colormap;
-import graphics.scenery.volumes.RAIVolume;
-import graphics.scenery.volumes.TransferFunction;
-import graphics.scenery.volumes.Volume;
-import io.scif.SCIFIOService;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
-import kotlin.jvm.functions.Function3;
-import net.imagej.Dataset;
-import net.imagej.ImageJService;
-import net.imagej.axis.CalibratedAxis;
-import net.imagej.axis.DefaultAxisType;
-import net.imagej.axis.DefaultLinearAxis;
-import net.imagej.interval.CalibratedRealInterval;
-import net.imagej.lut.LUTService;
-import net.imagej.ops.OpService;
-import net.imagej.units.UnitService;
-import net.imglib2.Cursor;
-import net.imglib2.RandomAccess;
-import net.imglib2.*;
-import net.imglib2.display.ColorTable;
-import net.imglib2.img.Img;
-import net.imglib2.realtransform.AffineTransform3D;
-import net.imglib2.type.numeric.ARGBType;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.view.Views;
-import org.joml.Quaternionf;
-import org.joml.Vector2f;
-import org.joml.Vector3f;
-import org.lwjgl.system.Platform;
-import org.scijava.Context;
-import org.scijava.display.Display;
-import org.scijava.display.DisplayService;
-import org.scijava.event.EventHandler;
-import org.scijava.event.EventService;
-import org.scijava.io.IOService;
-import org.scijava.log.LogLevel;
-import org.scijava.log.LogService;
-import org.scijava.menu.MenuService;
-import org.scijava.object.ObjectService;
-import org.scijava.plugin.Parameter;
-import org.scijava.service.SciJavaService;
-import org.scijava.thread.ThreadService;
-import org.scijava.ui.behaviour.ClickBehaviour;
-import org.scijava.ui.behaviour.InputTrigger;
-import org.scijava.ui.swing.menu.SwingJMenuBarCreator;
-import org.scijava.util.ColorRGB;
-import org.scijava.util.Colors;
-import org.scijava.util.VersionUtils;
-import sc.iview.commands.view.NodePropertyEditor;
-import sc.iview.controls.behaviours.CameraTranslateControl;
-import sc.iview.controls.behaviours.NodeTranslateControl;
-import sc.iview.event.NodeActivatedEvent;
-import sc.iview.event.NodeAddedEvent;
-import sc.iview.event.NodeChangedEvent;
-import sc.iview.event.NodeRemovedEvent;
-import sc.iview.process.MeshConverter;
-import sc.iview.ui.ContextPopUp;
-import sc.iview.ui.REPLPane;
-import sc.iview.vector.JOMLVector3;
-import sc.iview.vector.Vector3;
-import tpietzsch.example2.VolumeViewerOptions;
-
-import javax.imageio.ImageIO;
-import javax.script.ScriptException;
-import javax.swing.*;
-import java.awt.Image;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.geom.AffineTransform;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
-import java.io.*;
-import java.net.URL;
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.util.List;
-import java.util.Queue;
-import java.util.*;
-import java.util.concurrent.Future;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
+import bdv.BigDataViewer
+import bdv.cache.CacheControl
+import bdv.tools.brightness.ConverterSetup
+import bdv.util.AxisOrder
+import bdv.util.RandomAccessibleIntervalSource
+import bdv.util.RandomAccessibleIntervalSource4D
+import bdv.util.volatiles.VolatileView
+import bdv.viewer.Source
+import bdv.viewer.SourceAndConverter
+import cleargl.GLVector
+import com.formdev.flatlaf.FlatLightLaf
+import com.intellij.ui.tabs.JBTabsPosition
+import com.intellij.ui.tabs.TabInfo
+import com.intellij.ui.tabs.impl.JBEditorTabs
+import graphics.scenery.*
+import graphics.scenery.Box
+import graphics.scenery.Scene.RaycastResult
+import graphics.scenery.backends.Renderer
+import graphics.scenery.backends.opengl.OpenGLRenderer
+import graphics.scenery.backends.vulkan.VulkanRenderer
+import graphics.scenery.controls.InputHandler
+import graphics.scenery.controls.OpenVRHMD
+import graphics.scenery.controls.TrackerInput
+import graphics.scenery.controls.behaviours.ArcballCameraControl
+import graphics.scenery.controls.behaviours.FPSCameraControl
+import graphics.scenery.controls.behaviours.MovementCommand
+import graphics.scenery.controls.behaviours.SelectCommand
+import graphics.scenery.utils.*
+import graphics.scenery.utils.ExtractsNatives.Companion.getPlatform
+import graphics.scenery.volumes.Colormap
+import graphics.scenery.volumes.RAIVolume
+import graphics.scenery.volumes.Volume
+import graphics.scenery.volumes.Volume.Companion.fromXML
+import graphics.scenery.volumes.Volume.Companion.setupId
+import graphics.scenery.volumes.Volume.VolumeDataSource.RAISource
+import io.scif.SCIFIOService
+import net.imagej.Dataset
+import net.imagej.ImageJService
+import net.imagej.axis.CalibratedAxis
+import net.imagej.axis.DefaultAxisType
+import net.imagej.axis.DefaultLinearAxis
+import net.imagej.interval.CalibratedRealInterval
+import net.imagej.lut.LUTService
+import net.imagej.mesh.Mesh
+import net.imagej.ops.OpService
+import net.imagej.units.UnitService
+import net.imglib2.*
+import net.imglib2.display.ColorTable
+import net.imglib2.img.Img
+import net.imglib2.realtransform.AffineTransform3D
+import net.imglib2.type.numeric.ARGBType
+import net.imglib2.type.numeric.RealType
+import net.imglib2.type.numeric.integer.UnsignedByteType
+import net.imglib2.view.Views
+import org.joml.Quaternionf
+import org.joml.Vector2f
+import org.joml.Vector3f
+import org.lwjgl.system.Platform
+import org.scijava.Context
+import org.scijava.`object`.ObjectService
+import org.scijava.display.Display
+import org.scijava.display.DisplayService
+import org.scijava.event.EventHandler
+import org.scijava.event.EventService
+import org.scijava.io.IOService
+import org.scijava.log.LogLevel
+import org.scijava.log.LogService
+import org.scijava.menu.MenuService
+import org.scijava.plugin.Parameter
+import org.scijava.service.SciJavaService
+import org.scijava.thread.ThreadService
+import org.scijava.ui.behaviour.ClickBehaviour
+import org.scijava.ui.swing.menu.SwingJMenuBarCreator
+import org.scijava.util.ColorRGB
+import org.scijava.util.Colors
+import org.scijava.util.VersionUtils
+import sc.iview.SciView
+import sc.iview.commands.view.NodePropertyEditor
+import sc.iview.controls.behaviours.CameraTranslateControl
+import sc.iview.controls.behaviours.NodeTranslateControl
+import sc.iview.event.NodeActivatedEvent
+import sc.iview.event.NodeAddedEvent
+import sc.iview.event.NodeChangedEvent
+import sc.iview.event.NodeRemovedEvent
+import sc.iview.process.MeshConverter
+import sc.iview.ui.ContextPopUp
+import sc.iview.ui.REPLPane
+import sc.iview.vector.JOMLVector3
+import sc.iview.vector.Vector3
+import tpietzsch.example2.VolumeViewerOptions
+import java.awt.*
+import java.awt.event.*
+import java.awt.image.BufferedImage
+import java.awt.image.DataBufferByte
+import java.io.*
+import java.net.URL
+import java.nio.ByteBuffer
+import java.nio.FloatBuffer
+import java.util.*
+import java.util.concurrent.Future
+import java.util.function.Consumer
+import java.util.function.Function
+import java.util.function.Predicate
+import java.util.function.Supplier
+import java.util.stream.Collectors
+import javax.imageio.ImageIO
+import javax.script.ScriptException
+import javax.swing.*
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * Main SciView class.
@@ -150,116 +146,143 @@ import java.util.stream.Collectors;
  */
 // we suppress unused warnings here because @Parameter-annotated fields
 // get updated automatically by SciJava.
-@SuppressWarnings({"unused", "WeakerAccess"})
-public class SciView extends SceneryBase implements CalibratedRealInterval<CalibratedAxis> {
+class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
+    private val sceneryPanel = arrayOf<SceneryPanel?>(null)
 
-    public static final ColorRGB DEFAULT_COLOR = Colors.LIGHTGRAY;
-    private final SceneryPanel[] sceneryPanel = { null };
     /**
      * Mouse controls for FPS movement and Arcball rotation
      */
-    protected ArcballCameraControl targetArcball;
-    protected FPSCameraControl fpsControl;
+    var targetArcball: ArcballCameraControl? = null
+        protected set
+    protected var fpsControl: FPSCameraControl? = null
+    /*
+     * Return the default floor object
+     *//*
+     * Set the default floor object
+     */
     /**
      * The floor that orients the user in the scene
      */
-    protected Node floor;
-    protected boolean vrActive = false;
+    var floor: Node? = null
+    protected var vrActive = false
+
     /**
      * The primary camera/observer in the scene
      */
-    Camera camera = null;
+    var camera: Camera? = null
+    set(value) {
+        field = value
+        setActiveObserver(field)
+    }
+
     /**
      * Geometry/Image information of scene
      */
-    private CalibratedAxis[] axes;
+    private lateinit var axes: Array<CalibratedAxis>
 
     @Parameter
-    private LogService log;
+    private val log: LogService? = null
+
     @Parameter
-    private MenuService menus;
+    private val menus: MenuService? = null
+
     @Parameter
-    private IOService io;
+    private val io: IOService? = null
+
     @Parameter
-    private OpService ops;
+    private val ops: OpService? = null
+
     @Parameter
-    private EventService eventService;
+    private val eventService: EventService? = null
+
     @Parameter
-    private DisplayService displayService;
+    private val displayService: DisplayService? = null
+
     @Parameter
-    private LUTService lutService;
+    private val lutService: LUTService? = null
+
     @Parameter
-    private ThreadService threadService;
+    private val threadService: ThreadService? = null
+
     @Parameter
-    private ObjectService objectService;
+    private val objectService: ObjectService? = null
+
     @Parameter
-    private UnitService unitService;
+    private val unitService: UnitService? = null
+
     /**
      * Queue keeps track of the currently running animations
-     **/
-    private Queue<Future> animations;
+     */
+    private var animations: Queue<Future<*>>? = null
+
     /**
      * Animation pause tracking
-     **/
-    private boolean animating;
+     */
+    private var animating = false
+
     /**
      * This tracks the actively selected Node in the scene
      */
-    private Node activeNode = null;
+    var activeNode: Node? = null
+        private set
+
     /**
      * Speeds for input controls
      */
-    private float fpsScrollSpeed = 0.05f;
-    private float mouseSpeedMult = 0.25f;
-    private Display<?> scijavaDisplay;
-    private SplashLabel splashLabel;
-    private SceneryJPanel panel;
-    private JSplitPane mainSplitPane;
-    private JSplitPane inspector;
-    private JSplitPane interpreterSplitPane;
-    private REPLPane interpreterPane;
-    private NodePropertyEditor nodePropertyEditor;
-    private ArrayList<PointLight> lights;
-    private Stack<HashMap<String, Object>> controlStack;
-    private JFrame frame;
-    private Predicate<? super Node> notAbstractNode = (Predicate<Node>) node -> !( (node instanceof Camera) || (node instanceof Light) || (node==getFloor()));
-    private boolean isClosed = false;
-    private Function<Node,List<Node>> notAbstractBranchingFunction = node -> node.getChildren().stream().filter(notAbstractNode).collect(Collectors.toList());
+    private var fpsScrollSpeed = 0.05f
+    private var mouseSpeedMult = 0.25f
+
+    /*
+     * Return the SciJava Display that contains SciView
+     *//*
+     * Set the SciJava Display
+     */  var display: Display<*>? = null
+    private var splashLabel: SplashLabel? = null
+
+    /**
+     * Return the current SceneryJPanel. This is necessary for custom context menus
+     * @return panel the current SceneryJPanel
+     */
+    var sceneryJPanel: SceneryJPanel? = null
+        private set
+    private var mainSplitPane: JSplitPane? = null
+    private var inspector: JSplitPane? = null
+    private val interpreterSplitPane: JSplitPane? = null
+    private var interpreterPane: REPLPane? = null
+    private var nodePropertyEditor: NodePropertyEditor? = null
+    var lights: ArrayList<PointLight>? = null
+        private set
+    private var controlStack: Stack<HashMap<String, Any>>? = null
+    private var frame: JFrame? = null
+    private val notAbstractNode: Predicate<in Node> = Predicate { node: Node -> !(node is Camera || node is Light || node === floor) }
+    var isClosed = false
+        private set
+    private val notAbstractBranchingFunction = Function { node: Node -> node.children.stream().filter(notAbstractNode).collect(Collectors.toList()) }
 
     // If true, then when a new node is added to the scene, the camera will refocus on this node by default
-    private boolean centerOnNewNodes;
+    var centerOnNewNodes = false
 
     // If true, then when a new node is added the thread will block until the node is added to the scene. This is required for
     //   centerOnNewNodes
-    private boolean blockOnNewNodes;
-    private PointLight headlight;
+    var blockOnNewNodes = false
+    private var headlight: PointLight? = null
 
-    public SciView( Context context ) {
-        super( "SciView", 1280, 720, false, context );
-        context.inject( this );
+    constructor(context: Context) : super("SciView", 1280, 720, false, context) {
+        context.inject(this)
     }
 
-    public SciView( String applicationName, int windowWidth, int windowHeight ) {
-        super( applicationName, windowWidth, windowHeight, false );
-    }
+    constructor(applicationName: String?, windowWidth: Int, windowHeight: Int) : super(applicationName!!, windowWidth, windowHeight, false) {}
 
-    public boolean isClosed() {
-        return isClosed;
-    }
-
-    public InputHandler publicGetInputHandler() {
-        return getInputHandler();
+    fun publicGetInputHandler(): InputHandler {
+        return inputHandler!!
     }
 
     /**
      * Toggle video recording with scenery's video recording mechanism
      * Note: this video recording may skip frames because it is asynchronous
      */
-    public void toggleRecordVideo() {
-        if( getRenderer() instanceof  OpenGLRenderer )
-            ((OpenGLRenderer)getRenderer()).recordMovie();
-        else
-            ((VulkanRenderer)getRenderer()).recordMovie();
+    fun toggleRecordVideo() {
+        if (renderer is OpenGLRenderer) (renderer as OpenGLRenderer).recordMovie() else (renderer as VulkanRenderer).recordMovie()
     }
 
     /**
@@ -269,123 +292,106 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param filename destination for saving video
      * @param overwrite should the file be replaced, otherwise a unique incrementing counter will be appended
      */
-    public void toggleRecordVideo(String filename, boolean overwrite) {
-        if( getRenderer() instanceof  OpenGLRenderer )
-            ((OpenGLRenderer)getRenderer()).recordMovie(filename, overwrite);
-        else
-            ((VulkanRenderer)getRenderer()).recordMovie(filename, overwrite);
+    fun toggleRecordVideo(filename: String?, overwrite: Boolean) {
+        if (renderer is OpenGLRenderer) (renderer as OpenGLRenderer).recordMovie(filename!!, overwrite) else (renderer as VulkanRenderer).recordMovie(filename!!, overwrite)
     }
 
     /**
      * This pushes the current input setup onto a stack that allows them to be restored with restoreControls
      */
-    public void stashControls() {
-        HashMap<String, Object> controlState = new HashMap<String, Object>();
-        controlStack.push(controlState);
+    fun stashControls() {
+        val controlState = HashMap<String, Any>()
+        controlStack!!.push(controlState)
     }
 
     /**
      * This pops/restores the previously stashed controls. Emits a warning if there are no stashed controls
      */
-    public void restoreControls() {
-        HashMap<String, Object> controlState = controlStack.pop();
+    fun restoreControls() {
+        val controlState = controlStack!!.pop()
 
         // This isnt how it should work
-        setObjectSelectionMode();
-        resetFPSInputs();
+        setObjectSelectionMode()
+        resetFPSInputs()
     }
 
     /**
      * Place the camera such that all objects in the scene are within the field of view
      */
-    public void fitCameraToScene() {
-        centerOnNode(getScene());
-    }
-
-    public ArrayList<PointLight> getLights() {
-        return lights;
+    fun fitCameraToScene() {
+        centerOnNode(scene)
     }
 
     /**
      * Reset the scene to initial conditions
      */
-    public void reset() {
+    fun reset() {
         // Initialize the 3D axes
-        axes = new CalibratedAxis[3];
-
-        axes[0] = new DefaultLinearAxis(new DefaultAxisType("X", true), "um", 1);
-        axes[1] = new DefaultLinearAxis(new DefaultAxisType("Y", true), "um", 1);
-        axes[2] = new DefaultLinearAxis(new DefaultAxisType("Z", true), "um", 1);
+        axes = arrayOf(
+            DefaultLinearAxis(DefaultAxisType("X", true), "um", 1.0),
+            DefaultLinearAxis(DefaultAxisType("Y", true), "um", 1.0),
+            DefaultLinearAxis(DefaultAxisType("Z", true), "um", 1.0)
+        )
 
         // Remove everything except camera
-        Node[] toRemove = getSceneNodes( n -> !( n instanceof Camera ) );
-        for( Node n : toRemove ) {
-            deleteNode(n, false);
+        val toRemove = getSceneNodes { n: Node? -> n !is Camera }
+        for (n in toRemove) {
+            deleteNode(n, false)
         }
 
         // Setup camera
-        Camera cam;
-        if( getCamera() == null ) {
-            cam = new DetachedHeadCamera();
-            this.camera = cam;
-            cam.setPosition(new Vector3f(0.0f, 1.65f, 0.0f));
-            getScene().addChild( cam );
-        } else {
-            cam = getCamera();
+        if (camera == null) {
+            camera = DetachedHeadCamera()
+            (camera as DetachedHeadCamera).position = Vector3f(0.0f, 1.65f, 0.0f)
+            scene.addChild(camera as DetachedHeadCamera)
         }
-        cam.setPosition( new Vector3f( 0.0f, 1.65f, 5.0f ) );
-        cam.perspectiveCamera( 50.0f, getWindowWidth(), getWindowHeight(), 0.1f, 1000.0f );
+        camera!!.position = Vector3f(0.0f, 1.65f, 5.0f)
+        camera!!.perspectiveCamera(50.0f, windowWidth, windowHeight, 0.1f, 1000.0f)
 
         // Setup lights
-        Vector3f[] tetrahedron = new Vector3f[4];
-        tetrahedron[0] = new Vector3f( 1.0f, 0f, -1.0f/(float)Math.sqrt(2.0f) );
-        tetrahedron[1] = new Vector3f( -1.0f,0f,-1.0f/(float)Math.sqrt(2.0) );
-        tetrahedron[2] = new Vector3f( 0.0f,1.0f,1.0f/(float)Math.sqrt(2.0) );
-        tetrahedron[3] = new Vector3f( 0.0f,-1.0f,1.0f/(float)Math.sqrt(2.0) );
-
-        lights = new ArrayList<>();
-
-        for( int i = 0; i < 4; i++ ) {// TODO allow # initial lights to be customizable?
-            PointLight light = new PointLight(150.0f);
-            light.setPosition( tetrahedron[i].mul(25.0f) );
-            light.setEmissionColor( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-            light.setIntensity( 1.0f );
-            lights.add( light );
+        val tetrahedron = arrayOfNulls<Vector3f>(4)
+        tetrahedron[0] = Vector3f(1.0f, 0f, -1.0f / Math.sqrt(2.0).toFloat())
+        tetrahedron[1] = Vector3f(-1.0f, 0f, -1.0f / Math.sqrt(2.0).toFloat())
+        tetrahedron[2] = Vector3f(0.0f, 1.0f, 1.0f / Math.sqrt(2.0).toFloat())
+        tetrahedron[3] = Vector3f(0.0f, -1.0f, 1.0f / Math.sqrt(2.0).toFloat())
+        lights = ArrayList()
+        for (i in 0..3) { // TODO allow # initial lights to be customizable?
+            val light = PointLight(150.0f)
+            light.position = tetrahedron[i]!!.mul(25.0f)
+            light.emissionColor = Vector3f(1.0f, 1.0f, 1.0f)
+            light.intensity = 1.0f
+            lights!!.add(light)
             //camera.addChild( light );
-            getScene().addChild( light );
+            scene.addChild(light)
         }
 
         // Make a headlight for the camera
-        headlight = new PointLight(150.0f);
-        headlight.setPosition( new Vector3f(0f, 0f, -1f).mul(25.0f) );
-        headlight.setEmissionColor( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-        headlight.setIntensity( 0.5f );
-        headlight.setName("headlight");
-
-
-        Icosphere lightSphere = new Icosphere(1.0f, 2);
-        headlight.addChild(lightSphere);
-        lightSphere.getMaterial().setDiffuse(headlight.getEmissionColor());
-        lightSphere.getMaterial().setSpecular(headlight.getEmissionColor());
-        lightSphere.getMaterial().setAmbient(headlight.getEmissionColor());
-        lightSphere.getMaterial().setWireframe(true);
-        lightSphere.setVisible(false);
+        headlight = PointLight(150.0f)
+        headlight!!.position = Vector3f(0f, 0f, -1f).mul(25.0f)
+        headlight!!.emissionColor = Vector3f(1.0f, 1.0f, 1.0f)
+        headlight!!.intensity = 0.5f
+        headlight!!.name = "headlight"
+        val lightSphere = Icosphere(1.0f, 2)
+        headlight!!.addChild(lightSphere)
+        lightSphere.material.diffuse = headlight!!.emissionColor
+        lightSphere.material.specular = headlight!!.emissionColor
+        lightSphere.material.ambient = headlight!!.emissionColor
+        lightSphere.material.wireframe = true
+        lightSphere.visible = false
         //lights.add( light );
-        camera.setNearPlaneDistance(0.01f);
-        camera.setFarPlaneDistance(1000.0f);
-        camera.addChild( headlight );
-
-        floor = new InfinitePlane();//new Box( new Vector3f( 500f, 0.2f, 500f ) );
-        ((InfinitePlane)floor).setType(InfinitePlane.Type.Grid);
-        floor.setName( "Floor" );
-        getScene().addChild( floor );
-
+        camera!!.nearPlaneDistance = 0.01f
+        camera!!.farPlaneDistance = 1000.0f
+        camera!!.addChild(headlight!!)
+        floor = InfinitePlane() //new Box( new Vector3f( 500f, 0.2f, 500f ) );
+        (floor as InfinitePlane).type = InfinitePlane.Type.Grid
+        (floor as Node).name = "Floor"
+        scene.addChild(floor as Node)
     }
 
     /**
      * Initialization of SWING and scenery. Also triggers an initial population of lights/camera in the scene
      */
-    @SuppressWarnings("restriction") @Override public void init() {
+    override fun init() {
 
         // Darcula dependency went missing from maven repo, factor it out
 //        if(Boolean.parseBoolean(System.getProperty("sciview.useDarcula", "false"))) {
@@ -396,686 +402,517 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 //                getLogger().info("Could not load Darcula Look and Feel");
 //            }
 //        }
-        final String logLevel = System.getProperty("scenery.LogLevel", "info");
-        log.setLevel(LogLevel.value(logLevel));
-
-        LogbackUtils.setLogLevel(null, logLevel);
-
-        System.getProperties().stringPropertyNames().forEach(name -> {
-            if(name.startsWith("scenery.LogLevel")) {
-                LogbackUtils.setLogLevel("", System.getProperty(name, "info"));
+        val logLevel = System.getProperty("scenery.LogLevel", "info")
+        log!!.level = LogLevel.value(logLevel)
+        LogbackUtils.setLogLevel(null, logLevel)
+        System.getProperties().stringPropertyNames().forEach(Consumer { name: String ->
+            if (name.startsWith("scenery.LogLevel")) {
+                LogbackUtils.setLogLevel("", System.getProperty(name, "info"))
             }
-        });
+        })
 
         // determine imagej-launcher version and to disable Vulkan if XInitThreads() fix
         // is not deployed
         try {
-            final Class<?> launcherClass = Class.forName("net.imagej.launcher.ClassLauncher");
-            String versionString = VersionUtils.getVersion(launcherClass);
-
-            if (versionString != null && ExtractsNatives.Companion.getPlatform() == ExtractsNatives.Platform.LINUX) {
-                versionString = versionString.substring(0, 5);
-
-                final Version launcherVersion = new Version(versionString);
-                final Version nonWorkingVersion = new Version("4.0.5");
-
+            val launcherClass = Class.forName("net.imagej.launcher.ClassLauncher")
+            var versionString = VersionUtils.getVersion(launcherClass)
+            if (versionString != null && getPlatform() == ExtractsNatives.Platform.LINUX) {
+                versionString = versionString.substring(0, 5)
+                val launcherVersion = Version(versionString)
+                val nonWorkingVersion = Version("4.0.5")
                 if (launcherVersion.compareTo(nonWorkingVersion) <= 0
-                        && !Boolean.parseBoolean(System.getProperty("sciview.DisableLauncherVersionCheck", "false"))) {
-                    getLogger().info("imagej-launcher version smaller or equal to non-working version (" + versionString + " vs. 4.0.5), disabling Vulkan as rendering backend. Disable check by setting 'scenery.DisableLauncherVersionCheck' system property to 'true'.");
-                    System.setProperty("scenery.Renderer", "OpenGLRenderer");
+                        && !java.lang.Boolean.parseBoolean(System.getProperty("sciview.DisableLauncherVersionCheck", "false"))) {
+                    logger.info("imagej-launcher version smaller or equal to non-working version ($versionString vs. 4.0.5), disabling Vulkan as rendering backend. Disable check by setting 'scenery.DisableLauncherVersionCheck' system property to 'true'.")
+                    System.setProperty("scenery.Renderer", "OpenGLRenderer")
                 } else {
-                    getLogger().info("imagej-launcher version bigger that non-working version (" + versionString + " vs. 4.0.5), all good.");
+                    logger.info("imagej-launcher version bigger that non-working version ($versionString vs. 4.0.5), all good.")
                 }
             }
-        } catch (ClassNotFoundException cnfe) {
+        } catch (cnfe: ClassNotFoundException) {
             // Didn't find the launcher, so we're probably good.
-            getLogger().info("imagej-launcher not found, not touching renderer preferences.");
+            logger.info("imagej-launcher not found, not touching renderer preferences.")
         }
 
         // TODO: check for jdk 8 v. jdk 11 on linux and choose renderer accordingly
-        if( Platform.get() == Platform.LINUX ) {
-            String version = System.getProperty("java.version");
-            if( version.startsWith("1.") ) {
-                version = version.substring(2, 3);
+        if (Platform.get() === Platform.LINUX) {
+            var version = System.getProperty("java.version")
+            if (version.startsWith("1.")) {
+                version = version.substring(2, 3)
             } else {
-                int dot = version.indexOf(".");
+                val dot = version.indexOf(".")
                 if (dot != -1) {
-                    version = version.substring(0, dot);
+                    version = version.substring(0, dot)
                 }
             }
 
             // If Linux and JDK 8, then use OpenGLRenderer
-            if( version.equals("8") )
-                System.setProperty("scenery.Renderer", "OpenGLRenderer");
+            if (version == "8") System.setProperty("scenery.Renderer", "OpenGLRenderer")
         }
-
-        int x, y;
-
+        var x: Int
+        var y: Int
         try {
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-
-            x = screenSize.width/2 - getWindowWidth()/2;
-            y = screenSize.height/2 - getWindowHeight()/2;
-        } catch(HeadlessException e) {
-            x = 10;
-            y = 10;
+            val screenSize = Toolkit.getDefaultToolkit().screenSize
+            x = screenSize.width / 2 - windowWidth / 2
+            y = screenSize.height / 2 - windowHeight / 2
+        } catch (e: HeadlessException) {
+            x = 10
+            y = 10
         }
-
-        frame = new JFrame("SciView");
-        frame.setLayout(new BorderLayout(0, 0));
-        frame.setSize(getWindowWidth(), getWindowHeight());
-        frame.setLocation(x, y);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        nodePropertyEditor = new NodePropertyEditor( this );
-
-        final JPanel p = new JPanel(new BorderLayout(0, 0));
-        panel = new SceneryJPanel();
-
-        JPopupMenu.setDefaultLightWeightPopupEnabled(false);
-        final JMenuBar swingMenuBar = new JMenuBar();
-        new SwingJMenuBarCreator().createMenus(menus.getMenu("SciView"), swingMenuBar);
-        frame.setJMenuBar(swingMenuBar);
-
-        p.setLayout(new OverlayLayout(p));
-        p.setBackground(new Color(50, 48, 47));
-        p.add(panel, BorderLayout.CENTER);
-        panel.setVisible(true);
-
-        nodePropertyEditor.getComponent(); // Initialize node property panel
-
-        JTree inspectorTree = nodePropertyEditor.getTree();
-        inspectorTree.setToggleClickCount(0);// This disables expanding menus on double click
-        JPanel inspectorProperties = nodePropertyEditor.getProps();
-
-        JBEditorTabs tp = new JBEditorTabs(null);
-        tp.setTabsPosition(JBTabsPosition.right);
-        tp.setSideComponentVertical(true);
-
-        inspector = new JSplitPane(JSplitPane.VERTICAL_SPLIT, //
-                new JScrollPane( inspectorTree ),
-                new JScrollPane( inspectorProperties ));
-        inspector.setDividerLocation( getWindowHeight() / 3 );
-        inspector.setContinuousLayout(true);
-        inspector.setBorder(BorderFactory.createEmptyBorder());
-        inspector.setDividerSize(1);
-        ImageIcon inspectorIcon = getScaledImageIcon(this.getClass().getResource("toolbox.png"), 16, 16);
-
-        TabInfo tiInspector = new TabInfo(inspector, inspectorIcon);
-        tiInspector.setText("");
-        tp.addTab(tiInspector);
+        frame = JFrame("SciView")
+        frame!!.layout = BorderLayout(0, 0)
+        frame!!.setSize(windowWidth, windowHeight)
+        frame!!.setLocation(x, y)
+        frame!!.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
+        nodePropertyEditor = NodePropertyEditor(this)
+        val p = JPanel(BorderLayout(0, 0))
+        sceneryJPanel = SceneryJPanel()
+        JPopupMenu.setDefaultLightWeightPopupEnabled(false)
+        val swingMenuBar = JMenuBar()
+        SwingJMenuBarCreator().createMenus(menus!!.getMenu("SciView"), swingMenuBar)
+        frame!!.jMenuBar = swingMenuBar
+        p.layout = OverlayLayout(p)
+        p.background = Color(50, 48, 47)
+        p.add(sceneryJPanel, BorderLayout.CENTER)
+        sceneryJPanel!!.isVisible = true
+        nodePropertyEditor!!.component // Initialize node property panel
+        val inspectorTree = nodePropertyEditor!!.tree
+        inspectorTree.toggleClickCount = 0 // This disables expanding menus on double click
+        val inspectorProperties = nodePropertyEditor!!.props
+        val tp = JBEditorTabs(null)
+        tp.tabsPosition = JBTabsPosition.right
+        tp.isSideComponentVertical = true
+        inspector = JSplitPane(JSplitPane.VERTICAL_SPLIT,  //
+                JScrollPane(inspectorTree),
+                JScrollPane(inspectorProperties))
+        inspector!!.dividerLocation = windowHeight / 3
+        inspector!!.isContinuousLayout = true
+        inspector!!.border = BorderFactory.createEmptyBorder()
+        inspector!!.dividerSize = 1
+        val inspectorIcon = getScaledImageIcon(this.javaClass.getResource("toolbox.png"), 16, 16)
+        val tiInspector = TabInfo(inspector, inspectorIcon)
+        tiInspector.text = ""
+        tp.addTab(tiInspector)
 
         // We need to get the surface scale here before initialising scenery's renderer, as
         // the information is needed already at initialisation time.
-        final AffineTransform dt = frame.getGraphicsConfiguration().getDefaultTransform();
-        final Vector2f surfaceScale = new Vector2f((float)dt.getScaleX(), (float)dt.getScaleY());
-        getSettings().set("Renderer.SurfaceScale", surfaceScale);
-
-        interpreterPane = new REPLPane(getScijavaContext());
-        interpreterPane.getComponent().setBorder(BorderFactory.createEmptyBorder());
-        ImageIcon interpreterIcon = getScaledImageIcon(this.getClass().getResource("terminal.png"), 16, 16);
-
-        TabInfo tiREPL = new TabInfo(interpreterPane.getComponent(), interpreterIcon);
-        tiREPL.setText("");
-        tp.addTab(tiREPL);
-
-        tp.addTabMouseListener(new MouseListener() {
-            private boolean hidden = false;
-            private int previousPosition = 0;
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if(e.getClickCount() == 2) {
-                    toggleSidebar();
+        val dt = frame!!.graphicsConfiguration.defaultTransform
+        val surfaceScale = Vector2f(dt.scaleX.toFloat(), dt.scaleY.toFloat())
+        settings.set("Renderer.SurfaceScale", surfaceScale)
+        interpreterPane = REPLPane(scijavaContext)
+        interpreterPane!!.component.border = BorderFactory.createEmptyBorder()
+        val interpreterIcon = getScaledImageIcon(this.javaClass.getResource("terminal.png"), 16, 16)
+        val tiREPL = TabInfo(interpreterPane!!.component, interpreterIcon)
+        tiREPL.text = ""
+        tp.addTab(tiREPL)
+        tp.addTabMouseListener(object : MouseListener {
+            private val hidden = false
+            private val previousPosition = 0
+            override fun mouseClicked(e: MouseEvent) {
+                if (e.clickCount == 2) {
+                    toggleSidebar()
                 }
             }
 
-            @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-
-            }
-        });
-
-        initializeInterpreter();
-
-        mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, //
+            override fun mousePressed(e: MouseEvent) {}
+            override fun mouseReleased(e: MouseEvent) {}
+            override fun mouseEntered(e: MouseEvent) {}
+            override fun mouseExited(e: MouseEvent) {}
+        })
+        initializeInterpreter()
+        mainSplitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT,  //
                 p,
-                tp.getComponent()
-        );
-        mainSplitPane.setDividerLocation(frame.getSize().width - 36);
-        mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
-        mainSplitPane.setDividerSize(1);
-        mainSplitPane.setResizeWeight(0.9);
-        sidebarHidden = true;
+                tp.component
+        )
+        mainSplitPane!!.dividerLocation = frame!!.size.width - 36
+        mainSplitPane!!.border = BorderFactory.createEmptyBorder()
+        mainSplitPane!!.dividerSize = 1
+        mainSplitPane!!.resizeWeight = 0.9
+        sidebarHidden = true
 
         //frame.add(mainSplitPane, BorderLayout.CENTER);
-        frame.add(mainSplitPane, BorderLayout.CENTER);
-
-        SciView sciView = this;
-        frame.addWindowListener(new WindowAdapter() {
-            @Override public void windowClosing(WindowEvent e) {
-                getLogger().debug("Closing SciView window.");
-                close();
-                getScijavaContext().service(SciViewService.class).close(sciView);
-                isClosed = true;
+        frame!!.add(mainSplitPane, BorderLayout.CENTER)
+        val sciView = this
+        frame!!.addWindowListener(object : WindowAdapter() {
+            override fun windowClosing(e: WindowEvent) {
+                logger.debug("Closing SciView window.")
+                close()
+                scijavaContext!!.service(SciViewService::class.java).close(sciView)
+                isClosed = true
             }
-        });
-
-        splashLabel = new SplashLabel();
-        frame.setGlassPane(splashLabel);
-        frame.getGlassPane().setVisible(true);
-        frame.getGlassPane().requestFocusInWindow();
-//            frame.getGlassPane().setBackground(new java.awt.Color(50, 48, 47, 255));
-        frame.setVisible(true);
-
-        sceneryPanel[0] = panel;
-
-        setRenderer( Renderer.createRenderer( getHub(), getApplicationName(), getScene(),
-                getWindowWidth(), getWindowHeight(),
-                sceneryPanel[0]) );
-
-        getHub().add( SceneryElement.Renderer, getRenderer() );
-
-        reset();
-
-        animations = new LinkedList<>();
-        controlStack = new Stack<>();
-
-        SwingUtilities.invokeLater(() -> {
+        })
+        splashLabel = SplashLabel()
+        frame!!.glassPane = splashLabel
+        frame!!.glassPane.isVisible = true
+        frame!!.glassPane.requestFocusInWindow()
+        //            frame.getGlassPane().setBackground(new java.awt.Color(50, 48, 47, 255));
+        frame!!.isVisible = true
+        sceneryPanel[0] = sceneryJPanel
+        renderer = Renderer.createRenderer(hub, applicationName, scene,
+                windowWidth, windowHeight,
+                sceneryPanel[0])
+        hub.add(SceneryElement.Renderer, renderer!!)
+        reset()
+        animations = LinkedList()
+        controlStack = Stack()
+        SwingUtilities.invokeLater {
             try {
-                while (!getSceneryRenderer().getFirstImageReady()) {
-                    getLogger().debug("Waiting for renderer initialisation");
-                    Thread.sleep(300);
+                while (!getSceneryRenderer()!!.firstImageReady) {
+                    logger.debug("Waiting for renderer initialisation")
+                    Thread.sleep(300)
                 }
-
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                getLogger().error("Renderer construction interrupted.");
+                Thread.sleep(200)
+            } catch (e: InterruptedException) {
+                logger.error("Renderer construction interrupted.")
             }
-
-            nodePropertyEditor.rebuildTree();
-            getLogger().info("Done initializing SciView");
+            nodePropertyEditor!!.rebuildTree()
+            logger.info("Done initializing SciView")
 
             // subscribe to Node{Added, Removed, Changed} events
-            eventService.subscribe(this);
-            frame.getGlassPane().setVisible(false);
-            panel.setVisible(true);
+            eventService!!.subscribe(this)
+            frame!!.glassPane.isVisible = false
+            sceneryJPanel!!.isVisible = true
 
             // install hook to keep inspector updated on external changes (scripting, etc)
-            getScene().getOnNodePropertiesChanged().put("updateInspector",
-                    node -> {
-                        if( node == nodePropertyEditor.getCurrentNode() ) {
-                            nodePropertyEditor.updateProperties(node);
-                        }
-                        return null;
-                    });
-
-            // Enable push rendering by default
-            getRenderer().setPushMode( true );
-
-            sciView.getCamera().setPosition(1.65, 1);
-
-        });
-    }
-
-    private boolean sidebarHidden = false;
-    private int previousSidebarPosition = 0;
-
-    public boolean toggleSidebar() {
-        if(!sidebarHidden) {
-            previousSidebarPosition = mainSplitPane.getDividerLocation();
-            // TODO: remove hard-coded tab width
-            mainSplitPane.setDividerLocation(frame.getSize().width - 36);
-            sidebarHidden = true;
-        } else {
-            if(previousSidebarPosition == 0) {
-                previousSidebarPosition = getWindowWidth()/3 * 2;
+            scene.onNodePropertiesChanged["updateInspector"] = { node: Node ->
+                if (node === nodePropertyEditor!!.currentNode) {
+                    nodePropertyEditor!!.updateProperties(node)
+                }
+                null
             }
 
-            mainSplitPane.setDividerLocation(previousSidebarPosition);
-            sidebarHidden = false;
+            // Enable push rendering by default
+            renderer!!.pushMode = true
+            sciView.camera!!.setPosition(1.65, 1)
         }
-
-        return sidebarHidden;
     }
 
-    private ImageIcon getScaledImageIcon(final URL resource, int width, int height) {
-        final ImageIcon first = new ImageIcon(resource);
-        final Image image = first.getImage();
-
-        BufferedImage resizedImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2 = resizedImg.createGraphics();
-
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g2.drawImage(first.getImage(), 0, 0, width, height, null);
-        g2.dispose();
-
-        return new ImageIcon(resizedImg);
+    private var sidebarHidden = false
+    private var previousSidebarPosition = 0
+    fun toggleSidebar(): Boolean {
+        if (!sidebarHidden) {
+            previousSidebarPosition = mainSplitPane!!.dividerLocation
+            // TODO: remove hard-coded tab width
+            mainSplitPane!!.dividerLocation = frame!!.size.width - 36
+            sidebarHidden = true
+        } else {
+            if (previousSidebarPosition == 0) {
+                previousSidebarPosition = windowWidth / 3 * 2
+            }
+            mainSplitPane!!.dividerLocation = previousSidebarPosition
+            sidebarHidden = false
+        }
+        return sidebarHidden
     }
 
-    private void initializeInterpreter() {
-        String startupCode = "";
-        startupCode = new Scanner(SciView.class.getResourceAsStream("startup.py"), "UTF-8").useDelimiter("\\A").next();
-        interpreterPane.getREPL().getInterpreter().getBindings().put("sciView", this);
+    private fun getScaledImageIcon(resource: URL, width: Int, height: Int): ImageIcon {
+        val first = ImageIcon(resource)
+        val image = first.image
+        val resizedImg = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+        val g2 = resizedImg.createGraphics()
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
+        g2.drawImage(first.image, 0, 0, width, height, null)
+        g2.dispose()
+        return ImageIcon(resizedImg)
+    }
+
+    private fun initializeInterpreter() {
+        var startupCode: String? = ""
+        startupCode = Scanner(SciView::class.java.getResourceAsStream("startup.py"), "UTF-8").useDelimiter("\\A").next()
+        interpreterPane!!.repl.interpreter.bindings["sciView"] = this
         try {
-            interpreterPane.getREPL().getInterpreter().eval(startupCode);
-        } catch (ScriptException e) {
-            e.printStackTrace();
+            interpreterPane!!.repl.interpreter.eval(startupCode)
+        } catch (e: ScriptException) {
+            e.printStackTrace()
         }
     }
 
     /*
      * Completely close the SciView window + cleanup
      */
-    public void closeWindow() {
-        frame.dispose();
-    }
-
-    /*
-     * Return the default floor object
-     */
-    public Node getFloor() {
-        return floor;
-    }
-
-    /*
-     * Set the default floor object
-     */
-    public void setFloor( Node n ) {
-        floor = n;
-    }
-
-    /**
-     * Return the current SceneryJPanel. This is necessary for custom context menus
-     * @return panel the current SceneryJPanel
-     */
-    public SceneryJPanel getSceneryJPanel() {
-        return panel;
+    fun closeWindow() {
+        frame!!.dispose()
     }
 
     /*
      * Return true if the scene has been initialized
      */
-    public boolean isInitialized() {
-        return sceneInitialized();
-    }
-
-    /*
-     * Return the current camera that is rendering the scene
-     */
-    public Camera getCamera() {
-        return camera;
-    }
-
-    /*
-     * Return the SciJava Display that contains SciView
-     */
-    public Display<?> getDisplay() {
-        return scijavaDisplay;
-    }
-
-    /*
-     * Set the SciJava Display
-     */
-    public void setDisplay( Display<?> display ) {
-        scijavaDisplay = display;
-    }
+    val isInitialized: Boolean
+        get() = sceneInitialized()
 
     /*
      * Center the camera on the scene such that all objects are within the field of view
      */
-    public void centerOnScene() {
-        centerOnNode(getScene());
+    fun centerOnScene() {
+        centerOnNode(scene)
     }
 
     /*
      * Get the InputHandler that is managing mouse, input, VR controls, etc.
      */
-    public InputHandler getSceneryInputHandler() {
-        return getInputHandler();
+    val sceneryInputHandler: InputHandler
+        get() = inputHandler!!
+
+    /*
+     * Return a bounding box around a subgraph of the scenegraph
+     */
+    fun getSubgraphBoundingBox(n: Node): OrientedBoundingBox? {
+        val predicate = Function<Node, List<Node>> { node: Node -> node.children }
+        return getSubgraphBoundingBox(n, predicate)
     }
 
     /*
      * Return a bounding box around a subgraph of the scenegraph
      */
-    public OrientedBoundingBox getSubgraphBoundingBox( Node n ) {
-        Function<Node,List<Node>> predicate = node -> node.getChildren();
-        return getSubgraphBoundingBox(n,predicate);
-    }
-
-    /*
-     * Return a bounding box around a subgraph of the scenegraph
-     */
-    public OrientedBoundingBox getSubgraphBoundingBox( Node n, Function<Node,List<Node>> branchFunction ) {
-        if(n.getBoundingBox() == null && n.getChildren().size() != 0) {
-            return n.getMaximumBoundingBox().asWorld();
+    fun getSubgraphBoundingBox(n: Node, branchFunction: Function<Node, List<Node>>): OrientedBoundingBox? {
+        if (n.boundingBox == null && n.children.size != 0) {
+            return n.getMaximumBoundingBox().asWorld()
         }
-
-        List<Node> branches = branchFunction.apply(n);
-        if( branches.size() == 0 ) {
-            if( n.getBoundingBox() == null )
-                return null;
-            else
-                return n.getBoundingBox().asWorld();
+        val branches = branchFunction.apply(n)
+        if (branches.size == 0) {
+            return if (n.boundingBox == null) null else n.boundingBox!!.asWorld()
         }
-
-        OrientedBoundingBox bb = n.getMaximumBoundingBox();
-        for( Node c : branches ){
-            OrientedBoundingBox cBB = getSubgraphBoundingBox(c, branchFunction);
-            if( cBB != null )
-                bb = bb.expand(bb, cBB);
+        var bb = n.getMaximumBoundingBox()
+        for (c in branches) {
+            val cBB = getSubgraphBoundingBox(c, branchFunction)
+            if (cBB != null) bb = bb.expand(bb, cBB)
         }
-        return bb;
+        return bb
     }
 
     /*
      * Center the camera on the specified Node
      */
-    public void centerOnNode( Node currentNode ) {
-        centerOnNode(currentNode,notAbstractBranchingFunction);
-    }
-
     /*
      * Center the camera on the specified Node
      */
-    public void centerOnNode( Node currentNode, Function<Node,List<Node>> branchFunction ) {
-        if( currentNode == null ) {
-            log.info("Cannot center on node. CurrentNode is null" );
-            return;
+    @JvmOverloads
+    fun centerOnNode(currentNode: Node?, branchFunction: Function<Node, List<Node>> = notAbstractBranchingFunction) {
+        if (currentNode == null) {
+            log!!.info("Cannot center on node. CurrentNode is null")
+            return
         }
-
-        OrientedBoundingBox bb = getSubgraphBoundingBox(currentNode, branchFunction);
+        val bb = getSubgraphBoundingBox(currentNode, branchFunction) ?: return
 
         // TODO: find the widest dimensions of BB and align to that normal
-
-        if( bb == null ) return;
-        System.out.println("CurrentNode BoundingBox " + bb + " " + bb.getBoundingSphere().getOrigin() + " " + bb.getBoundingSphere().getRadius());
-
-        if(Float.isNaN(bb.getBoundingSphere().getOrigin().x()) ||
-                Float.isNaN(bb.getBoundingSphere().getOrigin().y()) ||
-                Float.isNaN(bb.getBoundingSphere().getOrigin().z()) ||
-                Float.isNaN(bb.getBoundingSphere().getRadius())) {
-            log.warn("Bounding box contains NaN, not adjusting camera.");
-            return;
+        println("CurrentNode BoundingBox " + bb + " " + bb.getBoundingSphere().origin + " " + bb.getBoundingSphere().radius)
+        if (java.lang.Float.isNaN(bb.getBoundingSphere().origin.x()) ||
+                java.lang.Float.isNaN(bb.getBoundingSphere().origin.y()) ||
+                java.lang.Float.isNaN(bb.getBoundingSphere().origin.z()) ||
+                java.lang.Float.isNaN(bb.getBoundingSphere().radius)) {
+            log!!.warn("Bounding box contains NaN, not adjusting camera.")
+            return
         }
-
-        getCamera().setTarget( bb.getBoundingSphere().getOrigin() );
-        getCamera().setTargeted( true );
+        camera!!.target = bb.getBoundingSphere().origin
+        camera!!.targeted = true
 
         // Set forward direction to point from camera at active node
-        Vector3f forward = bb.getBoundingSphere().getOrigin().sub( getCamera().getPosition() ).normalize();
-
-        float distance = (float) (bb.getBoundingSphere().getRadius() / Math.tan( getCamera().getFov() / 360 * Math.PI ));
-
-        headlight.setLightRadius(distance * 1.1f);
+        val forward = bb.getBoundingSphere().origin.sub(camera!!.position).normalize()
+        val distance = (bb.getBoundingSphere().radius / Math.tan(camera!!.fov / 360 * Math.PI)).toFloat()
+        headlight!!.lightRadius = distance * 1.1f
 
         // Solve for the proper rotation
-        Quaternionf rotation = new Quaternionf().lookAlong(forward, new Vector3f(0,1,0));
-
-        getCamera().setRotation( rotation.normalize() );
-        getCamera().setPosition( bb.getBoundingSphere().getOrigin().add( getCamera().getForward().mul( distance * -1.33f ) ) );
+        val rotation = Quaternionf().lookAlong(forward, Vector3f(0.0f, 1.0f, 0.0f))
+        camera!!.rotation = rotation.normalize()
+        camera!!.position = bb.getBoundingSphere().origin.add(camera!!.forward.mul(distance * -1.33f))
 
 //        getCamera().setDirty(true);
 //        getCamera().setNeedsUpdate(true);
     }
 
-    public float getFPSSpeed() {
-        return fpsScrollSpeed;
-    }
+    //log.debug( "FPS scroll speed: " + fpsScrollSpeed );
+    var fPSSpeed: Float
+        get() = fpsScrollSpeed
+        set(newspeed) {
+            var newspeed = newspeed
+            if (newspeed < 0.30f) newspeed = 0.3f else if (newspeed > 30.0f) newspeed = 30.0f
+            fpsScrollSpeed = newspeed
+            //log.debug( "FPS scroll speed: " + fpsScrollSpeed );
+        }
 
-    public void setFPSSpeed( float newspeed ) {
-        if( newspeed < 0.30f ) newspeed = 0.3f;
-        else if( newspeed > 30.0f ) newspeed = 30.0f;
-        fpsScrollSpeed = newspeed;
-        //log.debug( "FPS scroll speed: " + fpsScrollSpeed );
-    }
-
-    public float getMouseSpeed() {
-        return mouseSpeedMult;
-    }
-
-    public void setMouseSpeed( float newspeed ) {
-        if( newspeed < 0.30f ) newspeed = 0.3f;
-        else if( newspeed > 3.0f ) newspeed = 3.0f;
-        mouseSpeedMult = newspeed;
-        //log.debug( "Mouse speed: " + mouseSpeedMult );
-    }
+    //log.debug( "Mouse speed: " + mouseSpeedMult );
+    var mouseSpeed: Float
+        get() = mouseSpeedMult
+        set(newspeed) {
+            var newspeed = newspeed
+            if (newspeed < 0.30f) newspeed = 0.3f else if (newspeed > 3.0f) newspeed = 3.0f
+            mouseSpeedMult = newspeed
+            //log.debug( "Mouse speed: " + mouseSpeedMult );
+        }
 
     /*
      * Reset the input handler to first-person-shooter (FPS) style controls
      */
-    public void resetFPSInputs() {
-        InputHandler h = getInputHandler();
-        if(h == null) {
-            getLogger().error("InputHandler is null, cannot change bindings.");
-            return;
+    fun resetFPSInputs() {
+        val h = inputHandler
+        if (h == null) {
+            logger.error("InputHandler is null, cannot change bindings.")
+            return
         }
-
-        h.addBehaviour( "move_forward_scroll",
-                                        new MovementCommand( "move_forward", "forward", () -> getScene().findObserver(),
-                                                             getFPSSpeed() ) );
-        h.addBehaviour( "move_forward",
-                                        new MovementCommand( "move_forward", "forward", () -> getScene().findObserver(),
-                                                             getFPSSpeed() ) );
-        h.addBehaviour( "move_back",
-                                        new MovementCommand( "move_back", "back", () -> getScene().findObserver(),
-                                                             getFPSSpeed() ) );
-        h.addBehaviour( "move_left",
-                                        new MovementCommand( "move_left", "left", () -> getScene().findObserver(),
-                                                             getFPSSpeed() ) );
-        h.addBehaviour( "move_right",
-                                        new MovementCommand( "move_right", "right", () -> getScene().findObserver(),
-                                                             getFPSSpeed() ) );
-        h.addBehaviour( "move_up",
-                                        new MovementCommand( "move_up", "up", () -> getScene().findObserver(),
-                                                             getFPSSpeed() ) );
-        h.addBehaviour( "move_down",
-                                        new MovementCommand( "move_down", "down", () -> getScene().findObserver(),
-                                                             getFPSSpeed() ) );
-
-        h.addKeyBinding( "move_forward_scroll", "scroll" );
+        h.addBehaviour("move_forward_scroll",
+                MovementCommand("move_forward", "forward", { scene.findObserver() },
+                        fPSSpeed))
+        h.addBehaviour("move_forward",
+                MovementCommand("move_forward", "forward", { scene.findObserver() },
+                        fPSSpeed))
+        h.addBehaviour("move_back",
+                MovementCommand("move_back", "back", { scene.findObserver() },
+                        fPSSpeed))
+        h.addBehaviour("move_left",
+                MovementCommand("move_left", "left", { scene.findObserver() },
+                        fPSSpeed))
+        h.addBehaviour("move_right",
+                MovementCommand("move_right", "right", { scene.findObserver() },
+                        fPSSpeed))
+        h.addBehaviour("move_up",
+                MovementCommand("move_up", "up", { scene.findObserver() },
+                        fPSSpeed))
+        h.addBehaviour("move_down",
+                MovementCommand("move_down", "down", { scene.findObserver() },
+                        fPSSpeed))
+        h.addKeyBinding("move_forward_scroll", "scroll")
     }
 
-    public void setObjectSelectionMode() {
-        Function3<Scene.RaycastResult, Integer, Integer, Unit> selectAction = (nearest,x,y) -> {
-            if( !nearest.getMatches().isEmpty() ) {
-                setActiveNode( nearest.getMatches().get( 0 ).getNode() );
-                nodePropertyEditor.trySelectNode( getActiveNode() );
-                log.info( "Selected node: " + getActiveNode().getName() + " at " + x + "," + y);
+    fun setObjectSelectionMode() {
+        val selectAction: Function3<RaycastResult, Int, Int, Unit> = { (matches), x: Int, y: Int ->
+            if (!matches.isEmpty()) {
+                setActiveNode(matches[0].node)
+                nodePropertyEditor!!.trySelectNode(activeNode)
+                log!!.info("Selected node: " + activeNode!!.name + " at " + x + "," + y)
 
                 // Setup the context menu for this node
-
-                ContextPopUp menu = new ContextPopUp(nearest.getMatches().get(0).getNode());
-                menu.show(panel, x, y);
+                val menu = ContextPopUp(matches[0].node)
+                menu.show(sceneryJPanel, x, y)
             }
-            return Unit.INSTANCE;
-        };
-        setObjectSelectionMode(selectAction);
+        }
+        setObjectSelectionMode(selectAction)
     }
 
     /*
      * Set the action used during object selection
      */
-    public void setObjectSelectionMode(Function3<Scene.RaycastResult, Integer, Integer, Unit> selectAction) {
-        final InputHandler h = getInputHandler();
-        List<Class<?>> ignoredObjects = new ArrayList<>();
-        ignoredObjects.add( BoundingGrid.class );
-
-        if(h == null) {
-            getLogger().error("InputHandler is null, cannot change object selection mode.");
-            return;
+    fun setObjectSelectionMode(selectAction: Function3<RaycastResult, Int, Int, Unit>) {
+        val h = inputHandler
+        val ignoredObjects: MutableList<Class<*>> = ArrayList()
+        ignoredObjects.add(BoundingGrid::class.java)
+        if (h == null) {
+            logger.error("InputHandler is null, cannot change object selection mode.")
+            return
         }
-        h.addBehaviour( "object_selection_mode",
-                                        new SelectCommand( "objectSelector", getRenderer(), getScene(),
-                                                           () -> getScene().findObserver(), false, ignoredObjects,
-                                                           selectAction ) );
-        h.addKeyBinding( "object_selection_mode", "double-click button1" );
+        h.addBehaviour("object_selection_mode",
+                SelectCommand("objectSelector", renderer!!, scene,
+                        { scene.findObserver() }, false, ignoredObjects,
+                        selectAction))
+        h.addKeyBinding("object_selection_mode", "double-click button1")
     }
 
     /*
      * Initial configuration of the scenery InputHandler
      * This is automatically called and should not be used directly
      */
-    @Override public void inputSetup() {
-        final InputHandler h = getInputHandler();
-        if(h == null) {
-            getLogger().error("InputHandler is null, cannot run input setup.");
-            return;
+    override fun inputSetup() {
+        val h = inputHandler
+        if (h == null) {
+            logger.error("InputHandler is null, cannot run input setup.")
+            return
         }
 
         // TODO: Maybe get rid of this?
-        h.useDefaultBindings( "" );
+        h.useDefaultBindings("")
 
         // Mouse controls
-        setObjectSelectionMode();
-        NodeTranslateControl nodeTranslate = new NodeTranslateControl(this, 0.0005f);
-        h.addBehaviour( "mouse_control_nodetranslate", nodeTranslate );
-        h.addKeyBinding( "mouse_control_nodetranslate", "ctrl button1" );
-        h.addBehaviour( "scroll_nodetranslate", nodeTranslate );
-        h.addKeyBinding( "scroll_nodetranslate", "ctrl scroll" );
-
-        h.addBehaviour("move_up_slow", new MovementCommand("move_up", "up", () -> getScene().findObserver(), fpsScrollSpeed ) );
-        h.addBehaviour("move_down_slow", new MovementCommand("move_down", "down", () -> getScene().findObserver(), fpsScrollSpeed ) );
-        h.addBehaviour("move_up_fast", new MovementCommand("move_up", "up", () -> getScene().findObserver(), 1.0f ) );
-        h.addBehaviour("move_down_fast", new MovementCommand("move_down", "down", () -> getScene().findObserver(), 1.0f ) );
-
-        h.addKeyBinding("move_up_slow", "X");
-        h.addKeyBinding("move_down_slow", "C");
-        h.addKeyBinding("move_up_fast", "shift X");
-        h.addKeyBinding("move_down_fast", "shift C");
-
-        enableArcBallControl();
-        enableFPSControl();
+        setObjectSelectionMode()
+        val nodeTranslate = NodeTranslateControl(this, 0.0005f)
+        h.addBehaviour("mouse_control_nodetranslate", nodeTranslate)
+        h.addKeyBinding("mouse_control_nodetranslate", "ctrl button1")
+        h.addBehaviour("scroll_nodetranslate", nodeTranslate)
+        h.addKeyBinding("scroll_nodetranslate", "ctrl scroll")
+        h.addBehaviour("move_up_slow", MovementCommand("move_up", "up", { scene.findObserver() }, fpsScrollSpeed))
+        h.addBehaviour("move_down_slow", MovementCommand("move_down", "down", { scene.findObserver() }, fpsScrollSpeed))
+        h.addBehaviour("move_up_fast", MovementCommand("move_up", "up", { scene.findObserver() }, 1.0f))
+        h.addBehaviour("move_down_fast", MovementCommand("move_down", "down", { scene.findObserver() }, 1.0f))
+        h.addKeyBinding("move_up_slow", "X")
+        h.addKeyBinding("move_down_slow", "C")
+        h.addKeyBinding("move_up_fast", "shift X")
+        h.addKeyBinding("move_down_fast", "shift C")
+        enableArcBallControl()
+        enableFPSControl()
 
         // Extra keyboard controls
-        h.addBehaviour( "show_help", new showHelpDisplay() );
-        h.addKeyBinding( "show_help", "U" );
-
-        h.addBehaviour( "enable_decrease", new enableDecrease() );
-        h.addKeyBinding( "enable_decrease", "M" );
-
-        h.addBehaviour( "enable_increase", new enableIncrease() );
-        h.addKeyBinding( "enable_increase", "N" );
+        h.addBehaviour("show_help", showHelpDisplay())
+        h.addKeyBinding("show_help", "U")
+        h.addBehaviour("enable_decrease", enableDecrease())
+        h.addKeyBinding("enable_decrease", "M")
+        h.addBehaviour("enable_increase", enableIncrease())
+        h.addKeyBinding("enable_increase", "N")
 
         //float veryFastSpeed = getScene().getMaximumBoundingBox().getBoundingSphere().getRadius()/50f;
-        float veryFastSpeed = 100f;
-        h.addBehaviour("move_forward_veryfast", new MovementCommand("move_forward", "forward", () -> getScene().findObserver(), veryFastSpeed));
-        h.addBehaviour("move_back_veryfast", new MovementCommand("move_back", "back", () -> getScene().findObserver(), veryFastSpeed));
-        h.addBehaviour("move_left_veryfast", new MovementCommand("move_left", "left", () -> getScene().findObserver(), veryFastSpeed));
-        h.addBehaviour("move_right_veryfast", new MovementCommand("move_right", "right", () -> getScene().findObserver(), veryFastSpeed));
-        h.addBehaviour("move_up_veryfast", new MovementCommand("move_up", "up", () -> getScene().findObserver(), veryFastSpeed));
-        h.addBehaviour("move_down_veryfast", new MovementCommand("move_down", "down", () -> getScene().findObserver(), veryFastSpeed));
-
-        h.addKeyBinding("move_forward_veryfast", "ctrl shift W");
-        h.addKeyBinding("move_back_veryfast", "ctrl shift S");
-        h.addKeyBinding("move_left_veryfast", "ctrl shift A");
-        h.addKeyBinding("move_right_veryfast", "ctrl shift D");
-        h.addKeyBinding("move_up_veryfast", "ctrl shift X");
-        h.addKeyBinding("move_down_veryfast", "ctrl shift C");
-
+        val veryFastSpeed = 100f
+        h.addBehaviour("move_forward_veryfast", MovementCommand("move_forward", "forward", { scene.findObserver() }, veryFastSpeed))
+        h.addBehaviour("move_back_veryfast", MovementCommand("move_back", "back", { scene.findObserver() }, veryFastSpeed))
+        h.addBehaviour("move_left_veryfast", MovementCommand("move_left", "left", { scene.findObserver() }, veryFastSpeed))
+        h.addBehaviour("move_right_veryfast", MovementCommand("move_right", "right", { scene.findObserver() }, veryFastSpeed))
+        h.addBehaviour("move_up_veryfast", MovementCommand("move_up", "up", { scene.findObserver() }, veryFastSpeed))
+        h.addBehaviour("move_down_veryfast", MovementCommand("move_down", "down", { scene.findObserver() }, veryFastSpeed))
+        h.addKeyBinding("move_forward_veryfast", "ctrl shift W")
+        h.addKeyBinding("move_back_veryfast", "ctrl shift S")
+        h.addKeyBinding("move_left_veryfast", "ctrl shift A")
+        h.addKeyBinding("move_right_veryfast", "ctrl shift D")
+        h.addKeyBinding("move_up_veryfast", "ctrl shift X")
+        h.addKeyBinding("move_down_veryfast", "ctrl shift C")
     }
 
     /*
      * Change the control mode to circle around the active object in an arcball
      */
-    private void enableArcBallControl() {
-        final InputHandler h = getInputHandler();
-        if(h == null) {
-            getLogger().error("InputHandler is null, cannot setup arcball.");
-            return;
+    private fun enableArcBallControl() {
+        val h = inputHandler
+        if (h == null) {
+            logger.error("InputHandler is null, cannot setup arcball.")
+            return
         }
-
-        Vector3f target;
-        if( getActiveNode() == null ) {
-            target = new Vector3f( 0, 0, 0 );
+        val target: Vector3f
+        target = if (activeNode == null) {
+            Vector3f(0.0f, 0.0f, 0.0f)
         } else {
-            target = getActiveNode().getPosition();
+            activeNode!!.position
         }
-
-        float mouseSpeed = 0.25f;
-        mouseSpeed = getMouseSpeed();
-
-        Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
-        targetArcball = new ArcballCameraControl( "mouse_control_arcball", cameraSupplier,
-                                                  getRenderer().getWindow().getWidth(),
-                                                  getRenderer().getWindow().getHeight(), target );
-        targetArcball.setMaximumDistance( Float.MAX_VALUE );
-        targetArcball.setMouseSpeedMultiplier( mouseSpeed );
-        targetArcball.setScrollSpeedMultiplier( 0.05f );
-        targetArcball.setDistance( getCamera().getPosition().sub( target ).length() );
+        var mouseSpeed = 0.25f
+        mouseSpeed = mouseSpeed
+        val cameraSupplier = Supplier { scene.findObserver() }
+        targetArcball = ArcballCameraControl("mouse_control_arcball", cameraSupplier,
+                renderer!!.window.width,
+                renderer!!.window.height, target)
+        targetArcball!!.maximumDistance = Float.MAX_VALUE
+        targetArcball!!.mouseSpeedMultiplier = mouseSpeed
+        targetArcball!!.scrollSpeedMultiplier = 0.05f
+        targetArcball!!.distance = camera!!.position.sub(target).length()
 
         // FIXME: Swing seems to have issues with shift-scroll actions, so we change
-		//  this to alt-scroll here for the moment.
-        h.addBehaviour( "mouse_control_arcball", targetArcball );
-        h.addKeyBinding( "mouse_control_arcball", "shift button1" );
-        h.addBehaviour( "scroll_arcball", targetArcball );
-        h.addKeyBinding( "scroll_arcball", "shift scroll" );
+        //  this to alt-scroll here for the moment.
+        h.addBehaviour("mouse_control_arcball", targetArcball!!)
+        h.addKeyBinding("mouse_control_arcball", "shift button1")
+        h.addBehaviour("scroll_arcball", targetArcball!!)
+        h.addKeyBinding("scroll_arcball", "shift scroll")
     }
 
     /*
      * Enable FPS style controls
      */
-    private void enableFPSControl() {
-        final InputHandler h = getInputHandler();
-        if(h == null) {
-            getLogger().error("InputHandler is null, cannot setup fps control.");
-            return;
+    private fun enableFPSControl() {
+        val h = inputHandler
+        if (h == null) {
+            logger.error("InputHandler is null, cannot setup fps control.")
+            return
         }
-
-        Supplier<Camera> cameraSupplier = () -> getScene().findObserver();
-        fpsControl = new FPSCameraControl( "mouse_control", cameraSupplier, getRenderer().getWindow().getWidth(),
-                                           getRenderer().getWindow().getHeight() );
-
-        h.addBehaviour( "mouse_control", fpsControl );
-        h.addKeyBinding( "mouse_control", "button1" );
-
-        h.addBehaviour( "mouse_control_cameratranslate", new CameraTranslateControl( this, 0.002f ) );
-        h.addKeyBinding( "mouse_control_cameratranslate", "button2" );
-
-        resetFPSInputs();
+        val cameraSupplier = Supplier { scene.findObserver() }
+        fpsControl = FPSCameraControl("mouse_control", cameraSupplier, renderer!!.window.width,
+                renderer!!.window.height)
+        h.addBehaviour("mouse_control", fpsControl!!)
+        h.addKeyBinding("mouse_control", "button1")
+        h.addBehaviour("mouse_control_cameratranslate", CameraTranslateControl(this, 0.002f))
+        h.addKeyBinding("mouse_control_cameratranslate", "button2")
+        resetFPSInputs()
     }
-
-    /**
-     * Add a box to the scene with default parameters
-     * @return the Node corresponding to the box
-     */
-    public Node addBox() {
-        return addBox( new JOMLVector3( 0.0f, 0.0f, 0.0f ) );
-    }
-
-    /**
-     * Add a box at the specific position and unit size
-     * @param position position to put the box
-     * @return the Node corresponding to the box
-     */
-    public Node addBox( Vector3 position ) {
-        return addBox( position, new JOMLVector3( 1.0f, 1.0f, 1.0f ) );
-    }
-
-    /**
-     * Add a box at the specified position and with the specified size
-     * @param position position to put the box
-     * @param size size of the box
-     * @return the Node corresponding to the box
-     */
-    public Node addBox( Vector3 position, Vector3 size ) {
-        return addBox( position, size, DEFAULT_COLOR, false );
-    }
-
     /**
      * Add a box at the specified position with specified size, color, and normals on the inside/outside
      * @param position position to put the box
@@ -1084,39 +921,34 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param inside are normals inside the box?
      * @return the Node corresponding to the box
      */
-    public Node addBox( final Vector3 position, final Vector3 size, final ColorRGB color,
-                                         final boolean inside ) {
+    /**
+     * Add a box at the specified position and with the specified size
+     * @param position position to put the box
+     * @param size size of the box
+     * @return the Node corresponding to the box
+     */
+    /**
+     * Add a box at the specific position and unit size
+     * @param position position to put the box
+     * @return the Node corresponding to the box
+     */
+    /**
+     * Add a box to the scene with default parameters
+     * @return the Node corresponding to the box
+     */
+    @JvmOverloads
+    fun addBox(position: Vector3? = JOMLVector3(0.0f, 0.0f, 0.0f), size: Vector3? = JOMLVector3(1.0f, 1.0f, 1.0f), color: ColorRGB? = DEFAULT_COLOR,
+               inside: Boolean = false): Node {
         // TODO: use a material from the current palate by default
-        final Material boxmaterial = new Material();
-        boxmaterial.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
-        boxmaterial.setDiffuse( Utils.convertToVector3f( color ) );
-        boxmaterial.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-
-        final Box box = new Box( JOMLVector3.convert( size ), inside );
-        box.setMaterial( boxmaterial );
-        box.setPosition( JOMLVector3.convert( position ) );
-
-        return addNode( box );
+        val boxmaterial = Material()
+        boxmaterial.ambient = Vector3f(1.0f, 0.0f, 0.0f)
+        boxmaterial.diffuse = Utils.convertToVector3f(color)
+        boxmaterial.specular = Vector3f(1.0f, 1.0f, 1.0f)
+        val box = Box(JOMLVector3.convert(size), inside)
+        box.material = boxmaterial
+        box.position = JOMLVector3.convert(position)
+        return addNode(box)
     }
-
-    /**
-     * Add a unit sphere at the origin
-     * @return the Node corresponding to the sphere
-     */
-    public Node addSphere() {
-        return addSphere( new JOMLVector3( 0.0f, 0.0f, 0.0f ), 1 );
-    }
-
-    /**
-     * Add a sphere at the specified position with a given radius
-     * @param position position to put the sphere
-     * @param radius radius of the sphere
-     * @return the Node corresponding to the sphere
-     */
-    public Node addSphere( Vector3 position, float radius ) {
-        return addSphere( position, radius, DEFAULT_COLOR );
-    }
-
     /**
      * Add a sphere at the specified positoin with a given radius and color
      * @param position position to put the sphere
@@ -1124,17 +956,26 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param color color of the sphere
      * @return  the Node corresponding to the sphere
      */
-    public Node addSphere( final Vector3 position, final float radius, final ColorRGB color ) {
-        final Material material = new Material();
-        material.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
-        material.setDiffuse( Utils.convertToVector3f( color ) );
-        material.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-
-        final Sphere sphere = new Sphere( radius, 20 );
-        sphere.setMaterial( material );
-        sphere.setPosition( JOMLVector3.convert( position ) );
-
-        return addNode( sphere );
+    /**
+     * Add a sphere at the specified position with a given radius
+     * @param position position to put the sphere
+     * @param radius radius of the sphere
+     * @return the Node corresponding to the sphere
+     */
+    /**
+     * Add a unit sphere at the origin
+     * @return the Node corresponding to the sphere
+     */
+    @JvmOverloads
+    fun addSphere(position: Vector3? = JOMLVector3(0.0f, 0.0f, 0.0f), radius: Float = 1f, color: ColorRGB? = DEFAULT_COLOR): Node {
+        val material = Material()
+        material.ambient = Vector3f(1.0f, 0.0f, 0.0f)
+        material.diffuse = Utils.convertToVector3f(color)
+        material.specular = Vector3f(1.0f, 1.0f, 1.0f)
+        val sphere = Sphere(radius, 20)
+        sphere.material = material
+        sphere.position = JOMLVector3.convert(position)
+        return addNode(sphere)
     }
 
     /**
@@ -1145,10 +986,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param num_segments number of segments to represent the cylinder
      * @return  the Node corresponding to the cylinder
      */
-    public Node addCylinder( final Vector3 position, final float radius, final float height, final int num_segments ) {
-        final Cylinder cyl = new Cylinder( radius, height, num_segments );
-        cyl.setPosition( JOMLVector3.convert( position ) );
-        return addNode( cyl );
+    fun addCylinder(position: Vector3?, radius: Float, height: Float, num_segments: Int): Node {
+        val cyl = Cylinder(radius, height, num_segments)
+        cyl.position = JOMLVector3.convert(position)
+        return addNode(cyl)
     }
 
     /**
@@ -1159,28 +1000,10 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param num_segments number of segments used to represent cone
      * @return  the Node corresponding to the cone
      */
-    public Node addCone( final Vector3 position, final float radius, final float height, final int num_segments ) {
-        final Cone cone = new Cone( radius, height, num_segments, new Vector3f(0,0,1) );
-        cone.setPosition( JOMLVector3.convert( position ) );
-        return addNode( cone );
-    }
-
-    /**
-     * Add a Line from 0,0,0 to 1,1,1
-     * @return  the Node corresponding to the line
-     */
-    public Node addLine() {
-        return addLine( new JOMLVector3( 0.0f, 0.0f, 0.0f ), new JOMLVector3( 1.0f, 1.0f, 1.0f ) );
-    }
-
-    /**
-     * Add a line from start to stop
-     * @param start start position of line
-     * @param stop stop position of line
-     * @return  the Node corresponding to the line
-     */
-    public Node addLine( Vector3 start, Vector3 stop ) {
-        return addLine( start, stop, DEFAULT_COLOR );
+    fun addCone(position: Vector3?, radius: Float, height: Float, num_segments: Int): Node {
+        val cone = Cone(radius, height, num_segments, Vector3f(0.0f, 0.0f, 1.0f))
+        cone.position = JOMLVector3.convert(position)
+        return addNode(cone)
     }
 
     /**
@@ -1190,8 +1013,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param color color of line
      * @return the Node corresponding to the line
      */
-    public Node addLine( Vector3 start, Vector3 stop, ColorRGB color ) {
-        return addLine( new Vector3[] { start, stop }, color, 0.1f );
+    @JvmOverloads
+    fun addLine(start: Vector3 = JOMLVector3(0.0f, 0.0f, 0.0f), stop: Vector3 = JOMLVector3(1.0f, 1.0f, 1.0f), color: ColorRGB? = DEFAULT_COLOR): Node {
+        return addLine(arrayOf(start, stop), color, 0.1)
     }
 
     /**
@@ -1201,59 +1025,51 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param edgeWidth width of line segments
      * @return the Node corresponding to the line
      */
-    public Node addLine( final Vector3[] points, final ColorRGB color, final double edgeWidth ) {
-        final Material material = new Material();
-        material.setAmbient( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-        material.setDiffuse( Utils.convertToVector3f( color ) );
-        material.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-
-        final Line line = new Line( points.length );
-        for( final Vector3 pt : points ) {
-            line.addPoint( JOMLVector3.convert( pt ) );
+    fun addLine(points: Array<Vector3>, color: ColorRGB?, edgeWidth: Double): Node {
+        val material = Material()
+        material.ambient = Vector3f(1.0f, 1.0f, 1.0f)
+        material.diffuse = Utils.convertToVector3f(color)
+        material.specular = Vector3f(1.0f, 1.0f, 1.0f)
+        val line = Line(points.size)
+        for (pt in points) {
+            line.addPoint(JOMLVector3.convert(pt))
         }
-
-        line.setEdgeWidth( ( float ) edgeWidth );
-
-        line.setMaterial( material );
-        line.setPosition( JOMLVector3.convert( points[0] ) );
-
-        return addNode( line );
+        line.edgeWidth = edgeWidth.toFloat()
+        line.material = material
+        line.position = JOMLVector3.convert(points[0])
+        return addNode(line)
     }
 
     /**
      * Add a PointLight source at the origin
      * @return a Node corresponding to the PointLight
      */
-    public Node addPointLight() {
-        final Material material = new Material();
-        material.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
-        material.setDiffuse( new Vector3f( 0.0f, 1.0f, 0.0f ) );
-        material.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-
-        final PointLight light = new PointLight( 5.0f );
-        light.setMaterial( material );
-        light.setPosition( new Vector3f( 0.0f, 0.0f, 0.0f ) );
-        lights.add(light);
-
-        return addNode( light );
+    fun addPointLight(): Node {
+        val material = Material()
+        material.ambient = Vector3f(1.0f, 0.0f, 0.0f)
+        material.diffuse = Vector3f(0.0f, 1.0f, 0.0f)
+        material.specular = Vector3f(1.0f, 1.0f, 1.0f)
+        val light = PointLight(5.0f)
+        light.material = material
+        light.position = Vector3f(0.0f, 0.0f, 0.0f)
+        lights!!.add(light)
+        return addNode(light)
     }
 
     /**
      * Position all lights that were initialized by default around the scene in a circle at Y=0
      */
-    public void surroundLighting() {
-        OrientedBoundingBox bb = getSubgraphBoundingBox(getScene(), notAbstractBranchingFunction);
-        OrientedBoundingBox.BoundingSphere boundingSphere = bb.getBoundingSphere();
+    fun surroundLighting() {
+        val bb = getSubgraphBoundingBox(scene, notAbstractBranchingFunction)
+        val (c, r) = bb!!.getBoundingSphere()
         // Choose a good y-position, then place lights around the cross-section through this plane
-        float y = 0;
-        Vector3f c = boundingSphere.getOrigin();
-        float r = boundingSphere.getRadius();
-        for( int k = 0; k < lights.size(); k++ ) {
-            PointLight light = lights.get(k);
-            float x = (float) (c.x() + r * Math.cos( k == 0 ? 0 : Math.PI * 2 * ((float)k / (float)lights.size()) ));
-            float z = (float) (c.y() + r * Math.sin( k == 0 ? 0 : Math.PI * 2 * ((float)k / (float)lights.size()) ));
-            light.setLightRadius( 2 * r );
-            light.setPosition( new Vector3f( x, y, z ) );
+        val y = 0f
+        for (k in lights!!.indices) {
+            val light = lights!![k]
+            val x = (c.x() + r * cos(if (k == 0) 0.0 else Math.PI * 2 * (k.toFloat() / lights!!.size.toFloat()))).toFloat()
+            val z = (c.y() + r * sin(if (k == 0) 0.0 else Math.PI * 2 * (k.toFloat() / lights!!.size.toFloat()))).toFloat()
+            light.lightRadius = 2 * r
+            light.position = Vector3f(x, y, z)
         }
     }
 
@@ -1262,44 +1078,40 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param filename filename of the stl
      * @param scMesh mesh to save
      */
-    public void writeSCMesh( String filename, Mesh scMesh ) {
-        File f = new File( filename );
-        BufferedOutputStream out;
+    fun writeSCMesh(filename: String?, scMesh: graphics.scenery.Mesh) {
+        val f = File(filename)
+        val out: BufferedOutputStream
         try {
-            out = new BufferedOutputStream( new FileOutputStream( f ) );
-            out.write( "solid STL generated by FIJI\n".getBytes() );
-
-            FloatBuffer normalsFB = scMesh.getNormals();
-            FloatBuffer verticesFB = scMesh.getVertices();
-
-            while( verticesFB.hasRemaining() && normalsFB.hasRemaining() ) {
-                out.write( ( "facet normal " + normalsFB.get() + " " + normalsFB.get() + " " + normalsFB.get() +
-                             "\n" ).getBytes() );
-                out.write( "outer loop\n".getBytes() );
-                for( int v = 0; v < 3; v++ ) {
-                    out.write( ( "vertex\t" + verticesFB.get() + " " + verticesFB.get() + " " + verticesFB.get() +
-                                 "\n" ).getBytes() );
+            out = BufferedOutputStream(FileOutputStream(f))
+            out.write("solid STL generated by FIJI\n".toByteArray())
+            val normalsFB = scMesh.normals
+            val verticesFB = scMesh.vertices
+            while (verticesFB.hasRemaining() && normalsFB.hasRemaining()) {
+                out.write("""facet normal ${normalsFB.get()} ${normalsFB.get()} ${normalsFB.get()}
+""".toByteArray())
+                out.write("outer loop\n".toByteArray())
+                for (v in 0..2) {
+                    out.write("""vertex	${verticesFB.get()} ${verticesFB.get()} ${verticesFB.get()}
+""".toByteArray())
                 }
-                out.write( "endloop\n".getBytes() );
-                out.write( "endfacet\n".getBytes() );
+                out.write("endloop\n".toByteArray())
+                out.write("endfacet\n".toByteArray())
             }
-            out.write( "endsolid vcg\n".getBytes() );
-            out.close();
-        } catch( FileNotFoundException e ) {
-            e.printStackTrace();
-        } catch( IOException e ) {
-            e.printStackTrace();
+            out.write("endsolid vcg\n".toByteArray())
+            out.close()
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
-
     }
 
     /**
      * Return the default point size to use for point clouds
      * @return default point size used for point clouds
      */
-    public float getDefaultPointSize() {
-        return 0.025f;
-    }
+    private val defaultPointSize: Float
+        get() = 0.025f
 
     /**
      * Create an array of normal vectors from a set of vertices corresponding to triangles
@@ -1307,27 +1119,28 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param verts vertices to use for computing normals, assumed to be ordered as triangles
      * @return array of normals
      */
-    public float[] makeNormalsFromVertices( ArrayList<RealPoint> verts ) {
-        float[] normals = new float[verts.size()];// div3 * 3coords
-
-        for( int k = 0; k < verts.size(); k += 3 ) {
-            Vector3f v1 = new Vector3f( verts.get( k ).getFloatPosition( 0 ), //
-                                        verts.get( k ).getFloatPosition( 1 ), //
-                                        verts.get( k ).getFloatPosition( 2 ) );
-            Vector3f v2 = new Vector3f( verts.get( k + 1 ).getFloatPosition( 0 ),
-                                        verts.get( k + 1 ).getFloatPosition( 1 ),
-                                        verts.get( k + 1 ).getFloatPosition( 2 ) );
-            Vector3f v3 = new Vector3f( verts.get( k + 2 ).getFloatPosition( 0 ),
-                                        verts.get( k + 2 ).getFloatPosition( 1 ),
-                                        verts.get( k + 2 ).getFloatPosition( 2 ) );
-            Vector3f a = v2.sub( v1 );
-            Vector3f b = v3.sub( v1 );
-            Vector3f n = a.cross( b ).normalize();
-            normals[k / 3] = n.get( 0 );
-            normals[k / 3 + 1] = n.get( 1 );
-            normals[k / 3 + 2] = n.get( 2 );
+    fun makeNormalsFromVertices(verts: ArrayList<RealPoint>): FloatArray {
+        val normals = FloatArray(verts.size) // div3 * 3coords
+        var k = 0
+        while (k < verts.size) {
+            val v1 = Vector3f(verts[k].getFloatPosition(0),  //
+                    verts[k].getFloatPosition(1),  //
+                    verts[k].getFloatPosition(2))
+            val v2 = Vector3f(verts[k + 1].getFloatPosition(0),
+                    verts[k + 1].getFloatPosition(1),
+                    verts[k + 1].getFloatPosition(2))
+            val v3 = Vector3f(verts[k + 2].getFloatPosition(0),
+                    verts[k + 2].getFloatPosition(1),
+                    verts[k + 2].getFloatPosition(2))
+            val a = v2.sub(v1)
+            val b = v3.sub(v1)
+            val n = a.cross(b).normalize()
+            normals[k / 3] = n[0]
+            normals[k / 3 + 1] = n[1]
+            normals[k / 3 + 2] = n[2]
+            k += 3
         }
-        return normals;
+        return normals
     }
 
     /**
@@ -1335,48 +1148,42 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param source string of a data source
      * @throws IOException
      */
-    public void open( final String source ) throws IOException {
-        if(source.endsWith(".xml")) {
-            addNode(Volume.Companion.fromXML(source, getHub(), new VolumeViewerOptions()));
-            return;
+    @Throws(IOException::class)
+    fun open(source: String) {
+        if (source.endsWith(".xml")) {
+            addNode(fromXML(source, hub, VolumeViewerOptions()))
+            return
         }
-
-        final Object data = io.open( source );
-        if( data instanceof net.imagej.mesh.Mesh ) addMesh( ( net.imagej.mesh.Mesh ) data );
-        else if( data instanceof Mesh ) addMesh( ( Mesh ) data );
-        else if( data instanceof PointCloud ) addPointCloud( ( PointCloud ) data );
-        else if( data instanceof Dataset ) addVolume( ( Dataset ) data );
-        else if( data instanceof RandomAccessibleInterval ) addVolume( ( ( RandomAccessibleInterval ) data ), source );
-        else if( data instanceof List ) {
-            final List<?> list = ( List<?> ) data;
-            if( list.isEmpty() ) {
-                throw new IllegalArgumentException( "Data source '" + source + "' appears empty." );
-            }
-            final Object element = list.get( 0 );
-            if( element instanceof RealLocalizable ) {
+        val data = io!!.open(source)
+        if (data is Mesh)
+            addMesh(data)
+        else if (data is graphics.scenery.Mesh)
+            addMesh(data)
+        else if (data is PointCloud)
+            addPointCloud(data)
+        else if (data is Dataset)
+            addVolume(data)
+        else if (data is RandomAccessibleInterval<*>)
+            addVolume(data as RandomAccessibleInterval<RealType<*>>, source)
+        else if (data is List<*>) {
+            val list = data
+            require(!list.isEmpty()) { "Data source '$source' appears empty." }
+            val element = list[0]
+            if (element is RealLocalizable) {
                 // NB: For now, we assume all elements will be RealLocalizable.
                 // Highly likely to be the case, barring antagonistic importers.
-                @SuppressWarnings("unchecked") final List<? extends RealLocalizable> points = ( List<? extends RealLocalizable> ) list;
-                addPointCloud( points, source );
+                val points = list as List<RealLocalizable>
+                addPointCloud(points, source)
             } else {
-                final String type = element == null ? "<null>" : element.getClass().getName();
-                throw new IllegalArgumentException( "Data source '" + source + //
-                                                    "' contains elements of unknown type '" + type + "'" );
+                val type = if (element == null) "<null>" else element.javaClass.name
+                throw IllegalArgumentException("Data source '" + source +  //
+                        "' contains elements of unknown type '" + type + "'")
             }
         } else {
-            final String type = data == null ? "<null>" : data.getClass().getName();
-            throw new IllegalArgumentException( "Data source '" + source + //
-                                                "' contains data of unknown type '" + type + "'" );
+            val type = if (data == null) "<null>" else data.javaClass.name
+            throw IllegalArgumentException("Data source '" + source +  //
+                    "' contains data of unknown type '" + type + "'")
         }
-    }
-
-    /**
-     * Add the given points to the scene as a PointCloud
-     * @param points points to use in a PointCloud
-     * @return a Node corresponding to the PointCloud
-     */
-    public Node addPointCloud( Collection<? extends RealLocalizable> points ) {
-        return addPointCloud( points, "PointCloud" );
     }
 
     /**
@@ -1385,36 +1192,33 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param name name of the PointCloud
      * @return
      */
-    public Node addPointCloud( final Collection<? extends RealLocalizable> points,
-                                                final String name ) {
-        final float[] flatVerts = new float[points.size() * 3];
-        int k = 0;
-        for( final RealLocalizable point : points ) {
-            flatVerts[k * 3] = point.getFloatPosition( 0 );
-            flatVerts[k * 3 + 1] = point.getFloatPosition( 1 );
-            flatVerts[k * 3 + 2] = point.getFloatPosition( 2 );
-            k++;
+    @JvmOverloads
+    fun addPointCloud(points: Collection<RealLocalizable>,
+                      name: String? = "PointCloud"): Node {
+        val flatVerts = FloatArray(points.size * 3)
+        var k = 0
+        for (point in points) {
+            flatVerts[k * 3] = point.getFloatPosition(0)
+            flatVerts[k * 3 + 1] = point.getFloatPosition(1)
+            flatVerts[k * 3 + 2] = point.getFloatPosition(2)
+            k++
         }
-
-        final PointCloud pointCloud = new PointCloud( getDefaultPointSize(), name );
-        final Material material = new Material();
-        final FloatBuffer vBuffer = BufferUtils.allocateFloat( flatVerts.length * 4 );
-        final FloatBuffer nBuffer = BufferUtils.allocateFloat( 0 );
-
-        vBuffer.put( flatVerts );
-        vBuffer.flip();
-
-        pointCloud.setVertices( vBuffer );
-        pointCloud.setNormals( nBuffer );
-        pointCloud.setIndices( BufferUtils.allocateInt( 0 ) );
-        pointCloud.setupPointCloud();
-        material.setAmbient( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-        material.setDiffuse( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-        material.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-        pointCloud.setMaterial( material );
-        pointCloud.setPosition( new Vector3f( 0f, 0f, 0f ) );
-
-        return addNode( pointCloud );
+        val pointCloud = PointCloud(defaultPointSize, name!!)
+        val material = Material()
+        val vBuffer: FloatBuffer = BufferUtils.allocateFloat(flatVerts.size * 4)
+        val nBuffer: FloatBuffer = BufferUtils.allocateFloat(0)
+        vBuffer.put(flatVerts)
+        vBuffer.flip()
+        pointCloud.vertices = vBuffer
+        pointCloud.normals = nBuffer
+        pointCloud.indices = BufferUtils.allocateInt(0)
+        pointCloud.setupPointCloud()
+        material.ambient = Vector3f(1.0f, 1.0f, 1.0f)
+        material.diffuse = Vector3f(1.0f, 1.0f, 1.0f)
+        material.specular = Vector3f(1.0f, 1.0f, 1.0f)
+        pointCloud.material = material
+        pointCloud.position = Vector3f(0f, 0f, 0f)
+        return addNode(pointCloud)
     }
 
     /**
@@ -1422,23 +1226,13 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param pointCloud existing PointCloud to add to scene
      * @return a Node corresponding to the PointCloud
      */
-    public Node addPointCloud( final PointCloud pointCloud ) {
-        pointCloud.setupPointCloud();
-        pointCloud.getMaterial().setAmbient( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-        pointCloud.getMaterial().setDiffuse( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-        pointCloud.getMaterial().setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-        pointCloud.setPosition( new Vector3f( 0f, 0f, 0f ) );
-
-        return addNode( pointCloud );
-    }
-
-    /**
-     * Add a Node to the scene and publish it to the eventservice
-     * @param n node to add to scene
-     * @return a Node corresponding to the Node
-     */
-    public Node addNode( final Node n ) {
-        return addNode(n, true);
+    fun addPointCloud(pointCloud: PointCloud): Node {
+        pointCloud.setupPointCloud()
+        pointCloud.material.ambient = Vector3f(1.0f, 1.0f, 1.0f)
+        pointCloud.material.diffuse = Vector3f(1.0f, 1.0f, 1.0f)
+        pointCloud.material.specular = Vector3f(1.0f, 1.0f, 1.0f)
+        pointCloud.position = Vector3f(0f, 0f, 0f)
+        return addNode(pointCloud)
     }
 
     /**
@@ -1447,26 +1241,23 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param activePublish flag to specify whether the node becomes active *and* is published in the inspector/services
      * @return a Node corresponding to the Node
      */
-    public Node addNode( final Node n, final boolean activePublish ) {
-        getScene().addChild( n );
-
-        objectService.addObject(n);
-
-        if( blockOnNewNodes ) {
-            blockWhile(sciView -> (sciView.find(n.getName()) == null), 20);
+    @JvmOverloads
+    fun addNode(n: Node, activePublish: Boolean = true): Node {
+        scene.addChild(n)
+        objectService?.addObject(n)
+        if (blockOnNewNodes) {
+            blockWhile({ sciView: SciView -> sciView.find(n.name) == null }, 20)
             //System.out.println("find(name) " + find(n.getName()) );
         }
-
-        if( activePublish ) {
+        if (activePublish) {
             // Set new node as active and center
-            if( getCenterOnNewNodes() ) {
-                setActiveNode(n);
-                centerOnNode(n);
+            if (centerOnNewNodes) {
+                setActiveNode(n)
+                centerOnNode(n)
             }
-
-            eventService.publish(new NodeAddedEvent(n));
+            eventService!!.publish(NodeAddedEvent(n))
         }
-        return n;
+        return n
     }
 
     /**
@@ -1474,18 +1265,15 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param scMesh scenery mesh to add to scene
      * @return a Node corresponding to the mesh
      */
-    public Node addMesh( final Mesh scMesh ) {
-        final Material material = new Material();
-        material.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
-        material.setDiffuse( new Vector3f( 0.0f, 1.0f, 0.0f ) );
-        material.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-
-        scMesh.setMaterial( material );
-        scMesh.setPosition( new Vector3f( 0.0f, 0.0f, 0.0f ) );
-
-        objectService.addObject(scMesh);
-
-        return addNode( scMesh );
+    fun addMesh(scMesh: graphics.scenery.Mesh): Node {
+        val material = Material()
+        material.ambient = Vector3f(1.0f, 0.0f, 0.0f)
+        material.diffuse = Vector3f(0.0f, 1.0f, 0.0f)
+        material.specular = Vector3f(1.0f, 1.0f, 1.0f)
+        scMesh.material = material
+        scMesh.position = Vector3f(0.0f, 0.0f, 0.0f)
+        objectService?.addObject(scMesh)
+        return addNode(scMesh)
     }
 
     /**
@@ -1493,10 +1281,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param mesh net.imagej.mesh to add to scene
      * @return a Node corresponding to the mesh
      */
-    public Node addMesh( net.imagej.mesh.Mesh mesh ) {
-        Mesh scMesh = MeshConverter.toScenery( mesh );
-
-        return addMesh( scMesh );
+    fun addMesh(mesh: Mesh?): Node {
+        val scMesh = MeshConverter.toScenery(mesh)
+        return addMesh(scMesh)
     }
 
     /**
@@ -1504,15 +1291,8 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * Remove a Mesh from the scene
      * @param scMesh mesh to remove from scene
      */
-    public void removeMesh( Mesh scMesh ) {
-        getScene().removeChild( scMesh );
-    }
-
-    /**
-     * @return a Node corresponding to the currently active node
-     */
-    public Node getActiveNode() {
-        return activeNode;
+    fun removeMesh(scMesh: graphics.scenery.Mesh?) {
+        scene.removeChild(scMesh!!)
     }
 
     /**
@@ -1520,43 +1300,40 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param n existing node that should become active focus of this SciView
      * @return the currently active node
      */
-    public Node setActiveNode( Node n ) {
-        if( activeNode == n ) return activeNode;
-        activeNode = n;
-        targetArcball.setTarget( n == null ? () -> new Vector3f( 0, 0, 0 ) : () -> n.getMaximumBoundingBox().getBoundingSphere().getOrigin());
-        eventService.publish( new NodeActivatedEvent( activeNode ) );
-
-        return activeNode;
+    fun setActiveNode(n: Node?): Node? {
+        if (activeNode === n) return activeNode
+        activeNode = n
+        targetArcball!!.target = { n?.getMaximumBoundingBox()?.getBoundingSphere()?.origin ?: Vector3f(0.0f, 0.0f, 0.0f) }
+        eventService!!.publish(NodeActivatedEvent(activeNode))
+        return activeNode
     }
 
     @EventHandler
-    protected void onNodeAdded(NodeAddedEvent event) {
-        nodePropertyEditor.rebuildTree();
+    protected fun onNodeAdded(event: NodeAddedEvent?) {
+        nodePropertyEditor!!.rebuildTree()
     }
 
     @EventHandler
-    protected void onNodeRemoved(NodeRemovedEvent event) {
-        nodePropertyEditor.rebuildTree();
+    protected fun onNodeRemoved(event: NodeRemovedEvent?) {
+        nodePropertyEditor!!.rebuildTree()
     }
 
     @EventHandler
-    protected void onNodeChanged(NodeChangedEvent event) {
-    	nodePropertyEditor.rebuildTree();
+    protected fun onNodeChanged(event: NodeChangedEvent?) {
+        nodePropertyEditor!!.rebuildTree()
     }
 
     @EventHandler
-    protected void onNodeActivated(NodeActivatedEvent event) {
+    protected fun onNodeActivated(event: NodeActivatedEvent?) {
         // TODO: add listener code for node activation, if necessary
         // NOTE: do not update property window here, this will lead to a loop.
     }
 
-    public void toggleInspectorWindow()
-    {
-        toggleSidebar();
+    fun toggleInspectorWindow() {
+        toggleSidebar()
     }
 
-    public void setInspectorWindowVisibility(boolean visible)
-    {
+    fun setInspectorWindowVisibility(visible: Boolean) {
 //        inspector.setVisible(visible);
 //        if( visible )
 //            mainSplitPane.setDividerLocation(getWindowWidth()/4 * 3);
@@ -1564,8 +1341,7 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 //            mainSplitPane.setDividerLocation(getWindowWidth());
     }
 
-    public void setInterpreterWindowVisibility(boolean visible)
-    {
+    fun setInterpreterWindowVisibility(visible: Boolean) {
 //        interpreterPane.getComponent().setVisible(visible);
 //        if( visible )
 //            interpreterSplitPane.setDividerLocation(getWindowHeight()/10 * 6);
@@ -1573,210 +1349,199 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
 //            interpreterSplitPane.setDividerLocation(getWindowHeight());
     }
 
-
     /**
      * Create an animation thread with the given fps speed and the specified action
      * @param fps frames per second at which this action should be run
      * @param action Runnable that contains code to run fps times per second
      * @return a Future corresponding to the thread
      */
-    public synchronized Future<?> animate(int fps, Runnable action ) {
+    @Synchronized
+    fun animate(fps: Int, action: Runnable): Future<*> {
         // TODO: Make animation speed less laggy and more accurate.
-        final int delay = 1000 / fps;
-        Future<?> thread = threadService.run(() -> {
+        val delay = 1000 / fps
+        val thread = threadService!!.run {
             while (animating) {
-                action.run();
+                action.run()
                 try {
-                    Thread.sleep(delay);
-                } catch (InterruptedException e) {
-                    break;
+                    Thread.sleep(delay.toLong())
+                } catch (e: InterruptedException) {
+                    break
                 }
             }
-        });
-        animations.add( thread );
-        animating = true;
-        return thread;
+        }
+        animations!!.add(thread)
+        animating = true
+        return thread
     }
 
     /**
      * Stop all animations
      */
-    public synchronized void stopAnimation() {
-        animating = false;
-        while( !animations.isEmpty() ) {
-            animations.peek().cancel( true );
-            animations.remove();
+    @Synchronized
+    fun stopAnimation() {
+        animating = false
+        while (!animations!!.isEmpty()) {
+            animations!!.peek().cancel(true)
+            animations!!.remove()
         }
     }
 
     /**
      * Take a screenshot and save it to the default scenery location
      */
-    public void takeScreenshot() {
-        getRenderer().screenshot();
+    fun takeScreenshot() {
+        renderer!!.screenshot()
     }
 
     /**
      * Take a screenshot and save it to the specified path
      * @param path path for saving the screenshot
      */
-    public void takeScreenshot( String path ) {
-        getRenderer().screenshot( path, false );
+    fun takeScreenshot(path: String?) {
+        renderer!!.screenshot(path!!, false)
     }
 
     /**
      * Take a screenshot and return it as an Img
      * @return an Img of type UnsignedByteType
      */
-    public Img<UnsignedByteType> getScreenshot() {
-        RenderedImage screenshot = getSceneryRenderer().requestScreenshot();
-
-        BufferedImage image = new BufferedImage(screenshot.getWidth(), screenshot.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
-        byte[] imgData = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
-        System.arraycopy(screenshot.getData(), 0, imgData, 0, screenshot.getData().length);
-
-        Img<UnsignedByteType> img = null;
-        File tmpFile = null;
-        try {
-            tmpFile = File.createTempFile("sciview-", "-tmp.png");
-            ImageIO.write(image, "png", tmpFile);
-            img = (Img<UnsignedByteType>)io.open(tmpFile.getAbsolutePath());
-            tmpFile.delete();
-        } catch (IOException e) {
-            e.printStackTrace();
+    val screenshot: Img<UnsignedByteType?>?
+        get() {
+            val screenshot = getSceneryRenderer()!!.requestScreenshot()
+            val image = BufferedImage(screenshot.width, screenshot.height, BufferedImage.TYPE_4BYTE_ABGR)
+            val imgData = (image.raster.dataBuffer as DataBufferByte).data
+            System.arraycopy(screenshot.data, 0, imgData, 0, screenshot.data!!.size)
+            var img: Img<UnsignedByteType?>? = null
+            var tmpFile: File? = null
+            try {
+                tmpFile = File.createTempFile("sciview-", "-tmp.png")
+                ImageIO.write(image, "png", tmpFile)
+                img = io!!.open(tmpFile.absolutePath) as Img<UnsignedByteType?>
+                tmpFile.delete()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+            return img
         }
-        return img;
-    }
 
     /**
      * Take a screenshot and return it as an Img
      * @return an Img of type UnsignedByteType
      */
-    public Img<ARGBType> getARGBScreenshot() {
-        Img<UnsignedByteType> screenshot = getScreenshot();
-
-        return Utils.convertToARGB(screenshot);
-    }
+    val aRGBScreenshot: Img<ARGBType>
+        get() {
+            val screenshot = screenshot
+            return Utils.convertToARGB(screenshot)
+        }
 
     /**
      * @param name The name of the node to find.
      * @return the node object or null, if the node has not been found.
      */
-    public Node find(final String name) {
-        final Node n = getScene().find(name);
-
-        if(n == null) {
-            getLogger().warn("Node with name " + name + " not found.");
+    fun find(name: String): Node? {
+        val n = scene.find(name)
+        if (n == null) {
+            logger.warn("Node with name $name not found.")
         }
-
-        return n;
+        return n
     }
 
     /**
      * @return an array of all nodes in the scene except Cameras and PointLights
      */
-    public Node[] getSceneNodes() {
-        return getSceneNodes( n -> !( n instanceof Camera ) && !( n instanceof PointLight  ) );
-    }
+    val sceneNodes: Array<Node>
+        get() = getSceneNodes { n: Node? -> n !is Camera && n !is PointLight }
 
     /**
      * Get a list of nodes filtered by filter predicate
      * @param filter, a predicate that filters the candidate nodes
      * @return all nodes that match the predicate
      */
-    public Node[] getSceneNodes( Predicate<? super Node> filter ) {
-        return getScene().getChildren().stream().filter( filter ).toArray( Node[]::new );
+    fun getSceneNodes(filter: Predicate<in Node>): Array<Node> {
+        return scene.children.filter{ filter.test(it) }.toTypedArray()
     }
 
     /**
      * @return an array of all Node's in the scene
      */
-    public Node[] getAllSceneNodes() {
-        return getSceneNodes( n -> true );
-    }
+    val allSceneNodes: Array<Node>
+        get() = getSceneNodes { n: Node? -> true }
 
     /**
      * Delete the current active node
      */
-    public void deleteActiveNode() {
-        deleteNode( getActiveNode() );
+    fun deleteActiveNode() {
+        deleteNode(activeNode)
     }
-
-    /**
-     * Delete the specified node, this event is published
-     * @param node node to delete from scene
-     */
-    public void deleteNode( Node node ) {
-        deleteNode( node, true );
-    }
-
     /**
      * Delete a specified node and control whether the event is published
      * @param node node to delete from scene
      * @param activePublish whether the deletion should be published
      */
-    public void deleteNode( Node node, boolean activePublish ) {
-        for( Node child : node.getChildren() ) {
-            deleteNode(child, activePublish);
+    /**
+     * Delete the specified node, this event is published
+     * @param node node to delete from scene
+     */
+    @JvmOverloads
+    fun deleteNode(node: Node?, activePublish: Boolean = true) {
+        for (child in node!!.children) {
+            deleteNode(child, activePublish)
         }
-
-        objectService.removeObject(node);
-        node.getParent().removeChild( node );
-        if( activePublish ) {
-            eventService.publish(new NodeRemovedEvent(node));
-            if (activeNode == node) setActiveNode(null);
+        objectService?.removeObject(node)
+        node.parent!!.removeChild(node)
+        if (activePublish) {
+            eventService!!.publish(NodeRemovedEvent(node))
+            if (activeNode === node) setActiveNode(null)
         }
     }
 
     /**
      * Dispose the current scenery renderer, hub, and other scenery things
      */
-    public void dispose() {
-        List<Node> objs = objectService.getObjects(Node.class);
-        for( Node obj : objs ) {
-            objectService.removeObject(obj);
+    fun dispose() {
+        val objs: List<Node> = objectService!!.getObjects(Node::class.java)
+        for (obj in objs) {
+            objectService?.removeObject(obj)
         }
-        getScijavaContext().service(SciViewService.class).close(this);
-        this.close();
+        scijavaContext!!.service(SciViewService::class.java).close(this)
+        close()
     }
 
-
-    public void close() {
-        super.close();
-
-        frame.dispose();
-    }
-
-    /**
-     * Move the current active camera to the specified position
-     * @param position position to move the camera to
-     */
-    public void moveCamera( float[] position ) {
-        getCamera().setPosition( new Vector3f( position[0], position[1], position[2] ) );
+    override fun close() {
+        super.close()
+        frame!!.dispose()
     }
 
     /**
      * Move the current active camera to the specified position
      * @param position position to move the camera to
      */
-    public void moveCamera( double[] position ) {
-        getCamera().setPosition( new Vector3f( ( float ) position[0], ( float ) position[1], ( float ) position[2] ) );
+    fun moveCamera(position: FloatArray) {
+        camera!!.position = Vector3f(position[0], position[1], position[2])
+    }
+
+    /**
+     * Move the current active camera to the specified position
+     * @param position position to move the camera to
+     */
+    fun moveCamera(position: DoubleArray) {
+        camera!!.position = Vector3f(position[0].toFloat(), position[1].toFloat(), position[2].toFloat())
     }
 
     /**
      * Get the current application name
      * @return a String of the application name
      */
-    public String getName() {
-        return getApplicationName();
+    fun getName(): String {
+        return applicationName
     }
 
     /**
      * Add a child to the scene. you probably want addNode
      * @param node node to add as a child to the scene
      */
-    public void addChild( Node node ) {
-        getScene().addChild( node );
+    fun addChild(node: Node?) {
+        scene.addChild(node!!)
     }
 
     /**
@@ -1784,18 +1549,13 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param image image to add as a volume
      * @return a Node corresponding to the Volume
      */
-    public Node addVolume( Dataset image ) {
-
-        float[] voxelDims = new float[image.numDimensions()];
-        for( int d = 0; d < voxelDims.length; d++ ) {
-            double inValue = image.axis(d).averageScale(0, 1);
-            if( image.axis(d).unit() == null )
-                voxelDims[d] = (float) inValue;
-            else
-                voxelDims[d] = (float) unitService.value( inValue, image.axis(d).unit(), axis(d).unit() );
+    fun addVolume(image: Dataset): Node {
+        val voxelDims = FloatArray(image.numDimensions())
+        for (d in voxelDims.indices) {
+            val inValue = image.axis(d).averageScale(0.0, 1.0)
+            if (image.axis(d).unit() == null) voxelDims[d] = inValue.toFloat() else voxelDims[d] = unitService!!.value(inValue, image.axis(d).unit(), axis(d)!!.unit()).toFloat()
         }
-
-        return addVolume( image, voxelDims );
+        return addVolume(image, voxelDims)
     }
 
     /**
@@ -1804,43 +1564,42 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param voxelDimensions dimensions of voxels in volume
      * @return a Node corresponding to the Volume
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" }) public Node addVolume( Dataset image, float[] voxelDimensions ) {
-        return addVolume( ( RandomAccessibleInterval ) image.getImgPlus(), image.getName(),
-                          voxelDimensions );
+    fun addVolume(image: Dataset, voxelDimensions: FloatArray): Node {
+        return addVolume<RealType<*>>(image.imgPlus as RandomAccessibleInterval<RealType<*>>, image.name,
+                *voxelDimensions)
     }
 
-    /**
-     * Add a RandomAccessibleInterval to the image
-     * @param image image to add as a volume
-     * @param name name of image
-     * @param extra, kludge argument to prevent matching issues
-     * @param <T> pixel type of image
-     * @return a Node corresponding to the volume
-     */
-    public <T extends RealType<T>> Node addVolume( RandomAccessibleInterval<T> image, String name, String extra ) {
-        return addVolume( image, name, 1, 1, 1 );
-    }
-
-    /**
-     * Add a RandomAccessibleInterval to the image
-     * @param image image to add as a volume
-     * @param <T> pixel type of image
-     * @return a Node corresponding to the volume
-     */
-    public <T extends RealType<T>> Node addVolume(RandomAccessibleInterval<T> image, String name) {
-        return addVolume(image, name, 1f, 1f, 1f);
-    }
+//    /**
+//     * Add a RandomAccessibleInterval to the image
+//     * @param image image to add as a volume
+//     * @param name name of image
+//     * @param extra, kludge argument to prevent matching issues
+//     * @param <T> pixel type of image
+//     * @return a Node corresponding to the volume
+//    </T> */
+//    fun <T : RealType<T>?> addVolume(image: RandomAccessibleInterval<T>, name: String?, extra: String?): Node {
+//        return addVolume(image, name, 1f, 1f, 1f)
+//    }
 
     /**
      * Add a RandomAccessibleInterval to the image
      * @param image image to add as a volume
      * @param <T> pixel type of image
      * @return a Node corresponding to the volume
-     */
-    public <T extends RealType<T>> Node addVolume( RandomAccessibleInterval<T> image, float[] voxelDimensions ) {
-        long[] pos = new long[]{10, 10, 10};
+    </T> */
+    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, name: String?): Node {
+        return addVolume(image, name, 1f, 1f, 1f)
+    }
 
-        return addVolume( image, "volume", voxelDimensions );
+    /**
+     * Add a RandomAccessibleInterval to the image
+     * @param image image to add as a volume
+     * @param <T> pixel type of image
+     * @return a Node corresponding to the volume
+    </T> */
+    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, voxelDimensions: FloatArray): Node {
+        val pos = longArrayOf(10, 10, 10)
+        return addVolume(image, "volume", *voxelDimensions)
     }
 
     /**
@@ -1848,12 +1607,13 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param image
      * @param <T>
      * @return a Node corresponding to the Volume
-     */
-    public <T extends RealType<T>> Node addVolume( IterableInterval<T> image ) throws Exception {
-        if( image instanceof RandomAccessibleInterval ) {
-            return addVolume((RandomAccessibleInterval) image, "Volume");
+    </T> */
+    @Throws(Exception::class)
+    fun <T : RealType<T>?> addVolume(image: IterableInterval<T>): Node {
+        return if (image is RandomAccessibleInterval<*>) {
+            addVolume(image as RandomAccessibleInterval<RealType<*>>, "Volume")
         } else {
-            throw new Exception("Unsupported Volume type:" + image);
+            throw Exception("Unsupported Volume type:$image")
         }
     }
 
@@ -1863,12 +1623,13 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param name name of image
      * @param <T> pixel type of image
      * @return a Node corresponding to the Volume
-     */
-    public <T extends RealType<T>> Node addVolume( IterableInterval<T> image, String name ) throws Exception {
-        if( image instanceof RandomAccessibleInterval ) {
-            return addVolume( (RandomAccessibleInterval) image, name, 1, 1, 1 );
+    </T> */
+    @Throws(Exception::class)
+    fun <T : RealType<T>?> addVolume(image: IterableInterval<T>, name: String?): Node {
+        return if (image is RandomAccessibleInterval<*>) {
+            addVolume(image as RandomAccessibleInterval<RealType<*>>, name, 1f, 1f, 1f)
         } else {
-            throw new Exception("Unsupported Volume type:" + image);
+            throw Exception("Unsupported Volume type:$image")
         }
     }
 
@@ -1877,11 +1638,11 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param n node to apply colormap to
      * @param lutName name of LUT according to imagej LUTService
      */
-    public void setColormap( Node n, String lutName ) {
+    fun setColormap(n: Node, lutName: String?) {
         try {
-            setColormap( n, lutService.loadLUT( lutService.findLUTs().get( lutName ) ) );
-        } catch (IOException e) {
-            e.printStackTrace();
+            setColormap(n, lutService!!.loadLUT(lutService.findLUTs()[lutName]))
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
     }
 
@@ -1890,36 +1651,29 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param n node to apply colortable to
      * @param colorTable ColorTable to use
      */
-    public void setColormap( Node n, ColorTable colorTable ) {
-        final int copies = 16;
-
-        final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
-                4 * colorTable.getLength() * copies );// Num bytes * num components * color map length * height of color map texture
-
-        final byte[] tmp = new byte[4 * colorTable.getLength()];
-        for( int k = 0; k < colorTable.getLength(); k++ ) {
-            for( int c = 0; c < colorTable.getComponentCount(); c++ ) {
+    fun setColormap(n: Node, colorTable: ColorTable) {
+        val copies = 16
+        val byteBuffer = ByteBuffer.allocateDirect(
+                4 * colorTable.length * copies) // Num bytes * num components * color map length * height of color map texture
+        val tmp = ByteArray(4 * colorTable.length)
+        for (k in 0 until colorTable.length) {
+            for (c in 0 until colorTable.componentCount) {
                 // TODO this assumes numBits is 8, could be 16
-                tmp[4 * k + c] = ( byte ) colorTable.get( c, k );
+                tmp[4 * k + c] = colorTable[c, k].toByte()
             }
-
-            if( colorTable.getComponentCount() == 3 ) {
-                tmp[4 * k + 3] = (byte)255;
+            if (colorTable.componentCount == 3) {
+                tmp[4 * k + 3] = 255.toByte()
             }
         }
-
-        for( int i = 0; i < copies; i++ ) {
-            byteBuffer.put(tmp);
+        for (i in 0 until copies) {
+            byteBuffer.put(tmp)
         }
-
-        byteBuffer.flip();
-
-        n.getMetadata().put("sciviewColormap", colorTable);
-
-        if(n instanceof Volume) {
-            ((Volume) n).setColormap(Colormap.fromColorTable(colorTable));
-            n.setDirty(true);
-            n.setNeedsUpdate(true);
+        byteBuffer.flip()
+        n.metadata["sciviewColormap"] = colorTable
+        if (n is Volume) {
+            n.colormap = Colormap.fromColorTable(colorTable)
+            n.dirty = true
+            n.needsUpdate = true
         }
     }
 
@@ -1931,15 +1685,14 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param voxelDimensions Array with voxel dimensions.
      * @param <T> Type of the dataset.
      * @return THe node corresponding to the volume just added.
-     */
-    public <T extends RealType<T>> Node addVolume(SourceAndConverter<T> sac,
-                                                  int numTimepoints,
-                                                  String name,
-                                                  float... voxelDimensions ) {
-        List<SourceAndConverter<T>> sources = new ArrayList<>();
-        sources.add(sac);
-
-        return addVolume(sources, numTimepoints, name, voxelDimensions);
+    </T> */
+    fun <T : RealType<T>> addVolume(sac: SourceAndConverter<T>,
+                                     numTimepoints: Int,
+                                     name: String?,
+                                     vararg voxelDimensions: Float): Node {
+        val sources: MutableList<SourceAndConverter<T>> = ArrayList()
+        sources.add(sac)
+        return addVolume(sources, numTimepoints, name, *voxelDimensions)
     }
 
     /**
@@ -1950,47 +1703,40 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param voxelDimensions dimensions of voxel in volume
      * @param <T> pixel type of image
      * @return a Node corresponding to the Volume
-     */
-    public <T extends RealType<T>> Node addVolume( RandomAccessibleInterval<T> image, String name,
-                                                                    float... voxelDimensions ) {
+    </T> */
+    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, name: String?,
+                                     vararg voxelDimensions: Float): Node {
         //log.debug( "Add Volume " + name + " image: " + image );
-
-        long[] dimensions = new long[image.numDimensions()];
-        image.dimensions( dimensions );
-
-        long[] minPt = new long[image.numDimensions()];
+        val dimensions = LongArray(image.numDimensions())
+        image.dimensions(dimensions)
+        val minPt = LongArray(image.numDimensions())
 
         // Get type at min point
-        RandomAccess<T> imageRA = image.randomAccess();
-        image.min(minPt);
-        imageRA.setPosition(minPt);
-        T voxelType = imageRA.get().createVariable();
-
-        ArrayList<ConverterSetup> converterSetups = new ArrayList();
-        ArrayList<RandomAccessibleInterval<T>> stacks = AxisOrder.splitInputStackIntoSourceStacks(image, AxisOrder.getAxisOrder(AxisOrder.DEFAULT, image, false));
-        AffineTransform3D sourceTransform = new AffineTransform3D();
-        ArrayList<SourceAndConverter<T>> sources = new ArrayList();
-
-        int numTimepoints = 1;
-        for (RandomAccessibleInterval stack : stacks) {
-            Source<T> s;
+        val imageRA = image.randomAccess()
+        image.min(minPt)
+        imageRA.setPosition(minPt)
+        val voxelType = imageRA.get()!!.createVariable()
+        val converterSetups: ArrayList<ConverterSetup?> = ArrayList<ConverterSetup?>()
+        val stacks = AxisOrder.splitInputStackIntoSourceStacks(image, AxisOrder.getAxisOrder(AxisOrder.DEFAULT, image, false))
+        val sourceTransform = AffineTransform3D()
+        val sources: ArrayList<SourceAndConverter<T>> = ArrayList<SourceAndConverter<T>>()
+        var numTimepoints = 1
+        for (stack in stacks) {
+            var s: Source<T>
             if (stack.numDimensions() > 3) {
-                numTimepoints = (int) (stack.max(3) + 1);
-                s = new RandomAccessibleIntervalSource4D<T>(stack, voxelType, sourceTransform, name);
+                numTimepoints = (stack.max(3) + 1).toInt()
+                s = RandomAccessibleIntervalSource4D(stack, voxelType, sourceTransform, name)
             } else {
-                s = new RandomAccessibleIntervalSource<T>(stack, voxelType, sourceTransform, name);
+                s = RandomAccessibleIntervalSource(stack, voxelType, sourceTransform, name)
             }
-            SourceAndConverter<T> source = BigDataViewer.wrapWithTransformedSource(
-                new SourceAndConverter<T>(s, BigDataViewer.createConverterToARGB(voxelType)));
-            converterSetups.add(BigDataViewer.createConverterSetup(source, Volume.Companion.getSetupId().getAndIncrement()));
-            sources.add(source);
+            val source = BigDataViewer.wrapWithTransformedSource(
+                    SourceAndConverter(s, BigDataViewer.createConverterToARGB(voxelType)))
+            converterSetups.add(BigDataViewer.createConverterSetup(source, setupId.getAndIncrement()))
+            sources.add(source)
         }
-
-        Node v = addVolume(sources, numTimepoints, name, voxelDimensions);
-
-        v.getMetadata().put("RandomAccessibleInterval", image);
-
-        return v;
+        val v = addVolume(sources, numTimepoints, name, *voxelDimensions)
+        v.metadata["RandomAccessibleInterval"] = image
+        return v
     }
 
     /**
@@ -2003,63 +1749,53 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param voxelDimensions Array with voxel dimensions.
      * @param <T> Type of the dataset.
      * @return THe node corresponding to the volume just added.
-     */
-    public <T extends RealType<T>> Node addVolume(List<SourceAndConverter<T>> sources,
-                                                  ArrayList<ConverterSetup> converterSetups,
-                                                  int numTimepoints,
-                                                  String name,
-                                                  float... voxelDimensions ) {
-
-        CacheControl cacheControl = null;
+    </T> */
+    fun <T : RealType<T>?> addVolume(sources: List<SourceAndConverter<RealType<*>>>,
+                                     converterSetups: ArrayList<ConverterSetup>?,
+                                     numTimepoints: Int,
+                                     name: String?,
+                                     vararg voxelDimensions: Float): Node {
+        var numTimepoints = numTimepoints
+        var cacheControl: CacheControl? = null
 
 //        RandomAccessibleInterval<T> image =
 //                ((RandomAccessibleIntervalSource4D) sources.get(0).getSpimSource()).
 //                .getSource(0, 0);
-        RandomAccessibleInterval<T> image = sources.get(0).getSpimSource().getSource(0, 0);
-
-        if (image instanceof VolatileView) {
-            VolatileViewData<T, Volatile<T>> viewData  = ((VolatileView<T, Volatile<T>>) image).getVolatileViewData();
-            cacheControl = viewData.getCacheControl();
+        val image = sources[0]!!.spimSource.getSource(0, 0)
+        if (image is VolatileView<*, *>) {
+            val viewData = (image as VolatileView<T, Volatile<T>?>).volatileViewData
+            cacheControl = viewData.cacheControl
         }
-
-        long[] dimensions = new long[image.numDimensions()];
-        image.dimensions( dimensions );
-
-        long[] minPt = new long[image.numDimensions()];
+        val dimensions = LongArray(image.numDimensions())
+        image.dimensions(dimensions)
+        val minPt = LongArray(image.numDimensions())
 
         // Get type at min point
-        RandomAccess<T> imageRA = image.randomAccess();
-        image.min(minPt);
-        imageRA.setPosition(minPt);
-        T voxelType = imageRA.get().createVariable();
-
-        System.out.println("addVolume " + image.numDimensions() + " interval " + ((Interval) image) );
+        val imageRA = image.randomAccess()
+        image.min(minPt)
+        imageRA.setPosition(minPt)
+        val voxelType = imageRA.get()!!.createVariable() as RealType<*>
+        println("addVolume " + image.numDimensions() + " interval " + image as Interval)
 
         //int numTimepoints = 1;
-        if( image.numDimensions() > 3 ) {
-            numTimepoints = (int) image.dimension(3);
+        if (image.numDimensions() > 3) {
+            numTimepoints = image.dimension(3).toInt()
         }
-
-        Volume.VolumeDataSource.RAISource<T> ds = new Volume.VolumeDataSource.RAISource<T>(voxelType, sources, converterSetups, numTimepoints, cacheControl);
-        VolumeViewerOptions options = new VolumeViewerOptions();
-
-        Volume v = new RAIVolume(ds, options, getHub());
-        v.setName(name);
-
-        v.getMetadata().put("sources", sources);
-
-        TransferFunction tf = v.getTransferFunction();
-        float rampMin = 0f;
-        float rampMax = 0.1f;
-        tf.clear();
-        tf.addControlPoint(0.0f, 0.0f);
-        tf.addControlPoint(rampMin, 0.0f);
-        tf.addControlPoint(1.0f, rampMax);
-
-        BoundingGrid bg = new BoundingGrid();
-        bg.setNode(v);
-
-        return addNode(v);
+        val ds = RAISource(voxelType, sources, converterSetups!!, numTimepoints, cacheControl)
+        val options = VolumeViewerOptions()
+        val v: Volume = RAIVolume(ds, options, hub)
+        v.name = name!!
+        v.metadata["sources"] = sources
+        val tf = v.transferFunction
+        val rampMin = 0f
+        val rampMax = 0.1f
+        tf.clear()
+        tf.addControlPoint(0.0f, 0.0f)
+        tf.addControlPoint(rampMin, 0.0f)
+        tf.addControlPoint(1.0f, rampMax)
+        val bg = BoundingGrid()
+        bg.node = v
+        return addNode(v)
     }
 
     /**
@@ -2068,12 +1804,12 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param predicate predicate function that returns true as long as this function should block
      * @param waitTime wait time before predicate re-evaluation
      */
-    private void blockWhile(Function<SciView, Boolean> predicate, int waitTime) {
-        while( predicate.apply(this) ) {
+    private fun blockWhile(predicate: Function<SciView, Boolean>, waitTime: Int) {
+        while (predicate.apply(this)) {
             try {
-                Thread.sleep(waitTime);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                Thread.sleep(waitTime.toLong())
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
             }
         }
     }
@@ -2086,18 +1822,17 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param voxelDimensions Array with voxel dimensions.
      * @param <T> Type of the dataset.
      * @return THe node corresponding to the volume just added.
-     */
-    public <T extends RealType<T>> Node addVolume(List<SourceAndConverter<T>> sources,
-                                                  int numTimepoints,
-                                                  String name,
-                                                  float... voxelDimensions ) {
-        int setupId = 0;
-        ArrayList<ConverterSetup> converterSetups = new ArrayList<>();
-        for( SourceAndConverter source: sources ) {
-            converterSetups.add(BigDataViewer.createConverterSetup(source, setupId++));
+    </T> */
+    fun <T : RealType<T>> addVolume(sources: List<SourceAndConverter<T>>,
+                                     numTimepoints: Int,
+                                     name: String?,
+                                     vararg voxelDimensions: Float): Node {
+        var setupId = 0
+        val converterSetups = ArrayList<ConverterSetup>()
+        for (source in sources) {
+            converterSetups.add(BigDataViewer.createConverterSetup(source, setupId++))
         }
-
-        return addVolume(sources, converterSetups, numTimepoints, name, voxelDimensions);
+        return addVolume(sources, converterSetups, numTimepoints, name, *voxelDimensions)
     }
 
     /**
@@ -2109,37 +1844,33 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param v existing volume to update
      * @param <T> pixel type of image
      * @return a Node corresponding to the input volume
-     */
-    public <T extends RealType<T>> Node updateVolume( IterableInterval<T> image, String name,
-                                                                       float[] voxelDimensions, Volume v ) {
-        List<SourceAndConverter<T>> sacs = (List<SourceAndConverter<T>>) v.getMetadata().get("sources");
-
-        RandomAccessibleInterval<T> source = sacs.get(0).getSpimSource().getSource(0, 0);// hard coded to timepoint and mipmap 0
-
-        Cursor<T> sCur = Views.iterable(source).cursor();
-        Cursor<T> iCur = image.cursor();
-        while( sCur.hasNext() ) {
-            sCur.fwd();
-            iCur.fwd();
-            sCur.get().set(iCur.get());
+    </T> */
+    fun <T : RealType<T>?> updateVolume(image: IterableInterval<T>, name: String?,
+                                        voxelDimensions: FloatArray?, v: Volume): Node {
+        val sacs = v.metadata["sources"] as List<SourceAndConverter<T>>?
+        val source = sacs!![0].spimSource.getSource(0, 0) // hard coded to timepoint and mipmap 0
+        val sCur = Views.iterable(source).cursor()
+        val iCur = image.cursor()
+        while (sCur.hasNext()) {
+            sCur.fwd()
+            iCur.fwd()
+            sCur.get()!!.set(iCur.get())
         }
-
-        v.getVolumeManager().notifyUpdate(v);
-        v.getVolumeManager().requestRepaint();
+        v.volumeManager.notifyUpdate(v)
+        v.volumeManager.requestRepaint()
         //v.getCacheControls().clear();
         //v.setDirty( true );
-        v.setNeedsUpdate( true );
+        v.needsUpdate = true
         //v.setNeedsUpdateWorld( true );
-
-        return v;
+        return v
     }
 
     /**
      *
      * @return whether PushMode is currently active
      */
-    public boolean getPushMode() {
-        return getRenderer().getPushMode();
+    fun getPushMode(): Boolean {
+        return renderer!!.pushMode
     }
 
     /**
@@ -2147,99 +1878,72 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param push true if push mode should be used
      * @return current PushMode status
      */
-    public boolean setPushMode( boolean push ) {
-        getRenderer().setPushMode( push );
-        return getRenderer().getPushMode();
-    }
-    
-    public ArcballCameraControl getTargetArcball() {
-        return targetArcball;
+    fun setPushMode(push: Boolean): Boolean {
+        renderer!!.pushMode = push
+        return renderer!!.pushMode
     }
 
-    @Override
-    protected void finalize() {
-        stopAnimation();
+    protected fun finalize() {
+        stopAnimation()
     }
 
-    public Settings getScenerySettings() {
-        return this.getSettings();
+    fun getScenerySettings(): Settings {
+        return settings
     }
 
-    public Statistics getSceneryStatistics() {
-        return this.getStats();
+    fun getSceneryStatistics(): Statistics {
+        return stats
     }
 
-    public Renderer getSceneryRenderer() {
-        return this.getRenderer();
+    fun getSceneryRenderer(): Renderer? {
+        return renderer
     }
 
     /**
      * Enable VR rendering
      */
-    public void toggleVRRendering() {
-        vrActive = !vrActive;
-        Camera cam = getScene().getActiveObserver();
-        if(!(cam instanceof DetachedHeadCamera)) {
-            return;
-        }
-
-        TrackerInput ti = null;
-        boolean hmdAdded = false;
-
-        if (!getHub().has(SceneryElement.HMDInput)) {
+    fun toggleVRRendering() {
+        vrActive = !vrActive
+        val cam = scene.activeObserver as? DetachedHeadCamera ?: return
+        var ti: TrackerInput? = null
+        var hmdAdded = false
+        if (!hub.has(SceneryElement.HMDInput)) {
             try {
-                final OpenVRHMD hmd = new OpenVRHMD(false, true);
-
-                if(hmd.initializedAndWorking()) {
-                    getHub().add(SceneryElement.HMDInput, hmd);
-                    ti = hmd;
+                val hmd = OpenVRHMD(false, true)
+                if (hmd.initializedAndWorking()) {
+                    hub.add(SceneryElement.HMDInput, hmd)
+                    ti = hmd
                 } else {
-                    getLogger().warn("Could not initialise VR headset, just activating stereo rendering.");
+                    logger.warn("Could not initialise VR headset, just activating stereo rendering.")
                 }
-
-                hmdAdded = true;
-            } catch (Exception e) {
-                getLogger().error("Could not add OpenVRHMD: " + e.toString());
+                hmdAdded = true
+            } catch (e: Exception) {
+                logger.error("Could not add OpenVRHMD: $e")
             }
         } else {
-            ti = getHub().getWorkingHMD();
+            ti = hub.getWorkingHMD()
         }
-
-        if(vrActive && ti != null) {
-            ((DetachedHeadCamera) cam).setTracker(ti);
+        if (vrActive && ti != null) {
+            cam.tracker = ti
         } else {
-            ((DetachedHeadCamera) cam).setTracker(null);
+            cam.tracker = null
         }
-
-        getRenderer().setPushMode(false);
+        renderer!!.pushMode = false
         // we need to force reloading the renderer as the HMD might require device or instance extensions
-        if(getRenderer() instanceof VulkanRenderer && hmdAdded) {
-            replaceRenderer(getRenderer().getClass().getSimpleName(), true, true);
-            getRenderer().toggleVR();
-
-            while(!getRenderer().getInitialized()/* || !getRenderer().getFirstImageReady()*/) {
-                getLogger().debug("Waiting for renderer reinitialisation");
+        if (renderer is VulkanRenderer && hmdAdded) {
+            replaceRenderer((renderer as VulkanRenderer).javaClass.simpleName, true, true)
+            (renderer as VulkanRenderer).toggleVR()
+            while (!(renderer as VulkanRenderer).initialized /* || !getRenderer().getFirstImageReady()*/) {
+                logger.debug("Waiting for renderer reinitialisation")
                 try {
-                    Thread.sleep(200);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Thread.sleep(200)
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
                 }
             }
         } else {
-            getRenderer().toggleVR();
+            renderer!!.toggleVR()
         }
-
-    }
-
-    /**
-     * Utility function to generate GLVector in cases like usage from Python
-     * @param x x coord
-     * @param y y coord
-     * @param z z coord
-     * @return a GLVector of x,y,z
-     */
-    static public GLVector getGLVector(float x, float y, float z) {
-        return new GLVector(x, y, z);
     }
 
     /**
@@ -2250,173 +1954,133 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param z z coord of rotation quat
      * @param w w coord of rotation quat
      */
-    public void setRotation(Node n, float x, float y, float z, float w) {
-        n.setRotation(new Quaternionf(x,y,z,w));
+    fun setRotation(n: Node, x: Float, y: Float, z: Float, w: Float) {
+        n.rotation = Quaternionf(x, y, z, w)
     }
 
-    public void setScale(Node n, float x, float y, float z) {
-        n.setScale(new Vector3f(x,y,z));
+    fun setScale(n: Node, x: Float, y: Float, z: Float) {
+        n.scale = Vector3f(x, y, z)
     }
 
-    public void setColor(Node n, float x, float y, float z, float w) {
-        Vector3f col = new Vector3f(x, y, z);
-        n.getMaterial().setAmbient(col);
-        n.getMaterial().setDiffuse(col);
-        n.getMaterial().setSpecular(col);
+    fun setColor(n: Node, x: Float, y: Float, z: Float, w: Float) {
+        val col = Vector3f(x, y, z)
+        n.material.ambient = col
+        n.material.diffuse = col
+        n.material.specular = col
     }
 
-    public void setPosition(Node n, float x, float y, float z) {
-        n.setPosition(new Vector3f(x,y,z));
+    fun setPosition(n: Node, x: Float, y: Float, z: Float) {
+        n.position = Vector3f(x, y, z)
     }
 
-    public void addWindowListener(WindowListener wl) {
-        frame.addWindowListener(wl);
+    fun addWindowListener(wl: WindowListener?) {
+        frame!!.addWindowListener(wl)
     }
 
-    @Override
-    public CalibratedAxis axis(int i) {
-        return axes[i];
+    override fun axis(i: Int): CalibratedAxis? {
+        return axes[i]
     }
 
-    @Override
-    public void axes(CalibratedAxis[] calibratedAxes) {
-        axes = calibratedAxes;
+    override fun axes(calibratedAxes: Array<CalibratedAxis>) {
+        axes = calibratedAxes
     }
 
-    @Override
-    public void setAxis(CalibratedAxis calibratedAxis, int i) {
-        axes[i] = calibratedAxis;
+    override fun setAxis(calibratedAxis: CalibratedAxis, i: Int) {
+        axes[i] = calibratedAxis
     }
 
-    @Override
-    public double realMin(int i) {
-        return Double.NEGATIVE_INFINITY;
+    override fun realMin(i: Int): Double {
+        return Double.NEGATIVE_INFINITY
     }
 
-    @Override
-    public void realMin(double[] doubles) {
-        for( int i = 0; i < doubles.length; i++ ) {
-            doubles[i] = Double.NEGATIVE_INFINITY;
+    override fun realMin(doubles: DoubleArray) {
+        for (i in doubles.indices) {
+            doubles[i] = Double.NEGATIVE_INFINITY
         }
     }
 
-    @Override
-    public void realMin(RealPositionable realPositionable) {
-        for( int i = 0; i < realPositionable.numDimensions(); i++ ) {
-            realPositionable.move(Double.NEGATIVE_INFINITY, i);
+    override fun realMin(realPositionable: RealPositionable) {
+        for (i in 0 until realPositionable.numDimensions()) {
+            realPositionable.move(Double.NEGATIVE_INFINITY, i)
         }
     }
 
-    @Override
-    public double realMax(int i) {
-        return Double.POSITIVE_INFINITY;
+    override fun realMax(i: Int): Double {
+        return Double.POSITIVE_INFINITY
     }
 
-    @Override
-    public void realMax(double[] doubles) {
-        for( int i = 0; i < doubles.length; i++ ) {
-            doubles[i] = Double.POSITIVE_INFINITY;
+    override fun realMax(doubles: DoubleArray) {
+        for (i in doubles.indices) {
+            doubles[i] = Double.POSITIVE_INFINITY
         }
     }
 
-    @Override
-    public void realMax(RealPositionable realPositionable) {
-        for( int i = 0; i < realPositionable.numDimensions(); i++ ) {
-            realPositionable.move(Double.POSITIVE_INFINITY, i);
+    override fun realMax(realPositionable: RealPositionable) {
+        for (i in 0 until realPositionable.numDimensions()) {
+            realPositionable.move(Double.POSITIVE_INFINITY, i)
         }
     }
 
-    @Override
-    public int numDimensions() {
-        return axes.length;
+    override fun numDimensions(): Int {
+        return axes.size
     }
 
-    public void setCamera(Camera camera) {
-        this.camera = camera;
-        setActiveObserver(camera);
+    fun setActiveObserver(screenshotCam: Camera?) {
+        scene.activeObserver = screenshotCam
     }
 
-    public void setActiveObserver(Camera screenshotCam) {
-        getScene().setActiveObserver(screenshotCam);
+    fun getActiveObserver(): Camera? {
+        return scene.activeObserver
     }
 
-    public Camera getActiveObserver() {
-        return getScene().getActiveObserver();
-    }
+    inner class TransparentSlider : JSlider() {
+        override fun paintComponent(g: Graphics) {
+            val g2d = g.create() as Graphics2D
+            g2d.color = background
+            g2d.composite = AlphaComposite.SrcOver.derive(0.9f)
+            g2d.fillRect(0, 0, width, height)
+            g2d.dispose()
+            super.paintComponent(g)
+        }
 
-    public void setCenterOnNewNodes(boolean centerOnNewNodes) {
-        this.centerOnNewNodes = centerOnNewNodes;
-    }
-
-    public boolean getCenterOnNewNodes() {
-        return centerOnNewNodes;
-    }
-
-    public void setBlockOnNewNodes(boolean blockOnNewNodes) {
-        this.blockOnNewNodes = blockOnNewNodes;
-    }
-
-    public boolean getBlockOnNewNodes() {
-        return blockOnNewNodes;
-    }
-
-    public class TransparentSlider extends JSlider {
-
-        public TransparentSlider() {
+        init {
             // Important, we taking over the filling of the
             // component...
-            setOpaque(false);
-            setBackground(Color.DARK_GRAY);
-            setForeground(Color.LIGHT_GRAY);
+            isOpaque = false
+            background = Color.DARK_GRAY
+            foreground = Color.LIGHT_GRAY
         }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2d = (Graphics2D) g.create();
-            g2d.setColor(getBackground());
-            g2d.setComposite(AlphaComposite.SrcOver.derive(0.9f));
-            g2d.fillRect(0, 0, getWidth(), getHeight());
-            g2d.dispose();
-
-            super.paintComponent(g);
-        }
-
     }
 
-    class enableIncrease implements ClickBehaviour {
-
-        @Override public void click( int x, int y ) {
-            setFPSSpeed( getFPSSpeed() + 0.5f );
-            setMouseSpeed( getMouseSpeed() + 0.05f );
+    internal inner class enableIncrease : ClickBehaviour {
+        override fun click(x: Int, y: Int) {
+            fPSSpeed = fPSSpeed + 0.5f
+            mouseSpeed = mouseSpeed + 0.05f
 
             //log.debug( "Increasing FPS scroll Speed" );
-
-            resetFPSInputs();
+            resetFPSInputs()
         }
     }
 
-    class enableDecrease implements ClickBehaviour {
-
-        @Override public void click( int x, int y ) {
-            setFPSSpeed( getFPSSpeed() - 0.1f );
-            setMouseSpeed( getMouseSpeed() - 0.05f );
+    internal inner class enableDecrease : ClickBehaviour {
+        override fun click(x: Int, y: Int) {
+            fPSSpeed = fPSSpeed - 0.1f
+            mouseSpeed = mouseSpeed - 0.05f
 
             //log.debug( "Decreasing FPS scroll Speed" );
-
-            resetFPSInputs();
+            resetFPSInputs()
         }
     }
 
-    class showHelpDisplay implements ClickBehaviour {
-
-        @Override public void click( int x, int y ) {
-            StringBuilder helpString = new StringBuilder("SciView help:\n\n");
-            for( InputTrigger trigger : getInputHandler().getAllBindings().keySet() ) {
-                helpString.append(trigger).append("\t-\t").append(getInputHandler().getAllBindings().get(trigger)).append("\n");
+    internal inner class showHelpDisplay : ClickBehaviour {
+        override fun click(x: Int, y: Int) {
+            val helpString = StringBuilder("SciView help:\n\n")
+            for (trigger in inputHandler!!.getAllBindings().keys) {
+                helpString.append(trigger).append("\t-\t").append(inputHandler!!.getAllBindings()[trigger]).append("\n")
             }
             // HACK: Make the console pop via stderr.
             // Later, we will use a nicer dialog box or some such.
-            log.warn(helpString.toString());
+            log!!.warn(helpString.toString())
         }
     }
 
@@ -2425,50 +2089,63 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
      * @param nodeMatchPredicate, returns true if a node is a match
      * @return list of nodes that match the predicate
      */
-    public List<Node> findNodes(Function1<Node, Boolean> nodeMatchPredicate) {
-        return getScene().discover(getScene(), nodeMatchPredicate, false);
+    fun findNodes(nodeMatchPredicate: Function1<Node, Boolean>): List<Node> {
+        return scene.discover(scene, nodeMatchPredicate, false)
     }
 
     /*
      * Convenience function for getting a string of info about a Node
      */
-    public String nodeInfoString(Node n) {
-        return "Node name: " + n.getName() + " Node type: " + n.getNodeType() + " To String: " + n;
+    fun nodeInfoString(n: Node): String {
+        return "Node name: " + n.name + " Node type: " + n.nodeType + " To String: " + n
     }
 
-    /**
-     * Static launching method
-     *
-     * @return a newly created SciView
-     */
-    public static SciView create() throws Exception {
-        SceneryBase.xinitThreads();
+    companion object {
+        @JvmField
+        val DEFAULT_COLOR = Colors.LIGHTGRAY
 
-        FlatLightLaf.install();
-        try {
-            UIManager.setLookAndFeel( new FlatLightLaf() );
-        } catch( Exception ex ) {
-            System.err.println( "Failed to initialize Flat Light LaF, falling back to Swing default." );
+        /**
+         * Utility function to generate GLVector in cases like usage from Python
+         * @param x x coord
+         * @param y y coord
+         * @param z z coord
+         * @return a GLVector of x,y,z
+         */
+        fun getGLVector(x: Float, y: Float, z: Float): GLVector {
+            return GLVector(x, y, z)
         }
 
-        System.setProperty( "scijava.log.level:sc.iview", "debug" );
-        Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
+        /**
+         * Static launching method
+         *
+         * @return a newly created SciView
+         */
+        @JvmStatic
+        @Throws(Exception::class)
+        fun create(): SciView {
+            xinitThreads()
+            FlatLightLaf.install()
+            try {
+                UIManager.setLookAndFeel(FlatLightLaf())
+            } catch (ex: Exception) {
+                System.err.println("Failed to initialize Flat Light LaF, falling back to Swing default.")
+            }
+            System.setProperty("scijava.log.level:sc.iview", "debug")
+            val context = Context(ImageJService::class.java, SciJavaService::class.java, SCIFIOService::class.java, ThreadService::class.java)
+            val sciViewService = context.service(SciViewService::class.java)
+            return sciViewService.orCreateActiveSciView
+        }
 
-        SciViewService sciViewService = context.service( SciViewService.class );
-        SciView sciView = sciViewService.getOrCreateActiveSciView();
-
-        return sciView;
+        /**
+         * Static launching method
+         * [DEPRECATED] use SciView.create() instead
+         *
+         * @return a newly created SciView
+         */
+        @Deprecated("")
+        @Throws(Exception::class)
+        fun createSciView(): SciView {
+            return create()
+        }
     }
-
-    /**
-     * Static launching method
-     * [DEPRECATED] use SciView.create() instead
-     *
-     * @return a newly created SciView
-     */
-    @Deprecated
-    public static SciView createSciView() throws Exception {
-        return create();
-    }
-
 }
