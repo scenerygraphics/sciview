@@ -121,10 +121,9 @@ public class AddOrientationCompass implements Command {
         root.getUpdate().add(() -> {
             final Camera cam = sciView.getCamera();
             root.setPosition(cam.viewportToView(new Vector2f(-0.9f, 0.7f)));
-            root.setRotation(new Quaternionf(sciView.getCamera().getRotation()).conjugate());
+            root.setRotation(new Quaternionf(sciView.getCamera().getRotation()).conjugate().normalize());
             return null;
         });
-
     }
 
     public static void main(String... args) throws Exception {
