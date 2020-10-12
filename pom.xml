@@ -108,7 +108,7 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
-		<scenery.version>b5c63ad</scenery.version>
+		<scenery.version>b9c44a2</scenery.version>
 <!--		<scijava-common.version>2.84.0</scijava-common.version>-->
 
 		<kotlin.version>1.4.10</kotlin.version>
@@ -347,7 +347,6 @@
 
 	<build>
 		<testSourceDirectory>src/test/tests</testSourceDirectory>
-		<sourceDirectory>src/main/kotlin</sourceDirectory>
 		<plugins>
 			<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -370,7 +369,6 @@
 						</goals>
 						<configuration>
 							<sourceDirs>
-								<sourceDir>src/main/kotlin</sourceDir>
 								<sourceDir>src/main/java</sourceDir>
 							</sourceDirs>
 							<annotationProcessorPaths>
@@ -388,7 +386,6 @@
 						<goals> <goal>compile</goal> </goals>
 						<configuration>
 							<sourceDirs>
-								<source>src/main/kotlin</source>
 								<source>src/main/java</source>
 								<source>target/generated-sources/kapt</source>
 								<source>target/generated-sources/kaptKotlin</source>
