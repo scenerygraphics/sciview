@@ -1470,6 +1470,21 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
     }
 
     /**
+     * Triggers the inspector tree to be completely rebuilt/refreshed.
+     */
+    public void requestPropEditorRefresh() {
+        eventService.publish(new NodeChangedEvent(getScene()));
+    }
+
+    /**
+     * Triggers the inspector to rebuild/refresh the given node.
+     * @param n Root of the subtree to get rebuilt/refreshed.
+     */
+    public void requestPropEditorRefresh(final Node n) {
+        eventService.publish(new NodeChangedEvent(n));
+    }
+
+    /**
      * Add a scenery Mesh to the scene
      * @param scMesh scenery mesh to add to scene
      * @return a Node corresponding to the mesh
