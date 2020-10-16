@@ -382,7 +382,7 @@
 					</execution>
 					<execution>
 						<id>compile</id>
-						<phase>compile</phase>
+						<phase>validate</phase>
 						<goals> <goal>compile</goal> </goals>
 						<configuration>
 							<sourceDirs>
