@@ -987,6 +987,9 @@ public class SciView extends SceneryBase implements CalibratedRealInterval<Calib
         h.addKeyBinding("move_up_veryfast", "ctrl shift X");
         h.addKeyBinding("move_down_veryfast", "ctrl shift C");
 
+        //update scene inspector
+        h.addBehaviour( "update scene graph", (ClickBehaviour)(x,y) -> requestPropEditorRefresh() );
+        h.addKeyBinding("update scene graph", "shift ctrl I" );
     }
 
     /*
