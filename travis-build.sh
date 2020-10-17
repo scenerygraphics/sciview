@@ -186,7 +186,7 @@ then
 	if [ ! -f "$condaSh" ]; then
 		echo
 		echo "== Installing conda =="
-		wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+		wget -nv https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
 		rm -rf "$condaDir"
 		bash miniconda.sh -b -p "$condaDir"
 		checkSuccess $?
