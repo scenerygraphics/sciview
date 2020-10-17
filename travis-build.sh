@@ -211,6 +211,7 @@ then
 	echo
 	echo "== Run CI code =="
 	python3 .travis/ci.py
+    checkSuccess $?
 
 	echo travis_fold:end:scijava-conda
 fi
