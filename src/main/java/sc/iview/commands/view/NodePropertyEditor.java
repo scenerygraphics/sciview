@@ -59,6 +59,7 @@ import org.scijava.util.DebugUtils;
 import org.scijava.widget.UIComponent;
 import sc.iview.SciView;
 import sc.iview.commands.edit.Properties;
+import sc.iview.commands.help.Help;
 import sc.iview.event.NodeActivatedEvent;
 import sc.iview.event.NodeAddedEvent;
 import sc.iview.event.NodeChangedEvent;
@@ -96,11 +97,6 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
     private DefaultTreeModel treeModel;
     private JTree tree;
     private JBPanel props;
-
-    public static String USAGE_TEXT =
-                    "Single-clicking a node in the tree above selects it, while double-clicking centers the 3D view on the node.<br><br>" +
-                    "Drag in the 3D view to the left to look around, hold shift while dragging to rotate around selected node. Scrolling while holding shift zooms in and out.<br><br>" +
-                    "W, A, S, D moves you around, holding shift while moving slows down the movement.";
 
     public JPanel getProps() {
         return props;
@@ -202,7 +198,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         tree.getSelectionModel().setSelectionMode( TreeSelectionModel.SINGLE_TREE_SELECTION );
         tree.addTreeSelectionListener( e -> {
             final Node sceneNode = sceneNode( e.getNewLeadSelectionPath() );
-//            sciView.setActiveNode( sceneNode );
+            sciView.setActiveNode( sceneNode );
             updateProperties( sceneNode );
         } );
 
@@ -218,8 +214,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
                     }
 
                     Node node = (Node)n.getUserObject();
-                    sciView.setActiveNode( node );
-                    sciView.centerOnNode( node );
+                    sciView.setActiveCenteredNode( node );
                 } else if(e.getButton() == MouseEvent.BUTTON3) {
                     int x = e.getX();
                     int y = e.getY();
@@ -357,7 +352,8 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         props.removeAll();
 
         if( c == null ) {
-            final JLabel usageLabel = new JLabel( "<html><em>No node selected.</em><br><br>" + USAGE_TEXT + "</html>" );
+            final JLabel usageLabel = new JLabel( "<html><em>No node selected.</em><br><br>" +
+                    Help.getBasicUsageText(sciView.publicGetInputHandler()) + "</html>" );
             usageLabel.setPreferredSize(new Dimension(300, 100));
             props.add( usageLabel );
         } else {
@@ -403,6 +399,7 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
         final TreePath newPath = find((DefaultMutableTreeNode) treeModel.getRoot(), node);
         if(newPath != null) {
             tree.setSelectionPath(newPath);
+            tree.scrollPathToVisible(newPath);
             if(node != sciView.getActiveNode()) {
                 updateProperties(node);
             }

@@ -28,44 +28,19 @@
  */
 package sc.iview.controls.behaviours
 
-import graphics.scenery.Camera
-import graphics.scenery.Cylinder
-import graphics.scenery.Material
-import graphics.scenery.Node
 import org.joml.Vector3f
 import org.scijava.ui.behaviour.DragBehaviour
 import org.scijava.ui.behaviour.ScrollBehaviour
 import sc.iview.SciView
-import java.util.*
 
 /**
  * Control behavior for moving a Node
  *
  * @author Kyle Harrington
  */
-class NodeTranslateControl(protected var sciView: SciView, var dragSpeed: Float) : DragBehaviour, ScrollBehaviour {
-    private var firstEntered = true
+class NodeTranslateControl(protected val sciView: SciView) : DragBehaviour, ScrollBehaviour {
     private var lastX = 0
     private var lastY = 0
-    protected var axes // Tracking the rendered axes
-            : MutableList<Node>? = null
-    val camera: Camera
-        get() = sciView.camera
-
-    // Object mode
-    val lRAxis: Vector3f
-        get() =// Object mode
-            camera.forward.cross(camera.up).normalize()
-
-    fun getUDAxis(): Vector3f {
-        // Object mode
-        return camera.up
-    }
-
-    fun getFBAxis(): Vector3f {
-        // Object mode
-        return camera.forward
-    }
 
     /**
      * This function is called upon mouse down and initializes the camera control
@@ -75,85 +50,43 @@ class NodeTranslateControl(protected var sciView: SciView, var dragSpeed: Float)
      * y position in window
      */
     override fun init(x: Int, y: Int) {
-        camera.targeted = true
-        camera.target = sciView.activeNode.position
-        if (firstEntered) {
-            lastX = x
-            lastY = y
-            firstEntered = false
-            axes = ArrayList()
+        if (sciView.activeNode == null) return
 
-            // Draw a line along the axis
-            val lineLengths = 50 // Should be proportional to something about the view?
-
-            // Axis orthogonal to camera lookAt (along viewplane)
-            val leftPoint = camera.target.add(lRAxis.mul(lineLengths.toFloat()))
-            val rightPoint = camera.target.add(lRAxis.mul(-1 * lineLengths.toFloat()))
-            var cylinder = Cylinder(1.0f, (lineLengths * 2).toFloat(), 20)
-            cylinder.orientBetweenPoints(leftPoint, rightPoint)
-            cylinder.name = "L-R axis"
-            var mat = Material()
-            mat.diffuse = Vector3f(1.0f, 0.0f, 0.0f)
-            mat.ambient = Vector3f(1.0f, 0.0f, 0.0f)
-            cylinder.material = mat
-            cylinder.position = sciView.activeNode.getMaximumBoundingBox().getBoundingSphere().origin.add(lRAxis.mul(lineLengths.toFloat()))
-            sciView.addNode(cylinder, false)
-            (axes as ArrayList<Node>).add(cylinder)
-
-            // Axis orthogonal to camera lookAt (along viewplane)
-            val upPoint = camera.target.add(getUDAxis().mul(lineLengths.toFloat()))
-            val downPoint = camera.target.add(getUDAxis().mul(-1 * lineLengths.toFloat()))
-            cylinder = Cylinder(1.0f, (lineLengths * 2).toFloat(), 20)
-            cylinder.orientBetweenPoints(upPoint, downPoint)
-            cylinder.name = "U-D axis"
-            mat = Material()
-            mat.diffuse = Vector3f(0.25f, 1f, 0.25f)
-            mat.ambient = Vector3f(0.25f, 1f, 0.25f)
-            cylinder.material = mat
-            cylinder.position = sciView.activeNode.getMaximumBoundingBox().getBoundingSphere().origin.add(getUDAxis().mul(lineLengths.toFloat()))
-            sciView.addNode(cylinder, false)
-            (axes as ArrayList<Node>).add(cylinder)
-
-            // Axis orthogonal to camera lookAt (along viewplane)
-            val frontPoint = camera.target.add(getFBAxis().mul(lineLengths.toFloat()))
-            val backPoint = camera.target.add(getFBAxis().mul(-1 * lineLengths.toFloat()))
-            cylinder = Cylinder(1.0f, (lineLengths * 2).toFloat(), 20)
-            cylinder.orientBetweenPoints(frontPoint, backPoint)
-            cylinder.name = "F-B axis"
-            mat = Material()
-            mat.diffuse = Vector3f(0f, 0.5f, 1f)
-            mat.ambient = Vector3f(0f, 0.5f, 1f)
-            cylinder.material = mat
-            cylinder.position = sciView.activeNode.getMaximumBoundingBox().getBoundingSphere().origin.add(getFBAxis().mul(lineLengths.toFloat()))
-            sciView.addNode(cylinder, false)
-            (axes as ArrayList<Node>).add(cylinder)
-        }
+        lastX = x
+        lastY = y
     }
 
     override fun drag(x: Int, y: Int) {
-        if (sciView.activeNode == null || !sciView.activeNode.lock.tryLock()) {
-            return
-        }
-        sciView.activeNode.position = sciView.activeNode.position.add(
-                lRAxis.mul((x - lastX) * dragSpeed)).add(
-                getUDAxis().mul(-1 * (y - lastY) * dragSpeed))
-        sciView.activeNode.lock.unlock()
+        val targetedNode = sciView.activeNode;
+        if (targetedNode == null || !targetedNode.lock.tryLock()) return
+
+        sciView.camera.right.mul((x - lastX) * sciView.fpsSpeedSlow * sciView.mouseSpeed, dragPosUpdater )
+        targetedNode.position.add( dragPosUpdater )
+        sciView.camera.up.mul(   (lastY - y) * sciView.fpsSpeedSlow * sciView.mouseSpeed, dragPosUpdater )
+        targetedNode.position.add( dragPosUpdater )
+        targetedNode.needsUpdate = true
+
+        targetedNode.lock.unlock()
+
+        lastX = x
+        lastY = y
     }
 
     override fun end(x: Int, y: Int) {
-        firstEntered = true
-        // Clean up axes
-        for (n in axes!!) {
-            sciView.deleteNode(n, false)
-        }
     }
 
     override fun scroll(wheelRotation: Double, isHorizontal: Boolean, x: Int, y: Int) {
-        if (sciView.activeNode == null || !sciView.activeNode.lock.tryLock()) {
-            return
-        }
-        sciView.activeNode.position = sciView.activeNode.position.add(
-                getFBAxis().mul(wheelRotation.toFloat() * dragSpeed))
-        sciView.activeNode.lock.unlock()
+        val targetedNode = sciView.activeNode;
+        if (targetedNode == null || !targetedNode.lock.tryLock()) return
+
+        sciView.camera.forward.mul( wheelRotation.toFloat() * sciView.fpsSpeedSlow * sciView.mouseScrollSpeed, scrollPosUpdater )
+        targetedNode.position.add( scrollPosUpdater );
+        targetedNode.needsUpdate = true
+
+        targetedNode.lock.unlock()
     }
+
+    //aux vars to prevent from re-creating them over and over
+    private val dragPosUpdater: Vector3f = Vector3f()
+    private val scrollPosUpdater: Vector3f = Vector3f()
 }
