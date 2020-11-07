@@ -31,6 +31,7 @@ package sc.iview.commands.process;
 import graphics.scenery.HasGeometry;
 import graphics.scenery.Node;
 import net.imagej.mesh.Mesh;
+import net.imagej.mesh.Meshes;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
 import net.imglib2.IterableInterval;
@@ -81,7 +82,7 @@ public class Isosurface<T extends RealType> implements Command {
 
         Img<BitType> bitImg = (Img<BitType>) ops.threshold().apply(image, tmp);
 
-        Mesh m = ops.geom().marchingCubes(bitImg, 1, new BitTypeVertexInterpolator());
+        Mesh m = Meshes.marchingCubes(bitImg);
 
         Node scMesh = sciView.addMesh(m);
         ((HasGeometry)scMesh).recalculateNormals();
