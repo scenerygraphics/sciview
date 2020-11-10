@@ -41,9 +41,9 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
-import sc.iview.process.MeshConverter;
 
 import graphics.scenery.Mesh;
+import sc.iview.process.MeshConverter;
 
 /**
  * Command to create a convex hull of the currently open mesh

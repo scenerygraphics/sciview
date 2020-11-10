@@ -103,17 +103,17 @@ public class GameOfLife3D implements Command {
 //    @Parameter(label = "Play speed", min = "1", max="100", style = NumberWidget.SCROLL_BAR_STYLE, persist = false)
     private int playSpeed = 10;
 //
-//    @Parameter(callback = "iterate")
-//    private Button iterate;
-//
-//    @Parameter(callback = "randomize")
-//    private Button randomize;
-//
-//    @Parameter(callback = "play")
-//    private Button play;
-//
-//    @Parameter(callback = "pause")
-//    private Button pause;
+    @Parameter(callback = "iterate")
+    private Button iterate;
+
+    @Parameter(callback = "randomize")
+    private Button randomize;
+
+    @Parameter(callback = "play")
+    private Button play;
+
+    @Parameter(callback = "pause")
+    private Button pause;
 
     private int w = 64, h = 64, d = 64;
     private Img<UnsignedByteType> field;

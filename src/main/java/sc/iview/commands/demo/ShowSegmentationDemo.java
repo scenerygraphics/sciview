@@ -33,7 +33,6 @@ import io.scif.services.DatasetIOService;
 import net.imagej.mesh.Mesh;
 import net.imagej.mesh.Meshes;
 import net.imagej.ops.OpService;
-import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;

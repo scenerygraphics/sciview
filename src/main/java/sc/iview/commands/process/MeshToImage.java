@@ -43,9 +43,9 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
-import sc.iview.process.MeshConverter;
 
 import graphics.scenery.Mesh;
+import sc.iview.process.MeshConverter;
 
 /**
  * Command to voxelize the currently active Mesh into an image.
