@@ -38,9 +38,16 @@ print('Commit: %s' % commit_message)
 print('Starting build')
 # we now have our own version of travis-build.sh
 #subprocess.call(['curl', '-fsLO', 'https://raw.githubusercontent.com/scijava/scijava-scripts/master/travis-build.sh'])
-build_var1 = os.environ['encrypted_eb7aa63bf7ac_key']
-build_var2 = os.environ['encrypted_eb7aa63bf7ac_iv']
-subprocess.call(['bash', 'travis-build.sh', build_var1, build_var2])
+key_name = 'encrypted_eb7aa63bf7ac_key'
+key_iv = 'encrypted_eb7aa63bf7ac_iv'
+
+if ( key_name in os.environ ) and ( key_iv in os.environ ):# if encrypted keys in environment
+    build_var1 = os.environ[key_name]
+    build_var2 = os.environ[key_iv]
+
+    subprocess.check_call(['bash', 'travis-build.sh', build_var1, build_var2])
+else:
+    subprocess.check_call(['bash', 'travis-build.sh'])
 
 # Setup conda environment
 # def build_conda():

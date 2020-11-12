@@ -35,8 +35,8 @@ print('Is Pull Request?: %s' % is_PR)
 print('Commit: %s' % commit_message)
 
 def package_conda():
-    subprocess.call(['sh', 'populate_fiji.sh'])
-    subprocess.call(['pyinstaller', '--onefile', '--add-data', 'Fiji.app/jars:jars', 'src/main/python/sciview.py'])
+    subprocess.check_call(['sh', 'populate_fiji.sh'])
+    subprocess.check_call(['pyinstaller', '--onefile', '--add-data', 'Fiji.app/jars:jars', 'src/main/python/sciview.py'])
 
     platform = subprocess.check_output(['uname', '-s']).decode('UTF-8')
     arch = subprocess.check_output(['uname', '-m']).decode('UTF-8')
@@ -56,7 +56,7 @@ def package_conda():
 
     print(['exe:', exe_name])
 
-    subprocess.call(['mv', 'dist/sciview', exe_name])
+    subprocess.check_call(['mv', 'dist/sciview', exe_name])
 
 package_conda()
 
@@ -75,7 +75,7 @@ if ( branch == 'master' and not is_PR and travis_secure ) or \
     ( '[SV_IJ_DEPLOY_UNSTABLE]' in commit_message ):
     
     print('Upload to SciView-Unstable')
-    subprocess.call(['sh', 'sciview_deploy_unstable.sh'])
+    subprocess.check_call(['sh', 'sciview_deploy_unstable.sh'])
 
 
 ## Primary
@@ -87,5 +87,5 @@ if ( branch == 'master' and not is_PR and travis_secure ) or \
 if ( not is_PR and travis_secure and release_properties_exists ) or \
     ( '[SV_IJ_DEPLOY_PRIMARY]' in commit_message ):
     print('Upload to SciView')
-    subprocess.call(['sh', 'sciview_deploy.sh'])
+    subprocess.check_call(['sh', 'sciview_deploy.sh'])
 

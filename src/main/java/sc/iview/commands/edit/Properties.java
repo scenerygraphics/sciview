@@ -28,6 +28,7 @@
  */
 package sc.iview.commands.edit;
 
+import bdv.viewer.SourceAndConverter;
 import graphics.scenery.*;
 import graphics.scenery.volumes.Colormap;
 import graphics.scenery.volumes.Volume;
@@ -393,7 +394,8 @@ public class Properties extends InteractiveCommand {
             final MutableModuleItem<String> lutNameItem = getInfo().getMutableInput("colormapName", String.class );
             lutNameItem.setChoices( new ArrayList( lutService.findLUTs().keySet() ) );
 
-            RandomAccessibleInterval<RealType> rai = (RandomAccessibleInterval<RealType>) currentSceneNode.getMetadata().get("RandomAccessibleInterval");
+            ArrayList<SourceAndConverter> sources = (ArrayList<SourceAndConverter>) currentSceneNode.getMetadata().get("sources");
+            RandomAccessibleInterval<RealType> rai = sources.get(0).getSpimSource().getSource(0,0);
 
             timepoint = ((graphics.scenery.volumes.Volume)currentSceneNode).getCurrentTimepoint();
             getInfo().getMutableInput("timepoint", Integer.class).setMinimumValue(0);

@@ -54,9 +54,10 @@ class RotateView : Command {
 
     override fun run() {
         sciView.animate(30) {
-            sciView.targetArcball?.init(1, 1)
-            sciView.targetArcball?.drag(1 + xSpeed, 1 + ySpeed)
-            sciView.targetArcball?.end(1 + xSpeed, 1 + ySpeed)
+            // TODO: Make work again
+//            sciView.targetArcball?.init(1, 1)
+//            sciView.targetArcball?.drag(1 + xSpeed, 1 + ySpeed)
+//            sciView.targetArcball?.end(1 + xSpeed, 1 + ySpeed)
         }
     }
 }

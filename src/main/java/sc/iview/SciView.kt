@@ -72,7 +72,6 @@ import net.imagej.axis.DefaultLinearAxis
 import net.imagej.interval.CalibratedRealInterval
 import net.imagej.lut.LUTService
 import net.imagej.mesh.Mesh
-import net.imagej.ops.OpService
 import net.imagej.units.UnitService
 import net.imglib2.*
 import net.imglib2.display.ColorTable
@@ -89,8 +88,8 @@ import org.joml.Vector3f
 import org.lwjgl.system.Platform
 import org.scijava.Context
 import org.scijava.`object`.ObjectService
+import org.scijava.command.CommandService
 import org.scijava.display.Display
-import org.scijava.display.DisplayService
 import org.scijava.event.EventHandler
 import org.scijava.event.EventService
 import org.scijava.io.IOService
@@ -100,20 +99,21 @@ import org.scijava.menu.MenuService
 import org.scijava.plugin.Parameter
 import org.scijava.service.SciJavaService
 import org.scijava.thread.ThreadService
+import org.scijava.ui.behaviour.Behaviour
 import org.scijava.ui.behaviour.ClickBehaviour
 import org.scijava.ui.swing.menu.SwingJMenuBarCreator
 import org.scijava.util.ColorRGB
 import org.scijava.util.Colors
 import org.scijava.util.VersionUtils
+import sc.iview.commands.help.Help
 import sc.iview.commands.view.NodePropertyEditor
-import sc.iview.controls.behaviours.CameraTranslateControl
-import sc.iview.controls.behaviours.NodeTranslateControl
+import sc.iview.controls.behaviours.*
 import sc.iview.event.NodeActivatedEvent
 import sc.iview.event.NodeAddedEvent
 import sc.iview.event.NodeChangedEvent
 import sc.iview.event.NodeRemovedEvent
 import sc.iview.process.MeshConverter
-import sc.iview.ui.ContextPopUp
+import sc.iview.ui.ContextPopUpNodeChooser
 import sc.iview.ui.REPLPane
 import sc.iview.vector.JOMLVector3
 import sc.iview.vector.Vector3
@@ -136,6 +136,7 @@ import java.util.stream.Collectors
 import javax.imageio.ImageIO
 import javax.script.ScriptException
 import javax.swing.*
+import kotlin.math.acos
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -152,8 +153,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     /**
      * Mouse controls for FPS movement and Arcball rotation
      */
-    var targetArcball: ArcballCameraControl? = null
-        protected set
+    lateinit var targetArcball: SciView.AnimatedCenteringBeforeArcBallControl
     protected var fpsControl: FPSCameraControl? = null
     /*
      * Return the default floor object
@@ -223,9 +223,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     /**
      * Speeds for input controls
      */
-    private var fpsScrollSpeed = 0.05f
-    private var mouseSpeedMult = 0.25f
-
+    var controlsParameters: ControlsParameters = ControlsParameters()
     /*
      * Return the SciJava Display that contains SciView
      *//*
@@ -291,27 +289,95 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
     /**
      * This pushes the current input setup onto a stack that allows them to be restored with restoreControls
+     * This pushes the current input setup onto a stack that allows them to be restored with restoreControls.
+     * It stacks in particular: all keybindings, all Behaviours, and all step sizes and mouse sensitivities
+     * (which are held together in [ControlsParameters]).
+     *
+     * *Word of warning:* The stashing memorizes *references only* on currently used controls
+     * (such as, e.g., [MovementCommand], [FPSCameraControl] or [NodeTranslateControl]),
+     * it *does not* create an extra copy of any control. That said, if you modify any control
+     * object despite it was already stashed with this method, the change will be visible in the "stored"
+     * control and will not go away after the restore... To be on the safe side for now at least, *create
+     * new and modified* controls rather than directly changing them.
      */
     fun stashControls() {
         val controlState = HashMap<String, Any>()
+        val handler = inputHandler
+        if (handler == null) {
+            logger.error("InputHandler is null, cannot store controls")
+            return
+        }
+
+        //behaviours:
+        for (actionName in handler.getAllBehaviours()) {
+            controlState[STASH_BEHAVIOUR_KEY + actionName] = handler.getBehaviour(actionName) as Any
+        }
+
+        //bindings:
+        for (actionName in handler.getAllBehaviours()) {
+            for (trigger in handler.getKeyBindings(actionName)) {
+                controlState[STASH_BINDING_KEY + actionName] = trigger.toString()
+            }
+        }
+
+        //finally, stash the control parameters
+        controlState[STASH_CONTROLSPARAMS_KEY] = controlsParameters
+
+        //...and stash it!
         controlStack!!.push(controlState)
     }
 
     /**
-     * This pops/restores the previously stashed controls. Emits a warning if there are no stashed controls
+     * This pops/restores the previously stashed controls. Emits a warning if there are no stashed controls.
+     * It first clears all controls, and then resets in particular: all keybindings, all Behaviours,
+     * and all step sizes and mouse sensitivities (which are held together in [ControlsParameters]).
+     *
+     * *Some recent changes may not be removed* with this restore --
+     * see discussion in the docs of [SciView.stashControls] for more details.
      */
     fun restoreControls() {
-        // This isnt how it should work
-        setObjectSelectionMode()
-        resetFPSInputs()
+        if (controlStack!!.empty()) {
+            logger.warn("Not restoring controls, the controls stash stack is empty!")
+            return
+        }
+        val inputHandler = inputHandler
+        if (inputHandler == null) {
+            logger.error("InputHandler is null, cannot restore controls")
+            return
+        }
+
+        //clear the input handler entirely
+        for (actionName in inputHandler.getAllBehaviours()) {
+            inputHandler.removeKeyBinding(actionName)
+            inputHandler.removeBehaviour(actionName)
+        }
+
+        //retrieve the most recent stash with controls
+        val controlState = controlStack!!.pop()
+        for (control in controlState.entries) {
+            var key: String
+            when {
+                control.key.startsWith(STASH_BEHAVIOUR_KEY) -> {
+                    //processing behaviour
+                    key = control.key.substring(STASH_BEHAVIOUR_KEY.length)
+                    inputHandler.addBehaviour(key, control.value as Behaviour)
+                }
+                control.key.startsWith(STASH_BINDING_KEY) -> {
+                    //processing key binding
+                    key = control.key.substring(STASH_BINDING_KEY.length)
+                    inputHandler.addKeyBinding(key, (control.value as String))
+                }
+                control.key.startsWith(STASH_CONTROLSPARAMS_KEY) -> {
+                    //processing mouse sensitivities and step sizes...
+                    controlsParameters = control.value as ControlsParameters
+                }
+            }
+        }
     }
 
-    /**
-     * Place the camera such that all objects in the scene are within the field of view
-     */
-    fun fitCameraToScene() {
-        centerOnNode(scene)
-    }
+    private val STASH_BEHAVIOUR_KEY = "behaviour:"
+    private val STASH_BINDING_KEY = "binding:"
+    private val STASH_CONTROLSPARAMS_KEY = "parameters:"
 
     /**
      * Reset the scene to initial conditions
@@ -319,9 +385,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     fun reset() {
         // Initialize the 3D axes
         axes = arrayOf(
-            DefaultLinearAxis(DefaultAxisType("X", true), "um", 1.0),
-            DefaultLinearAxis(DefaultAxisType("Y", true), "um", 1.0),
-            DefaultLinearAxis(DefaultAxisType("Z", true), "um", 1.0)
+                DefaultLinearAxis(DefaultAxisType("X", true), "um", 1.0),
+                DefaultLinearAxis(DefaultAxisType("Y", true), "um", 1.0),
+                DefaultLinearAxis(DefaultAxisType("Z", true), "um", 1.0)
         )
 
         // Remove everything except camera
@@ -556,8 +622,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             nodePropertyEditor!!.rebuildTree()
             logger.info("Done initializing SciView")
 
-            // subscribe to Node{Added, Removed, Changed} events
-            eventService!!.subscribe(this)
+            // subscribe to Node{Added, Removed, Changed} events, happens automatically
+//            eventService!!.subscribe(this)
             frame!!.glassPane.isVisible = false
             sceneryJPanel!!.isVisible = true
 
@@ -625,13 +691,22 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     val isInitialized: Boolean
         get() = sceneInitialized()
 
-    /*
-     * Center the camera on the scene such that all objects are within the field of view
+    /**
+     * Place the scene into the center of camera view, and zoom in/out such
+     * that the whole scene is in the view (everything would be visible if it
+     * would not be potentially occluded).
+     */
+    fun fitCameraToScene() {
+        centerOnNode(scene)
+        //TODO: smooth zoom in/out VLADO vlado Vlado
+    }
+
+    /**
+     * Place the scene into the center of camera view.
      */
     fun centerOnScene() {
         centerOnNode(scene)
     }
-
     /*
      * Get the InputHandler that is managing mouse, input, VR controls, etc.
      */
@@ -665,130 +740,226 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         return bb
     }
 
-    /*
-     * Center the camera on the specified Node
+    /**
+     * Place the active node into the center of camera view.
      */
-    /*
-     * Center the camera on the specified Node
+    fun centerOnActiveNode() {
+        if (activeNode == null) return
+        centerOnNode(activeNode)
+    }
+
+    /**
+     * Place the specified node into the center of camera view.
      */
-    @JvmOverloads
-    fun centerOnNode(currentNode: Node?, branchFunction: Function<Node, List<Node>> = notAbstractBranchingFunction) {
+    fun centerOnNode(currentNode: Node?) {
         if (currentNode == null) {
-            log!!.info("Cannot center on node. CurrentNode is null")
+            log!!.info("Cannot center on null node.")
             return
         }
-        val bb = getSubgraphBoundingBox(currentNode, branchFunction) ?: return
 
-        // TODO: find the widest dimensions of BB and align to that normal
-        println("CurrentNode BoundingBox " + bb + " " + bb.getBoundingSphere().origin + " " + bb.getBoundingSphere().radius)
-        if (java.lang.Float.isNaN(bb.getBoundingSphere().origin.x()) ||
-                java.lang.Float.isNaN(bb.getBoundingSphere().origin.y()) ||
-                java.lang.Float.isNaN(bb.getBoundingSphere().origin.z()) ||
-                java.lang.Float.isNaN(bb.getBoundingSphere().radius)) {
-            log!!.warn("Bounding box contains NaN, not adjusting camera.")
-            return
-        }
-        camera!!.target = bb.getBoundingSphere().origin
-        camera!!.targeted = true
-
-        // Set forward direction to point from camera at active node
-        val forward = bb.getBoundingSphere().origin.sub(camera!!.position).normalize()
-        val distance = (bb.getBoundingSphere().radius / Math.tan(camera!!.fov / 360 * Math.PI)).toFloat()
-        headlight!!.lightRadius = distance * 1.1f
-
-        // Solve for the proper rotation
-        val rotation = Quaternionf().lookAlong(forward, Vector3f(0.0f, 1.0f, 0.0f))
-        camera!!.rotation = rotation.normalize()
-        camera!!.position = bb.getBoundingSphere().origin.add(camera!!.forward.mul(distance * -1.33f))
-
-//        getCamera().setDirty(true);
-//        getCamera().setNeedsUpdate(true);
+        //center the on the same spot as ArcBall does
+        centerOnPosition(currentNode.getMaximumBoundingBox().getBoundingSphere().origin)
     }
 
-    //log.debug( "FPS scroll speed: " + fpsScrollSpeed );
-    var fPSSpeed: Float
-        get() = fpsScrollSpeed
-        set(newspeed) {
-            var speed = newspeed
-            if (newspeed < 0.30f) speed = 0.3f else if (newspeed > 30.0f) speed = 30.0f
-            fpsScrollSpeed = speed
-            //log.debug( "FPS scroll speed: " + fpsScrollSpeed );
-        }
-
-    //log.debug( "Mouse speed: " + mouseSpeedMult );
-    var mouseSpeed: Float
-        get() = mouseSpeedMult
-        set(newspeed) {
-            var speed = newspeed
-            if (newspeed < 0.30f) speed = 0.3f else if (newspeed > 3.0f) speed = 3.0f
-            mouseSpeedMult = speed
-            //log.debug( "Mouse speed: " + mouseSpeedMult );
-        }
-
-    /*
-     * Reset the input handler to first-person-shooter (FPS) style controls
+    /**
+     * Center the camera on the specified Node
      */
-    fun resetFPSInputs() {
-        val h = inputHandler
-        if (h == null) {
-            logger.error("InputHandler is null, cannot change bindings.")
+    fun centerOnPosition(currentPos: Vector3f?) {
+        //desired view direction in world coords
+        val worldDirVec = Vector3f(currentPos).sub(camera!!.position)
+        if (worldDirVec.lengthSquared() < 0.01) {
+            //ill defined task, happens typically when cam is inside the node which we want center on
+            log!!.info("Camera is on the spot you want to look at. Please, move the camera away first.")
             return
         }
-        h.addBehaviour("move_forward_scroll",
-                MovementCommand("move_forward", "forward", { scene.findObserver() },
-                        fPSSpeed))
-        h.addBehaviour("move_forward",
-                MovementCommand("move_forward", "forward", { scene.findObserver() },
-                        fPSSpeed))
-        h.addBehaviour("move_back",
-                MovementCommand("move_back", "back", { scene.findObserver() },
-                        fPSSpeed))
-        h.addBehaviour("move_left",
-                MovementCommand("move_left", "left", { scene.findObserver() },
-                        fPSSpeed))
-        h.addBehaviour("move_right",
-                MovementCommand("move_right", "right", { scene.findObserver() },
-                        fPSSpeed))
-        h.addBehaviour("move_up",
-                MovementCommand("move_up", "up", { scene.findObserver() },
-                        fPSSpeed))
-        h.addBehaviour("move_down",
-                MovementCommand("move_down", "down", { scene.findObserver() },
-                        fPSSpeed))
-        h.addKeyBinding("move_forward_scroll", "scroll")
+        val camForwardXZ = Vector2f(camera!!.forward.x, camera!!.forward.z)
+        val wantLookAtXZ = Vector2f(worldDirVec.x, worldDirVec.z)
+        var totalYawAng = camForwardXZ.normalize().dot(wantLookAtXZ.normalize()).toDouble()
+        //while mathematically impossible, cumulated numerical inaccuracies have different opinion
+        totalYawAng = if (totalYawAng > 1) {
+            0.0
+        } else {
+            acos(totalYawAng)
+        }
+
+        //switch direction?
+        camForwardXZ[camForwardXZ.y] = -camForwardXZ.x
+        if (wantLookAtXZ.dot(camForwardXZ) > 0) totalYawAng *= -1.0
+        val camForwardYed = Vector3f(camera!!.forward)
+        Quaternionf().rotateXYZ(0f, (-totalYawAng).toFloat(), 0f).normalize().transform(camForwardYed)
+        var totalPitchAng = camForwardYed.normalize().dot(worldDirVec.normalize()).toDouble()
+        totalPitchAng = if (totalPitchAng > 1) {
+            0.0
+        } else {
+            acos(totalPitchAng)
+        }
+
+        //switch direction?
+        if (camera!!.forward.y > worldDirVec.y) totalPitchAng *= -1.0
+        if (camera!!.up.y < 0) totalPitchAng *= -1.0
+
+        //animation options: control delay between animation frames -- fluency
+        val rotPausePerStep: Long = 30 //miliseconds
+
+        //animation options: control max number of steps -- upper limit on total time for animation
+        val rotMaxSteps = 999999 //effectively disabled....
+
+        //animation options: the hardcoded 5 deg (0.087 rad) -- smoothness
+        //how many steps when max update/move is 5 deg
+        val totalDeltaAng = Math.max(Math.abs(totalPitchAng), Math.abs(totalYawAng)).toFloat()
+        var rotSteps = Math.ceil(totalDeltaAng / 0.087).toInt()
+        if (rotSteps > rotMaxSteps) rotSteps = rotMaxSteps
+
+        /*
+        log.info("centering over "+rotSteps+" steps the pitch " + 180*totalPitchAng/Math.PI
+                + " and the yaw " + 180*totalYawAng/Math.PI);
+        */
+
+        //angular progress aux variables
+        var donePitchAng = 0.0
+        var doneYawAng = 0.0
+        var deltaAng: Float
+        camera!!.targeted = false
+        var i = 1
+        while (i <= rotSteps) {
+
+            //this emulates ease-in ease-out animation, both vars are in [0:1]
+            var timeProgress = i.toFloat() / rotSteps
+            val angProgress = (if (2.let { timeProgress *= it; timeProgress } <= 1) //two cubics connected smoothly into S-shape curve from [0,0] to [1,1]
+                timeProgress * timeProgress * timeProgress else 2.let { timeProgress -= it; timeProgress } * timeProgress * timeProgress + 2) / 2
+
+            //rotate now by this ang: "where should I be by now" minus "where I got last time"
+            deltaAng = (angProgress * totalPitchAng - donePitchAng).toFloat()
+            val pitchQ = Quaternionf().rotateXYZ(-deltaAng, 0f, 0f).normalize()
+            deltaAng = (angProgress * totalYawAng - doneYawAng).toFloat()
+            val yawQ = Quaternionf().rotateXYZ(0f, deltaAng, 0f).normalize()
+            camera!!.rotation = pitchQ.mul(camera!!.rotation).mul(yawQ).normalize()
+            donePitchAng = angProgress * totalPitchAng
+            doneYawAng = angProgress * totalYawAng
+            try {
+                Thread.sleep(rotPausePerStep)
+            } catch (e: InterruptedException) {
+                i = rotSteps
+            }
+            ++i
+        }
     }
+
+    /**
+     * Activate the node, and center the view on it.
+     * @param n
+     * @return the currently active node
+     */
+    fun setActiveCenteredNode(n: Node?): Node? {
+        //activate...
+        val ret = setActiveNode(n)
+        //...and center it
+        ret?.let { centerOnNode(it) }
+        return ret
+    }
+
+    //a couple of shortcut methods to readout controls params
+    fun getFPSSpeedSlow(): Float {
+        return controlsParameters.getFpsSpeedSlow()
+    }
+
+    fun getFPSSpeedFast(): Float {
+        return controlsParameters.getFpsSpeedFast()
+    }
+
+    fun getFPSSpeedVeryFast(): Float {
+        return controlsParameters.getFpsSpeedVeryFast()
+    }
+
+    fun getMouseSpeed(): Float {
+        return controlsParameters.getMouseSpeedMult()
+    }
+
+    fun getMouseScrollSpeed(): Float {
+        return controlsParameters.getMouseScrollMult()
+    }
+
+    //a couple of setters with scene sensible boundary checks
+    fun setFPSSpeedSlow(slowSpeed: Float) {
+        controlsParameters.setFpsSpeedSlow(paramWithinBounds(slowSpeed, FPSSPEED_MINBOUND_SLOW, FPSSPEED_MAXBOUND_SLOW))
+    }
+
+    fun setFPSSpeedFast(fastSpeed: Float) {
+        controlsParameters.setFpsSpeedFast(paramWithinBounds(fastSpeed, FPSSPEED_MINBOUND_FAST, FPSSPEED_MAXBOUND_FAST))
+    }
+
+    fun setFPSSpeedVeryFast(veryFastSpeed: Float) {
+        controlsParameters.setFpsSpeedVeryFast(paramWithinBounds(veryFastSpeed, FPSSPEED_MINBOUND_VERYFAST, FPSSPEED_MAXBOUND_VERYFAST))
+    }
+
+    fun setFPSSpeed(newBaseSpeed: Float) {
+        // we don't want to escape bounds checking
+        // (so we call "our" methods rather than directly the controlsParameters)
+        setFPSSpeedSlow(1f * newBaseSpeed)
+        setFPSSpeedFast(20f * newBaseSpeed)
+        setFPSSpeedVeryFast(500f * newBaseSpeed)
+
+        //report what's been set in the end
+        log!!.debug("FPS speeds: slow=" + controlsParameters.getFpsSpeedSlow()
+                .toString() + ", fast=" + controlsParameters.getFpsSpeedFast()
+                .toString() + ", very fast=" + controlsParameters.getFpsSpeedVeryFast())
+    }
+
+    fun setMouseSpeed(newSpeed: Float) {
+        controlsParameters.setMouseSpeedMult(paramWithinBounds(newSpeed, MOUSESPEED_MINBOUND, MOUSESPEED_MAXBOUND))
+        log!!.debug("Mouse movement speed: " + controlsParameters.getMouseSpeedMult())
+    }
+
+    fun setMouseScrollSpeed(newSpeed: Float) {
+        controlsParameters.setMouseScrollMult(paramWithinBounds(newSpeed, MOUSESCROLL_MINBOUND, MOUSESCROLL_MAXBOUND))
+        log!!.debug("Mouse scroll speed: " + controlsParameters.getMouseScrollMult())
+    }
+
+    // TODO replace with coerce?
+    private fun paramWithinBounds(param: Float, minBound: Float, maxBound: Float): Float {
+        var newParam = param
+        if (newParam < minBound) newParam = minBound else if (newParam > maxBound) newParam = maxBound
+        return newParam
+    }
+
 
     fun setObjectSelectionMode() {
-        val selectAction: Function3<RaycastResult, Int, Int, Unit> = { (matches), x: Int, y: Int ->
-            if (!matches.isEmpty()) {
-                setActiveNode(matches[0].node)
-                nodePropertyEditor!!.trySelectNode(activeNode)
-                log!!.info("Selected node: " + activeNode!!.name + " at " + x + "," + y)
+        val selectAction = { nearest: RaycastResult, x: Int, y: Int ->
+            if (!nearest.matches.isEmpty()) {
+                // copy reference on the last object picking result into "public domain"
+                // (this must happen before the ContextPopUpNodeChooser menu!)
+                objectSelectionLastResult = nearest
 
-                // Setup the context menu for this node
-                val menu = ContextPopUp(matches[0].node)
-                menu.show(sceneryJPanel, x, y)
+                // Setup the context menu for this picking
+                // (in the menu, the user will chose node herself)
+                ContextPopUpNodeChooser(this).show(sceneryJPanel, x, y)
             }
         }
         setObjectSelectionMode(selectAction)
     }
 
+    var objectSelectionLastResult: RaycastResult? = null
+
     /*
      * Set the action used during object selection
      */
-    fun setObjectSelectionMode(selectAction: Function3<RaycastResult, Int, Int, Unit>) {
+    fun setObjectSelectionMode(selectAction: Function3<RaycastResult, Int, Int, Unit>?) {
         val h = inputHandler
-        val ignoredObjects: MutableList<Class<*>> = ArrayList()
+        val ignoredObjects = ArrayList<Class<*>>()
         ignoredObjects.add(BoundingGrid::class.java)
+        ignoredObjects.add(Camera::class.java) //do not mess with "scene params", allow only "scene data" to be selected
+        ignoredObjects.add(DetachedHeadCamera::class.java)
+        ignoredObjects.add(DirectionalLight::class.java)
+        ignoredObjects.add(PointLight::class.java)
         if (h == null) {
             logger.error("InputHandler is null, cannot change object selection mode.")
             return
         }
-        h.addBehaviour("object_selection_mode",
+        h.addBehaviour("node: choose one from the view panel",
                 SelectCommand("objectSelector", renderer!!, scene,
                         { scene.findObserver() }, false, ignoredObjects,
-                        selectAction))
-        h.addKeyBinding("object_selection_mode", "double-click button1")
+                        selectAction!!))
+        h.addKeyBinding("node: choose one from the view panel", "double-click button1")
     }
 
     /*
@@ -801,50 +972,55 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             logger.error("InputHandler is null, cannot run input setup.")
             return
         }
+        //when we get here, the Behaviours and key bindings from scenery are already in place
 
-        // TODO: Maybe get rid of this?
-        h.useDefaultBindings("")
+        //possibly, disable some (unused?) controls from scenery
+        /*
+        h.removeBehaviour( "gamepad_camera_control");
+        h.removeKeyBinding("gamepad_camera_control");
+        h.removeBehaviour( "gamepad_movement_control");
+        h.removeKeyBinding("gamepad_movement_control");
+        */
 
-        // Mouse controls
+        // node-selection and node-manipulation (translate & rotate) controls
         setObjectSelectionMode()
-        val nodeTranslate = NodeTranslateControl(this, 0.0005f)
-        h.addBehaviour("mouse_control_nodetranslate", nodeTranslate)
-        h.addKeyBinding("mouse_control_nodetranslate", "ctrl button1")
-        h.addBehaviour("scroll_nodetranslate", nodeTranslate)
-        h.addKeyBinding("scroll_nodetranslate", "ctrl scroll")
-        h.addBehaviour("move_up_slow", MovementCommand("move_up", "up", { scene.findObserver() }, fpsScrollSpeed))
-        h.addBehaviour("move_down_slow", MovementCommand("move_down", "down", { scene.findObserver() }, fpsScrollSpeed))
-        h.addBehaviour("move_up_fast", MovementCommand("move_up", "up", { scene.findObserver() }, 1.0f))
-        h.addBehaviour("move_down_fast", MovementCommand("move_down", "down", { scene.findObserver() }, 1.0f))
-        h.addKeyBinding("move_up_slow", "X")
-        h.addKeyBinding("move_down_slow", "C")
-        h.addKeyBinding("move_up_fast", "shift X")
-        h.addKeyBinding("move_down_fast", "shift C")
+        val nodeTranslateControl = NodeTranslateControl(this)
+        h.addBehaviour("node: move selected one left, right, up, or down", nodeTranslateControl)
+        h.addKeyBinding("node: move selected one left, right, up, or down", "ctrl button1")
+        h.addBehaviour("node: move selected one closer or further away", nodeTranslateControl)
+        h.addKeyBinding("node: move selected one closer or further away", "ctrl scroll")
+        h.addBehaviour("node: rotate selected one", NodeRotateControl(this))
+        h.addKeyBinding("node: rotate selected one", "ctrl shift button1")
+
+        // within-scene navigation: ArcBall and FPS
         enableArcBallControl()
         enableFPSControl()
 
-        // Extra keyboard controls
-        h.addBehaviour("show_help", showHelpDisplay())
-        h.addKeyBinding("show_help", "U")
-        h.addBehaviour("enable_decrease", enableDecrease())
-        h.addKeyBinding("enable_decrease", "M")
-        h.addBehaviour("enable_increase", enableIncrease())
-        h.addKeyBinding("enable_increase", "N")
+        // whole-scene rolling
+        h.addBehaviour("view: rotate (roll) clock-wise", SceneRollControl(this, +0.05f)) //2.8 deg
+        h.addKeyBinding("view: rotate (roll) clock-wise", "R")
+        h.addBehaviour("view: rotate (roll) counter clock-wise", SceneRollControl(this, -0.05f))
+        h.addKeyBinding("view: rotate (roll) counter clock-wise", "shift R")
+        h.addBehaviour("view: rotate (roll) with mouse", h.getBehaviour("view: rotate (roll) clock-wise")!!)
+        h.addKeyBinding("view: rotate (roll) with mouse", "ctrl button3")
 
-        //float veryFastSpeed = getScene().getMaximumBoundingBox().getBoundingSphere().getRadius()/50f;
-        val veryFastSpeed = 100f
-        h.addBehaviour("move_forward_veryfast", MovementCommand("move_forward", "forward", { scene.findObserver() }, veryFastSpeed))
-        h.addBehaviour("move_back_veryfast", MovementCommand("move_back", "back", { scene.findObserver() }, veryFastSpeed))
-        h.addBehaviour("move_left_veryfast", MovementCommand("move_left", "left", { scene.findObserver() }, veryFastSpeed))
-        h.addBehaviour("move_right_veryfast", MovementCommand("move_right", "right", { scene.findObserver() }, veryFastSpeed))
-        h.addBehaviour("move_up_veryfast", MovementCommand("move_up", "up", { scene.findObserver() }, veryFastSpeed))
-        h.addBehaviour("move_down_veryfast", MovementCommand("move_down", "down", { scene.findObserver() }, veryFastSpeed))
-        h.addKeyBinding("move_forward_veryfast", "ctrl shift W")
-        h.addKeyBinding("move_back_veryfast", "ctrl shift S")
-        h.addKeyBinding("move_left_veryfast", "ctrl shift A")
-        h.addKeyBinding("move_right_veryfast", "ctrl shift D")
-        h.addKeyBinding("move_up_veryfast", "ctrl shift X")
-        h.addKeyBinding("move_down_veryfast", "ctrl shift C")
+        // adjusters of various controls sensitivities
+        h.addBehaviour("moves: step size decrease", ClickBehaviour { _: Int, _: Int -> setFPSSpeed(getFPSSpeedSlow() - 0.01f) })
+        h.addKeyBinding("moves: step size decrease", "MINUS")
+        h.addBehaviour("moves: step size increase", ClickBehaviour { _: Int, _: Int -> setFPSSpeed(getFPSSpeedSlow() + 0.01f) })
+        h.addKeyBinding("moves: step size increase", "EQUALS")
+        h.addBehaviour("mouse: move sensitivity decrease", ClickBehaviour { _: Int, _: Int -> setMouseSpeed(getMouseSpeed() - 0.02f) })
+        h.addKeyBinding("mouse: move sensitivity decrease", "M MINUS")
+        h.addBehaviour("mouse: move sensitivity increase", ClickBehaviour { _: Int, _: Int -> setMouseSpeed(getMouseSpeed() + 0.02f) })
+        h.addKeyBinding("mouse: move sensitivity increase", "M EQUALS")
+        h.addBehaviour("mouse: scroll sensitivity decrease", ClickBehaviour { _: Int, _: Int -> setMouseScrollSpeed(getMouseScrollSpeed() - 0.3f) })
+        h.addKeyBinding("mouse: scroll sensitivity decrease", "S MINUS")
+        h.addBehaviour("mouse: scroll sensitivity increase", ClickBehaviour { _: Int, _: Int -> setMouseScrollSpeed(getMouseScrollSpeed() + 0.3f) })
+        h.addKeyBinding("mouse: scroll sensitivity increase", "S EQUALS")
+
+        // help window
+        h.addBehaviour("show help", showHelpDisplay())
+        h.addKeyBinding("show help", "F1")
     }
 
     /*
@@ -853,32 +1029,47 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     private fun enableArcBallControl() {
         val h = inputHandler
         if (h == null) {
-            logger.error("InputHandler is null, cannot setup arcball.")
+            logger.error("InputHandler is null, cannot setup arcball control.")
             return
         }
-        val target: Vector3f
-        target = if (activeNode == null) {
-            Vector3f(0.0f, 0.0f, 0.0f)
-        } else {
-            activeNode!!.position
-        }
-        var mouseSpeed = 0.25f
-        mouseSpeed = mouseSpeed
+
+        val target: Vector3f = activeNode?.position ?: Vector3f(0.0f, 0.0f, 0.0f)
+
+        //setup ArcballCameraControl from scenery, register it with SciView's controlsParameters
         val cameraSupplier = Supplier { scene.findObserver() }
-        targetArcball = ArcballCameraControl("mouse_control_arcball", cameraSupplier,
+        targetArcball = AnimatedCenteringBeforeArcBallControl("view: rotate it around selected node", cameraSupplier,
                 renderer!!.window.width,
                 renderer!!.window.height, target)
-        targetArcball!!.maximumDistance = Float.MAX_VALUE
-        targetArcball!!.mouseSpeedMultiplier = mouseSpeed
-        targetArcball!!.scrollSpeedMultiplier = 0.05f
-        targetArcball!!.distance = camera!!.position.sub(target).length()
+        targetArcball.maximumDistance = Float.MAX_VALUE
+        controlsParameters.registerArcballCameraControl(targetArcball)
+        h.addBehaviour("view: rotate around selected node", targetArcball)
+        h.addKeyBinding("view: rotate around selected node", "shift button1")
+        h.addBehaviour("view: zoom outward or toward selected node", targetArcball)
+        h.addKeyBinding("view: zoom outward or toward selected node", "shift scroll")
+    }
 
-        // FIXME: Swing seems to have issues with shift-scroll actions, so we change
-        //  this to alt-scroll here for the moment.
-        h.addBehaviour("mouse_control_arcball", targetArcball!!)
-        h.addKeyBinding("mouse_control_arcball", "shift button1")
-        h.addBehaviour("scroll_arcball", targetArcball!!)
-        h.addKeyBinding("scroll_arcball", "shift scroll")
+    /*
+     * A wrapping class for the {@ArcballCameraControl} that calls {@link CenterOnPosition()}
+     * before the actual Arcball camera movement takes place. This way, the targeted node is
+     * first smoothly brought into the centre along which Arcball is revolving, preventing
+     * from sudden changes of view (and lost of focus from the user.
+     */
+    inner class AnimatedCenteringBeforeArcBallControl : ArcballCameraControl {
+        //a bunch of necessary c'tors (originally defined in the ArcballCameraControl class)
+        constructor(name: String, n: Function0<Camera?>, w: Int, h: Int, target: Function0<Vector3f>) : super(name, n, w, h, target) {}
+        constructor(name: String,n: Supplier<Camera?>, w: Int, h: Int, target: Supplier<Vector3f>) : super(name, n, w, h, target) {}
+        constructor(name: String, n: Function0<Camera?>, w: Int, h: Int, target: Vector3f) : super(name, n, w, h, target) {}
+        constructor(name: String, n: Supplier<Camera?>, w: Int, h: Int, target: Vector3f) : super(name, n, w, h, target) {}
+
+        override fun init(x: Int, y: Int) {
+            centerOnPosition(targetArcball.target.invoke())
+            super.init(x, y)
+        }
+
+        override fun scroll(wheelRotation: Double, isHorizontal: Boolean, x: Int, y: Int) {
+            centerOnPosition(targetArcball.target.invoke())
+            super.scroll(wheelRotation, isHorizontal, x, y)
+        }
     }
 
     /*
@@ -890,15 +1081,108 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             logger.error("InputHandler is null, cannot setup fps control.")
             return
         }
+
+        // Mouse look around (Lclick) and move around (Rclick)
+        //
+        //setup FPSCameraControl from scenery, register it with SciView's controlsParameters
         val cameraSupplier = Supplier { scene.findObserver() }
-        fpsControl = FPSCameraControl("mouse_control", cameraSupplier, renderer!!.window.width,
+        fpsControl = FPSCameraControl("view: freely look around", cameraSupplier, renderer!!.window.width,
                 renderer!!.window.height)
-        h.addBehaviour("mouse_control", fpsControl!!)
-        h.addKeyBinding("mouse_control", "button1")
-        h.addBehaviour("mouse_control_cameratranslate", CameraTranslateControl(this, 0.002f))
-        h.addKeyBinding("mouse_control_cameratranslate", "button2")
-        resetFPSInputs()
+        controlsParameters.registerFpsCameraControl(fpsControl)
+        h.addBehaviour("view: freely look around", fpsControl!!)
+        h.addKeyBinding("view: freely look around", "button1")
+
+        //slow and fast camera motion
+        h.addBehaviour("move_withMouse_back/forward/left/right", CameraTranslateControl(this, 1f))
+        h.addKeyBinding("move_withMouse_back/forward/left/right", "button3")
+        //
+        //fast and very fast camera motion
+        h.addBehaviour("move_withMouse_back/forward/left/right_fast", CameraTranslateControl(this, 10f))
+        h.addKeyBinding("move_withMouse_back/forward/left/right_fast", "shift button3")
+
+        // Keyboard move around (WASD keys)
+        //
+        //override 'WASD' from Scenery
+        var mcW: MovementCommand
+        var mcA: MovementCommand
+        var mcS: MovementCommand
+        var mcD: MovementCommand
+        mcW = MovementCommand("move_forward", "forward", { scene.findObserver() }, controlsParameters.getFpsSpeedSlow())
+        mcS = MovementCommand("move_backward", "back", { scene.findObserver() }, controlsParameters.getFpsSpeedSlow())
+        mcA = MovementCommand("move_left", "left", { scene.findObserver() }, controlsParameters.getFpsSpeedSlow())
+        mcD = MovementCommand("move_right", "right", { scene.findObserver() }, controlsParameters.getFpsSpeedSlow())
+        controlsParameters.registerSlowStepMover(mcW)
+        controlsParameters.registerSlowStepMover(mcS)
+        controlsParameters.registerSlowStepMover(mcA)
+        controlsParameters.registerSlowStepMover(mcD)
+        h.addBehaviour("move_forward", mcW)
+        h.addBehaviour("move_back", mcS)
+        h.addBehaviour("move_left", mcA)
+        h.addBehaviour("move_right", mcD)
+        // 'WASD' keys are registered already in scenery
+
+        //override shift+'WASD' from Scenery
+        mcW = MovementCommand("move_forward_fast", "forward", { scene.findObserver() }, controlsParameters.getFpsSpeedFast())
+        mcS = MovementCommand("move_backward_fast", "back", { scene.findObserver() }, controlsParameters.getFpsSpeedFast())
+        mcA = MovementCommand("move_left_fast", "left", { scene.findObserver() }, controlsParameters.getFpsSpeedFast())
+        mcD = MovementCommand("move_right_fast", "right", { scene.findObserver() }, controlsParameters.getFpsSpeedFast())
+        controlsParameters.registerFastStepMover(mcW)
+        controlsParameters.registerFastStepMover(mcS)
+        controlsParameters.registerFastStepMover(mcA)
+        controlsParameters.registerFastStepMover(mcD)
+        h.addBehaviour("move_forward_fast", mcW)
+        h.addBehaviour("move_back_fast", mcS)
+        h.addBehaviour("move_left_fast", mcA)
+        h.addBehaviour("move_right_fast", mcD)
+        // shift+'WASD' keys are registered already in scenery
+
+        //define additionally shift+ctrl+'WASD'
+        mcW = MovementCommand("move_forward_veryfast", "forward", { scene.findObserver() }, controlsParameters.getFpsSpeedVeryFast())
+        mcS = MovementCommand("move_back_veryfast", "back", { scene.findObserver() }, controlsParameters.getFpsSpeedVeryFast())
+        mcA = MovementCommand("move_left_veryfast", "left", { scene.findObserver() }, controlsParameters.getFpsSpeedVeryFast())
+        mcD = MovementCommand("move_right_veryfast", "right", { scene.findObserver() }, controlsParameters.getFpsSpeedVeryFast())
+        controlsParameters.registerVeryFastStepMover(mcW)
+        controlsParameters.registerVeryFastStepMover(mcS)
+        controlsParameters.registerVeryFastStepMover(mcA)
+        controlsParameters.registerVeryFastStepMover(mcD)
+        h.addBehaviour("move_forward_veryfast", mcW)
+        h.addBehaviour("move_back_veryfast", mcS)
+        h.addBehaviour("move_left_veryfast", mcA)
+        h.addBehaviour("move_right_veryfast", mcD)
+        h.addKeyBinding("move_forward_veryfast", "ctrl shift W")
+        h.addKeyBinding("move_back_veryfast", "ctrl shift S")
+        h.addKeyBinding("move_left_veryfast", "ctrl shift A")
+        h.addKeyBinding("move_right_veryfast", "ctrl shift D")
+
+        // Keyboard only move up/down (XC keys)
+        //
+        //[[ctrl]+shift]+'XC'
+        mcW = MovementCommand("move_up", "up", { scene.findObserver() }, controlsParameters.getFpsSpeedSlow())
+        mcS = MovementCommand("move_down", "down", { scene.findObserver() }, controlsParameters.getFpsSpeedSlow())
+        controlsParameters.registerSlowStepMover(mcW)
+        controlsParameters.registerSlowStepMover(mcS)
+        h.addBehaviour("move_up", mcW)
+        h.addBehaviour("move_down", mcS)
+        h.addKeyBinding("move_up", "C")
+        h.addKeyBinding("move_down", "X")
+        mcW = MovementCommand("move_up_fast", "up", { scene.findObserver() }, controlsParameters.getFpsSpeedFast())
+        mcS = MovementCommand("move_down_fast", "down", { scene.findObserver() }, controlsParameters.getFpsSpeedFast())
+        controlsParameters.registerFastStepMover(mcW)
+        controlsParameters.registerFastStepMover(mcS)
+        h.addBehaviour("move_up_fast", mcW)
+        h.addBehaviour("move_down_fast", mcS)
+        h.addKeyBinding("move_up_fast", "shift C")
+        h.addKeyBinding("move_down_fast", "shift X")
+        mcW = MovementCommand("move_up_veryfast", "up", { scene.findObserver() }, controlsParameters.getFpsSpeedVeryFast())
+        mcS = MovementCommand("move_down_veryfast", "down", { scene.findObserver() }, controlsParameters.getFpsSpeedVeryFast())
+        controlsParameters.registerVeryFastStepMover(mcW)
+        controlsParameters.registerVeryFastStepMover(mcS)
+        h.addBehaviour("move_up_veryfast", mcW)
+        h.addBehaviour("move_down_veryfast", mcS)
+        h.addKeyBinding("move_up_veryfast", "ctrl shift C")
+        h.addKeyBinding("move_down_veryfast", "ctrl shift X")
     }
+
     /**
      * Add a box at the specified position with specified size, color, and normals on the inside/outside
      * @param position position to put the box
@@ -1221,15 +1505,16 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             blockWhile({ sciView: SciView -> sciView.find(n.name) == null }, 20)
             //System.out.println("find(name) " + find(n.getName()) );
         }
-        if (activePublish) {
-            // Set new node as active and center
-            if (centerOnNewNodes) {
-                setActiveNode(n)
-                centerOnNode(n)
-            }
-            eventService!!.publish(NodeAddedEvent(n))
+        // Set new node as active and centered?
+        setActiveNode(n);
+        if( centerOnNewNodes ) {
+            centerOnNode(n)
         }
-        return n
+        if( activePublish ) {
+            eventService?.publish(NodeAddedEvent(n));
+        }
+
+        return n;
     }
 
     /**
@@ -1253,7 +1538,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param mesh net.imagej.mesh to add to scene
      * @return a Node corresponding to the mesh
      */
-    fun addMesh(mesh: Mesh?): Node {
+    fun addMesh(mesh: Mesh): Node {
         val scMesh = MeshConverter.toScenery(mesh)
         return addMesh(scMesh)
     }
@@ -1275,7 +1560,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     fun setActiveNode(n: Node?): Node? {
         if (activeNode === n) return activeNode
         activeNode = n
-        targetArcball!!.target = { n?.getMaximumBoundingBox()?.getBoundingSphere()?.origin ?: Vector3f(0.0f, 0.0f, 0.0f) }
+        targetArcball.target = { n?.getMaximumBoundingBox()?.getBoundingSphere()?.origin ?: Vector3f(0.0f, 0.0f, 0.0f) }
+        nodePropertyEditor?.trySelectNode(activeNode);
         eventService!!.publish(NodeActivatedEvent(activeNode))
         return activeNode
     }
@@ -1465,12 +1751,15 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         for (child in node!!.children) {
             deleteNode(child, activePublish)
         }
-        objectService?.removeObject(node)
-        node.parent!!.removeChild(node)
-        if (activePublish) {
-            eventService!!.publish(NodeRemovedEvent(node))
-            if (activeNode === node) setActiveNode(null)
+        objectService?.removeObject(node);
+        node.parent?.removeChild(node);
+        if (activeNode == node) {
+            setActiveNode(null)
         }
+        //maintain consistency
+        if( activePublish ) {
+            eventService?.publish(NodeRemovedEvent(node))
+        };
     }
 
     /**
@@ -1667,9 +1956,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return THe node corresponding to the volume just added.
     </T> */
     fun <T : RealType<T>> addVolume(sac: SourceAndConverter<T>,
-                                     numTimepoints: Int,
-                                     name: String?,
-                                     vararg voxelDimensions: Float): Node {
+                                    numTimepoints: Int,
+                                    name: String?,
+                                    vararg voxelDimensions: Float): Node {
         val sources: MutableList<SourceAndConverter<T>> = ArrayList()
         sources.add(sac)
         return addVolume(sources, numTimepoints, name, *voxelDimensions)
@@ -1685,7 +1974,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return a Node corresponding to the Volume
     </T> */
     fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, name: String?,
-                                     vararg voxelDimensions: Float): Node {
+                                    vararg voxelDimensions: Float): Node {
         //log.debug( "Add Volume " + name + " image: " + image );
         val dimensions = LongArray(image.numDimensions())
         image.dimensions(dimensions)
@@ -1806,9 +2095,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return THe node corresponding to the volume just added.
     </T> */
     fun <T : RealType<T>> addVolume(sources: List<SourceAndConverter<T>>,
-                                     numTimepoints: Int,
-                                     name: String?,
-                                     vararg voxelDimensions: Float): Node {
+                                    numTimepoints: Int,
+                                    name: String?,
+                                    vararg voxelDimensions: Float): Node {
         var setupId = 0
         val converterSetups = ArrayList<ConverterSetup>()
         for (source in sources) {
@@ -2038,35 +2327,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         }
     }
 
-    internal inner class enableIncrease : ClickBehaviour {
-        override fun click(x: Int, y: Int) {
-            fPSSpeed = fPSSpeed + 0.5f
-            mouseSpeed = mouseSpeed + 0.05f
-
-            //log.debug( "Increasing FPS scroll Speed" );
-            resetFPSInputs()
-        }
-    }
-
-    internal inner class enableDecrease : ClickBehaviour {
-        override fun click(x: Int, y: Int) {
-            fPSSpeed = fPSSpeed - 0.1f
-            mouseSpeed = mouseSpeed - 0.05f
-
-            //log.debug( "Decreasing FPS scroll Speed" );
-            resetFPSInputs()
-        }
-    }
-
     internal inner class showHelpDisplay : ClickBehaviour {
         override fun click(x: Int, y: Int) {
-            val helpString = StringBuilder("SciView help:\n\n")
-            for (trigger in inputHandler!!.getAllBindings().keys) {
-                helpString.append(trigger).append("\t-\t").append(inputHandler!!.getAllBindings()[trigger]).append("\n")
-            }
-            // HACK: Make the console pop via stderr.
-            // Later, we will use a nicer dialog box or some such.
-            log!!.warn(helpString.toString())
+            scijavaContext?.getService(CommandService::class.java)?.run(Help::class.java, true)
         }
     }
 
@@ -2087,6 +2350,29 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     companion object {
+        //bounds for the controls
+        @JvmField
+        val FPSSPEED_MINBOUND_SLOW = 0.01f
+        @JvmField
+        val FPSSPEED_MAXBOUND_SLOW = 30.0f
+        @JvmField
+        val FPSSPEED_MINBOUND_FAST = 0.2f
+        @JvmField
+        val FPSSPEED_MAXBOUND_FAST = 600f
+        @JvmField
+        val FPSSPEED_MINBOUND_VERYFAST = 10f
+        @JvmField
+        val FPSSPEED_MAXBOUND_VERYFAST = 2000f
+
+        @JvmField
+        val MOUSESPEED_MINBOUND = 0.1f
+        @JvmField
+        val MOUSESPEED_MAXBOUND = 3.0f
+        @JvmField
+        val MOUSESCROLL_MINBOUND = 0.3f
+        @JvmField
+        val MOUSESCROLL_MAXBOUND = 10.0f
+
         @JvmField
         val DEFAULT_COLOR = Colors.LIGHTGRAY
 

@@ -31,8 +31,8 @@ package sc.iview.commands.demo;
 import graphics.scenery.volumes.Volume;
 import io.scif.services.DatasetIOService;
 import net.imagej.mesh.Mesh;
+import net.imagej.mesh.Meshes;
 import net.imagej.ops.OpService;
-import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
@@ -105,7 +105,7 @@ public class ShowSegmentationDemo implements Command {
 
         for( LabelRegion region : regions ) {
             // Generate the mesh with imagej-ops
-            Mesh m = ops.geom().marchingCubes( region, 1, new BitTypeVertexInterpolator() );
+            Mesh m = Meshes.marchingCubes(region);
 
             // Convert the mesh into a scenery mesh for visualization
             graphics.scenery.Mesh isoSurfaceMesh = MeshConverter.toScenery(m,false);

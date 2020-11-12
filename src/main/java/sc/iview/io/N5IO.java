@@ -43,7 +43,6 @@ import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
 import org.scijava.io.AbstractIOPlugin;
 import org.scijava.io.IOPlugin;
 import org.scijava.plugin.Plugin;
-import org.scijava.util.FileUtils;
 import sc.iview.SciView;
 import sc.iview.SciViewService;
 import sc.iview.process.MeshConverter;

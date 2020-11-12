@@ -28,14 +28,17 @@
  */
 package sc.iview.commands.process;
 
+import graphics.scenery.HasGeometry;
 import graphics.scenery.Node;
 import net.imagej.mesh.Mesh;
+import net.imagej.mesh.Meshes;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
 import net.imglib2.IterableInterval;
 import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.RealType;
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
@@ -79,10 +82,11 @@ public class Isosurface<T extends RealType> implements Command {
 
         Img<BitType> bitImg = (Img<BitType>) ops.threshold().apply(image, tmp);
 
-        Mesh m = ops.geom().marchingCubes(bitImg, 1, new BitTypeVertexInterpolator());
+        Mesh m = Meshes.marchingCubes(bitImg);
 
         Node scMesh = sciView.addMesh(m);
-
+        ((HasGeometry)scMesh).recalculateNormals();
+        scMesh.setScale(new Vector3f(0.001f, 0.001f, 0.001f));
     }
 
 }

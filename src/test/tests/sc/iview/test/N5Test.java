@@ -45,6 +45,9 @@ import org.janelia.saalfeldlab.n5.N5FSWriter;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import org.scijava.Context;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sc.iview.commands.demo.MeshDemo;
 import sc.iview.commands.demo.ResourceLoader;
 import sc.iview.io.N5;
@@ -64,6 +67,7 @@ import static org.junit.Assert.assertEquals;
 public class N5Test {
     private static final double EPSILON = 10e-12;
 	private static Mesh mesh;
+	private static final Logger logger = LoggerFactory.getLogger("N5Test");
 
 	@BeforeClass
 	public static void setupBefore()
@@ -72,8 +76,6 @@ public class N5Test {
     }
 
     private static Mesh generateMesh() {
-        ImageJ imagej = new ImageJ();
-
 	    // Generate an image
         Img<BitType> img = ArrayImgs.bits(25, 25, 25);
 
@@ -89,8 +91,6 @@ public class N5Test {
     }
 
     private static Mesh getMesh() {
-        ImageJ imagej = new ImageJ();
-
         final Mesh m;
         try {
             m = new STLMeshIO()
@@ -100,7 +100,7 @@ public class N5Test {
             return m;
         }
         catch (IOException exc) {
-            imagej.log().error( exc );
+            logger.error(exc.toString());
             return null;
         }
     }

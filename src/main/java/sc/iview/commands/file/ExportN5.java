@@ -29,8 +29,6 @@
 package sc.iview.commands.file;
 
 import graphics.scenery.Mesh;
-import graphics.scenery.Node;
-import org.janelia.saalfeldlab.n5.N5FSReader;
 import org.janelia.saalfeldlab.n5.N5FSWriter;
 import org.janelia.saalfeldlab.n5.N5Writer;
 import org.scijava.command.Command;
