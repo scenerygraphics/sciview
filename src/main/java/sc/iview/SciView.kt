@@ -79,6 +79,7 @@ import net.imglib2.display.ColorTable
 import net.imglib2.img.Img
 import net.imglib2.realtransform.AffineTransform3D
 import net.imglib2.type.numeric.ARGBType
+import net.imglib2.type.numeric.NumericType
 import net.imglib2.type.numeric.RealType
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import net.imglib2.view.Views
@@ -104,7 +105,6 @@ import org.scijava.ui.swing.menu.SwingJMenuBarCreator
 import org.scijava.util.ColorRGB
 import org.scijava.util.Colors
 import org.scijava.util.VersionUtils
-import sc.iview.SciView
 import sc.iview.commands.view.NodePropertyEditor
 import sc.iview.controls.behaviours.CameraTranslateControl
 import sc.iview.controls.behaviours.NodeTranslateControl
@@ -190,13 +190,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     private val io: IOService? = null
 
     @Parameter
-    private val ops: OpService? = null
-
-    @Parameter
     private val eventService: EventService? = null
-
-    @Parameter
-    private val displayService: DisplayService? = null
 
     @Parameter
     private val lutService: LUTService? = null
@@ -247,7 +241,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         private set
     private var mainSplitPane: JSplitPane? = null
     private var inspector: JSplitPane? = null
-    private val interpreterSplitPane: JSplitPane? = null
     private var interpreterPane: REPLPane? = null
     private var nodePropertyEditor: NodePropertyEditor? = null
     var lights: ArrayList<PointLight>? = null
@@ -308,8 +301,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * This pops/restores the previously stashed controls. Emits a warning if there are no stashed controls
      */
     fun restoreControls() {
-        val controlState = controlStack!!.pop()
-
         // This isnt how it should work
         setObjectSelectionMode()
         resetFPSInputs()
@@ -505,8 +496,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         tiREPL.text = ""
         tp.addTab(tiREPL)
         tp.addTabMouseListener(object : MouseListener {
-            private val hidden = false
-            private val previousPosition = 0
             override fun mouseClicked(e: MouseEvent) {
                 if (e.clickCount == 2) {
                     toggleSidebar()
@@ -577,7 +566,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                 if (node === nodePropertyEditor!!.currentNode) {
                     nodePropertyEditor!!.updateProperties(node)
                 }
-                null
             }
 
             // Enable push rendering by default
@@ -606,7 +594,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
     private fun getScaledImageIcon(resource: URL, width: Int, height: Int): ImageIcon {
         val first = ImageIcon(resource)
-        val image = first.image
         val resizedImg = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
         val g2 = resizedImg.createGraphics()
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
@@ -616,8 +603,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     private fun initializeInterpreter() {
-        var startupCode: String? = ""
-        startupCode = Scanner(SciView::class.java.getResourceAsStream("startup.py"), "UTF-8").useDelimiter("\\A").next()
+        val startupCode = Scanner(SciView::class.java.getResourceAsStream("startup.py"), "UTF-8").useDelimiter("\\A").next()
         interpreterPane!!.repl.interpreter.bindings["sciView"] = this
         try {
             interpreterPane!!.repl.interpreter.eval(startupCode)
@@ -723,9 +709,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     var fPSSpeed: Float
         get() = fpsScrollSpeed
         set(newspeed) {
-            var newspeed = newspeed
-            if (newspeed < 0.30f) newspeed = 0.3f else if (newspeed > 30.0f) newspeed = 30.0f
-            fpsScrollSpeed = newspeed
+            var speed = newspeed
+            if (newspeed < 0.30f) speed = 0.3f else if (newspeed > 30.0f) speed = 30.0f
+            fpsScrollSpeed = speed
             //log.debug( "FPS scroll speed: " + fpsScrollSpeed );
         }
 
@@ -733,9 +719,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     var mouseSpeed: Float
         get() = mouseSpeedMult
         set(newspeed) {
-            var newspeed = newspeed
-            if (newspeed < 0.30f) newspeed = 0.3f else if (newspeed > 3.0f) newspeed = 3.0f
-            mouseSpeedMult = newspeed
+            var speed = newspeed
+            if (newspeed < 0.30f) speed = 0.3f else if (newspeed > 3.0f) speed = 3.0f
+            mouseSpeedMult = speed
             //log.debug( "Mouse speed: " + mouseSpeedMult );
         }
 
@@ -919,21 +905,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param size size of the box
      * @param color color of the box
      * @param inside are normals inside the box?
-     * @return the Node corresponding to the box
-     */
-    /**
-     * Add a box at the specified position and with the specified size
-     * @param position position to put the box
-     * @param size size of the box
-     * @return the Node corresponding to the box
-     */
-    /**
-     * Add a box at the specific position and unit size
-     * @param position position to put the box
-     * @return the Node corresponding to the box
-     */
-    /**
-     * Add a box to the scene with default parameters
      * @return the Node corresponding to the box
      */
     @JvmOverloads
@@ -1148,6 +1119,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param source string of a data source
      * @throws IOException
      */
+    @Suppress("UNCHECKED_CAST")
     @Throws(IOException::class)
     fun open(source: String) {
         if (source.endsWith(".xml")) {
@@ -1308,21 +1280,25 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         return activeNode
     }
 
+    @Suppress("UNUSED_PARAMETER")
     @EventHandler
     protected fun onNodeAdded(event: NodeAddedEvent?) {
         nodePropertyEditor!!.rebuildTree()
     }
 
+    @Suppress("UNUSED_PARAMETER")
     @EventHandler
     protected fun onNodeRemoved(event: NodeRemovedEvent?) {
         nodePropertyEditor!!.rebuildTree()
     }
 
+    @Suppress("UNUSED_PARAMETER")
     @EventHandler
     protected fun onNodeChanged(event: NodeChangedEvent?) {
         nodePropertyEditor!!.rebuildTree()
     }
 
+    @Suppress("UNUSED_PARAMETER")
     @EventHandler
     protected fun onNodeActivated(event: NodeActivatedEvent?) {
         // TODO: add listener code for node activation, if necessary
@@ -1333,6 +1309,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         toggleSidebar()
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun setInspectorWindowVisibility(visible: Boolean) {
 //        inspector.setVisible(visible);
 //        if( visible )
@@ -1341,6 +1318,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 //            mainSplitPane.setDividerLocation(getWindowWidth());
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun setInterpreterWindowVisibility(visible: Boolean) {
 //        interpreterPane.getComponent().setVisible(visible);
 //        if( visible )
@@ -1412,10 +1390,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             val imgData = (image.raster.dataBuffer as DataBufferByte).data
             System.arraycopy(screenshot.data, 0, imgData, 0, screenshot.data!!.size)
             var img: Img<UnsignedByteType?>? = null
-            var tmpFile: File? = null
             try {
-                tmpFile = File.createTempFile("sciview-", "-tmp.png")
+                val tmpFile = File.createTempFile("sciview-", "-tmp.png")
                 ImageIO.write(image, "png", tmpFile)
+                @Suppress("UNCHECKED_CAST")
                 img = io!!.open(tmpFile.absolutePath) as Img<UnsignedByteType?>
                 tmpFile.delete()
             } catch (e: IOException) {
@@ -1465,7 +1443,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return an array of all Node's in the scene
      */
     val allSceneNodes: Array<Node>
-        get() = getSceneNodes { n: Node? -> true }
+        get() = getSceneNodes { _: Node? -> true }
 
     /**
      * Delete the current active node
@@ -1501,7 +1479,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     fun dispose() {
         val objs: List<Node> = objectService!!.getObjects(Node::class.java)
         for (obj in objs) {
-            objectService?.removeObject(obj)
+            objectService.removeObject(obj)
         }
         scijavaContext!!.service(SciViewService::class.java).close(this)
         close()
@@ -1564,6 +1542,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param voxelDimensions dimensions of voxels in volume
      * @return a Node corresponding to the Volume
      */
+    @Suppress("UNCHECKED_CAST")
     fun addVolume(image: Dataset, voxelDimensions: FloatArray): Node {
         return addVolume<RealType<*>>(image.imgPlus as RandomAccessibleInterval<RealType<*>>, image.name,
                 *voxelDimensions)
@@ -1598,7 +1577,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return a Node corresponding to the volume
     </T> */
     fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, voxelDimensions: FloatArray): Node {
-        val pos = longArrayOf(10, 10, 10)
         return addVolume(image, "volume", *voxelDimensions)
     }
 
@@ -1608,6 +1586,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param <T>
      * @return a Node corresponding to the Volume
     </T> */
+    @Suppress("UNCHECKED_CAST")
     @Throws(Exception::class)
     fun <T : RealType<T>?> addVolume(image: IterableInterval<T>): Node {
         return if (image is RandomAccessibleInterval<*>) {
@@ -1624,6 +1603,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param <T> pixel type of image
      * @return a Node corresponding to the Volume
     </T> */
+    @Suppress("UNCHECKED_CAST")
     @Throws(Exception::class)
     fun <T : RealType<T>?> addVolume(image: IterableInterval<T>, name: String?): Node {
         return if (image is RandomAccessibleInterval<*>) {
@@ -1750,18 +1730,19 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param <T> Type of the dataset.
      * @return THe node corresponding to the volume just added.
     </T> */
-    fun <T : RealType<T>?> addVolume(sources: List<SourceAndConverter<RealType<*>>>,
-                                     converterSetups: ArrayList<ConverterSetup>?,
-                                     numTimepoints: Int,
-                                     name: String?,
-                                     vararg voxelDimensions: Float): Node {
-        var numTimepoints = numTimepoints
+    @Suppress("UNCHECKED_CAST")
+    fun <T : NumericType<T>> addVolume(sources: List<SourceAndConverter<T>>,
+                                       converterSetups: ArrayList<ConverterSetup>?,
+                                       numTimepoints: Int,
+                                       name: String?,
+                                       vararg voxelDimensions: Float): Node {
+        var timepoints = numTimepoints
         var cacheControl: CacheControl? = null
 
 //        RandomAccessibleInterval<T> image =
 //                ((RandomAccessibleIntervalSource4D) sources.get(0).getSpimSource()).
 //                .getSource(0, 0);
-        val image = sources[0]!!.spimSource.getSource(0, 0)
+        val image = sources[0].spimSource.getSource(0, 0)
         if (image is VolatileView<*, *>) {
             val viewData = (image as VolatileView<T, Volatile<T>?>).volatileViewData
             cacheControl = viewData.cacheControl
@@ -1774,18 +1755,19 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         val imageRA = image.randomAccess()
         image.min(minPt)
         imageRA.setPosition(minPt)
-        val voxelType = imageRA.get()!!.createVariable() as RealType<*>
+        val voxelType = imageRA.get()!!.createVariable() as T
         println("addVolume " + image.numDimensions() + " interval " + image as Interval)
 
         //int numTimepoints = 1;
         if (image.numDimensions() > 3) {
-            numTimepoints = image.dimension(3).toInt()
+            timepoints = image.dimension(3).toInt()
         }
-        val ds = RAISource(voxelType, sources, converterSetups!!, numTimepoints, cacheControl)
+        val ds = RAISource<T>(voxelType, sources, converterSetups!!, timepoints, cacheControl)
         val options = VolumeViewerOptions()
         val v: Volume = RAIVolume(ds, options, hub)
         v.name = name!!
         v.metadata["sources"] = sources
+        v.metadata["VoxelDimensions"] = voxelDimensions
         val tf = v.transferFunction
         val rampMin = 0f
         val rampMax = 0.1f
@@ -1845,8 +1827,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param <T> pixel type of image
      * @return a Node corresponding to the input volume
     </T> */
-    fun <T : RealType<T>?> updateVolume(image: IterableInterval<T>, name: String?,
-                                        voxelDimensions: FloatArray?, v: Volume): Node {
+    @Suppress("UNCHECKED_CAST")
+    fun <T : RealType<T>> updateVolume(image: IterableInterval<T>, name: String,
+                                       voxelDimensions: FloatArray, v: Volume): Node {
         val sacs = v.metadata["sources"] as List<SourceAndConverter<T>>?
         val source = sacs!![0].spimSource.getSource(0, 0) // hard coded to timepoint and mipmap 0
         val sCur = Views.iterable(source).cursor()
@@ -1856,6 +1839,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             iCur.fwd()
             sCur.get()!!.set(iCur.get())
         }
+        v.name = name
+        v.metadata["VoxelDimensions"] = voxelDimensions
         v.volumeManager.notifyUpdate(v)
         v.volumeManager.requestRepaint()
         //v.getCacheControls().clear();
@@ -1962,6 +1947,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         n.scale = Vector3f(x, y, z)
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun setColor(n: Node, x: Float, y: Float, z: Float, w: Float) {
         val col = Vector3f(x, y, z)
         n.material.ambient = col
@@ -2138,7 +2124,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
         /**
          * Static launching method
-         * [DEPRECATED] use SciView.create() instead
+         * DEPRECATED use SciView.create() instead
          *
          * @return a newly created SciView
          */
