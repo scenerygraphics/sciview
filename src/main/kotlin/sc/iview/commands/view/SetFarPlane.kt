@@ -51,6 +51,6 @@ class SetFarPlane : Command {
     private var farPlane = 1000f
 
     override fun run() {
-        sciView.camera.farPlaneDistance = farPlane
+        sciView.camera?.farPlaneDistance = farPlane
     }
 }

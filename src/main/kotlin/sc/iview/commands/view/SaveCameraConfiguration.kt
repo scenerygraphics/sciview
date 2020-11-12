@@ -59,11 +59,13 @@ class SaveCameraConfiguration : Command {
 
     override fun run() {
         try {
+            val cam = sciView.camera ?: return
+
             val fw = FileWriter(saveFile)
             val bw = BufferedWriter(fw)
             if (!Files.getFileExtension(saveFile.absolutePath).equals("clj", ignoreCase = true)) throw IOException("File must be Clojure (extension = .clj)")
-            val pos = sciView.camera.position
-            val rot = sciView.camera.rotation
+            val pos = cam.position
+            val rot = cam.rotation
             var scriptContents = "; @SciView sciView\n\n"
             scriptContents += """(.setPosition (.getCamera sciView) (cleargl.GLVector. (float-array [${pos.x()} ${pos.y()} ${pos.z()}])))
 """

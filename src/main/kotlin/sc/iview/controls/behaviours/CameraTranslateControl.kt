@@ -31,14 +31,15 @@ class CameraTranslateControl(protected var sciView: SciView, var dragSpeed: Floa
     }
 
     override fun drag(x: Int, y: Int) {
-        if (!sciView.camera.lock.tryLock()) {
+        val cam = sciView.camera ?: return
+        if (!cam.lock.tryLock()) {
             return
         }
         val translationVector = Vector3f((x - lastX) * dragSpeed, (y - lastY) * dragSpeed, 0.0f)
-        Quaternionf(sciView.camera.rotation).conjugate().transform(translationVector)
+        Quaternionf(cam.rotation).conjugate().transform(translationVector)
         translationVector.y *= -1f
-        sciView.camera.position = sciView.camera.position.add(Vector3f(translationVector.x(), translationVector.y(), translationVector.z()))
-        sciView.camera.lock.unlock()
+        cam.position = cam.position.add(Vector3f(translationVector.x(), translationVector.y(), translationVector.z()))
+        cam.lock.unlock()
     }
 
     override fun end(x: Int, y: Int) {

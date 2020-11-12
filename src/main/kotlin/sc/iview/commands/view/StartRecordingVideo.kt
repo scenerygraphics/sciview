@@ -56,8 +56,8 @@ class StartRecordingVideo : Command {
 
     override fun run() {
         bitrate = max(0, bitrate)
-        sciView.scenerySettings.set("VideoEncoder.Bitrate", bitrate)
-        sciView.scenerySettings.set("VideoEncoder.Quality", videoEncodingQuality)
+        sciView.getScenerySettings().set("VideoEncoder.Bitrate", bitrate)
+        sciView.getScenerySettings().set("VideoEncoder.Quality", videoEncodingQuality)
         sciView.toggleRecordVideo()
     }
 }

@@ -97,7 +97,7 @@ class VolumeRenderDemo : Command {
             v.addChild(isoSurfaceMesh)
             isoSurfaceMesh.name = "Volume Render Demo Isosurface"
         }
-        sciView.activeNode = v
+        sciView.setActiveNode(v)
         sciView.centerOnNode(sciView.activeNode)
     }
 

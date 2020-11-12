@@ -19,6 +19,6 @@ class ToggleUnlimitedFramerate : Command {
     private lateinit var sciView: SciView
 
     override fun run() {
-        sciView.pushMode = !sciView.pushMode
+        sciView.setPushMode(!sciView.getPushMode())
     }
 }

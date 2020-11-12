@@ -50,7 +50,7 @@ class NodeTranslateControl(protected var sciView: SciView, var dragSpeed: Float)
     protected var axes // Tracking the rendered axes
             : MutableList<Node>? = null
     val camera: Camera
-        get() = sciView.camera
+        get() = sciView.camera!!
 
     // Object mode
     val lRAxis: Vector3f
@@ -75,8 +75,9 @@ class NodeTranslateControl(protected var sciView: SciView, var dragSpeed: Float)
      * y position in window
      */
     override fun init(x: Int, y: Int) {
+        val activeNode = sciView.activeNode ?: return
         camera.targeted = true
-        camera.target = sciView.activeNode.position
+        camera.target = activeNode.position
         if (firstEntered) {
             lastX = x
             lastY = y
@@ -96,7 +97,7 @@ class NodeTranslateControl(protected var sciView: SciView, var dragSpeed: Float)
             mat.diffuse = Vector3f(1.0f, 0.0f, 0.0f)
             mat.ambient = Vector3f(1.0f, 0.0f, 0.0f)
             cylinder.material = mat
-            cylinder.position = sciView.activeNode.getMaximumBoundingBox().getBoundingSphere().origin.add(lRAxis.mul(lineLengths.toFloat()))
+            cylinder.position = activeNode.getMaximumBoundingBox().getBoundingSphere().origin.add(lRAxis.mul(lineLengths.toFloat()))
             sciView.addNode(cylinder, false)
             (axes as ArrayList<Node>).add(cylinder)
 
@@ -110,7 +111,7 @@ class NodeTranslateControl(protected var sciView: SciView, var dragSpeed: Float)
             mat.diffuse = Vector3f(0.25f, 1f, 0.25f)
             mat.ambient = Vector3f(0.25f, 1f, 0.25f)
             cylinder.material = mat
-            cylinder.position = sciView.activeNode.getMaximumBoundingBox().getBoundingSphere().origin.add(getUDAxis().mul(lineLengths.toFloat()))
+            cylinder.position = activeNode.getMaximumBoundingBox().getBoundingSphere().origin.add(getUDAxis().mul(lineLengths.toFloat()))
             sciView.addNode(cylinder, false)
             (axes as ArrayList<Node>).add(cylinder)
 
@@ -124,20 +125,22 @@ class NodeTranslateControl(protected var sciView: SciView, var dragSpeed: Float)
             mat.diffuse = Vector3f(0f, 0.5f, 1f)
             mat.ambient = Vector3f(0f, 0.5f, 1f)
             cylinder.material = mat
-            cylinder.position = sciView.activeNode.getMaximumBoundingBox().getBoundingSphere().origin.add(getFBAxis().mul(lineLengths.toFloat()))
+            cylinder.position = activeNode.getMaximumBoundingBox().getBoundingSphere().origin.add(getFBAxis().mul(lineLengths.toFloat()))
             sciView.addNode(cylinder, false)
             (axes as ArrayList<Node>).add(cylinder)
         }
     }
 
     override fun drag(x: Int, y: Int) {
-        if (sciView.activeNode == null || !sciView.activeNode.lock.tryLock()) {
+        val activeNode = sciView.activeNode ?: return
+
+        if (sciView.activeNode == null || !activeNode.lock.tryLock()) {
             return
         }
-        sciView.activeNode.position = sciView.activeNode.position.add(
+        activeNode.position = activeNode.position.add(
                 lRAxis.mul((x - lastX) * dragSpeed)).add(
                 getUDAxis().mul(-1 * (y - lastY) * dragSpeed))
-        sciView.activeNode.lock.unlock()
+        activeNode.lock.unlock()
     }
 
     override fun end(x: Int, y: Int) {
@@ -149,11 +152,13 @@ class NodeTranslateControl(protected var sciView: SciView, var dragSpeed: Float)
     }
 
     override fun scroll(wheelRotation: Double, isHorizontal: Boolean, x: Int, y: Int) {
-        if (sciView.activeNode == null || !sciView.activeNode.lock.tryLock()) {
+        val activeNode = sciView.activeNode ?: return
+
+        if (sciView.activeNode == null || !activeNode.lock.tryLock()) {
             return
         }
-        sciView.activeNode.position = sciView.activeNode.position.add(
+        activeNode.position = activeNode.position.add(
                 getFBAxis().mul(wheelRotation.toFloat() * dragSpeed))
-        sciView.activeNode.lock.unlock()
+        activeNode.lock.unlock()
     }
 }

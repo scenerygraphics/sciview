@@ -86,6 +86,6 @@ class SetLUT : DynamicCommand() {
     }
 
     override fun run() {
-        sciView.setColormap(node, colorTable as AbstractArrayColorTable<*>?)
+        sciView.setColormap(node, colorTable)
     }
 }

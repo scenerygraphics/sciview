@@ -51,6 +51,6 @@ class SetSupersamplingFactor : Command {
     private var supersamplingFactor = 1.0
 
     override fun run() {
-        sciView.sceneryRenderer.settings.set("Renderer.SupersamplingFactor", supersamplingFactor)
+        sciView.getSceneryRenderer()?.settings?.set("Renderer.SupersamplingFactor", supersamplingFactor)
     }
 }

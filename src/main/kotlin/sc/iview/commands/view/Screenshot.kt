@@ -58,7 +58,7 @@ class Screenshot : Command {
     private var img: ImgPlus<*>? = null
 
     override fun run() {
-        val screenshot = sciView.argbScreenshot
+        val screenshot = sciView.aRGBScreenshot
         img = ImgPlus(screenshot)
         uiService.show(img)
     }
