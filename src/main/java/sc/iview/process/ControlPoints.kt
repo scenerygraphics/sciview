@@ -3,14 +3,13 @@ package sc.iview.process
 import graphics.scenery.Material
 import graphics.scenery.Node
 import graphics.scenery.Sphere
+import org.joml.Vector3f
 import org.scijava.ui.behaviour.Behaviour
 import org.scijava.ui.behaviour.ClickBehaviour
 import org.scijava.ui.behaviour.ScrollBehaviour
 import org.scijava.util.ColorRGB
 import sc.iview.SciView
 import sc.iview.Utils
-import sc.iview.vector.JOMLVector3
-import sc.iview.vector.Vector3
 import java.util.ArrayList
 
 /**
@@ -26,21 +25,21 @@ class ControlPoints {
         nodes.clear()
     }
 
-    val vertices: List<Vector3>
+    val vertices: List<Vector3f>
         get() {
-            val points: MutableList<Vector3> = ArrayList()
+            val points: MutableList<Vector3f> = ArrayList()
             for (k in nodes.indices) {
-                points.add(JOMLVector3(nodes[k].position))
+                points.add(Vector3f(nodes[k].position))
             }
             return points
         }
 
-    fun setPoints(newPoints: Array<Vector3?>) {
+    fun setPoints(newPoints: Array<Vector3f>) {
         nodes.clear()
         nodes = ArrayList()
         for (k in newPoints.indices) {
             val cp = Sphere(DEFAULT_RADIUS, DEFAULT_SEGMENTS)
-            cp.position = JOMLVector3.convert(newPoints[k])
+            cp.position = newPoints[k]
             nodes.add(cp)
         }
     }

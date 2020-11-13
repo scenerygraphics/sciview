@@ -115,8 +115,6 @@ import sc.iview.event.NodeRemovedEvent
 import sc.iview.process.MeshConverter
 import sc.iview.ui.ContextPopUpNodeChooser
 import sc.iview.ui.REPLPane
-import sc.iview.vector.JOMLVector3
-import sc.iview.vector.Vector3
 import tpietzsch.example2.VolumeViewerOptions
 import java.awt.*
 import java.awt.event.*
@@ -1192,16 +1190,18 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return the Node corresponding to the box
      */
     @JvmOverloads
-    fun addBox(position: Vector3? = JOMLVector3(0.0f, 0.0f, 0.0f), size: Vector3? = JOMLVector3(1.0f, 1.0f, 1.0f), color: ColorRGB? = DEFAULT_COLOR,
-               inside: Boolean = false): Node {
+    fun addBox(position: Vector3f? = Vector3f(0.0f, 0.0f, 0.0f), size: Vector3f? = Vector3f(1.0f, 1.0f, 1.0f), color: ColorRGB? = DEFAULT_COLOR,
+               inside: Boolean = false): Node? {
         // TODO: use a material from the current palate by default
         val boxmaterial = Material()
         boxmaterial.ambient = Vector3f(1.0f, 0.0f, 0.0f)
         boxmaterial.diffuse = Utils.convertToVector3f(color)
         boxmaterial.specular = Vector3f(1.0f, 1.0f, 1.0f)
-        val box = Box(JOMLVector3.convert(size), inside)
-        box.material = boxmaterial
-        box.position = JOMLVector3.convert(position)
+        val box = size?.let { Box(it, inside) }
+        box?.material = boxmaterial
+        if (position != null) {
+            box?.position = position
+        }
         return addNode(box)
     }
     /**
@@ -1222,14 +1222,16 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return the Node corresponding to the sphere
      */
     @JvmOverloads
-    fun addSphere(position: Vector3? = JOMLVector3(0.0f, 0.0f, 0.0f), radius: Float = 1f, color: ColorRGB? = DEFAULT_COLOR): Node {
+    fun addSphere(position: Vector3f? = Vector3f(0.0f, 0.0f, 0.0f), radius: Float = 1f, color: ColorRGB? = DEFAULT_COLOR): Node? {
         val material = Material()
         material.ambient = Vector3f(1.0f, 0.0f, 0.0f)
         material.diffuse = Utils.convertToVector3f(color)
         material.specular = Vector3f(1.0f, 1.0f, 1.0f)
         val sphere = Sphere(radius, 20)
         sphere.material = material
-        sphere.position = JOMLVector3.convert(position)
+        if (position != null) {
+            sphere.position = position
+        }
         return addNode(sphere)
     }
 
@@ -1241,9 +1243,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param num_segments number of segments to represent the cylinder
      * @return  the Node corresponding to the cylinder
      */
-    fun addCylinder(position: Vector3?, radius: Float, height: Float, num_segments: Int): Node {
+    fun addCylinder(position: Vector3f?, radius: Float, height: Float, num_segments: Int): Node? {
         val cyl = Cylinder(radius, height, num_segments)
-        cyl.position = JOMLVector3.convert(position)
+        if (position != null) {
+            cyl.position = position
+        }
         return addNode(cyl)
     }
 
@@ -1255,9 +1259,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param num_segments number of segments used to represent cone
      * @return  the Node corresponding to the cone
      */
-    fun addCone(position: Vector3?, radius: Float, height: Float, num_segments: Int): Node {
+    fun addCone(position: Vector3f?, radius: Float, height: Float, num_segments: Int): Node? {
         val cone = Cone(radius, height, num_segments, Vector3f(0.0f, 0.0f, 1.0f))
-        cone.position = JOMLVector3.convert(position)
+        if (position != null) {
+            cone.position = position
+        }
         return addNode(cone)
     }
 
@@ -1269,7 +1275,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return the Node corresponding to the line
      */
     @JvmOverloads
-    fun addLine(start: Vector3 = JOMLVector3(0.0f, 0.0f, 0.0f), stop: Vector3 = JOMLVector3(1.0f, 1.0f, 1.0f), color: ColorRGB? = DEFAULT_COLOR): Node {
+    fun addLine(start: Vector3f = Vector3f(0.0f, 0.0f, 0.0f), stop: Vector3f = Vector3f(1.0f, 1.0f, 1.0f), color: ColorRGB? = DEFAULT_COLOR): Node? {
         return addLine(arrayOf(start, stop), color, 0.1)
     }
 
@@ -1280,18 +1286,18 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param edgeWidth width of line segments
      * @return the Node corresponding to the line
      */
-    fun addLine(points: Array<Vector3>, color: ColorRGB?, edgeWidth: Double): Node {
+    fun addLine(points: Array<Vector3f>, color: ColorRGB?, edgeWidth: Double): Node? {
         val material = Material()
         material.ambient = Vector3f(1.0f, 1.0f, 1.0f)
         material.diffuse = Utils.convertToVector3f(color)
         material.specular = Vector3f(1.0f, 1.0f, 1.0f)
         val line = Line(points.size)
         for (pt in points) {
-            line.addPoint(JOMLVector3.convert(pt))
+            line.addPoint(pt)
         }
         line.edgeWidth = edgeWidth.toFloat()
         line.material = material
-        line.position = JOMLVector3.convert(points[0])
+        line.position = points[0]
         return addNode(line)
     }
 
@@ -1299,7 +1305,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Add a PointLight source at the origin
      * @return a Node corresponding to the PointLight
      */
-    fun addPointLight(): Node {
+    fun addPointLight(): Node? {
         val material = Material()
         material.ambient = Vector3f(1.0f, 0.0f, 0.0f)
         material.diffuse = Vector3f(0.0f, 1.0f, 0.0f)
@@ -1450,7 +1456,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     @JvmOverloads
     fun addPointCloud(points: Collection<RealLocalizable>,
-                      name: String? = "PointCloud"): Node {
+                      name: String? = "PointCloud"): Node? {
         val flatVerts = FloatArray(points.size * 3)
         var k = 0
         for (point in points) {
@@ -1482,7 +1488,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param pointCloud existing PointCloud to add to scene
      * @return a Node corresponding to the PointCloud
      */
-    fun addPointCloud(pointCloud: PointCloud): Node {
+    fun addPointCloud(pointCloud: PointCloud): Node? {
         pointCloud.setupPointCloud()
         pointCloud.material.ambient = Vector3f(1.0f, 1.0f, 1.0f)
         pointCloud.material.diffuse = Vector3f(1.0f, 1.0f, 1.0f)
@@ -1498,22 +1504,23 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return a Node corresponding to the Node
      */
     @JvmOverloads
-    fun addNode(n: Node, activePublish: Boolean = true): Node {
-        scene.addChild(n)
-        objectService?.addObject(n)
-        if (blockOnNewNodes) {
-            blockWhile({ sciView: SciView -> sciView.find(n.name) == null }, 20)
-            //System.out.println("find(name) " + find(n.getName()) );
+    fun addNode(n: Node?, activePublish: Boolean = true): Node? {
+        n?.let {
+            scene.addChild(it)
+            objectService?.addObject(n)
+            if (blockOnNewNodes) {
+                blockWhile({ sciView: SciView -> sciView.find(n.name) == null }, 20)
+                //System.out.println("find(name) " + find(n.getName()) );
+            }
+            // Set new node as active and centered?
+            setActiveNode(n);
+            if (centerOnNewNodes) {
+                centerOnNode(n)
+            }
+            if (activePublish) {
+                eventService?.publish(NodeAddedEvent(n));
+            }
         }
-        // Set new node as active and centered?
-        setActiveNode(n);
-        if( centerOnNewNodes ) {
-            centerOnNode(n)
-        }
-        if( activePublish ) {
-            eventService?.publish(NodeAddedEvent(n));
-        }
-
         return n;
     }
 
@@ -1522,7 +1529,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param scMesh scenery mesh to add to scene
      * @return a Node corresponding to the mesh
      */
-    fun addMesh(scMesh: graphics.scenery.Mesh): Node {
+    fun addMesh(scMesh: graphics.scenery.Mesh): Node? {
         val material = Material()
         material.ambient = Vector3f(1.0f, 0.0f, 0.0f)
         material.diffuse = Vector3f(0.0f, 1.0f, 0.0f)
@@ -1538,7 +1545,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param mesh net.imagej.mesh to add to scene
      * @return a Node corresponding to the mesh
      */
-    fun addMesh(mesh: Mesh): Node {
+    fun addMesh(mesh: Mesh): Node? {
         val scMesh = MeshConverter.toScenery(mesh)
         return addMesh(scMesh)
     }
@@ -1816,7 +1823,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param image image to add as a volume
      * @return a Node corresponding to the Volume
      */
-    fun addVolume(image: Dataset): Node {
+    fun addVolume(image: Dataset): Node? {
         val voxelDims = FloatArray(image.numDimensions())
         for (d in voxelDims.indices) {
             val inValue = image.axis(d).averageScale(0.0, 1.0)
@@ -1832,7 +1839,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return a Node corresponding to the Volume
      */
     @Suppress("UNCHECKED_CAST")
-    fun addVolume(image: Dataset, voxelDimensions: FloatArray): Node {
+    fun addVolume(image: Dataset, voxelDimensions: FloatArray): Node? {
         return addVolume<RealType<*>>(image.imgPlus as RandomAccessibleInterval<RealType<*>>, image.name,
                 *voxelDimensions)
     }
@@ -1855,7 +1862,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param <T> pixel type of image
      * @return a Node corresponding to the volume
     </T> */
-    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, name: String?): Node {
+    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, name: String?): Node? {
         return addVolume(image, name, 1f, 1f, 1f)
     }
 
@@ -1865,7 +1872,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param <T> pixel type of image
      * @return a Node corresponding to the volume
     </T> */
-    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, voxelDimensions: FloatArray): Node {
+    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, voxelDimensions: FloatArray): Node? {
         return addVolume(image, "volume", *voxelDimensions)
     }
 
@@ -1877,7 +1884,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     </T> */
     @Suppress("UNCHECKED_CAST")
     @Throws(Exception::class)
-    fun <T : RealType<T>?> addVolume(image: IterableInterval<T>): Node {
+    fun <T : RealType<T>?> addVolume(image: IterableInterval<T>): Node? {
         return if (image is RandomAccessibleInterval<*>) {
             addVolume(image as RandomAccessibleInterval<RealType<*>>, "Volume")
         } else {
@@ -1894,7 +1901,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     </T> */
     @Suppress("UNCHECKED_CAST")
     @Throws(Exception::class)
-    fun <T : RealType<T>?> addVolume(image: IterableInterval<T>, name: String?): Node {
+    fun <T : RealType<T>?> addVolume(image: IterableInterval<T>, name: String?): Node? {
         return if (image is RandomAccessibleInterval<*>) {
             addVolume(image as RandomAccessibleInterval<RealType<*>>, name, 1f, 1f, 1f)
         } else {
@@ -1958,7 +1965,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     fun <T : RealType<T>> addVolume(sac: SourceAndConverter<T>,
                                     numTimepoints: Int,
                                     name: String?,
-                                    vararg voxelDimensions: Float): Node {
+                                    vararg voxelDimensions: Float): Node? {
         val sources: MutableList<SourceAndConverter<T>> = ArrayList()
         sources.add(sac)
         return addVolume(sources, numTimepoints, name, *voxelDimensions)
@@ -1974,7 +1981,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return a Node corresponding to the Volume
     </T> */
     fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, name: String?,
-                                    vararg voxelDimensions: Float): Node {
+                                    vararg voxelDimensions: Float): Node? {
         //log.debug( "Add Volume " + name + " image: " + image );
         val dimensions = LongArray(image.numDimensions())
         image.dimensions(dimensions)
@@ -2004,7 +2011,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             sources.add(source)
         }
         val v = addVolume(sources, numTimepoints, name, *voxelDimensions)
-        v.metadata["RandomAccessibleInterval"] = image
+        v?.metadata?.set("RandomAccessibleInterval", image)
         return v
     }
 
@@ -2024,7 +2031,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                                        converterSetups: ArrayList<ConverterSetup>?,
                                        numTimepoints: Int,
                                        name: String?,
-                                       vararg voxelDimensions: Float): Node {
+                                       vararg voxelDimensions: Float): Node? {
         var timepoints = numTimepoints
         var cacheControl: CacheControl? = null
 
@@ -2097,7 +2104,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     fun <T : RealType<T>> addVolume(sources: List<SourceAndConverter<T>>,
                                     numTimepoints: Int,
                                     name: String?,
-                                    vararg voxelDimensions: Float): Node {
+                                    vararg voxelDimensions: Float): Node? {
         var setupId = 0
         val converterSetups = ArrayList<ConverterSetup>()
         for (source in sources) {

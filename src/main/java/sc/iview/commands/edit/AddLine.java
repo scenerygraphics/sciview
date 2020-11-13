@@ -31,6 +31,7 @@ package sc.iview.commands.edit;
 import static sc.iview.commands.MenuWeights.EDIT;
 import static sc.iview.commands.MenuWeights.EDIT_ADD_LINE;
 
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
@@ -38,8 +39,6 @@ import org.scijava.plugin.Plugin;
 import org.scijava.util.ColorRGB;
 
 import sc.iview.SciView;
-import sc.iview.vector.JOMLVector3;
-import sc.iview.vector.Vector3;
 
 /**
  * Command to add a line in the scene
@@ -71,7 +70,7 @@ public class AddLine implements Command {
     @Override
     public void run() {
         //Vector3[] endpoints = { JOMLVector3.parse( start ), JOMLVector3.parse( stop ) };
-        Vector3[] endpoints = { new JOMLVector3( 0, 0, 0 ), new JOMLVector3( 1, 1, 1 ) };
+        Vector3f[] endpoints = { new Vector3f( 0, 0, 0 ), new Vector3f( 1, 1, 1 ) };
         sciView.addLine( endpoints, color, edgeWidth );
     }
 }

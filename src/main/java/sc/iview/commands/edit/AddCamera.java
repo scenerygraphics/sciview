@@ -29,14 +29,13 @@
 package sc.iview.commands.edit;
 
 import graphics.scenery.DetachedHeadCamera;
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.display.DisplayService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
-import sc.iview.vector.JOMLVector3;
-import sc.iview.vector.Vector3;
 
 import static sc.iview.commands.MenuWeights.EDIT;
 import static sc.iview.commands.MenuWeights.EDIT_ADD_CAMERA;
@@ -74,7 +73,7 @@ public class AddCamera implements Command {
 	@Override
 	public void run() {
 		//final Vector3 pos = ClearGLVector3.parse( position );
-		final Vector3 pos = new JOMLVector3(0, 0, 0);
+		final Vector3f pos = new Vector3f(0, 0, 0);
 		final DetachedHeadCamera cam = new DetachedHeadCamera();
 		cam.perspectiveCamera( fov, sciView.getWindowWidth(), sciView.getWindowHeight(), Math.min(nearPlane, farPlane), Math.max(nearPlane, farPlane)  );
 		cam.setPosition( pos );

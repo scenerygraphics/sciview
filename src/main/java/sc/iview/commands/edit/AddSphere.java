@@ -31,6 +31,7 @@ package sc.iview.commands.edit;
 import static sc.iview.commands.MenuWeights.EDIT;
 import static sc.iview.commands.MenuWeights.EDIT_ADD_SPHERE;
 
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
@@ -38,8 +39,6 @@ import org.scijava.plugin.Plugin;
 import org.scijava.util.ColorRGB;
 
 import sc.iview.SciView;
-import sc.iview.vector.JOMLVector3;
-import sc.iview.vector.Vector3;
 
 /**
  * Command to add a sphere in the scene
@@ -67,7 +66,7 @@ public class AddSphere implements Command {
     @Override
     public void run() {
         //final Vector3 pos = ClearGLVector3.parse( position );
-        final Vector3 pos = new JOMLVector3(0, 0, 0);
+        final Vector3f pos = new Vector3f(0, 0, 0);
         sciView.addSphere( pos, radius, color );
     }
 }

@@ -33,6 +33,7 @@ import net.imagej.mesh.Mesh;
 import net.imagej.mesh.naive.NaiveDoubleMesh;
 import net.imagej.ops.OpService;
 import net.imagej.ops.geom.geom3d.DefaultConvexHull3D;
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
 import org.scijava.plugin.Menu;
@@ -41,7 +42,6 @@ import org.scijava.plugin.Plugin;
 import org.scijava.widget.Button;
 import sc.iview.SciView;
 import sc.iview.process.ControlPoints;
-import sc.iview.vector.Vector3;
 
 import java.util.List;
 
@@ -83,8 +83,8 @@ public class InteractiveConvexMesh extends InteractiveCommand {
     public void createMesh() {
         Mesh mesh = new NaiveDoubleMesh();
 
-        for( Vector3 v : controlPoints.getVertices() ) {
-            mesh.vertices().add(v.xf(), v.yf(), v.zf());
+        for( Vector3f v : controlPoints.getVertices() ) {
+            mesh.vertices().add(v.x(), v.y(), v.z());
         }
 
         final List<?> result = (List<?>) opService.run(DefaultConvexHull3D.class, mesh );

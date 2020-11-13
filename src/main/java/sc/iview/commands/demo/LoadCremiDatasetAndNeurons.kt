@@ -5,10 +5,8 @@ import bdv.viewer.Interpolation
 import ch.systemsx.cisd.hdf5.HDF5Factory
 import graphics.scenery.Material
 import graphics.scenery.Origin
-import graphics.scenery.numerics.Random
 import graphics.scenery.utils.extensions.xyz
 import graphics.scenery.volumes.Colormap
-import graphics.scenery.volumes.Colormap.Companion.fromColorTable
 import graphics.scenery.volumes.TransferFunction
 import graphics.scenery.volumes.Volume
 import net.imagej.lut.LUTService
@@ -35,7 +33,6 @@ import org.scijava.plugin.Plugin
 import org.scijava.ui.UIService
 import org.scijava.widget.FileWidget
 import sc.iview.SciView
-import sc.iview.SciViewService
 import sc.iview.commands.MenuWeights
 import sc.iview.process.MeshConverter
 import java.io.FileFilter
