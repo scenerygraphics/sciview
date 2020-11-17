@@ -11,6 +11,7 @@ import graphics.scenery.volumes.TransferFunction
 import graphics.scenery.volumes.Volume
 import net.imagej.lut.LUTService
 import net.imagej.mesh.Mesh
+import net.imagej.mesh.Meshes
 import net.imagej.ops.OpService
 import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator
 import net.imglib2.RandomAccessibleInterval
@@ -84,6 +85,7 @@ class LoadCremiDatasetAndNeurons: Command {
      * @see Thread.run
      */
     override fun run() {
+        val task = sciview.taskManager.newTask("Cremi", "Loading dataset")
         val filter = FileFilter { file ->
             val extension = file.name.substringAfterLast(".").toLowerCase()
 
@@ -109,6 +111,8 @@ class LoadCremiDatasetAndNeurons: Command {
         volume?.scale = Vector3f(0.04f, 0.04f, 2.5f)
         volume?.transferFunction = TransferFunction.ramp(0.3f, 0.1f, 0.1f)
         // min 20, max 180, color map fire
+
+        volume?.transferFunction?.addControlPoint(0.3f, 0.5f)
         volume?.transferFunction?.addControlPoint(0.8f, 0.01f)
         volume?.converterSetups?.get(0)?.setDisplayRange(20.0, 220.0)
         val colormap = lut.loadLUT(lut.findLUTs().get("Grays.lut"))
@@ -117,6 +121,8 @@ class LoadCremiDatasetAndNeurons: Command {
         volume?.colormap = Colormap.fromColorTable(colormap)
 
 
+        task.status = "Creating labeling"
+        task.completion = 10.0f
         val rai = nai.second
         log.info("Got ${nai.first.size} labels")
 
@@ -135,9 +141,11 @@ class LoadCremiDatasetAndNeurons: Command {
 
         regions.filter { largestNeuronLabels.contains(it.label.toLong() + 1L) }.forEachIndexed { i, region ->
             log.info("Meshing neuron ${i + 1}/${largestNeuronLabels.size} with label ${region.label}...")
+            task.status = "Meshing neuron ${i+1}/${largestNeuronLabels.size}"
+
             // ui.show(region)
             // Generate the mesh with imagej-ops
-            val m: Mesh = ops.geom().marchingCubes(region, 1.0, BitTypeVertexInterpolator())
+            val m: Mesh = Meshes.marchingCubes(region);
 
             log.info("Converting neuron ${i + 1}/${largestNeuronLabels.size} to scenery format...")
             // Convert the mesh into a scenery mesh for visualization
@@ -146,11 +154,13 @@ class LoadCremiDatasetAndNeurons: Command {
             mesh.material.diffuse = colormapNeurons.lookupARGB(0.0, 255.0, kotlin.random.Random.nextDouble(0.0, 255.0)).toRGBColor().xyz()
             mesh.material.roughness = 0.0f
 
-            // marching cubes produces CW meshes, not CCW as expected by default
-            mesh.material.cullingMode = Material.CullingMode.Front
             mesh.name = "Neuron $i"
             sciview.addNode(mesh)
+            val completion = 10.0f + ((i+1)/largestNeuronLabels.size.toFloat())*90.0f
+            task.completion = completion
         }
+
+        task.completion = 100.0f
     }
 
     fun readCremiHDF5(path: String, scale: Double = 1.0): NeuronsAndImage? {
