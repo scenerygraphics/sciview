@@ -114,7 +114,9 @@ import sc.iview.event.NodeChangedEvent
 import sc.iview.event.NodeRemovedEvent
 import sc.iview.process.MeshConverter
 import sc.iview.ui.ContextPopUpNodeChooser
+import sc.iview.ui.ProgressPie
 import sc.iview.ui.REPLPane
+import sc.iview.ui.TaskManager
 import tpietzsch.example2.VolumeViewerOptions
 import java.awt.*
 import java.awt.event.*
@@ -247,6 +249,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     var isClosed = false
         private set
     private val notAbstractBranchingFunction = Function { node: Node -> node.children.stream().filter(notAbstractNode).collect(Collectors.toList()) }
+
+    val taskManager = TaskManager()
 
     // If true, then when a new node is added to the scene, the camera will refocus on this node by default
     var centerOnNewNodes = false
@@ -524,10 +528,33 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         JPopupMenu.setDefaultLightWeightPopupEnabled(false)
         val swingMenuBar = JMenuBar()
         SwingJMenuBarCreator().createMenus(menus!!.getMenu("SciView"), swingMenuBar)
+        val bar = ProgressPie()
+//        progress.add(bar)
+        bar.value = 0.0
+        bar.minimumSize = Dimension(30, 30)
+        bar.maximumSize = Dimension(30, 30)
+        bar.preferredSize = Dimension(30, 30)
+        val progressLabel = JLabel("<html><strong></strong></html>")
+        progressLabel.horizontalAlignment = SwingConstants.RIGHT
+        swingMenuBar.add(javax.swing.Box.createHorizontalGlue())
+        swingMenuBar.add(progressLabel)
+        swingMenuBar.add(bar)
         frame!!.jMenuBar = swingMenuBar
         p.layout = OverlayLayout(p)
         p.background = Color(50, 48, 47)
         p.add(sceneryJPanel, BorderLayout.CENTER)
+
+        taskManager.update = { current ->
+            if(current != null) {
+                progressLabel.text = "<html><strong>${current.source}:</strong> ${current.status} </html>"
+                bar.value = current.completion.toDouble()
+            } else {
+                progressLabel.text = ""
+                bar.value = 0.0
+            }
+
+            bar.repaint()
+        }
         sceneryJPanel!!.isVisible = true
         nodePropertyEditor!!.component // Initialize node property panel
         val inspectorTree = nodePropertyEditor!!.tree
