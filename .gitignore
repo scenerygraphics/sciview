@@ -179,7 +179,9 @@ gradle-app.setting
 # https://docs.gradle.com/enterprise/maven-extension/
 .mvn/.gradle-enterprise
 
-# original .gitignore, commented out duplicates and wrong exclusions# Maven #
+# original .gitignore, commented out duplicates and wrong exclusions
+
+# Maven #
 /target/
 
 # Eclipse #
