@@ -3,14 +3,13 @@ package sc.iview.process
 import graphics.scenery.Material
 import graphics.scenery.Node
 import graphics.scenery.Sphere
+import org.joml.Vector3f
 import org.scijava.ui.behaviour.Behaviour
 import org.scijava.ui.behaviour.ClickBehaviour
 import org.scijava.ui.behaviour.ScrollBehaviour
 import org.scijava.util.ColorRGB
 import sc.iview.SciView
 import sc.iview.Utils
-import sc.iview.vector.JOMLVector3
-import sc.iview.vector.Vector3
 import java.util.ArrayList
 
 /**
@@ -20,27 +19,27 @@ import java.util.ArrayList
  */
 class ControlPoints {
     protected var nodes: MutableList<Node>
-    private var targetPoint: Node? = null
+    private lateinit var targetPoint: Node
     private var controlPointDistance = 0f
     fun clearPoints() {
         nodes.clear()
     }
 
-    val vertices: List<Vector3>
+    val vertices: List<Vector3f>
         get() {
-            val points: MutableList<Vector3> = ArrayList()
+            val points: MutableList<Vector3f> = ArrayList()
             for (k in nodes.indices) {
-                points.add(JOMLVector3(nodes[k].position))
+                points.add(Vector3f(nodes[k].position))
             }
             return points
         }
 
-    fun setPoints(newPoints: Array<Vector3?>) {
+    fun setPoints(newPoints: Array<Vector3f>) {
         nodes.clear()
         nodes = ArrayList()
         for (k in newPoints.indices) {
             val cp = Sphere(DEFAULT_RADIUS, DEFAULT_SEGMENTS)
-            cp.position = JOMLVector3.convert(newPoints[k])
+            cp.position = newPoints[k]
             nodes.add(cp)
         }
     }
@@ -55,6 +54,7 @@ class ControlPoints {
     }
 
     fun initializeSciView(sciView: SciView, controlPointDistance: Float) {
+        val cam= sciView.camera ?: return
         // This is where the command should change the current inputs setup
         sciView.stashControls()
         sciView.sceneryInputHandler.addBehaviour("place_control_point",
@@ -72,14 +72,14 @@ class ControlPoints {
         mat.ambient = Utils.convertToVector3f(TARGET_COLOR)
         mat.diffuse = Utils.convertToVector3f(TARGET_COLOR)
         (targetPoint as Sphere).material = mat
-        (targetPoint as Sphere).position = sciView.camera.position.add(sciView.camera.forward.mul(controlPointDistance))
+        (targetPoint as Sphere).position = cam.position.add(cam.forward.mul(controlPointDistance))
         sciView.addNode(targetPoint, false)
         //sciView.getCamera().addChild(targetPoint);
         (targetPoint as Sphere).update.add {
 
             //targetPoint.getRotation().set(sciView.getCamera().getRotation().conjugate().rotateByAngleY((float) Math.PI));
             // Set rotation before setting position
-            (targetPoint as Sphere).position = sciView.camera.position.add(sciView.camera.forward.mul(controlPointDistance))
+            (targetPoint as Sphere).position = cam.position.add(cam.forward.mul(controlPointDistance))
         }
     }
 
@@ -89,8 +89,9 @@ class ControlPoints {
 
     private fun distanceControlPointBehaviour(sciView: SciView): Behaviour {
         return ScrollBehaviour { wheelRotation, _, _, _ ->
+            val cam = sciView.camera!!
             controlPointDistance += wheelRotation.toFloat()
-            targetPoint!!.position = sciView.camera.position.add(sciView.camera.forward.mul(controlPointDistance))
+            targetPoint.position = cam.position.add(cam.forward.mul(controlPointDistance))
         }
     }
 
@@ -102,7 +103,7 @@ class ControlPoints {
         controlPoint.material = mat
 
         //controlPoint.setPosition( sciView.getCamera().getTransformation().mult(targetPoint.getPosition().xyzw()) );
-        controlPoint.position = targetPoint!!.position
+        controlPoint.position = targetPoint.position
         addPoint(controlPoint)
         sciView.addNode(controlPoint, false)
     }

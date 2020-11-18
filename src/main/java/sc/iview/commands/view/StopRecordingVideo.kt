@@ -26,39 +26,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.commands.view
 
-import org.scijava.command.Command;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import sc.iview.SciView;
-
-import static sc.iview.commands.MenuWeights.VIEW;
-import static sc.iview.commands.MenuWeights.VIEW_TOGGLE_UNLIMITED_FRAMERATE;
+import org.scijava.command.Command
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.VIEW
+import sc.iview.commands.MenuWeights.VIEW_STOP_RECORDING_VIDEO
 
 /**
- * Command to toggle scenery's PushMode. If this is true the scene only renders when it is changed, otherwise it is
- * continuously rendered
+ * Command to stop recording the current video
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = {@Menu(label = "View", weight = VIEW), //
-                @Menu(label = "Toggle Unlimited Framerate", weight = VIEW_TOGGLE_UNLIMITED_FRAMERATE)})
-public class ToggleUnlimitedFramerate implements Command {
-
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Stop recording video", weight = VIEW_STOP_RECORDING_VIDEO)])
+class StopRecordingVideo : Command {
     @Parameter
-    private LogService logService;
+    private lateinit var sciView: SciView
 
-    @Parameter
-    private SciView sciView;
-
-    @Override
-    public void run() {
-        sciView.setPushMode(!sciView.getPushMode());
+    override fun run() {
+        sciView.toggleRecordVideo()
     }
-
 }

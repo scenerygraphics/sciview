@@ -41,7 +41,6 @@ import org.scijava.widget.Button;
 import sc.iview.SciView;
 import sc.iview.node.Line3D;
 import sc.iview.process.ControlPoints;
-import sc.iview.vector.Vector3;
 
 import java.util.ArrayList;
 
@@ -84,8 +83,8 @@ public class DrawLines extends InteractiveCommand {
         //Line line = new Line();
 
         ArrayList<Vector3f> points = new ArrayList<>();
-        for( Vector3 v : controlPoints.getVertices() ) {
-            points.add(new Vector3f(v.xf(), v.yf(), v.zf()));
+        for( Vector3f v : controlPoints.getVertices() ) {
+            points.add(new Vector3f(v.x(), v.y(), v.z()));
         }
 
         float r = 0.1f;

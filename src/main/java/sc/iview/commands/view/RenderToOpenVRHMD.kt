@@ -26,50 +26,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.vector;
+package sc.iview.commands.view
 
-import org.joml.Vector3f;
+import org.scijava.command.Command
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.VIEW
+import sc.iview.commands.MenuWeights.VIEW_RENDER_TO_OPENVR
 
 /**
- * {@link Vector3} backed by a JOML {@link Vector3f}.
- * 
- * @author Kyle Harrington
- * @author Curtis Rueden
+ * Activates rendering to an OpenVR headset
+ *
+ * @author Ulrik Guenther
  */
-public class JOMLVector3 implements Vector3 {
+@Plugin(type = Command::class, initializer = "initValues", menuRoot = "SciView", selectable = true, menu = [Menu(label = "View", weight = VIEW), Menu(label = "Render to OpenVR Headset", weight = VIEW_RENDER_TO_OPENVR)])
+class RenderToOpenVRHMD : Command {
+    @Parameter
+    private lateinit var sciView: SciView
 
-    private Vector3f source;
-
-    public JOMLVector3( float x, float y, float z ) {
-        this( new Vector3f( x, y, z ) );
-    }
-
-    public JOMLVector3( Vector3f source ) {
-        this.source = source;
-    }
-
-    public Vector3f source() { return source; }
-
-    @Override public float xf() { return source.x(); }
-    @Override public float yf() { return source.y(); }
-    @Override public float zf() { return source.z(); }
-
-    @Override public void setX( float position ) { source.set( position, yf(), zf() ); }
-    @Override public void setY( float position ) { source.set( xf(), position, zf() ); }
-    @Override public void setZ( float position ) { source.set( xf(), yf(), position ); }
-
-    @Override
-    public Vector3 copy() {
-        return new JOMLVector3(xf(),yf(),zf());
-    }
-
-    @Override
-    public String toString() {
-        return "[" + xf() + "; " + yf() + "; " + zf() + "]";
-    }
-
-    public static Vector3f convert( Vector3 v ) {
-        if( v instanceof JOMLVector3 ) return (( JOMLVector3 ) v).source();
-        return new Vector3f( v.xf(), v.yf(), v.zf() );
+    override fun run() {
+        sciView.toggleVRRendering()
     }
 }

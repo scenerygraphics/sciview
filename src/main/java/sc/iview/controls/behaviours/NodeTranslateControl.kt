@@ -58,11 +58,12 @@ class NodeTranslateControl(protected val sciView: SciView) : DragBehaviour, Scro
 
     override fun drag(x: Int, y: Int) {
         val targetedNode = sciView.activeNode;
+        val cam = sciView.camera ?: return
         if (targetedNode == null || !targetedNode.lock.tryLock()) return
 
-        sciView.camera.right.mul((x - lastX) * sciView.fpsSpeedSlow * sciView.mouseSpeed, dragPosUpdater )
+        cam.right.mul((x - lastX) * sciView.getFPSSpeedSlow() * sciView.getMouseSpeed(), dragPosUpdater )
         targetedNode.position.add( dragPosUpdater )
-        sciView.camera.up.mul(   (lastY - y) * sciView.fpsSpeedSlow * sciView.mouseSpeed, dragPosUpdater )
+        cam.up.mul(   (lastY - y) * sciView.getFPSSpeedSlow() * sciView.getMouseSpeed(), dragPosUpdater )
         targetedNode.position.add( dragPosUpdater )
         targetedNode.needsUpdate = true
 
@@ -77,9 +78,10 @@ class NodeTranslateControl(protected val sciView: SciView) : DragBehaviour, Scro
 
     override fun scroll(wheelRotation: Double, isHorizontal: Boolean, x: Int, y: Int) {
         val targetedNode = sciView.activeNode;
+        val cam = sciView.camera ?: return
         if (targetedNode == null || !targetedNode.lock.tryLock()) return
 
-        sciView.camera.forward.mul( wheelRotation.toFloat() * sciView.fpsSpeedSlow * sciView.mouseScrollSpeed, scrollPosUpdater )
+        cam.forward.mul( wheelRotation.toFloat() * sciView.getFPSSpeedSlow() * sciView.getMouseSpeed(), scrollPosUpdater )
         targetedNode.position.add( scrollPosUpdater );
         targetedNode.needsUpdate = true
 

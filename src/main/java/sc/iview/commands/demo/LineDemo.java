@@ -31,6 +31,7 @@ package sc.iview.commands.demo;
 import static sc.iview.commands.MenuWeights.DEMO;
 import static sc.iview.commands.MenuWeights.DEMO_LINES;
 
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
 import org.scijava.plugin.Menu;
@@ -39,9 +40,6 @@ import org.scijava.plugin.Plugin;
 import org.scijava.util.Colors;
 
 import sc.iview.SciView;
-import sc.iview.vector.JOMLVector3;
-import sc.iview.vector.Vector3;
-
 import java.util.HashMap;
 
 /**
@@ -61,12 +59,12 @@ public class LineDemo implements Command {
     @Override
     public void run() {
         int numPoints = 25;
-        Vector3[] points = new Vector3[numPoints];
+        Vector3f[] points = new Vector3f[numPoints];
 
         for( int k = 0; k < numPoints; k++ ) {
-            points[k] = new JOMLVector3( ( float ) ( 10.0f * Math.random() - 5.0f ), //
-                                         ( float ) ( 10.0f * Math.random() - 5.0f ), //
-                                         ( float ) ( 10.0f * Math.random() - 5.0f ) );
+            points[k] = new Vector3f( ( float ) ( 10.0f * Math.random() - 5.0f ), //
+                                      ( float ) ( 10.0f * Math.random() - 5.0f ), //
+                                      ( float ) ( 10.0f * Math.random() - 5.0f ) );
         }
 
         double edgeWidth = 0.1;

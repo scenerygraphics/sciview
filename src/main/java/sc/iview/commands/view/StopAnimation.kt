@@ -26,51 +26,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.vector;
+package sc.iview.commands.view
 
-import org.joml.Vector4f;
+import org.scijava.command.Command
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.VIEW
+import sc.iview.commands.MenuWeights.VIEW_STOP_ANIMATION
 
 /**
- * {@link Vector4} backed by a JOML {@link Vector4f}.
- * 
+ * Command to stop all current animations
+ *
  * @author Kyle Harrington
  */
-public class JOMLVector4 implements Vector4 {
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Stop Animation", weight = VIEW_STOP_ANIMATION)])
+class StopAnimation : Command {
+    @Parameter
+    private lateinit var sciView: SciView
 
-    private Vector4f source;
-
-    public JOMLVector4(float x, float y, float z, float w ) {
-        this( new Vector4f( x, y, z, w ) );
-    }
-
-    public JOMLVector4(Vector4f source ) {
-        this.source = source;
-    }
-
-    public Vector4f source() { return source; }
-
-    @Override public float xf() { return source.x(); }
-    @Override public float yf() { return source.y(); }
-    @Override public float zf() { return source.z(); }
-    @Override public float wf() { return source.w(); }
-
-    @Override public void setX( float position ) { source.set( position, yf(), zf(), wf() ); }
-    @Override public void setY( float position ) { source.set( xf(), position, zf(), wf() ); }
-    @Override public void setZ( float position ) { source.set( xf(), yf(), position, wf() ); }
-    @Override public void setW( float position ) { source.set( xf(), yf(), zf(), position ); }
-
-    @Override
-    public Vector4 copy() {
-        return new JOMLVector4(xf(),yf(),zf(),wf());
-    }
-
-    @Override
-    public String toString() {
-        return "[" + xf() + "; " + yf() + "; " + zf() + "; " + wf() + "]";
-    }
-
-    public static Vector4f convert( Vector4 v ) {
-        if( v instanceof JOMLVector4) return ((JOMLVector4) v).source();
-        return new Vector4f( v.xf(), v.yf(), v.zf(), v.wf() );
+    override fun run() {
+        sciView.stopAnimation()
     }
 }

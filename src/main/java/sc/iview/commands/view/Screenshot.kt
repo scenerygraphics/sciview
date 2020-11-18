@@ -26,46 +26,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.commands.view
 
-import graphics.scenery.Mesh;
-import graphics.scenery.Node;
-import org.scijava.command.Command;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import sc.iview.SciView;
-
-import static sc.iview.commands.MenuWeights.VIEW;
-import static sc.iview.commands.MenuWeights.VIEW_CENTER_ON_ACTIVE_NODE;
+import net.imagej.ImgPlus
+import net.imagej.ops.OpService
+import org.scijava.ItemIO
+import org.scijava.command.Command
+import org.scijava.io.IOService
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import org.scijava.ui.UIService
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.VIEW
+import sc.iview.commands.MenuWeights.VIEW_SCREENSHOT
 
 /**
- * Command to center the camera on the currently active Node
+ * Command to take a screenshot. The screenshot is opened in ImageJ.
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-menu = {@Menu(label = "View", weight = VIEW), //
-        @Menu(label = "Center On Active Node", weight = VIEW_CENTER_ON_ACTIVE_NODE)})
-public class CenterOnActiveNode implements Command {
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Screenshot", weight = VIEW_SCREENSHOT)])
+class Screenshot : Command {
+    @Parameter
+    private lateinit var sciView: SciView
 
     @Parameter
-    private LogService logService;
+    private lateinit var uiService: UIService
 
-    @Parameter
-    private SciView sciView;
+    @Parameter(type = ItemIO.OUTPUT)
+    private var img: ImgPlus<*>? = null
 
-    @Override
-    public void run() {
-        if( sciView.getActiveNode() instanceof Mesh ) {
-            Node currentNode = sciView.getActiveNode();
-
-            sciView.centerOnNode( currentNode );
-
-        }
-
+    override fun run() {
+        val screenshot = sciView.aRGBScreenshot
+        img = ImgPlus(screenshot)
+        uiService.show(img)
     }
-
 }

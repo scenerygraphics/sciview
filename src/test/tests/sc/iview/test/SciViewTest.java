@@ -39,7 +39,6 @@ import org.scijava.service.SciJavaService;
 import org.scijava.thread.ThreadService;
 import sc.iview.SciView;
 import sc.iview.SciViewService;
-import sc.iview.vector.JOMLVector3;
 
 public class SciViewTest {
 
@@ -83,7 +82,7 @@ public class SciViewTest {
 
         final Sphere sphere = new Sphere( 1, 20 );
         sphere.setMaterial( material );
-        sphere.setPosition( JOMLVector3.convert( new JOMLVector3(0,0,0) ) );
+        sphere.setPosition( new Vector3f(0,0,0) );
         //sphere.setParent(group);
         group.addChild(sphere);
         sciView.addNode(group);

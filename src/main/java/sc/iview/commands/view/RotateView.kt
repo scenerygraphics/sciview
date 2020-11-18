@@ -26,32 +26,37 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.commands.view
 
-import org.scijava.command.Command;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-
-import sc.iview.SciView;
-
-import static sc.iview.commands.MenuWeights.*;
+import org.scijava.command.Command
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.VIEW
+import sc.iview.commands.MenuWeights.VIEW_ROTATE
 
 /**
- * Command that displays a {@link NodePropertyEditor} window.
+ * Command to circle the camera around the currently active Node
  *
- * @author Curtis Rueden
+ * @author Kyle Harrington
  */
-@Plugin(type = Command.class, initializer = "initValues", menuRoot = "SciView", //
-        menu = { @Menu(label = "View", weight = VIEW), //
-                 @Menu(label = "Toggle Inspector", weight = VIEW_TOGGLE_INSPECTOR) })
-public class ToggleInspector implements Command {
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Circle camera around current object", weight = VIEW_ROTATE)])
+class RotateView : Command {
+    @Parameter
+    private lateinit var sciView: SciView
 
     @Parameter
-    private SciView sciView;
+    private var xSpeed = 3
 
-    @Override
-    public void run() {
-        sciView.toggleInspectorWindow();
+    @Parameter
+    private var ySpeed = 0
+
+    override fun run() {
+        sciView.animate(30) {
+            sciView.targetArcball.init(1, 1)
+            sciView.targetArcball.drag(1 + xSpeed, 1 + ySpeed)
+            sciView.targetArcball.end(1 + xSpeed, 1 + ySpeed)
+        }
     }
 }

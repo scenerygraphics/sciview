@@ -26,57 +26,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.commands.view
 
-import graphics.scenery.BoundingGrid;
-import graphics.scenery.Mesh;
-import graphics.scenery.Node;
-import org.scijava.command.Command;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import sc.iview.SciView;
-
-import static sc.iview.commands.MenuWeights.*;
+import graphics.scenery.Mesh
+import org.scijava.command.Command
+import org.scijava.log.LogService
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.VIEW
+import sc.iview.commands.MenuWeights.VIEW_CENTER_ON_ACTIVE_NODE
 
 /**
- * Command to toggle the bounding grid around a Node
+ * Command to center the camera on the currently active Node
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-menu = {@Menu(label = "View", weight = VIEW), //
-        @Menu(label = "Toggle Bounding Grid", weight = VIEW_TOGGLE_BOUNDING_GRID)})
-public class ToggleBoundingGrid implements Command {
-
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Center On Active Node", weight = VIEW_CENTER_ON_ACTIVE_NODE)])
+class CenterOnActiveNode : Command {
     @Parameter
-    private LogService logService;
+    private lateinit var sciView: SciView
 
-    @Parameter
-    private SciView sciView;
-
-    @Parameter
-    private Node node;
-
-    @Override
-    public void run() {
-        if( node instanceof Mesh ) {
-
-            if( node.getMetadata().containsKey("BoundingGrid") ) {
-                BoundingGrid bg = (BoundingGrid) node.getMetadata().get("BoundingGrid");
-                bg.setNode( null );
-                node.getMetadata().remove("BoundingGrid");
-                bg.getScene().removeChild(bg);
-            } else {
-                BoundingGrid bg = new BoundingGrid();
-                bg.setNode(node);
-
-                node.getMetadata().put("BoundingGrid", bg);
-            }
+    override fun run() {
+        if (sciView.activeNode is Mesh) {
+            val currentNode = sciView.activeNode
+            sciView.centerOnNode(currentNode)
         }
-
     }
-
 }

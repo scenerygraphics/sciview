@@ -1,11 +1,10 @@
 package sc.iview.node
 
 import graphics.scenery.*
+import org.joml.Vector3f
 import org.scijava.util.ColorRGB
 import org.scijava.util.Colors
 import sc.iview.Utils
-import sc.iview.vector.JOMLVector3
-import sc.iview.vector.Vector3
 import java.util.ArrayList
 
 /**
@@ -24,7 +23,7 @@ class Line3D : Node {
         edges = ArrayList()
     }
 
-    constructor(points: List<Vector3?>, colorRGB: ColorRGB, edgeWidth: Double) {
+    constructor(points: List<Vector3f>, colorRGB: ColorRGB, edgeWidth: Double) {
         defaultColor = colorRGB
         this.edgeWidth = edgeWidth
         edges = ArrayList()
@@ -32,8 +31,8 @@ class Line3D : Node {
         for (k in points.indices) {
             if (k > 0) {
                 val edge: Node = Cylinder.betweenPoints(
-                        JOMLVector3.convert(points[k - 1]),
-                        JOMLVector3.convert(points[k]),
+                        points[k - 1],
+                        points[k],
                         edgeWidth.toFloat(),
                         1f,
                         15)
@@ -41,14 +40,14 @@ class Line3D : Node {
             }
             if (sphereJoints) {
                 val joint: Node = Sphere(edgeWidth.toFloat(), 15)
-                joint.position = JOMLVector3.convert(points[k])
+                joint.position = points[k]
                 joints!!.add(joint)
                 addChild(joint)
             }
         }
     }
 
-    constructor(points: List<Vector3?>, colors: List<ColorRGB?>, edgeWidth: Double) {
+    constructor(points: List<Vector3f>, colors: List<ColorRGB?>, edgeWidth: Double) {
         this.edgeWidth = edgeWidth
         edges = ArrayList()
         if (sphereJoints) joints = ArrayList()
@@ -60,8 +59,8 @@ class Line3D : Node {
             mat.specular = c
             if (k > 0) {
                 val edge: Node = Cylinder.betweenPoints(
-                        JOMLVector3.convert(points[k - 1]),
-                        JOMLVector3.convert(points[k]),
+                        points[k - 1],
+                        points[k],
                         edgeWidth.toFloat(),
                         1f,
                         15)
@@ -71,7 +70,7 @@ class Line3D : Node {
             if (sphereJoints) {
                 val joint: Node = Sphere(edgeWidth.toFloat(), 15)
                 joint.material = mat
-                joint.position = JOMLVector3.convert(points[k])
+                joint.position = points[k]
                 joints!!.add(joint)
                 addChild(joint)
             }

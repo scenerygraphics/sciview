@@ -26,41 +26,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.vector;
+package sc.iview.commands.view
+
+import graphics.scenery.BoundingGrid
+import graphics.scenery.Mesh
+import graphics.scenery.Node
+import org.scijava.command.Command
+import org.scijava.log.LogService
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.VIEW
+import sc.iview.commands.MenuWeights.VIEW_TOGGLE_BOUNDING_GRID
 
 /**
- * {@link Vector4} backed by three {@code float}s.
- * 
+ * Command to toggle the bounding grid around a Node
+ *
  * @author Kyle Harrington
  */
-public class FloatVector4 implements Vector4 {
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Toggle Bounding Grid", weight = VIEW_TOGGLE_BOUNDING_GRID)])
+class ToggleBoundingGrid : Command {
+    @Parameter
+    private lateinit var logService: LogService
 
-    private float x, y, z, w;
+    @Parameter
+    private lateinit var sciView: SciView
 
-    public FloatVector4(float x, float y, float z, float w ) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.w = w;
-    }
+    @Parameter
+    private lateinit var node: Node
 
-    @Override public float xf() { return x; }
-    @Override public float yf() { return y; }
-    @Override public float zf() { return z; }
-    @Override public float wf() { return w; }
-
-    @Override public void setX( float position ) { x = position; }
-    @Override public void setY( float position ) { y = position; }
-    @Override public void setZ( float position ) { z = position; }
-    @Override public void setW( float position ) { w = position; }
-
-    @Override
-    public Vector4 copy() {
-        return new FloatVector4(xf(),yf(),zf(),wf());
-    }
-
-    @Override
-    public String toString() {
-        return "[" + xf() + "; " + yf() + "; " + zf() + "; " + wf() + "]";
+    override fun run() {
+        if (node is Mesh) {
+            if (node.metadata.containsKey("BoundingGrid")) {
+                val bg = node.metadata["BoundingGrid"] as BoundingGrid?
+                bg!!.node = null
+                node.metadata.remove("BoundingGrid")
+                bg.getScene()!!.removeChild(bg)
+            } else {
+                val bg = BoundingGrid()
+                bg.node = node
+                node.metadata["BoundingGrid"] = bg
+            }
+        }
     }
 }

@@ -15,7 +15,7 @@ class SceneRollControl(protected val sciView: SciView, protected val byFixedAngI
     private val rotQ_CCW: Quaternionf = Quaternionf().rotateAxis(-byFixedAngInRad, 0f, 0f, -1f);
 
     override fun click(x: Int, y: Int) {
-        val cam = sciView.camera
+        val cam = sciView.camera ?: return
         rotQ_CW.mul(cam.rotation, cam.rotation).normalize()
     }
 
@@ -27,7 +27,7 @@ class SceneRollControl(protected val sciView: SciView, protected val byFixedAngI
     }
 
     override fun drag(x: Int, y: Int) {
-        val cam = sciView.camera
+        val cam = sciView.camera ?: return
         if (x > lastX + minMouseMovementDelta) rotQ_CW.mul(cam.rotation, cam.rotation).normalize()
         else if (x < lastX - minMouseMovementDelta) rotQ_CCW.mul(cam.rotation, cam.rotation).normalize()
         lastX = x

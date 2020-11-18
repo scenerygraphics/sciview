@@ -26,39 +26,38 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.commands.view
 
-import org.joml.Quaternionf;
-import org.scijava.command.Command;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import sc.iview.SciView;
-
-import static sc.iview.commands.MenuWeights.VIEW;
-import static sc.iview.commands.MenuWeights.VIEW_RESET_CAMERA_ROTATION;
+import org.scijava.command.Command
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.VIEW
+import sc.iview.commands.MenuWeights.VIEW_START_RECORDING_VIDEO
+import kotlin.math.max
 
 /**
- * Command to set the camera rotation to the default orientation.
+ * Command to start recording a video. Currently this will record to ~/Desktop
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-menu = {@Menu(label = "View", weight = VIEW), //
-        @Menu(label = "Reset Camera Rotation", weight = VIEW_RESET_CAMERA_ROTATION)})
-public class ResetCameraRotation implements Command {
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Start recording video", weight = VIEW_START_RECORDING_VIDEO)])
+class StartRecordingVideo : Command {
+    @Parameter
+    private lateinit var sciView: SciView
 
     @Parameter
-    private LogService logService;
+    private var bitrate = 10000000 // 10 MBit
 
-    @Parameter
-    private SciView sciView;
+    @Parameter(choices = ["VeryLow", "Low", "Medium", "High", "Ultra", "Insane"], style = "listBox")
+    private lateinit var videoEncodingQuality // listed as an enum here, cant access from java https://github.com/scenerygraphics/scenery/blob/1a451c2864e5a48e47622d9313fe1681e47d7958/src/main/kotlin/graphics/scenery/utils/H264Encoder.kt#L65
+            : String
 
-    @Override
-    public void run() {
-        sciView.getCamera().setRotation( new Quaternionf(0, 0, 0, 1) );
+    override fun run() {
+        bitrate = max(0, bitrate)
+        sciView.getScenerySettings().set("VideoEncoder.Bitrate", bitrate)
+        sciView.getScenerySettings().set("VideoEncoder.Quality", videoEncodingQuality)
+        sciView.toggleRecordVideo()
     }
-
 }

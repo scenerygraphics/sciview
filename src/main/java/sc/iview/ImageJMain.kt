@@ -6,13 +6,13 @@
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -26,55 +26,35 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands;
+package sc.iview
 
-import org.scijava.ItemIO;
-import org.scijava.command.Command;
-import org.scijava.display.DisplayService;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import org.scijava.ui.UIService;
-
-import sc.iview.SciView;
-import sc.iview.SciViewService;
-import sc.iview.display.SciViewDisplay;
+import net.imagej.lut.LUTService
+import net.imagej.ops.OpService
+import net.imagej.units.UnitService
+import org.scijava.Context
+import org.scijava.console.ConsoleService
+import org.scijava.io.IOService
+import org.scijava.menu.MenuService
+import org.scijava.options.OptionsService
+import org.scijava.tool.ToolService
+import org.scijava.ui.UIService
+import org.scijava.ui.swing.SwingIconService
 
 /**
- * Command to launch SciView
+ * Entry point for testing SciView functionality.
  *
  * @author Kyle Harrington
- *
+ * @author Ulrik Guenther
  */
-@Plugin(type = Command.class, menuPath = "Plugins>SciView")
-public class LaunchViewer implements Command {
+object ImageJMain {
+    @Throws(Exception::class)
+    @JvmStatic
+    fun main(args: Array<String>) {
+        val context = Context()
+        val uiService = context.service(UIService::class.java)
+        val sciViewService = context.service(SciViewService::class.java)
 
-    @Parameter
-    private DisplayService displayService;
-
-    @Parameter
-    private SciViewService sciViewService;
-
-    @Parameter(required = false)
-    private UIService uiService;
-
-    @Parameter(type = ItemIO.OUTPUT)
-    private SciView sciView = null;
-
-    @Override
-    public void run() {
-        final SciViewDisplay display = displayService.getActiveDisplay(SciViewDisplay.class);
-        try {
-            if (display == null) {
-                sciView = sciViewService.getOrCreateActiveSciView();
-            }
-            else
-                sciViewService.createSciView();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-//        else if (uiService != null)
-//            uiService.showDialog( "The SciView window is already open. For now, only one SciView window is supported.", "SciView" );
+        uiService.showUI()
+        sciViewService.createSciView()
     }
-
 }

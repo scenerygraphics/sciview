@@ -26,34 +26,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.commands
 
-import static sc.iview.commands.MenuWeights.VIEW;
-import static sc.iview.commands.MenuWeights.VIEW_STOP_ANIMATION;
-
-import org.scijava.command.Command;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-
-import sc.iview.SciView;
+import org.scijava.ItemIO
+import org.scijava.command.Command
+import org.scijava.display.DisplayService
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import org.scijava.ui.UIService
+import sc.iview.SciView
+import sc.iview.SciViewService
+import sc.iview.display.SciViewDisplay
 
 /**
- * Command to stop all current animations
+ * Command to launch SciView
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "View", weight = VIEW), //
-                 @Menu(label = "Stop Animation", weight = VIEW_STOP_ANIMATION) })
-public class StopAnimation implements Command {
+@Plugin(type = Command::class, menuPath = "Plugins>SciView")
+class LaunchViewer : Command {
+    @Parameter
+    private lateinit var displayService: DisplayService
 
     @Parameter
-    private SciView sciView;
+    private lateinit var sciViewService: SciViewService
 
-    @Override
-    public void run() {
-        sciView.stopAnimation();
+    @Parameter(type = ItemIO.OUTPUT)
+    private var sciView: SciView? = null
+    override fun run() {
+        val display = displayService.getActiveDisplay(SciViewDisplay::class.java)
+        try {
+            if (display == null) {
+                sciView = sciViewService.orCreateActiveSciView
+            } else sciViewService.createSciView()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
+
 }

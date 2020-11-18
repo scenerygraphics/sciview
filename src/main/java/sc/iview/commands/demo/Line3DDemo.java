@@ -28,6 +28,7 @@
  */
 package sc.iview.commands.demo;
 
+import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
 import org.scijava.plugin.Menu;
@@ -36,8 +37,6 @@ import org.scijava.plugin.Plugin;
 import org.scijava.util.ColorRGB;
 import sc.iview.SciView;
 import sc.iview.node.Line3D;
-import sc.iview.vector.JOMLVector3;
-import sc.iview.vector.Vector3;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -62,11 +61,11 @@ public class Line3DDemo implements Command {
     @Override
     public void run() {
         int numPoints = 25;
-        List<Vector3> points = new ArrayList<>();
+        List<Vector3f> points = new ArrayList<>();
         List<ColorRGB> colors = new ArrayList<>();
 
         for( int k = 0; k < numPoints; k++ ) {
-            points.add( new JOMLVector3( ( float ) ( 10.0f * Math.random() - 5.0f ), //
+            points.add( new Vector3f( ( float ) ( 10.0f * Math.random() - 5.0f ), //
                                             ( float ) ( 10.0f * Math.random() - 5.0f ), //
                                             ( float ) ( 10.0f * Math.random() - 5.0f ) ) );
             colors.add(new ColorRGB((int) (Math.random()*255), (int) (Math.random()*255), (int) (Math.random()*255)));

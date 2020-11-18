@@ -26,39 +26,31 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.vector;
+package sc.iview.commands.view
+
+import org.scijava.command.Command
+import org.scijava.log.LogService
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.VIEW
+import sc.iview.commands.MenuWeights.VIEW_SET_FAR_PLANE
 
 /**
- * {@link Vector3} backed by three {@code float}s.
- * 
- * @author Curtis Rueden
+ * Command to set the far plane for the renderer. Everything beyond this **will not** be rendered
+ *
  * @author Kyle Harrington
  */
-public class FloatVector3 implements Vector3 {
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Set Far Plane", weight = VIEW_SET_FAR_PLANE)])
+class SetFarPlane : Command {
+    @Parameter
+    private lateinit var sciView: SciView
 
-    private float x, y, z;
+    @Parameter
+    private var farPlane = 1000f
 
-    public FloatVector3( float x, float y, float z ) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-
-    @Override public float xf() { return x; }
-    @Override public float yf() { return y; }
-    @Override public float zf() { return z; }
-
-    @Override public void setX( float position ) { x = position; }
-    @Override public void setY( float position ) { y = position; }
-    @Override public void setZ( float position ) { z = position; }
-
-    @Override
-    public Vector3 copy() {
-        return new FloatVector3(xf(),yf(),zf());
-    }
-
-    @Override
-    public String toString() {
-        return "[" + xf() + "; " + yf() + "; " + zf() + "]";
+    override fun run() {
+        sciView.camera?.farPlaneDistance = farPlane
     }
 }

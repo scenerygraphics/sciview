@@ -8,6 +8,7 @@ import sc.iview.SciView
  * Behavior for translating a camera
  *
  * @author Kyle Harrington
+ * @author Vladimir Ulman
  */
 class CameraTranslateControl(protected val sciView: SciView, var dragSpeed: Float) : DragBehaviour {
     private var lastX = 0

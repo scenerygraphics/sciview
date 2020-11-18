@@ -6,10 +6,9 @@ import javax.swing.JPopupMenu
 
 class ContextPopUpNodeChooser(sv: SciView) : JPopupMenu() {
     init {
-        for (m in sv.objectSelectionLastResult.matches) {
-            var n = m.node
-            add( JMenuItem(n.name) )
-                    .addActionListener { sv.activeNode = n }
+        sv.objectSelectionLastResult?.matches?.forEach { match ->
+            add( JMenuItem(match.node.name) )
+                    .addActionListener { sv.setActiveNode(match.node) }
         }
     }
 }
