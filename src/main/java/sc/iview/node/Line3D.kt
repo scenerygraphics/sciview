@@ -47,7 +47,7 @@ class Line3D : Node {
         }
     }
 
-    constructor(points: List<Vector3f>, colors: List<ColorRGB?>, edgeWidth: Double) {
+    constructor(points: List<Vector3f>, colors: List<ColorRGB>, edgeWidth: Double) {
         this.edgeWidth = edgeWidth
         edges = ArrayList()
         if (sphereJoints) joints = ArrayList()
@@ -77,7 +77,7 @@ class Line3D : Node {
         }
     }
 
-    fun setColors(colors: List<ColorRGB?>) {
+    fun setColors(colors: List<ColorRGB>) {
         for (k in joints!!.indices) {
             val c = Utils.convertToVector3f(colors[k])
             val mat = Material()

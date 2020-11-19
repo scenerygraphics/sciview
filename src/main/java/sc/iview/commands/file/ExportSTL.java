@@ -43,6 +43,7 @@ import org.scijava.widget.FileWidget;
 import sc.iview.SciView;
 
 import graphics.scenery.Mesh;
+import sc.iview.Utils;
 
 /**
  * Command to export a STL of the currently active Node
@@ -71,7 +72,7 @@ public class ExportSTL implements Command {
 
             if( mesh != null ) {
                 try {
-                    sciView.writeSCMesh( stlFile.getAbsolutePath(), mesh );
+                    Utils.writeSCMesh( stlFile.getAbsolutePath(), mesh );
                 } catch( final Exception e ) {
                     logService.trace( e );
                 }

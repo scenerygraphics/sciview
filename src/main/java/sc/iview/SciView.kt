@@ -37,13 +37,7 @@ import bdv.util.RandomAccessibleIntervalSource4D
 import bdv.util.volatiles.VolatileView
 import bdv.viewer.Source
 import bdv.viewer.SourceAndConverter
-import cleargl.GLVector
-import com.formdev.flatlaf.FlatLightLaf
-import com.intellij.ui.tabs.JBTabsPosition
-import com.intellij.ui.tabs.TabInfo
-import com.intellij.ui.tabs.impl.JBEditorTabs
 import graphics.scenery.*
-import graphics.scenery.Box
 import graphics.scenery.Scene.RaycastResult
 import graphics.scenery.backends.Renderer
 import graphics.scenery.backends.opengl.OpenGLRenderer
@@ -51,12 +45,11 @@ import graphics.scenery.backends.vulkan.VulkanRenderer
 import graphics.scenery.controls.InputHandler
 import graphics.scenery.controls.OpenVRHMD
 import graphics.scenery.controls.TrackerInput
-import graphics.scenery.controls.behaviours.ArcballCameraControl
-import graphics.scenery.controls.behaviours.FPSCameraControl
-import graphics.scenery.controls.behaviours.MovementCommand
-import graphics.scenery.controls.behaviours.SelectCommand
-import graphics.scenery.utils.*
+import graphics.scenery.utils.ExtractsNatives
 import graphics.scenery.utils.ExtractsNatives.Companion.getPlatform
+import graphics.scenery.utils.LogbackUtils
+import graphics.scenery.utils.SceneryPanel
+import graphics.scenery.utils.Statistics
 import graphics.scenery.volumes.Colormap
 import graphics.scenery.volumes.RAIVolume
 import graphics.scenery.volumes.Volume
@@ -83,12 +76,9 @@ import net.imglib2.type.numeric.RealType
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import net.imglib2.view.Views
 import org.joml.Quaternionf
-import org.joml.Vector2f
 import org.joml.Vector3f
-import org.lwjgl.system.Platform
 import org.scijava.Context
 import org.scijava.`object`.ObjectService
-import org.scijava.command.CommandService
 import org.scijava.display.Display
 import org.scijava.event.EventHandler
 import org.scijava.event.EventService
@@ -99,31 +89,23 @@ import org.scijava.menu.MenuService
 import org.scijava.plugin.Parameter
 import org.scijava.service.SciJavaService
 import org.scijava.thread.ThreadService
-import org.scijava.ui.behaviour.Behaviour
-import org.scijava.ui.behaviour.ClickBehaviour
-import org.scijava.ui.swing.menu.SwingJMenuBarCreator
 import org.scijava.util.ColorRGB
 import org.scijava.util.Colors
 import org.scijava.util.VersionUtils
-import sc.iview.commands.help.Help
-import sc.iview.commands.view.NodePropertyEditor
-import sc.iview.controls.behaviours.*
 import sc.iview.event.NodeActivatedEvent
 import sc.iview.event.NodeAddedEvent
 import sc.iview.event.NodeChangedEvent
 import sc.iview.event.NodeRemovedEvent
 import sc.iview.process.MeshConverter
-import sc.iview.ui.ContextPopUpNodeChooser
-import sc.iview.ui.ProgressPie
-import sc.iview.ui.REPLPane
+import sc.iview.ui.MainWindow
+import sc.iview.ui.SwingMainWindow
 import sc.iview.ui.TaskManager
 import tpietzsch.example2.VolumeViewerOptions
-import java.awt.*
-import java.awt.event.*
+import java.awt.event.WindowListener
 import java.awt.image.BufferedImage
 import java.awt.image.DataBufferByte
-import java.io.*
-import java.net.URL
+import java.io.File
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.util.*
@@ -131,12 +113,8 @@ import java.util.concurrent.Future
 import java.util.function.Consumer
 import java.util.function.Function
 import java.util.function.Predicate
-import java.util.function.Supplier
 import java.util.stream.Collectors
 import javax.imageio.ImageIO
-import javax.script.ScriptException
-import javax.swing.*
-import kotlin.math.acos
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -148,13 +126,8 @@ import kotlin.math.sin
 // we suppress unused warnings here because @Parameter-annotated fields
 // get updated automatically by SciJava.
 class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
-    private val sceneryPanel = arrayOf<SceneryPanel?>(null)
+    val sceneryPanel = arrayOf<SceneryPanel?>(null)
 
-    /**
-     * Mouse controls for FPS movement and Arcball rotation
-     */
-    lateinit var targetArcball: SciView.AnimatedCenteringBeforeArcBallControl
-    protected var fpsControl: FPSCameraControl? = null
     /*
      * Return the default floor object
      *//*
@@ -175,34 +148,41 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         setActiveObserver(field)
     }
 
+    lateinit var controls: Controls
+    val targetArcball: AnimatedCenteringBeforeArcBallControl
+        get() = controls.targetArcball
+
+    val currentScene: Scene
+        get() = scene
+
     /**
      * Geometry/Image information of scene
      */
     private lateinit var axes: Array<CalibratedAxis>
 
     @Parameter
-    private val log: LogService? = null
+    private lateinit var log: LogService
 
     @Parameter
-    private val menus: MenuService? = null
+    private lateinit var menus: MenuService
 
     @Parameter
-    private val io: IOService? = null
+    private lateinit var io: IOService
 
     @Parameter
-    private val eventService: EventService? = null
+    private lateinit var eventService: EventService
 
     @Parameter
-    private val lutService: LUTService? = null
+    private lateinit var lutService: LUTService
 
     @Parameter
-    private val threadService: ThreadService? = null
+    private lateinit var threadService: ThreadService
 
     @Parameter
-    private val objectService: ObjectService? = null
+    private lateinit var objectService: ObjectService
 
     @Parameter
-    private val unitService: UnitService? = null
+    private lateinit var unitService: UnitService
 
     /**
      * Queue keeps track of the currently running animations
@@ -220,34 +200,22 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     var activeNode: Node? = null
         private set
 
-    /**
-     * Speeds for input controls
-     */
-    var controlsParameters: ControlsParameters = ControlsParameters()
     /*
      * Return the SciJava Display that contains SciView
      *//*
      * Set the SciJava Display
      */  var display: Display<*>? = null
-    private var splashLabel: SplashLabel? = null
 
     /**
      * Return the current SceneryJPanel. This is necessary for custom context menus
      * @return panel the current SceneryJPanel
      */
-    var sceneryJPanel: SceneryJPanel? = null
-        private set
-    private var mainSplitPane: JSplitPane? = null
-    private var inspector: JSplitPane? = null
-    private var interpreterPane: REPLPane? = null
-    private var nodePropertyEditor: NodePropertyEditor? = null
     var lights: ArrayList<PointLight>? = null
         private set
-    private var controlStack: Stack<HashMap<String, Any>>? = null
-    private var frame: JFrame? = null
     private val notAbstractNode: Predicate<in Node> = Predicate { node: Node -> !(node is Camera || node is Light || node === floor) }
     var isClosed = false
-        private set
+        internal set
+
     private val notAbstractBranchingFunction = Function { node: Node -> node.children.stream().filter(notAbstractNode).collect(Collectors.toList()) }
 
     val taskManager = TaskManager()
@@ -260,11 +228,13 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     var blockOnNewNodes = false
     private var headlight: PointLight? = null
 
+    lateinit var mainWindow: MainWindow
+
     constructor(context: Context) : super("SciView", 1280, 720, false, context) {
         context.inject(this)
     }
 
-    constructor(applicationName: String?, windowWidth: Int, windowHeight: Int) : super(applicationName!!, windowWidth, windowHeight, false) {}
+    constructor(applicationName: String?, windowWidth: Int, windowHeight: Int) : super(applicationName!!, windowWidth, windowHeight, false)
 
     fun publicGetInputHandler(): InputHandler {
         return inputHandler!!
@@ -290,96 +260,22 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     /**
-     * This pushes the current input setup onto a stack that allows them to be restored with restoreControls
-     * This pushes the current input setup onto a stack that allows them to be restored with restoreControls.
-     * It stacks in particular: all keybindings, all Behaviours, and all step sizes and mouse sensitivities
-     * (which are held together in [ControlsParameters]).
-     *
-     * *Word of warning:* The stashing memorizes *references only* on currently used controls
-     * (such as, e.g., [MovementCommand], [FPSCameraControl] or [NodeTranslateControl]),
-     * it *does not* create an extra copy of any control. That said, if you modify any control
-     * object despite it was already stashed with this method, the change will be visible in the "stored"
-     * control and will not go away after the restore... To be on the safe side for now at least, *create
-     * new and modified* controls rather than directly changing them.
+     * See [Controls.stashControls].
      */
     fun stashControls() {
-        val controlState = HashMap<String, Any>()
-        val handler = inputHandler
-        if (handler == null) {
-            logger.error("InputHandler is null, cannot store controls")
-            return
-        }
-
-        //behaviours:
-        for (actionName in handler.getAllBehaviours()) {
-            controlState[STASH_BEHAVIOUR_KEY + actionName] = handler.getBehaviour(actionName) as Any
-        }
-
-        //bindings:
-        for (actionName in handler.getAllBehaviours()) {
-            for (trigger in handler.getKeyBindings(actionName)) {
-                controlState[STASH_BINDING_KEY + actionName] = trigger.toString()
-            }
-        }
-
-        //finally, stash the control parameters
-        controlState[STASH_CONTROLSPARAMS_KEY] = controlsParameters
-
-        //...and stash it!
-        controlStack!!.push(controlState)
+        controls.stashControls()
     }
 
     /**
-     * This pops/restores the previously stashed controls. Emits a warning if there are no stashed controls.
-     * It first clears all controls, and then resets in particular: all keybindings, all Behaviours,
-     * and all step sizes and mouse sensitivities (which are held together in [ControlsParameters]).
-     *
-     * *Some recent changes may not be removed* with this restore --
-     * see discussion in the docs of [SciView.stashControls] for more details.
+     * See [Controls.restoreControls] and [Controls.stashControls].
      */
     fun restoreControls() {
-        if (controlStack!!.empty()) {
-            logger.warn("Not restoring controls, the controls stash stack is empty!")
-            return
-        }
-        val inputHandler = inputHandler
-        if (inputHandler == null) {
-            logger.error("InputHandler is null, cannot restore controls")
-            return
-        }
-
-        //clear the input handler entirely
-        for (actionName in inputHandler.getAllBehaviours()) {
-            inputHandler.removeKeyBinding(actionName)
-            inputHandler.removeBehaviour(actionName)
-        }
-
-        //retrieve the most recent stash with controls
-        val controlState = controlStack!!.pop()
-        for (control in controlState.entries) {
-            var key: String
-            when {
-                control.key.startsWith(STASH_BEHAVIOUR_KEY) -> {
-                    //processing behaviour
-                    key = control.key.substring(STASH_BEHAVIOUR_KEY.length)
-                    inputHandler.addBehaviour(key, control.value as Behaviour)
-                }
-                control.key.startsWith(STASH_BINDING_KEY) -> {
-                    //processing key binding
-                    key = control.key.substring(STASH_BINDING_KEY.length)
-                    inputHandler.addKeyBinding(key, (control.value as String))
-                }
-                control.key.startsWith(STASH_CONTROLSPARAMS_KEY) -> {
-                    //processing mouse sensitivities and step sizes...
-                    controlsParameters = control.value as ControlsParameters
-                }
-            }
-        }
+        controls.restoreControls()
     }
 
-    private val STASH_BEHAVIOUR_KEY = "behaviour:"
-    private val STASH_BINDING_KEY = "binding:"
-    private val STASH_CONTROLSPARAMS_KEY = "parameters:"
+    internal fun setRenderer(newRenderer: Renderer) {
+        renderer = newRenderer
+    }
 
     /**
      * Reset the scene to initial conditions
@@ -451,18 +347,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Initialization of SWING and scenery. Also triggers an initial population of lights/camera in the scene
      */
     override fun init() {
-
-        // Darcula dependency went missing from maven repo, factor it out
-//        if(Boolean.parseBoolean(System.getProperty("sciview.useDarcula", "false"))) {
-//            try {
-//                BasicLookAndFeel darcula = new DarculaLaf();
-//                UIManager.setLookAndFeel(darcula);
-//            } catch (Exception e) {
-//                getLogger().info("Could not load Darcula Look and Feel");
-//            }
-//        }
         val logLevel = System.getProperty("scenery.LogLevel", "info")
-        log!!.level = LogLevel.value(logLevel)
+        log.level = LogLevel.value(logLevel)
         LogbackUtils.setLogLevel(null, logLevel)
         System.getProperties().stringPropertyNames().forEach(Consumer { name: String ->
             if (name.startsWith("scenery.LogLevel")) {
@@ -492,222 +378,25 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             logger.info("imagej-launcher not found, not touching renderer preferences.")
         }
 
-        // TODO: check for jdk 8 v. jdk 11 on linux and choose renderer accordingly
-        if (Platform.get() === Platform.LINUX) {
-            var version = System.getProperty("java.version")
-            if (version.startsWith("1.")) {
-                version = version.substring(2, 3)
-            } else {
-                val dot = version.indexOf(".")
-                if (dot != -1) {
-                    version = version.substring(0, dot)
-                }
-            }
-
-            // If Linux and JDK 8, then use OpenGLRenderer
-            if (version == "8") System.setProperty("scenery.Renderer", "OpenGLRenderer")
-        }
-        var x: Int
-        var y: Int
-        try {
-            val screenSize = Toolkit.getDefaultToolkit().screenSize
-            x = screenSize.width / 2 - windowWidth / 2
-            y = screenSize.height / 2 - windowHeight / 2
-        } catch (e: HeadlessException) {
-            x = 10
-            y = 10
-        }
-        frame = JFrame("SciView")
-        frame!!.layout = BorderLayout(0, 0)
-        frame!!.setSize(windowWidth, windowHeight)
-        frame!!.setLocation(x, y)
-        frame!!.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
-        nodePropertyEditor = NodePropertyEditor(this)
-        val p = JPanel(BorderLayout(0, 0))
-        sceneryJPanel = SceneryJPanel()
-        JPopupMenu.setDefaultLightWeightPopupEnabled(false)
-        val swingMenuBar = JMenuBar()
-        SwingJMenuBarCreator().createMenus(menus!!.getMenu("SciView"), swingMenuBar)
-        val bar = ProgressPie()
-//        progress.add(bar)
-        bar.value = 0.0
-        bar.minimumSize = Dimension(30, 30)
-        bar.maximumSize = Dimension(30, 30)
-        bar.preferredSize = Dimension(30, 30)
-        val progressLabel = JLabel("<html><strong></strong></html>")
-        progressLabel.horizontalAlignment = SwingConstants.RIGHT
-        swingMenuBar.add(javax.swing.Box.createHorizontalGlue())
-        swingMenuBar.add(progressLabel)
-        swingMenuBar.add(bar)
-        frame!!.jMenuBar = swingMenuBar
-        p.layout = OverlayLayout(p)
-        p.background = Color(50, 48, 47)
-        p.add(sceneryJPanel, BorderLayout.CENTER)
-
-        taskManager.update = { current ->
-            if(current != null) {
-                progressLabel.text = "<html><strong>${current.source}:</strong> ${current.status} </html>"
-                bar.value = current.completion.toDouble()
-            } else {
-                progressLabel.text = ""
-                bar.value = 0.0
-            }
-
-            bar.repaint()
-        }
-        sceneryJPanel!!.isVisible = true
-        nodePropertyEditor!!.component // Initialize node property panel
-        val inspectorTree = nodePropertyEditor!!.tree
-        inspectorTree.toggleClickCount = 0 // This disables expanding menus on double click
-        val inspectorProperties = nodePropertyEditor!!.props
-        val tp = JBEditorTabs(null)
-        tp.tabsPosition = JBTabsPosition.right
-        tp.isSideComponentVertical = true
-        inspector = JSplitPane(JSplitPane.VERTICAL_SPLIT,  //
-                JScrollPane(inspectorTree),
-                JScrollPane(inspectorProperties))
-        inspector!!.dividerLocation = windowHeight / 3
-        inspector!!.isContinuousLayout = true
-        inspector!!.border = BorderFactory.createEmptyBorder()
-        inspector!!.dividerSize = 1
-        val inspectorIcon = getScaledImageIcon(this.javaClass.getResource("toolbox.png"), 16, 16)
-        val tiInspector = TabInfo(inspector, inspectorIcon)
-        tiInspector.text = ""
-        tp.addTab(tiInspector)
-
-        // We need to get the surface scale here before initialising scenery's renderer, as
-        // the information is needed already at initialisation time.
-        val dt = frame!!.graphicsConfiguration.defaultTransform
-        val surfaceScale = Vector2f(dt.scaleX.toFloat(), dt.scaleY.toFloat())
-        settings.set("Renderer.SurfaceScale", surfaceScale)
-        interpreterPane = REPLPane(scijavaContext)
-        interpreterPane!!.component.border = BorderFactory.createEmptyBorder()
-        val interpreterIcon = getScaledImageIcon(this.javaClass.getResource("terminal.png"), 16, 16)
-        val tiREPL = TabInfo(interpreterPane!!.component, interpreterIcon)
-        tiREPL.text = ""
-        tp.addTab(tiREPL)
-        tp.addTabMouseListener(object : MouseListener {
-            override fun mouseClicked(e: MouseEvent) {
-                if (e.clickCount == 2) {
-                    toggleSidebar()
-                }
-            }
-
-            override fun mousePressed(e: MouseEvent) {}
-            override fun mouseReleased(e: MouseEvent) {}
-            override fun mouseEntered(e: MouseEvent) {}
-            override fun mouseExited(e: MouseEvent) {}
-        })
-        initializeInterpreter()
-        mainSplitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT,  //
-                p,
-                tp.component
-        )
-        mainSplitPane!!.dividerLocation = frame!!.size.width - 36
-        mainSplitPane!!.border = BorderFactory.createEmptyBorder()
-        mainSplitPane!!.dividerSize = 1
-        mainSplitPane!!.resizeWeight = 0.9
-        sidebarHidden = true
-
-        //frame.add(mainSplitPane, BorderLayout.CENTER);
-        frame!!.add(mainSplitPane, BorderLayout.CENTER)
-        val sciView = this
-        frame!!.addWindowListener(object : WindowAdapter() {
-            override fun windowClosing(e: WindowEvent) {
-                logger.debug("Closing SciView window.")
-                close()
-                scijavaContext!!.service(SciViewService::class.java).close(sciView)
-                isClosed = true
-            }
-        })
-        splashLabel = SplashLabel()
-        frame!!.glassPane = splashLabel
-        frame!!.glassPane.isVisible = true
-        frame!!.glassPane.requestFocusInWindow()
-        //            frame.getGlassPane().setBackground(new java.awt.Color(50, 48, 47, 255));
-        frame!!.isVisible = true
-        sceneryPanel[0] = sceneryJPanel
-        renderer = Renderer.createRenderer(hub, applicationName, scene,
-                windowWidth, windowHeight,
-                sceneryPanel[0])
-        hub.add(SceneryElement.Renderer, renderer!!)
-        reset()
         animations = LinkedList()
-        controlStack = Stack()
-        SwingUtilities.invokeLater {
-            try {
-                while (!getSceneryRenderer()!!.firstImageReady) {
-                    logger.debug("Waiting for renderer initialisation")
-                    Thread.sleep(300)
-                }
-                Thread.sleep(200)
-            } catch (e: InterruptedException) {
-                logger.error("Renderer construction interrupted.")
-            }
-            nodePropertyEditor!!.rebuildTree()
-            logger.info("Done initializing SciView")
-
-            // subscribe to Node{Added, Removed, Changed} events, happens automatically
-//            eventService!!.subscribe(this)
-            frame!!.glassPane.isVisible = false
-            sceneryJPanel!!.isVisible = true
-
-            // install hook to keep inspector updated on external changes (scripting, etc)
-            scene.onNodePropertiesChanged["updateInspector"] = { node: Node ->
-                if (node === nodePropertyEditor!!.currentNode) {
-                    nodePropertyEditor!!.updateProperties(node)
-                }
-            }
-
-            // Enable push rendering by default
-            renderer!!.pushMode = true
-            sciView.camera!!.setPosition(1.65, 1)
-        }
+        mainWindow = SwingMainWindow(this)
+        controls = Controls(this)
     }
 
-    private var sidebarHidden = false
-    private var previousSidebarPosition = 0
     fun toggleSidebar(): Boolean {
-        if (!sidebarHidden) {
-            previousSidebarPosition = mainSplitPane!!.dividerLocation
-            // TODO: remove hard-coded tab width
-            mainSplitPane!!.dividerLocation = frame!!.size.width - 36
-            sidebarHidden = true
-        } else {
-            if (previousSidebarPosition == 0) {
-                previousSidebarPosition = windowWidth / 3 * 2
-            }
-            mainSplitPane!!.dividerLocation = previousSidebarPosition
-            sidebarHidden = false
-        }
-        return sidebarHidden
-    }
+        return mainWindow.toggleSidebar()
 
-    private fun getScaledImageIcon(resource: URL, width: Int, height: Int): ImageIcon {
-        val first = ImageIcon(resource)
-        val resizedImg = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
-        val g2 = resizedImg.createGraphics()
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
-        g2.drawImage(first.image, 0, 0, width, height, null)
-        g2.dispose()
-        return ImageIcon(resizedImg)
     }
 
     private fun initializeInterpreter() {
-        val startupCode = Scanner(SciView::class.java.getResourceAsStream("startup.py"), "UTF-8").useDelimiter("\\A").next()
-        interpreterPane!!.repl.interpreter.bindings["sciView"] = this
-        try {
-            interpreterPane!!.repl.interpreter.eval(startupCode)
-        } catch (e: ScriptException) {
-            e.printStackTrace()
-        }
+        mainWindow.initializeInterpreter()
     }
 
     /*
      * Completely close the SciView window + cleanup
      */
     fun closeWindow() {
-        frame!!.dispose()
+        mainWindow.close()
     }
 
     /*
@@ -754,7 +443,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             return n.getMaximumBoundingBox().asWorld()
         }
         val branches = branchFunction.apply(n)
-        if (branches.size == 0) {
+        if (branches.isEmpty()) {
             return if (n.boundingBox == null) null else n.boundingBox!!.asWorld()
         }
         var bb = n.getMaximumBoundingBox()
@@ -778,7 +467,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     fun centerOnNode(currentNode: Node?) {
         if (currentNode == null) {
-            log!!.info("Cannot center on null node.")
+            log.info("Cannot center on null node.")
             return
         }
 
@@ -790,84 +479,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Center the camera on the specified Node
      */
     fun centerOnPosition(currentPos: Vector3f?) {
-        //desired view direction in world coords
-        val worldDirVec = Vector3f(currentPos).sub(camera!!.position)
-        if (worldDirVec.lengthSquared() < 0.01) {
-            //ill defined task, happens typically when cam is inside the node which we want center on
-            log!!.info("Camera is on the spot you want to look at. Please, move the camera away first.")
-            return
-        }
-        val camForwardXZ = Vector2f(camera!!.forward.x, camera!!.forward.z)
-        val wantLookAtXZ = Vector2f(worldDirVec.x, worldDirVec.z)
-        var totalYawAng = camForwardXZ.normalize().dot(wantLookAtXZ.normalize()).toDouble()
-        //while mathematically impossible, cumulated numerical inaccuracies have different opinion
-        totalYawAng = if (totalYawAng > 1) {
-            0.0
-        } else {
-            acos(totalYawAng)
-        }
-
-        //switch direction?
-        camForwardXZ[camForwardXZ.y] = -camForwardXZ.x
-        if (wantLookAtXZ.dot(camForwardXZ) > 0) totalYawAng *= -1.0
-        val camForwardYed = Vector3f(camera!!.forward)
-        Quaternionf().rotateXYZ(0f, (-totalYawAng).toFloat(), 0f).normalize().transform(camForwardYed)
-        var totalPitchAng = camForwardYed.normalize().dot(worldDirVec.normalize()).toDouble()
-        totalPitchAng = if (totalPitchAng > 1) {
-            0.0
-        } else {
-            acos(totalPitchAng)
-        }
-
-        //switch direction?
-        if (camera!!.forward.y > worldDirVec.y) totalPitchAng *= -1.0
-        if (camera!!.up.y < 0) totalPitchAng *= -1.0
-
-        //animation options: control delay between animation frames -- fluency
-        val rotPausePerStep: Long = 30 //miliseconds
-
-        //animation options: control max number of steps -- upper limit on total time for animation
-        val rotMaxSteps = 999999 //effectively disabled....
-
-        //animation options: the hardcoded 5 deg (0.087 rad) -- smoothness
-        //how many steps when max update/move is 5 deg
-        val totalDeltaAng = Math.max(Math.abs(totalPitchAng), Math.abs(totalYawAng)).toFloat()
-        var rotSteps = Math.ceil(totalDeltaAng / 0.087).toInt()
-        if (rotSteps > rotMaxSteps) rotSteps = rotMaxSteps
-
-        /*
-        log.info("centering over "+rotSteps+" steps the pitch " + 180*totalPitchAng/Math.PI
-                + " and the yaw " + 180*totalYawAng/Math.PI);
-        */
-
-        //angular progress aux variables
-        var donePitchAng = 0.0
-        var doneYawAng = 0.0
-        var deltaAng: Float
-        camera!!.targeted = false
-        var i = 1
-        while (i <= rotSteps) {
-
-            //this emulates ease-in ease-out animation, both vars are in [0:1]
-            var timeProgress = i.toFloat() / rotSteps
-            val angProgress = (if (2.let { timeProgress *= it; timeProgress } <= 1) //two cubics connected smoothly into S-shape curve from [0,0] to [1,1]
-                timeProgress * timeProgress * timeProgress else 2.let { timeProgress -= it; timeProgress } * timeProgress * timeProgress + 2) / 2
-
-            //rotate now by this ang: "where should I be by now" minus "where I got last time"
-            deltaAng = (angProgress * totalPitchAng - donePitchAng).toFloat()
-            val pitchQ = Quaternionf().rotateXYZ(-deltaAng, 0f, 0f).normalize()
-            deltaAng = (angProgress * totalYawAng - doneYawAng).toFloat()
-            val yawQ = Quaternionf().rotateXYZ(0f, deltaAng, 0f).normalize()
-            camera!!.rotation = pitchQ.mul(camera!!.rotation).mul(yawQ).normalize()
-            donePitchAng = angProgress * totalPitchAng
-            doneYawAng = angProgress * totalYawAng
-            try {
-                Thread.sleep(rotPausePerStep)
-            } catch (e: InterruptedException) {
-                i = rotSteps
-            }
-            ++i
-        }
+        controls.centerOnPosition(currentPos)
     }
 
     /**
@@ -885,106 +497,63 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
     //a couple of shortcut methods to readout controls params
     fun getFPSSpeedSlow(): Float {
-        return controlsParameters.getFpsSpeedSlow()
+        return controls.getFPSSpeedSlow()
     }
 
     fun getFPSSpeedFast(): Float {
-        return controlsParameters.getFpsSpeedFast()
+        return controls.getFPSSpeedFast()
     }
 
     fun getFPSSpeedVeryFast(): Float {
-        return controlsParameters.getFpsSpeedVeryFast()
+        return controls.getFPSSpeedVeryFast()
     }
 
     fun getMouseSpeed(): Float {
-        return controlsParameters.getMouseSpeedMult()
+        return controls.getMouseSpeed()
     }
 
     fun getMouseScrollSpeed(): Float {
-        return controlsParameters.getMouseScrollMult()
+        return controls.getMouseScrollSpeed()
     }
 
     //a couple of setters with scene sensible boundary checks
     fun setFPSSpeedSlow(slowSpeed: Float) {
-        controlsParameters.setFpsSpeedSlow(paramWithinBounds(slowSpeed, FPSSPEED_MINBOUND_SLOW, FPSSPEED_MAXBOUND_SLOW))
+        controls.setFPSSpeedSlow(slowSpeed)
     }
 
     fun setFPSSpeedFast(fastSpeed: Float) {
-        controlsParameters.setFpsSpeedFast(paramWithinBounds(fastSpeed, FPSSPEED_MINBOUND_FAST, FPSSPEED_MAXBOUND_FAST))
+        controls.setFPSSpeedFast(fastSpeed)
     }
 
     fun setFPSSpeedVeryFast(veryFastSpeed: Float) {
-        controlsParameters.setFpsSpeedVeryFast(paramWithinBounds(veryFastSpeed, FPSSPEED_MINBOUND_VERYFAST, FPSSPEED_MAXBOUND_VERYFAST))
+        controls.setFPSSpeedVeryFast(veryFastSpeed)
     }
 
     fun setFPSSpeed(newBaseSpeed: Float) {
-        // we don't want to escape bounds checking
-        // (so we call "our" methods rather than directly the controlsParameters)
-        setFPSSpeedSlow(1f * newBaseSpeed)
-        setFPSSpeedFast(20f * newBaseSpeed)
-        setFPSSpeedVeryFast(500f * newBaseSpeed)
-
-        //report what's been set in the end
-        log!!.debug("FPS speeds: slow=" + controlsParameters.getFpsSpeedSlow()
-                .toString() + ", fast=" + controlsParameters.getFpsSpeedFast()
-                .toString() + ", very fast=" + controlsParameters.getFpsSpeedVeryFast())
+        controls.setFPSSpeed(newBaseSpeed)
     }
 
     fun setMouseSpeed(newSpeed: Float) {
-        controlsParameters.setMouseSpeedMult(paramWithinBounds(newSpeed, MOUSESPEED_MINBOUND, MOUSESPEED_MAXBOUND))
-        log!!.debug("Mouse movement speed: " + controlsParameters.getMouseSpeedMult())
+        controls.setMouseSpeed(newSpeed)
     }
 
     fun setMouseScrollSpeed(newSpeed: Float) {
-        controlsParameters.setMouseScrollMult(paramWithinBounds(newSpeed, MOUSESCROLL_MINBOUND, MOUSESCROLL_MAXBOUND))
-        log!!.debug("Mouse scroll speed: " + controlsParameters.getMouseScrollMult())
+        controls.setMouseScrollSpeed(newSpeed)
     }
-
-    // TODO replace with coerce?
-    private fun paramWithinBounds(param: Float, minBound: Float, maxBound: Float): Float {
-        var newParam = param
-        if (newParam < minBound) newParam = minBound else if (newParam > maxBound) newParam = maxBound
-        return newParam
-    }
-
 
     fun setObjectSelectionMode() {
-        val selectAction = { nearest: RaycastResult, x: Int, y: Int ->
-            if (!nearest.matches.isEmpty()) {
-                // copy reference on the last object picking result into "public domain"
-                // (this must happen before the ContextPopUpNodeChooser menu!)
-                objectSelectionLastResult = nearest
-
-                // Setup the context menu for this picking
-                // (in the menu, the user will chose node herself)
-                ContextPopUpNodeChooser(this).show(sceneryJPanel, x, y)
-            }
-        }
-        setObjectSelectionMode(selectAction)
+        controls.setObjectSelectionMode()
     }
-
-    var objectSelectionLastResult: RaycastResult? = null
 
     /*
      * Set the action used during object selection
      */
     fun setObjectSelectionMode(selectAction: Function3<RaycastResult, Int, Int, Unit>?) {
-        val h = inputHandler
-        val ignoredObjects = ArrayList<Class<*>>()
-        ignoredObjects.add(BoundingGrid::class.java)
-        ignoredObjects.add(Camera::class.java) //do not mess with "scene params", allow only "scene data" to be selected
-        ignoredObjects.add(DetachedHeadCamera::class.java)
-        ignoredObjects.add(DirectionalLight::class.java)
-        ignoredObjects.add(PointLight::class.java)
-        if (h == null) {
-            logger.error("InputHandler is null, cannot change object selection mode.")
-            return
-        }
-        h.addBehaviour("node: choose one from the view panel",
-                SelectCommand("objectSelector", renderer!!, scene,
-                        { scene.findObserver() }, false, ignoredObjects,
-                        selectAction!!))
-        h.addKeyBinding("node: choose one from the view panel", "double-click button1")
+        controls.setObjectSelectionMode(selectAction)
+    }
+
+    fun showContextNodeChooser(x: Int, y: Int) {
+        mainWindow.showContextNodeChooser(x,y)
     }
 
     /*
@@ -992,224 +561,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * This is automatically called and should not be used directly
      */
     override fun inputSetup() {
-        val h = inputHandler
-        if (h == null) {
-            logger.error("InputHandler is null, cannot run input setup.")
-            return
-        }
-        //when we get here, the Behaviours and key bindings from scenery are already in place
-
-        //possibly, disable some (unused?) controls from scenery
-        /*
-        h.removeBehaviour( "gamepad_camera_control");
-        h.removeKeyBinding("gamepad_camera_control");
-        h.removeBehaviour( "gamepad_movement_control");
-        h.removeKeyBinding("gamepad_movement_control");
-        */
-
-        // node-selection and node-manipulation (translate & rotate) controls
-        setObjectSelectionMode()
-        val nodeTranslateControl = NodeTranslateControl(this)
-        h.addBehaviour("node: move selected one left, right, up, or down", nodeTranslateControl)
-        h.addKeyBinding("node: move selected one left, right, up, or down", "ctrl button1")
-        h.addBehaviour("node: move selected one closer or further away", nodeTranslateControl)
-        h.addKeyBinding("node: move selected one closer or further away", "ctrl scroll")
-        h.addBehaviour("node: rotate selected one", NodeRotateControl(this))
-        h.addKeyBinding("node: rotate selected one", "ctrl shift button1")
-
-        // within-scene navigation: ArcBall and FPS
-        enableArcBallControl()
-        enableFPSControl()
-
-        // whole-scene rolling
-        h.addBehaviour("view: rotate (roll) clock-wise", SceneRollControl(this, +0.05f)) //2.8 deg
-        h.addKeyBinding("view: rotate (roll) clock-wise", "R")
-        h.addBehaviour("view: rotate (roll) counter clock-wise", SceneRollControl(this, -0.05f))
-        h.addKeyBinding("view: rotate (roll) counter clock-wise", "shift R")
-        h.addBehaviour("view: rotate (roll) with mouse", h.getBehaviour("view: rotate (roll) clock-wise")!!)
-        h.addKeyBinding("view: rotate (roll) with mouse", "ctrl button3")
-
-        // adjusters of various controls sensitivities
-        h.addBehaviour("moves: step size decrease", ClickBehaviour { _: Int, _: Int -> setFPSSpeed(getFPSSpeedSlow() - 0.01f) })
-        h.addKeyBinding("moves: step size decrease", "MINUS")
-        h.addBehaviour("moves: step size increase", ClickBehaviour { _: Int, _: Int -> setFPSSpeed(getFPSSpeedSlow() + 0.01f) })
-        h.addKeyBinding("moves: step size increase", "EQUALS")
-        h.addBehaviour("mouse: move sensitivity decrease", ClickBehaviour { _: Int, _: Int -> setMouseSpeed(getMouseSpeed() - 0.02f) })
-        h.addKeyBinding("mouse: move sensitivity decrease", "M MINUS")
-        h.addBehaviour("mouse: move sensitivity increase", ClickBehaviour { _: Int, _: Int -> setMouseSpeed(getMouseSpeed() + 0.02f) })
-        h.addKeyBinding("mouse: move sensitivity increase", "M EQUALS")
-        h.addBehaviour("mouse: scroll sensitivity decrease", ClickBehaviour { _: Int, _: Int -> setMouseScrollSpeed(getMouseScrollSpeed() - 0.3f) })
-        h.addKeyBinding("mouse: scroll sensitivity decrease", "S MINUS")
-        h.addBehaviour("mouse: scroll sensitivity increase", ClickBehaviour { _: Int, _: Int -> setMouseScrollSpeed(getMouseScrollSpeed() + 0.3f) })
-        h.addKeyBinding("mouse: scroll sensitivity increase", "S EQUALS")
-
-        // help window
-        h.addBehaviour("show help", showHelpDisplay())
-        h.addKeyBinding("show help", "F1")
-
-        //update scene inspector
-        h.addBehaviour("update scene graph", ClickBehaviour { _: Int, _: Int -> requestPropEditorRefresh() })
-        h.addKeyBinding("update scene graph", "shift ctrl I")
-    }
-
-    /*
-     * Change the control mode to circle around the active object in an arcball
-     */
-    private fun enableArcBallControl() {
-        val h = inputHandler
-        if (h == null) {
-            logger.error("InputHandler is null, cannot setup arcball control.")
-            return
-        }
-
-        val target: Vector3f = activeNode?.position ?: Vector3f(0.0f, 0.0f, 0.0f)
-
-        //setup ArcballCameraControl from scenery, register it with SciView's controlsParameters
-        val cameraSupplier = Supplier { scene.findObserver() }
-        targetArcball = AnimatedCenteringBeforeArcBallControl("view: rotate it around selected node", cameraSupplier,
-                renderer!!.window.width,
-                renderer!!.window.height, target)
-        targetArcball.maximumDistance = Float.MAX_VALUE
-        controlsParameters.registerArcballCameraControl(targetArcball)
-        h.addBehaviour("view: rotate around selected node", targetArcball)
-        h.addKeyBinding("view: rotate around selected node", "shift button1")
-        h.addBehaviour("view: zoom outward or toward selected node", targetArcball)
-        h.addKeyBinding("view: zoom outward or toward selected node", "shift scroll")
-    }
-
-    /*
-     * A wrapping class for the {@ArcballCameraControl} that calls {@link CenterOnPosition()}
-     * before the actual Arcball camera movement takes place. This way, the targeted node is
-     * first smoothly brought into the centre along which Arcball is revolving, preventing
-     * from sudden changes of view (and lost of focus from the user.
-     */
-    inner class AnimatedCenteringBeforeArcBallControl : ArcballCameraControl {
-        //a bunch of necessary c'tors (originally defined in the ArcballCameraControl class)
-        constructor(name: String, n: Function0<Camera?>, w: Int, h: Int, target: Function0<Vector3f>) : super(name, n, w, h, target) {}
-        constructor(name: String, n: Supplier<Camera?>, w: Int, h: Int, target: Supplier<Vector3f>) : super(name, n, w, h, target) {}
-        constructor(name: String, n: Function0<Camera?>, w: Int, h: Int, target: Vector3f) : super(name, n, w, h, target) {}
-        constructor(name: String, n: Supplier<Camera?>, w: Int, h: Int, target: Vector3f) : super(name, n, w, h, target) {}
-
-        override fun init(x: Int, y: Int) {
-            centerOnPosition(targetArcball.target.invoke())
-            super.init(x, y)
-        }
-
-        override fun scroll(wheelRotation: Double, isHorizontal: Boolean, x: Int, y: Int) {
-            centerOnPosition(targetArcball.target.invoke())
-            super.scroll(wheelRotation, isHorizontal, x, y)
-        }
-    }
-
-    /*
-     * Enable FPS style controls
-     */
-    private fun enableFPSControl() {
-        val h = inputHandler
-        if (h == null) {
-            logger.error("InputHandler is null, cannot setup fps control.")
-            return
-        }
-
-        // Mouse look around (Lclick) and move around (Rclick)
-        //
-        //setup FPSCameraControl from scenery, register it with SciView's controlsParameters
-        val cameraSupplier = Supplier { scene.findObserver() }
-        fpsControl = FPSCameraControl("view: freely look around", cameraSupplier, renderer!!.window.width,
-                renderer!!.window.height)
-        controlsParameters.registerFpsCameraControl(fpsControl)
-        h.addBehaviour("view: freely look around", fpsControl!!)
-        h.addKeyBinding("view: freely look around", "button1")
-
-        //slow and fast camera motion
-        h.addBehaviour("move_withMouse_back/forward/left/right", CameraTranslateControl(this, 1f))
-        h.addKeyBinding("move_withMouse_back/forward/left/right", "button3")
-        //
-        //fast and very fast camera motion
-        h.addBehaviour("move_withMouse_back/forward/left/right_fast", CameraTranslateControl(this, 10f))
-        h.addKeyBinding("move_withMouse_back/forward/left/right_fast", "shift button3")
-
-        // Keyboard move around (WASD keys)
-        //
-        //override 'WASD' from Scenery
-        var mcW: MovementCommand
-        var mcA: MovementCommand
-        var mcS: MovementCommand
-        var mcD: MovementCommand
-        mcW = MovementCommand("move_forward", "forward", { scene.findObserver() }, controlsParameters.getFpsSpeedSlow())
-        mcS = MovementCommand("move_backward", "back", { scene.findObserver() }, controlsParameters.getFpsSpeedSlow())
-        mcA = MovementCommand("move_left", "left", { scene.findObserver() }, controlsParameters.getFpsSpeedSlow())
-        mcD = MovementCommand("move_right", "right", { scene.findObserver() }, controlsParameters.getFpsSpeedSlow())
-        controlsParameters.registerSlowStepMover(mcW)
-        controlsParameters.registerSlowStepMover(mcS)
-        controlsParameters.registerSlowStepMover(mcA)
-        controlsParameters.registerSlowStepMover(mcD)
-        h.addBehaviour("move_forward", mcW)
-        h.addBehaviour("move_back", mcS)
-        h.addBehaviour("move_left", mcA)
-        h.addBehaviour("move_right", mcD)
-        // 'WASD' keys are registered already in scenery
-
-        //override shift+'WASD' from Scenery
-        mcW = MovementCommand("move_forward_fast", "forward", { scene.findObserver() }, controlsParameters.getFpsSpeedFast())
-        mcS = MovementCommand("move_backward_fast", "back", { scene.findObserver() }, controlsParameters.getFpsSpeedFast())
-        mcA = MovementCommand("move_left_fast", "left", { scene.findObserver() }, controlsParameters.getFpsSpeedFast())
-        mcD = MovementCommand("move_right_fast", "right", { scene.findObserver() }, controlsParameters.getFpsSpeedFast())
-        controlsParameters.registerFastStepMover(mcW)
-        controlsParameters.registerFastStepMover(mcS)
-        controlsParameters.registerFastStepMover(mcA)
-        controlsParameters.registerFastStepMover(mcD)
-        h.addBehaviour("move_forward_fast", mcW)
-        h.addBehaviour("move_back_fast", mcS)
-        h.addBehaviour("move_left_fast", mcA)
-        h.addBehaviour("move_right_fast", mcD)
-        // shift+'WASD' keys are registered already in scenery
-
-        //define additionally shift+ctrl+'WASD'
-        mcW = MovementCommand("move_forward_veryfast", "forward", { scene.findObserver() }, controlsParameters.getFpsSpeedVeryFast())
-        mcS = MovementCommand("move_back_veryfast", "back", { scene.findObserver() }, controlsParameters.getFpsSpeedVeryFast())
-        mcA = MovementCommand("move_left_veryfast", "left", { scene.findObserver() }, controlsParameters.getFpsSpeedVeryFast())
-        mcD = MovementCommand("move_right_veryfast", "right", { scene.findObserver() }, controlsParameters.getFpsSpeedVeryFast())
-        controlsParameters.registerVeryFastStepMover(mcW)
-        controlsParameters.registerVeryFastStepMover(mcS)
-        controlsParameters.registerVeryFastStepMover(mcA)
-        controlsParameters.registerVeryFastStepMover(mcD)
-        h.addBehaviour("move_forward_veryfast", mcW)
-        h.addBehaviour("move_back_veryfast", mcS)
-        h.addBehaviour("move_left_veryfast", mcA)
-        h.addBehaviour("move_right_veryfast", mcD)
-        h.addKeyBinding("move_forward_veryfast", "ctrl shift W")
-        h.addKeyBinding("move_back_veryfast", "ctrl shift S")
-        h.addKeyBinding("move_left_veryfast", "ctrl shift A")
-        h.addKeyBinding("move_right_veryfast", "ctrl shift D")
-
-        // Keyboard only move up/down (XC keys)
-        //
-        //[[ctrl]+shift]+'XC'
-        mcW = MovementCommand("move_up", "up", { scene.findObserver() }, controlsParameters.getFpsSpeedSlow())
-        mcS = MovementCommand("move_down", "down", { scene.findObserver() }, controlsParameters.getFpsSpeedSlow())
-        controlsParameters.registerSlowStepMover(mcW)
-        controlsParameters.registerSlowStepMover(mcS)
-        h.addBehaviour("move_up", mcW)
-        h.addBehaviour("move_down", mcS)
-        h.addKeyBinding("move_up", "C")
-        h.addKeyBinding("move_down", "X")
-        mcW = MovementCommand("move_up_fast", "up", { scene.findObserver() }, controlsParameters.getFpsSpeedFast())
-        mcS = MovementCommand("move_down_fast", "down", { scene.findObserver() }, controlsParameters.getFpsSpeedFast())
-        controlsParameters.registerFastStepMover(mcW)
-        controlsParameters.registerFastStepMover(mcS)
-        h.addBehaviour("move_up_fast", mcW)
-        h.addBehaviour("move_down_fast", mcS)
-        h.addKeyBinding("move_up_fast", "shift C")
-        h.addKeyBinding("move_down_fast", "shift X")
-        mcW = MovementCommand("move_up_veryfast", "up", { scene.findObserver() }, controlsParameters.getFpsSpeedVeryFast())
-        mcS = MovementCommand("move_down_veryfast", "down", { scene.findObserver() }, controlsParameters.getFpsSpeedVeryFast())
-        controlsParameters.registerVeryFastStepMover(mcW)
-        controlsParameters.registerVeryFastStepMover(mcS)
-        h.addBehaviour("move_up_veryfast", mcW)
-        h.addBehaviour("move_down_veryfast", mcS)
-        h.addKeyBinding("move_up_veryfast", "ctrl shift C")
-        h.addKeyBinding("move_down_veryfast", "ctrl shift X")
+        log.info("Running InputSetup")
+        controls.inputSetup()
     }
 
     /**
@@ -1221,48 +574,35 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return the Node corresponding to the box
      */
     @JvmOverloads
-    fun addBox(position: Vector3f? = Vector3f(0.0f, 0.0f, 0.0f), size: Vector3f? = Vector3f(1.0f, 1.0f, 1.0f), color: ColorRGB? = DEFAULT_COLOR,
+    fun addBox(position: Vector3f = Vector3f(0.0f, 0.0f, 0.0f), size: Vector3f = Vector3f(1.0f, 1.0f, 1.0f), color: ColorRGB = DEFAULT_COLOR,
                inside: Boolean = false): Node? {
         // TODO: use a material from the current palate by default
         val boxmaterial = Material()
         boxmaterial.ambient = Vector3f(1.0f, 0.0f, 0.0f)
         boxmaterial.diffuse = Utils.convertToVector3f(color)
         boxmaterial.specular = Vector3f(1.0f, 1.0f, 1.0f)
-        val box = size?.let { Box(it, inside) }
-        box?.material = boxmaterial
-        if (position != null) {
-            box?.position = position
-        }
+
+        val box = Box(size, inside)
+        box.material = boxmaterial
+        box.position = position
         return addNode(box)
     }
+
     /**
-     * Add a sphere at the specified positoin with a given radius and color
-     * @param position position to put the sphere
-     * @param radius radius the sphere
-     * @param color color of the sphere
-     * @return  the Node corresponding to the sphere
-     */
-    /**
-     * Add a sphere at the specified position with a given radius
-     * @param position position to put the sphere
-     * @param radius radius of the sphere
-     * @return the Node corresponding to the sphere
-     */
-    /**
-     * Add a unit sphere at the origin
+     * Add a unit sphere at a given [position] with given [radius] and [color].
      * @return the Node corresponding to the sphere
      */
     @JvmOverloads
-    fun addSphere(position: Vector3f? = Vector3f(0.0f, 0.0f, 0.0f), radius: Float = 1f, color: ColorRGB? = DEFAULT_COLOR): Node? {
+    fun addSphere(position: Vector3f = Vector3f(0.0f, 0.0f, 0.0f), radius: Float = 1f, color: ColorRGB = DEFAULT_COLOR): Node? {
         val material = Material()
         material.ambient = Vector3f(1.0f, 0.0f, 0.0f)
         material.diffuse = Utils.convertToVector3f(color)
         material.specular = Vector3f(1.0f, 1.0f, 1.0f)
+
         val sphere = Sphere(radius, 20)
         sphere.material = material
-        if (position != null) {
-            sphere.position = position
-        }
+        sphere.position = position
+
         return addNode(sphere)
     }
 
@@ -1274,11 +614,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param num_segments number of segments to represent the cylinder
      * @return  the Node corresponding to the cylinder
      */
-    fun addCylinder(position: Vector3f?, radius: Float, height: Float, num_segments: Int): Node? {
+    fun addCylinder(position: Vector3f, radius: Float, height: Float, num_segments: Int): Node? {
         val cyl = Cylinder(radius, height, num_segments)
-        if (position != null) {
-            cyl.position = position
-        }
+        cyl.position = position
         return addNode(cyl)
     }
 
@@ -1290,11 +628,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param num_segments number of segments used to represent cone
      * @return  the Node corresponding to the cone
      */
-    fun addCone(position: Vector3f?, radius: Float, height: Float, num_segments: Int): Node? {
+    fun addCone(position: Vector3f, radius: Float, height: Float, num_segments: Int): Node? {
         val cone = Cone(radius, height, num_segments, Vector3f(0.0f, 0.0f, 1.0f))
-        if (position != null) {
-            cone.position = position
-        }
+        cone.position = position
         return addNode(cone)
     }
 
@@ -1306,7 +642,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return the Node corresponding to the line
      */
     @JvmOverloads
-    fun addLine(start: Vector3f = Vector3f(0.0f, 0.0f, 0.0f), stop: Vector3f = Vector3f(1.0f, 1.0f, 1.0f), color: ColorRGB? = DEFAULT_COLOR): Node? {
+    fun addLine(start: Vector3f = Vector3f(0.0f, 0.0f, 0.0f), stop: Vector3f = Vector3f(1.0f, 1.0f, 1.0f), color: ColorRGB = DEFAULT_COLOR): Node? {
         return addLine(arrayOf(start, stop), color, 0.1)
     }
 
@@ -1317,7 +653,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param edgeWidth width of line segments
      * @return the Node corresponding to the line
      */
-    fun addLine(points: Array<Vector3f>, color: ColorRGB?, edgeWidth: Double): Node? {
+    fun addLine(points: Array<Vector3f>, color: ColorRGB, edgeWidth: Double): Node? {
         val material = Material()
         material.ambient = Vector3f(1.0f, 1.0f, 1.0f)
         material.diffuse = Utils.convertToVector3f(color)
@@ -1366,74 +702,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     /**
-     * Write a scenery mesh as an stl to the given file
-     * @param filename filename of the stl
-     * @param scMesh mesh to save
-     */
-    fun writeSCMesh(filename: String?, scMesh: graphics.scenery.Mesh) {
-        val f = File(filename)
-        val out: BufferedOutputStream
-        try {
-            out = BufferedOutputStream(FileOutputStream(f))
-            out.write("solid STL generated by FIJI\n".toByteArray())
-            val normalsFB = scMesh.normals
-            val verticesFB = scMesh.vertices
-            while (verticesFB.hasRemaining() && normalsFB.hasRemaining()) {
-                out.write("""facet normal ${normalsFB.get()} ${normalsFB.get()} ${normalsFB.get()}
-""".toByteArray())
-                out.write("outer loop\n".toByteArray())
-                for (v in 0..2) {
-                    out.write("""vertex	${verticesFB.get()} ${verticesFB.get()} ${verticesFB.get()}
-""".toByteArray())
-                }
-                out.write("endloop\n".toByteArray())
-                out.write("endfacet\n".toByteArray())
-            }
-            out.write("endsolid vcg\n".toByteArray())
-            out.close()
-        } catch (e: FileNotFoundException) {
-            e.printStackTrace()
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
-
-    /**
      * Return the default point size to use for point clouds
      * @return default point size used for point clouds
      */
     private val defaultPointSize: Float
         get() = 0.025f
-
-    /**
-     * Create an array of normal vectors from a set of vertices corresponding to triangles
-     *
-     * @param verts vertices to use for computing normals, assumed to be ordered as triangles
-     * @return array of normals
-     */
-    fun makeNormalsFromVertices(verts: ArrayList<RealPoint>): FloatArray {
-        val normals = FloatArray(verts.size) // div3 * 3coords
-        var k = 0
-        while (k < verts.size) {
-            val v1 = Vector3f(verts[k].getFloatPosition(0),  //
-                    verts[k].getFloatPosition(1),  //
-                    verts[k].getFloatPosition(2))
-            val v2 = Vector3f(verts[k + 1].getFloatPosition(0),
-                    verts[k + 1].getFloatPosition(1),
-                    verts[k + 1].getFloatPosition(2))
-            val v3 = Vector3f(verts[k + 2].getFloatPosition(0),
-                    verts[k + 2].getFloatPosition(1),
-                    verts[k + 2].getFloatPosition(2))
-            val a = v2.sub(v1)
-            val b = v3.sub(v1)
-            val n = a.cross(b).normalize()
-            normals[k / 3] = n[0]
-            normals[k / 3 + 1] = n[1]
-            normals[k / 3 + 2] = n[2]
-            k += 3
-        }
-        return normals
-    }
 
     /**
      * Open a file specified by the source path. The file can be anything that SciView knows about: mesh, volume, point cloud
@@ -1447,7 +720,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             addNode(fromXML(source, hub, VolumeViewerOptions()))
             return
         }
-        val data = io!!.open(source)
+        val data = io.open(source)
         if (data is Mesh)
             addMesh(data)
         else if (data is graphics.scenery.Mesh)
@@ -1538,21 +811,21 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     fun addNode(n: Node?, activePublish: Boolean = true): Node? {
         n?.let {
             scene.addChild(it)
-            objectService?.addObject(n)
+            objectService.addObject(n)
             if (blockOnNewNodes) {
-                blockWhile({ sciView: SciView -> sciView.find(n.name) == null }, 20)
+                Utils.blockWhile({ this.find(n.name) == null }, 20)
                 //System.out.println("find(name) " + find(n.getName()) );
             }
             // Set new node as active and centered?
-            setActiveNode(n);
+            setActiveNode(n)
             if (centerOnNewNodes) {
                 centerOnNode(n)
             }
             if (activePublish) {
-                eventService?.publish(NodeAddedEvent(n));
+                eventService.publish(NodeAddedEvent(n))
             }
         }
-        return n;
+        return n
     }
 
     /**
@@ -1567,7 +840,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         material.specular = Vector3f(1.0f, 1.0f, 1.0f)
         scMesh.material = material
         scMesh.position = Vector3f(0.0f, 0.0f, 0.0f)
-        objectService?.addObject(scMesh)
+        objectService.addObject(scMesh)
         return addNode(scMesh)
     }
 
@@ -1599,27 +872,27 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         if (activeNode === n) return activeNode
         activeNode = n
         targetArcball.target = { n?.getMaximumBoundingBox()?.getBoundingSphere()?.origin ?: Vector3f(0.0f, 0.0f, 0.0f) }
-        nodePropertyEditor?.trySelectNode(activeNode);
-        eventService!!.publish(NodeActivatedEvent(activeNode))
+        mainWindow.selectNode(activeNode)
+        eventService.publish(NodeActivatedEvent(activeNode))
         return activeNode
     }
 
     @Suppress("UNUSED_PARAMETER")
     @EventHandler
     protected fun onNodeAdded(event: NodeAddedEvent?) {
-        nodePropertyEditor!!.rebuildTree()
+        mainWindow.rebuildSceneTree()
     }
 
     @Suppress("UNUSED_PARAMETER")
     @EventHandler
     protected fun onNodeRemoved(event: NodeRemovedEvent?) {
-        nodePropertyEditor!!.rebuildTree()
+        mainWindow.rebuildSceneTree()
     }
 
     @Suppress("UNUSED_PARAMETER")
     @EventHandler
     protected fun onNodeChanged(event: NodeChangedEvent?) {
-        nodePropertyEditor!!.rebuildTree()
+        mainWindow.rebuildSceneTree()
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -1661,7 +934,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     fun animate(fps: Int, action: Runnable): Future<*> {
         // TODO: Make animation speed less laggy and more accurate.
         val delay = 1000 / fps
-        val thread = threadService!!.run {
+        val thread = threadService.run {
             while (animating) {
                 action.run()
                 try {
@@ -1707,18 +980,18 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Take a screenshot and return it as an Img
      * @return an Img of type UnsignedByteType
      */
-    val screenshot: Img<UnsignedByteType?>?
+    val screenshot: Img<UnsignedByteType>?
         get() {
             val screenshot = getSceneryRenderer()!!.requestScreenshot()
             val image = BufferedImage(screenshot.width, screenshot.height, BufferedImage.TYPE_4BYTE_ABGR)
             val imgData = (image.raster.dataBuffer as DataBufferByte).data
             System.arraycopy(screenshot.data, 0, imgData, 0, screenshot.data!!.size)
-            var img: Img<UnsignedByteType?>? = null
+            var img: Img<UnsignedByteType>? = null
             try {
                 val tmpFile = File.createTempFile("sciview-", "-tmp.png")
                 ImageIO.write(image, "png", tmpFile)
                 @Suppress("UNCHECKED_CAST")
-                img = io!!.open(tmpFile.absolutePath) as Img<UnsignedByteType?>
+                img = io.open(tmpFile.absolutePath) as Img<UnsignedByteType>
                 tmpFile.delete()
             } catch (e: IOException) {
                 e.printStackTrace()
@@ -1733,7 +1006,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     val aRGBScreenshot: Img<ARGBType>
         get() {
             val screenshot = screenshot
-            return Utils.convertToARGB(screenshot)
+            return Utils.convertToARGB(screenshot!!)
         }
 
     /**
@@ -1775,36 +1048,33 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     fun deleteActiveNode() {
         deleteNode(activeNode)
     }
+
     /**
      * Delete a specified node and control whether the event is published
      * @param node node to delete from scene
      * @param activePublish whether the deletion should be published
-     */
-    /**
-     * Delete the specified node, this event is published
-     * @param node node to delete from scene
      */
     @JvmOverloads
     fun deleteNode(node: Node?, activePublish: Boolean = true) {
         for (child in node!!.children) {
             deleteNode(child, activePublish)
         }
-        objectService?.removeObject(node);
-        node.parent?.removeChild(node);
+        objectService.removeObject(node)
+        node.parent?.removeChild(node)
         if (activeNode == node) {
             setActiveNode(null)
         }
         //maintain consistency
         if( activePublish ) {
-            eventService?.publish(NodeRemovedEvent(node))
-        };
+            eventService.publish(NodeRemovedEvent(node))
+        }
     }
 
     /**
      * Dispose the current scenery renderer, hub, and other scenery things
      */
     fun dispose() {
-        val objs: List<Node> = objectService!!.getObjects(Node::class.java)
+        val objs: List<Node> = objectService.getObjects(Node::class.java)
         for (obj in objs) {
             objectService.removeObject(obj)
         }
@@ -1814,7 +1084,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
     override fun close() {
         super.close()
-        frame!!.dispose()
+        mainWindow.close()
     }
 
     /**
@@ -1822,7 +1092,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param position position to move the camera to
      */
     fun moveCamera(position: FloatArray) {
-        camera!!.position = Vector3f(position[0], position[1], position[2])
+        camera?.position = Vector3f(position[0], position[1], position[2])
     }
 
     /**
@@ -1830,7 +1100,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param position position to move the camera to
      */
     fun moveCamera(position: DoubleArray) {
-        camera!!.position = Vector3f(position[0].toFloat(), position[1].toFloat(), position[2].toFloat())
+        camera?.position = Vector3f(position[0].toFloat(), position[1].toFloat(), position[2].toFloat())
     }
 
     /**
@@ -1845,8 +1115,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Add a child to the scene. you probably want addNode
      * @param node node to add as a child to the scene
      */
-    fun addChild(node: Node?) {
-        scene.addChild(node!!)
+    fun addChild(node: Node) {
+        scene.addChild(node)
     }
 
     /**
@@ -1858,7 +1128,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         val voxelDims = FloatArray(image.numDimensions())
         for (d in voxelDims.indices) {
             val inValue = image.axis(d).averageScale(0.0, 1.0)
-            if (image.axis(d).unit() == null) voxelDims[d] = inValue.toFloat() else voxelDims[d] = unitService!!.value(inValue, image.axis(d).unit(), axis(d)!!.unit()).toFloat()
+            if (image.axis(d).unit() == null) voxelDims[d] = inValue.toFloat() else voxelDims[d] = unitService.value(inValue, image.axis(d).unit(), axis(d)!!.unit()).toFloat()
         }
         return addVolume(image, voxelDims)
     }
@@ -1875,25 +1145,13 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                 *voxelDimensions)
     }
 
-//    /**
-//     * Add a RandomAccessibleInterval to the image
-//     * @param image image to add as a volume
-//     * @param name name of image
-//     * @param extra, kludge argument to prevent matching issues
-//     * @param <T> pixel type of image
-//     * @return a Node corresponding to the volume
-//    </T> */
-//    fun <T : RealType<T>?> addVolume(image: RandomAccessibleInterval<T>, name: String?, extra: String?): Node {
-//        return addVolume(image, name, 1f, 1f, 1f)
-//    }
-
     /**
      * Add a RandomAccessibleInterval to the image
      * @param image image to add as a volume
      * @param <T> pixel type of image
      * @return a Node corresponding to the volume
     </T> */
-    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, name: String?): Node? {
+    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, name: String = "Volume"): Node? {
         return addVolume(image, name, 1f, 1f, 1f)
     }
 
@@ -1932,7 +1190,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     </T> */
     @Suppress("UNCHECKED_CAST")
     @Throws(Exception::class)
-    fun <T : RealType<T>?> addVolume(image: IterableInterval<T>, name: String?): Node? {
+    fun <T : RealType<T>?> addVolume(image: IterableInterval<T>, name: String = "Volume"): Node? {
         return if (image is RandomAccessibleInterval<*>) {
             addVolume(image as RandomAccessibleInterval<RealType<*>>, name, 1f, 1f, 1f)
         } else {
@@ -1945,9 +1203,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param n node to apply colormap to
      * @param lutName name of LUT according to imagej LUTService
      */
-    fun setColormap(n: Node, lutName: String?) {
+    fun setColormap(n: Node, lutName: String) {
         try {
-            setColormap(n, lutService!!.loadLUT(lutService.findLUTs()[lutName]))
+            setColormap(n, lutService.loadLUT(lutService.findLUTs()[lutName]))
         } catch (e: IOException) {
             e.printStackTrace()
         }
@@ -1995,7 +1253,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     </T> */
     fun <T : RealType<T>> addVolume(sac: SourceAndConverter<T>,
                                     numTimepoints: Int,
-                                    name: String?,
+                                    name: String = "Volume",
                                     vararg voxelDimensions: Float): Node? {
         val sources: MutableList<SourceAndConverter<T>> = ArrayList()
         sources.add(sac)
@@ -2011,7 +1269,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param <T> pixel type of image
      * @return a Node corresponding to the Volume
     </T> */
-    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, name: String?,
+    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, name: String = "Volume",
                                     vararg voxelDimensions: Float): Node? {
         //log.debug( "Add Volume " + name + " image: " + image );
         val dimensions = LongArray(image.numDimensions())
@@ -2059,9 +1317,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     </T> */
     @Suppress("UNCHECKED_CAST")
     fun <T : NumericType<T>> addVolume(sources: List<SourceAndConverter<T>>,
-                                       converterSetups: ArrayList<ConverterSetup>?,
+                                       converterSetups: ArrayList<ConverterSetup>,
                                        numTimepoints: Int,
-                                       name: String?,
+                                       name: String = "Volume",
                                        vararg voxelDimensions: Float): Node? {
         var timepoints = numTimepoints
         var cacheControl: CacheControl? = null
@@ -2071,7 +1329,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 //                .getSource(0, 0);
         val image = sources[0].spimSource.getSource(0, 0)
         if (image is VolatileView<*, *>) {
-            val viewData = (image as VolatileView<T, Volatile<T>?>).volatileViewData
+            val viewData = (image as VolatileView<T, Volatile<T>>).volatileViewData
             cacheControl = viewData.cacheControl
         }
         val dimensions = LongArray(image.numDimensions())
@@ -2089,10 +1347,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         if (image.numDimensions() > 3) {
             timepoints = image.dimension(3).toInt()
         }
-        val ds = RAISource<T>(voxelType, sources, converterSetups!!, timepoints, cacheControl)
+        val ds = RAISource<T>(voxelType, sources, converterSetups, timepoints, cacheControl)
         val options = VolumeViewerOptions()
         val v: Volume = RAIVolume(ds, options, hub)
-        v.name = name!!
+        v.name = name
         v.metadata["sources"] = sources
         v.metadata["VoxelDimensions"] = voxelDimensions
         val tf = v.transferFunction
@@ -2108,22 +1366,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     /**
-     * Block while predicate is true
-     *
-     * @param predicate predicate function that returns true as long as this function should block
-     * @param waitTime wait time before predicate re-evaluation
-     */
-    private fun blockWhile(predicate: Function<SciView, Boolean>, waitTime: Int) {
-        while (predicate.apply(this)) {
-            try {
-                Thread.sleep(waitTime.toLong())
-            } catch (e: InterruptedException) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    /**
      * Adds a SourceAndConverter to the scene.
      *
      * @param sources The list of SourceAndConverter to add
@@ -2134,7 +1376,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     </T> */
     fun <T : RealType<T>> addVolume(sources: List<SourceAndConverter<T>>,
                                     numTimepoints: Int,
-                                    name: String?,
+                                    name: String = "Volume",
                                     vararg voxelDimensions: Float): Node? {
         var setupId = 0
         val converterSetups = ArrayList<ConverterSetup>()
@@ -2287,7 +1529,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     fun addWindowListener(wl: WindowListener?) {
-        frame!!.addWindowListener(wl)
+        (mainWindow as? SwingMainWindow)?.addWindowListener(wl)
     }
 
     override fun axis(i: Int): CalibratedAxis? {
@@ -2346,31 +1588,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         return scene.activeObserver
     }
 
-    inner class TransparentSlider : JSlider() {
-        override fun paintComponent(g: Graphics) {
-            val g2d = g.create() as Graphics2D
-            g2d.color = background
-            g2d.composite = AlphaComposite.SrcOver.derive(0.9f)
-            g2d.fillRect(0, 0, width, height)
-            g2d.dispose()
-            super.paintComponent(g)
-        }
-
-        init {
-            // Important, we taking over the filling of the
-            // component...
-            isOpaque = false
-            background = Color.DARK_GRAY
-            foreground = Color.LIGHT_GRAY
-        }
-    }
-
-    internal inner class showHelpDisplay : ClickBehaviour {
-        override fun click(x: Int, y: Int) {
-            scijavaContext?.getService(CommandService::class.java)?.run(Help::class.java, true)
-        }
-    }
-
     /**
      * Return a list of all nodes that match a given predicate function
      * @param nodeMatchPredicate, returns true if a node is a match
@@ -2391,7 +1608,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Triggers the inspector tree to be completely rebuilt/refreshed.
      */
     fun requestPropEditorRefresh() {
-        eventService!!.publish(NodeChangedEvent(scene))
+        eventService.publish(NodeChangedEvent(scene))
     }
 
     /**
@@ -2399,46 +1616,25 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param n Root of the subtree to get rebuilt/refreshed.
      */
     fun requestPropEditorRefresh(n: Node?) {
-        eventService!!.publish(NodeChangedEvent(n))
+        eventService.publish(NodeChangedEvent(n))
     }
 
     companion object {
         //bounds for the controls
-        @JvmField
-        val FPSSPEED_MINBOUND_SLOW = 0.01f
-        @JvmField
-        val FPSSPEED_MAXBOUND_SLOW = 30.0f
-        @JvmField
-        val FPSSPEED_MINBOUND_FAST = 0.2f
-        @JvmField
-        val FPSSPEED_MAXBOUND_FAST = 600f
-        @JvmField
-        val FPSSPEED_MINBOUND_VERYFAST = 10f
-        @JvmField
-        val FPSSPEED_MAXBOUND_VERYFAST = 2000f
+        const val FPSSPEED_MINBOUND_SLOW = 0.01f
+        const val FPSSPEED_MAXBOUND_SLOW = 30.0f
+        const val FPSSPEED_MINBOUND_FAST = 0.2f
+        const val FPSSPEED_MAXBOUND_FAST = 600f
+        const val FPSSPEED_MINBOUND_VERYFAST = 10f
+        const val FPSSPEED_MAXBOUND_VERYFAST = 2000f
+
+        const val MOUSESPEED_MINBOUND = 0.1f
+        const val MOUSESPEED_MAXBOUND = 3.0f
+        const val MOUSESCROLL_MINBOUND = 0.3f
+        const val MOUSESCROLL_MAXBOUND = 10.0f
 
         @JvmField
-        val MOUSESPEED_MINBOUND = 0.1f
-        @JvmField
-        val MOUSESPEED_MAXBOUND = 3.0f
-        @JvmField
-        val MOUSESCROLL_MINBOUND = 0.3f
-        @JvmField
-        val MOUSESCROLL_MAXBOUND = 10.0f
-
-        @JvmField
-        val DEFAULT_COLOR = Colors.LIGHTGRAY
-
-        /**
-         * Utility function to generate GLVector in cases like usage from Python
-         * @param x x coord
-         * @param y y coord
-         * @param z z coord
-         * @return a GLVector of x,y,z
-         */
-        fun getGLVector(x: Float, y: Float, z: Float): GLVector {
-            return GLVector(x, y, z)
-        }
+        val DEFAULT_COLOR: ColorRGB = Colors.LIGHTGRAY
 
         /**
          * Static launching method
@@ -2449,12 +1645,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         @Throws(Exception::class)
         fun create(): SciView {
             xinitThreads()
-            FlatLightLaf.install()
-            try {
-                UIManager.setLookAndFeel(FlatLightLaf())
-            } catch (ex: Exception) {
-                System.err.println("Failed to initialize Flat Light LaF, falling back to Swing default.")
-            }
             System.setProperty("scijava.log.level:sc.iview", "debug")
             val context = Context(ImageJService::class.java, SciJavaService::class.java, SCIFIOService::class.java, ThreadService::class.java)
             val sciViewService = context.service(SciViewService::class.java)
@@ -2467,7 +1657,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
          *
          * @return a newly created SciView
          */
-        @Deprecated("")
+        @Deprecated("Please use SciView.create() instead.", replaceWith = ReplaceWith("SciView.create()"))
         @Throws(Exception::class)
         fun createSciView(): SciView {
             return create()

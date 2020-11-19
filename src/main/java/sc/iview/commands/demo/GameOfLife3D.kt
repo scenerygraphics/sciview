@@ -103,7 +103,7 @@ class GameOfLife3D : Command {
      */
     var img: Img<UnsignedByteType>? = null
         private set
-    private var name: String? = null
+    private var name: String = "Life Simulation"
     private var voxelDims: FloatArray = floatArrayOf(1.0f, 1.0f, 1.0f)
 
     /**
