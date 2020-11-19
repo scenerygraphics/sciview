@@ -1046,6 +1046,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         // help window
         h.addBehaviour("show help", showHelpDisplay())
         h.addKeyBinding("show help", "F1")
+
+        //update scene inspector
+        h.addBehaviour("update scene graph", ClickBehaviour { _: Int, _: Int -> requestPropEditorRefresh() })
+        h.addKeyBinding("update scene graph", "shift ctrl I")
     }
 
     /*
@@ -1082,7 +1086,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     inner class AnimatedCenteringBeforeArcBallControl : ArcballCameraControl {
         //a bunch of necessary c'tors (originally defined in the ArcballCameraControl class)
         constructor(name: String, n: Function0<Camera?>, w: Int, h: Int, target: Function0<Vector3f>) : super(name, n, w, h, target) {}
-        constructor(name: String,n: Supplier<Camera?>, w: Int, h: Int, target: Supplier<Vector3f>) : super(name, n, w, h, target) {}
+        constructor(name: String, n: Supplier<Camera?>, w: Int, h: Int, target: Supplier<Vector3f>) : super(name, n, w, h, target) {}
         constructor(name: String, n: Function0<Camera?>, w: Int, h: Int, target: Vector3f) : super(name, n, w, h, target) {}
         constructor(name: String, n: Supplier<Camera?>, w: Int, h: Int, target: Vector3f) : super(name, n, w, h, target) {}
 
@@ -2381,6 +2385,21 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     fun nodeInfoString(n: Node): String {
         return "Node name: " + n.name + " Node type: " + n.nodeType + " To String: " + n
+    }
+
+    /**
+     * Triggers the inspector tree to be completely rebuilt/refreshed.
+     */
+    fun requestPropEditorRefresh() {
+        eventService!!.publish(NodeChangedEvent(scene))
+    }
+
+    /**
+     * Triggers the inspector to rebuild/refresh the given node.
+     * @param n Root of the subtree to get rebuilt/refreshed.
+     */
+    fun requestPropEditorRefresh(n: Node?) {
+        eventService!!.publish(NodeChangedEvent(n))
     }
 
     companion object {
