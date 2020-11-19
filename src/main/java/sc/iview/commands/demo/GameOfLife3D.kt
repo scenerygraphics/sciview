@@ -288,11 +288,6 @@ class GameOfLife3D : Command {
             val bg = BoundingGrid()
             bg.node = volume
 
-//            volume.setVoxelSizeX(10.0f);
-//            volume.setVoxelSizeY(10.0f);
-//            volume.setVoxelSizeZ(10.0f);
-            volume!!.putAbove(Vector3f(0.0f, 0.0f, 0.0f))
-            //            volume.setRenderingMethod(2);
             volume!!.transferFunction.addControlPoint(0.0f, 0.0f)
             volume!!.transferFunction.addControlPoint(0.4f, 0.3f)
             volume!!.name = "Game of Life 3D"
