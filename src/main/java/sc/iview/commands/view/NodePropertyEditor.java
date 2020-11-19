@@ -64,6 +64,7 @@ import sc.iview.event.NodeActivatedEvent;
 import sc.iview.event.NodeAddedEvent;
 import sc.iview.event.NodeChangedEvent;
 import sc.iview.event.NodeRemovedEvent;
+import sc.iview.ui.SwingGroupingInputHarvester;
 
 import javax.swing.*;
 import javax.swing.tree.*;
@@ -324,9 +325,9 @@ public class NodePropertyEditor implements UIComponent<JPanel> {
 				p.setSceneNode( sceneNode );
 
 				// Prepare the SwingInputHarvester.
-				final PluginInfo<SciJavaPlugin> pluginInfo = pluginService.getPlugin( SwingInputHarvester.class );
+				final PluginInfo<SciJavaPlugin> pluginInfo = pluginService.getPlugin( SwingGroupingInputHarvester.class );
 				final SciJavaPlugin pluginInstance = pluginService.createInstance( pluginInfo );
-				final SwingInputHarvester harvester = ( SwingInputHarvester ) pluginInstance;
+				final SwingGroupingInputHarvester harvester = (SwingGroupingInputHarvester) pluginInstance;
 				inputPanel = harvester.createInputPanel();
 
 				// Build the panel.
