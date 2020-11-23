@@ -106,7 +106,7 @@ class Properties : InteractiveCommand() {
     private var timepoint = 0
 
     @Parameter(label = "[Volume]Play", callback = "playTimeSeries")
-    private val playPauseButton: Button? = null
+    private var playPauseButton: Button? = null
 
     @Volatile
     @Parameter(label = "[Volume]Speed", min = "1", max = "10", style = NumberWidget.SCROLL_BAR_STYLE, persist = false)
@@ -283,6 +283,8 @@ class Properties : InteractiveCommand() {
                             nextTimepoint = 0
                         }
                         v.goToTimepoint(nextTimepoint)
+                        timepoint = nextTimepoint
+
                         Thread.sleep(1000L / playSpeed)
                     } catch (e: InterruptedException) {
                         e.printStackTrace()
