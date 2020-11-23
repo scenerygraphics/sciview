@@ -22,6 +22,7 @@ import java.awt.event.*
 import java.util.*
 import javax.script.ScriptException
 import javax.swing.*
+import kotlin.concurrent.thread
 
 /**
  * Class for Swing-based main window.
@@ -86,6 +87,16 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
         frame.layout = BorderLayout(0, 0)
         frame.setSize(sciview.windowWidth, sciview.windowHeight)
         frame.setLocation(x, y)
+
+        splashLabel = SplashLabel()
+        val glassPane = frame.glassPane as JPanel
+        glassPane.isVisible = true
+        glassPane.layout = BorderLayout()
+        glassPane.isOpaque = false
+        glassPane.add(splashLabel, BorderLayout.CENTER)
+        glassPane.requestFocusInWindow()
+        glassPane.revalidate()
+
         frame.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
         nodePropertyEditor = SwingNodePropertyEditor(sciview)
 
@@ -191,12 +202,9 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
             }
         })
 
-        splashLabel = SplashLabel()
-        frame.glassPane = splashLabel
-        frame.glassPane.isVisible = true
-        frame.glassPane.requestFocusInWindow()
-        //            frame.getGlassPane().setBackground(new java.awt.Color(50, 48, 47, 255));
         frame.isVisible = true
+        glassPane.repaint()
+
         sciview.sceneryPanel[0] = sceneryJPanel
         val renderer = Renderer.createRenderer(
                 sciview.hub,
@@ -210,6 +218,7 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
         sciview.setRenderer(renderer)
         sciview.hub.add(SceneryElement.Renderer, renderer)
         sciview.reset()
+
         SwingUtilities.invokeLater {
             try {
                 while (!sciview.getSceneryRenderer()!!.firstImageReady) {
@@ -225,7 +234,6 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
 
             // subscribe to Node{Added, Removed, Changed} events, happens automatically
 //            eventService!!.subscribe(this)
-            frame.glassPane.isVisible = false
             sceneryJPanel.isVisible = true
 
             // install hook to keep inspector updated on external changes (scripting, etc)
@@ -238,6 +246,7 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
             // Enable push rendering by default
             renderer.pushMode = true
             sciview.camera!!.setPosition(1.65, 1)
+            glassPane.isVisible = false
         }
     }
 
