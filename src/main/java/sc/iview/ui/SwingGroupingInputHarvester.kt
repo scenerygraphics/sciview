@@ -9,8 +9,12 @@ import org.scijava.module.ModuleItem
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import org.scijava.ui.swing.widget.SwingInputHarvester
+import org.scijava.ui.swing.widget.SwingInputPanel
 import org.scijava.widget.*
+import java.awt.event.MouseEvent
+import java.awt.event.MouseListener
 import java.util.*
+import javax.swing.JLabel
 import javax.swing.JPanel
 
 @Plugin(type = org.scijava.module.process.PreprocessorPlugin::class, priority = InputHarvester.PRIORITY)
@@ -34,14 +38,79 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
     override fun buildPanel(inputPanel: InputPanel<JPanel, JPanel>, module: Module) {
         val inputs = module.info.inputs()
         val models = ArrayList<WidgetModel>()
-        val sortedInputs = inputs.sortedBy {
+        val sortedInputs = inputs.groupBy {
             val sortKey = it.label.substringBeforeLast("]").substringAfter("[")
             sortKey
         }
 
-        for (item in sortedInputs) {
-            val model = addInput(inputPanel, module, item)
-            if (model != null) models.add(model)
+        sortedInputs.forEach { group ->
+            // no empty groups, and skip resolved inputs, aka services
+            if(group.value.isEmpty() || group.value.all { module.isInputResolved(it.name) }) {
+                return@forEach
+            }
+
+            val panel = SwingInputPanel()
+            val labelPanel = SwingInputPanel()
+            val label = JLabel("<html><strong>▼ ${group.key}</strong></html>")
+
+            label.addMouseListener(object: MouseListener {
+                /**
+                 * Invoked when the mouse button has been clicked (pressed
+                 * and released) on a component.
+                 * @param e the event to be processed
+                 */
+                override fun mouseClicked(e: MouseEvent?) {
+                    if(e?.clickCount == 2) {
+                        panel.component.isVisible = !panel.component.isVisible
+
+                        if(panel.component.isVisible) {
+                            label.text = "<html><strong>▼ ${group.key}</strong></html>"
+                        } else {
+                            label.text = "<html><strong>▶ ${group.key}</strong></html>"
+                        }
+                        inputPanel.component.revalidate()
+                    }
+                }
+
+                /**
+                 * Invoked when a mouse button has been pressed on a component.
+                 * @param e the event to be processed
+                 */
+                override fun mousePressed(e: MouseEvent?) {
+                }
+
+                /**
+                 * Invoked when a mouse button has been released on a component.
+                 * @param e the event to be processed
+                 */
+                override fun mouseReleased(e: MouseEvent?) {
+                }
+
+                /**
+                 * Invoked when the mouse enters a component.
+                 * @param e the event to be processed
+                 */
+                override fun mouseEntered(e: MouseEvent?) {
+                }
+
+                /**
+                 * Invoked when the mouse exits a component.
+                 * @param e the event to be processed
+                 */
+                override fun mouseExited(e: MouseEvent?) {
+                }
+
+            })
+
+            labelPanel.component.add(label)
+            inputPanel.component.add(labelPanel.component, "span 2")
+            // hidemode 3 ignores the space taken up by components when rendered
+            inputPanel.component.add(panel.component, "wrap,hidemode 3")
+
+            for (item in group.value) {
+                val model = addInput(panel, module, item)
+                if (model != null) models.add(model)
+            }
         }
 
         // mark all models as initialized

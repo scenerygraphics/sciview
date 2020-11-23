@@ -12,13 +12,11 @@ import graphics.scenery.utils.SceneryJPanel
 import org.joml.Vector2f
 import org.lwjgl.system.Platform
 import org.scijava.menu.MenuService
-import org.scijava.plugin.Parameter
 import org.scijava.ui.swing.menu.SwingJMenuBarCreator
 import sc.iview.SciView
 import sc.iview.SciViewService
 import sc.iview.SplashLabel
 import sc.iview.Utils
-import sc.iview.commands.view.NodePropertyEditor
 import java.awt.*
 import java.awt.event.*
 import java.util.*
@@ -44,7 +42,7 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
         protected set
     var interpreterPane: REPLPane
         protected set
-    var nodePropertyEditor: NodePropertyEditor
+    var nodePropertyEditor: SwingNodePropertyEditor
         protected set
     var frame: JFrame
         protected set
@@ -89,7 +87,7 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
         frame.setSize(sciview.windowWidth, sciview.windowHeight)
         frame.setLocation(x, y)
         frame.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
-        nodePropertyEditor = NodePropertyEditor(sciview)
+        nodePropertyEditor = SwingNodePropertyEditor(sciview)
 
         val p = JPanel(BorderLayout(0, 0))
         sceneryJPanel = SceneryJPanel()

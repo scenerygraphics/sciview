@@ -38,8 +38,8 @@ import net.imglib2.Sampler
 import net.imglib2.img.Img
 import net.imglib2.img.array.ArrayImgs
 import net.imglib2.type.numeric.integer.UnsignedByteType
-import org.joml.Vector3f
 import org.scijava.command.Command
+import org.scijava.command.CommandInfo
 import org.scijava.command.CommandService
 import org.scijava.event.EventHandler
 import org.scijava.plugin.Menu
@@ -64,16 +64,19 @@ class GameOfLife3D : Command {
     @Parameter
     private lateinit var sciView: SciView
 
-    @Parameter(label = "Starvation threshold", min = "0", max = "26", persist = false)
+    @Parameter
+    private lateinit var commandService: CommandService
+
+    @Parameter(label = "[Game of Life]Starvation threshold", min = "0", max = "26", persist = false)
     private var starvation = 5
 
-    @Parameter(label = "Birth threshold", min = "0", max = "26", persist = false)
+    @Parameter(label = "[Game of Life]Birth threshold", min = "0", max = "26", persist = false)
     private var birth = 6
 
-    @Parameter(label = "Suffocation threshold", min = "0", max = "26", persist = false)
+    @Parameter(label = "[Game of Life]Suffocation threshold", min = "0", max = "26", persist = false)
     private var suffocation = 9
 
-    @Parameter(choices = [SIX, EIGHTEEN, TWENTY_SIX], persist = false)
+    @Parameter(label = "[Game of Life]Connectedness", choices = [SIX, EIGHTEEN, TWENTY_SIX], persist = false)
     private var connectedness = TWENTY_SIX
 
     @Parameter(label = "Initial saturation % when randomizing", min = "1", max = "99", style = NumberWidget.SCROLL_BAR_STYLE, persist = false)
@@ -292,6 +295,15 @@ class GameOfLife3D : Command {
             volume!!.transferFunction.addControlPoint(0.4f, 0.3f)
             volume!!.name = "Game of Life 3D"
             sciView.centerOnNode(volume)
+
+            // NB: Create dynamic metadata lazily.
+            val commandInfo: CommandInfo = commandService.getCommand(javaClass)
+            volume!!.metadata["sciview-inspector"] = listOf(
+                    commandInfo.getInput("starvation"),
+                    commandInfo.getInput("suffocation"),
+                    commandInfo.getInput("birth"),
+                    commandInfo.getInput("connectedness")
+            )
         } else {
             // NB: Name must be unique each time.
             sciView.updateVolume(img as IterableInterval<UnsignedByteType>, name + "-" + ++tick, voxelDims, volume!!)

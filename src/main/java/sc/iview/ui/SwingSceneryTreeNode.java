@@ -26,24 +26,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view;
+package sc.iview.ui;
 
 import graphics.scenery.Node;
 import sc.iview.SciView;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
-class SceneryTreeNode extends DefaultMutableTreeNode {
+class SwingSceneryTreeNode extends DefaultMutableTreeNode {
     private final Node node;
 
-    public SceneryTreeNode(final SciView sciView ) {
+    public SwingSceneryTreeNode(final SciView sciView ) {
         this( ( Node ) null );
         for( final Node sceneNode : sciView.getSceneNodes( n -> true ) ) {
             addNode( sceneNode );
         }
     }
 
-    private SceneryTreeNode(final Node node ) {
+    private SwingSceneryTreeNode(final Node node ) {
         super( node );
         this.node = node;
     }
@@ -54,7 +54,7 @@ class SceneryTreeNode extends DefaultMutableTreeNode {
     }
 
     private void addNode( final Node child ) {
-        final SceneryTreeNode treeNode = new SceneryTreeNode( child );
+        final SwingSceneryTreeNode treeNode = new SwingSceneryTreeNode( child );
         add( treeNode );
         for( final Node n : child.getChildren() ) {
             treeNode.addNode( n );

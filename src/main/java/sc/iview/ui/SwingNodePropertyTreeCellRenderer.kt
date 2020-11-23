@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.view
+package sc.iview.ui
 
 import graphics.scenery.*
 import graphics.scenery.volumes.Volume
@@ -45,7 +45,7 @@ import javax.swing.tree.DefaultTreeCellRenderer
  *
  * @author Ulrik Guenther
  */
-internal class NodePropertyTreeCellRenderer : DefaultTreeCellRenderer() {
+internal class SwingNodePropertyTreeCellRenderer : DefaultTreeCellRenderer() {
     private var nodeBackground: Color? = null
     private var overrideColor = false
 
@@ -180,8 +180,8 @@ internal class NodePropertyTreeCellRenderer : DefaultTreeCellRenderer() {
             var icon: ImageIcon
             var disabledIcon: ImageIcon
             try {
-                val iconImage = ImageIO.read(NodePropertyTreeCellRenderer::class.java.getResourceAsStream(name))
-                val disabledIconImage = ImageIO.read(NodePropertyTreeCellRenderer::class.java.getResourceAsStream(name))
+                val iconImage = ImageIO.read(SwingNodePropertyTreeCellRenderer::class.java.getResourceAsStream(name))
+                val disabledIconImage = ImageIO.read(SwingNodePropertyTreeCellRenderer::class.java.getResourceAsStream(name))
                 icon = ImageIcon(iconImage.getScaledInstance(16, 16, Image.SCALE_SMOOTH))
                 val width = disabledIconImage.width
                 val height = disabledIconImage.height

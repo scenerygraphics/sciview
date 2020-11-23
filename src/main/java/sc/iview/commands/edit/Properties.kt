@@ -348,12 +348,6 @@ class Properties : InteractiveCommand() {
             val lutNameItem = info.getMutableInput("colormapName", String::class.java)
             lutNameItem.setChoices(lutService.findLUTs().keys.toMutableList())
 
-            @Suppress("UNCHECKED_CAST")
-            val sources = node.metadata["sources"] as ArrayList<SourceAndConverter<*>>?
-
-            @Suppress("UNCHECKED_CAST")
-            val rai: RandomAccessibleInterval<RealType<*>> = sources!![0].spimSource.getSource(0, 0) as RandomAccessibleInterval<RealType<*>>
-
             timepoint = node.currentTimepoint
             info.getMutableInput("timepoint", java.lang.Integer::class.java).minimumValue = java.lang.Integer.valueOf(0) as java.lang.Integer
 
