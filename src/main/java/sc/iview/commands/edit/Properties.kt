@@ -42,6 +42,7 @@ import org.joml.Vector4f
 import org.scijava.command.Command
 import org.scijava.command.InteractiveCommand
 import org.scijava.event.EventService
+import org.scijava.log.LogService
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import org.scijava.ui.UIService
@@ -92,10 +93,10 @@ class Properties : InteractiveCommand() {
     @Parameter(label = "[Basic]Visible", callback = "updateNodeProperties")
     private var visible = false
 
-    @Parameter(required = false, callback = "updateNodeProperties")
+    @Parameter(label = "[Basic]Color", required = false, callback = "updateNodeProperties")
     private var colour: ColorRGB? = null
 
-    @Parameter(required = false, callback = "updateNodeProperties")
+    @Parameter(label = "[Camera]Active", required = false, callback = "updateNodeProperties")
     private var active = false
 
     @Parameter(label = "[Basic]Name", callback = "updateNodeProperties")
@@ -183,6 +184,9 @@ class Properties : InteractiveCommand() {
     var fieldsUpdating = true
     var sceneNodeChoices = ArrayList<String>()
     private var currentSceneNode: Node? = null
+
+    @Parameter
+    private lateinit var log: LogService
 
     /**
      * Nothing happens here, as cancelling the dialog is not possible.
@@ -344,13 +348,17 @@ class Properties : InteractiveCommand() {
             val lutNameItem = info.getMutableInput("colormapName", String::class.java)
             lutNameItem.setChoices(lutService.findLUTs().keys.toMutableList())
 
-            @Suppress("UNCHECKED_CAST") val sources = node.metadata["sources"] as ArrayList<SourceAndConverter<*>>?
-            @Suppress("UNCHECKED_CAST") val rai: RandomAccessibleInterval<RealType<*>> = sources!![0].spimSource.getSource(0, 0) as RandomAccessibleInterval<RealType<*>>
+            @Suppress("UNCHECKED_CAST")
+            val sources = node.metadata["sources"] as ArrayList<SourceAndConverter<*>>?
+
+            @Suppress("UNCHECKED_CAST")
+            val rai: RandomAccessibleInterval<RealType<*>> = sources!![0].spimSource.getSource(0, 0) as RandomAccessibleInterval<RealType<*>>
 
             timepoint = node.currentTimepoint
-            info.getMutableInput("timepoint", java.lang.Integer::class.java).setMinimumValue(java.lang.Integer.valueOf(0) as java.lang.Integer)
-            info.getMutableInput("timepoint", java.lang.Integer::class.java).setMaximumValue(
-                    java.lang.Integer.valueOf(if (rai.numDimensions() > 3) node.timepointCount else 0) as java.lang.Integer)
+            info.getMutableInput("timepoint", java.lang.Integer::class.java).minimumValue = java.lang.Integer.valueOf(0) as java.lang.Integer
+
+            info.getMutableInput("timepoint", java.lang.Integer::class.java).maximumValue = java.lang.Integer.valueOf(node.timepointCount-1) as java.lang.Integer
+
             min = node.converterSetups[0].displayRangeMin.toInt()
             max = node.converterSetups[0].displayRangeMax.toInt()
             maybeRemoveInput("colour", ColorRGB::class.java)
@@ -454,10 +462,11 @@ class Properties : InteractiveCommand() {
             try {
                 val cm = lutService.loadLUT(lutService.findLUTs()[colormapName])
                 node.colormap = fromColorTable(cm)
-                
+                log.info("Setting new colormap to $colormapName / $cm")
+
                 colormap = cm
             } catch (ioe: IOException) {
-                System.err.println("Could not load LUT $colormapName")
+                log.error("Could not load LUT $colormapName")
             }
             node.goToTimepoint(timepoint)
             node.converterSetups[0].setDisplayRange(min.toDouble(), max.toDouble())
