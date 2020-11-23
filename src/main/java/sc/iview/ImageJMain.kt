@@ -50,11 +50,10 @@ object ImageJMain {
     @Throws(Exception::class)
     @JvmStatic
     fun main(args: Array<String>) {
-        val context = Context()
-        val uiService = context.service(UIService::class.java)
-        val sciViewService = context.service(SciViewService::class.java)
+        val sv = SciView.create()
+        val context = sv.scijavaContext
+        val uiService = context?.service(UIService::class.java)
 
-        uiService.showUI()
-        sciViewService.createSciView()
+        uiService?.showUI()
     }
 }

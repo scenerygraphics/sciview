@@ -100,11 +100,11 @@ public class NavigationControlsSettings extends InteractiveCommand
 
         //backup the current state of SciView before we eventually override it
         //so that there is something to return to with the "first toggle"
-        orig_fpsSlowSpeed = sciView.getControlsParameters().getFpsSpeedSlow();
-        orig_fpsFastSpeed = sciView.getControlsParameters().getFpsSpeedFast();
-        orig_fpsVeryFastSpeed = sciView.getControlsParameters().getFpsSpeedVeryFast();
-        orig_mouseMoveSensitivity = sciView.getControlsParameters().getMouseSpeedMult();
-        orig_mouseScrollSensitivity = sciView.getControlsParameters().getMouseScrollMult();
+        orig_fpsSlowSpeed = sciView.getControls().getParameters().getFpsSpeedSlow();
+        orig_fpsFastSpeed = sciView.getControls().getParameters().getFpsSpeedFast();
+        orig_fpsVeryFastSpeed = sciView.getControls().getParameters().getFpsSpeedVeryFast();
+        orig_mouseMoveSensitivity = sciView.getControls().getParameters().getMouseSpeedMult();
+        orig_mouseScrollSensitivity = sciView.getControls().getParameters().getMouseScrollMult();
 
         //try to retrieve stored dialog state and push it to SciView
         //so that the SciView and dialog states match
@@ -120,11 +120,11 @@ public class NavigationControlsSettings extends InteractiveCommand
     //updates GUI with fresh values
     private void updateDialogSpeedsAndMouseParams()
     {
-        fpsSlowSpeed = sciView.getControlsParameters().getFpsSpeedSlow();
-        fpsFastSpeed = sciView.getControlsParameters().getFpsSpeedFast();
-        fpsVeryFastSpeed = sciView.getControlsParameters().getFpsSpeedVeryFast();
-        mouseMoveSensitivity = sciView.getControlsParameters().getMouseSpeedMult();
-        mouseScrollSensitivity = sciView.getControlsParameters().getMouseScrollMult();
+        fpsSlowSpeed = sciView.getControls().getParameters().getFpsSpeedSlow();
+        fpsFastSpeed = sciView.getControls().getParameters().getFpsSpeedFast();
+        fpsVeryFastSpeed = sciView.getControls().getParameters().getFpsSpeedVeryFast();
+        mouseMoveSensitivity = sciView.getControls().getParameters().getMouseSpeedMult();
+        mouseScrollSensitivity = sciView.getControls().getParameters().getMouseScrollMult();
     }
 
 

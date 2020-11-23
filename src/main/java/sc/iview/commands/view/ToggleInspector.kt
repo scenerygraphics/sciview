@@ -37,7 +37,7 @@ import sc.iview.commands.MenuWeights.VIEW
 import sc.iview.commands.MenuWeights.VIEW_TOGGLE_INSPECTOR
 
 /**
- * Command that displays a [NodePropertyEditor] window.
+ * Command that displays a [SwingNodePropertyEditor] window.
  *
  * @author Curtis Rueden
  */
