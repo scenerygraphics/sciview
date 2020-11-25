@@ -193,6 +193,7 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
 
         //frame.add(mainSplitPane, BorderLayout.CENTER);
         frame.add(mainSplitPane, BorderLayout.CENTER)
+        frame.defaultCloseOperation = JFrame.DO_NOTHING_ON_CLOSE
         frame.addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
                 logger.debug("Closing SciView window.")
@@ -274,7 +275,7 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
      */
     override fun initializeInterpreter() {
         val startupCode = Scanner(SciView::class.java.getResourceAsStream("startup.py"), "UTF-8").useDelimiter("\\A").next()
-        interpreterPane.repl.interpreter.bindings["sciView"] = this
+        interpreterPane.repl.interpreter.bindings["sciview"] = this.sciview
         try {
             interpreterPane.repl.interpreter.eval(startupCode)
         } catch (e: ScriptException) {
@@ -317,5 +318,6 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
      */
     override fun close() {
         frame.dispose()
+        sciview.close()
     }
 }
