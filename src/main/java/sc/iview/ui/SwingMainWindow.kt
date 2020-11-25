@@ -188,7 +188,7 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
         mainSplitPane.dividerLocation = frame.size.width - 36
         mainSplitPane.border = BorderFactory.createEmptyBorder()
         mainSplitPane.dividerSize = 1
-        mainSplitPane.resizeWeight = 0.9
+        mainSplitPane.resizeWeight = 0.75
         sidebarHidden = true
 
         //frame.add(mainSplitPane, BorderLayout.CENTER);
