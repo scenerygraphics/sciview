@@ -347,7 +347,7 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
 //        }
 //        updateProperties( sciView.getActiveNode() );
         if (currentPath != null) {
-            val selectedNode = (currentPath.lastPathComponent as SwingSceneryTreeNode).node
+            val selectedNode = (currentPath.lastPathComponent as SwingSceneryTreeNode).node ?: return
             trySelectNode(selectedNode)
         }
     }
