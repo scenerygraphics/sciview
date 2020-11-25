@@ -1142,7 +1142,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     @Suppress("UNCHECKED_CAST")
     fun addVolume(image: Dataset, voxelDimensions: FloatArray): Node? {
-        return addVolume<RealType<*>>(image.imgPlus as RandomAccessibleInterval<RealType<*>>, image.name,
+        return addVolume<RealType<*>>(image.imgPlus as RandomAccessibleInterval<RealType<*>>, image.name ?: "Volume",
                 *voxelDimensions)
     }
 
