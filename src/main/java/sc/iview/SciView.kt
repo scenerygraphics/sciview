@@ -1085,7 +1085,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
     override fun close() {
         super.close()
-        mainWindow.close()
     }
 
     /**
