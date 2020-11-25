@@ -39,7 +39,7 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
         val inputs = module.info.inputs()
         val models = ArrayList<WidgetModel>()
         val sortedInputs = inputs.groupBy {
-            val sortKey = it.label.substringBeforeLast("]").substringAfter("[")
+            val sortKey = it.widgetStyle.substringAfter("group:").substringBefore(",")
             sortKey
         }
 
@@ -103,7 +103,7 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
             })
 
             labelPanel.component.add(label)
-            inputPanel.component.add(labelPanel.component, "span 2")
+            inputPanel.component.add(labelPanel.component, "wrap")
             // hidemode 3 ignores the space taken up by components when rendered
             inputPanel.component.add(panel.component, "wrap,hidemode 3")
 

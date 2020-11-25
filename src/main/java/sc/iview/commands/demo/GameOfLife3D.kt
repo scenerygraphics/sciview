@@ -67,16 +67,16 @@ class GameOfLife3D : Command {
     @Parameter
     private lateinit var commandService: CommandService
 
-    @Parameter(label = "[Game of Life]Starvation threshold", min = "0", max = "26", persist = false)
+    @Parameter(label = "Starvation threshold", min = "0", max = "26", persist = false, style = "group:Game of Life")
     private var starvation = 5
 
-    @Parameter(label = "[Game of Life]Birth threshold", min = "0", max = "26", persist = false)
+    @Parameter(label = "Birth threshold", min = "0", max = "26", persist = false, style = "group:Game of Life")
     private var birth = 6
 
-    @Parameter(label = "[Game of Life]Suffocation threshold", min = "0", max = "26", persist = false)
+    @Parameter(label = "Suffocation threshold", min = "0", max = "26", persist = false, style = "group:Game of Life")
     private var suffocation = 9
 
-    @Parameter(label = "[Game of Life]Connectedness", choices = [SIX, EIGHTEEN, TWENTY_SIX], persist = false)
+    @Parameter(label = "Connectedness", choices = [SIX, EIGHTEEN, TWENTY_SIX], persist = false, style = "group:Game of Life")
     private var connectedness = TWENTY_SIX
 
     @Parameter(label = "Initial saturation % when randomizing", min = "1", max = "99", style = NumberWidget.SCROLL_BAR_STYLE, persist = false)

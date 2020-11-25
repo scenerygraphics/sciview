@@ -28,14 +28,11 @@
  */
 package sc.iview.commands.edit
 
-import bdv.viewer.SourceAndConverter
 import graphics.scenery.*
 import graphics.scenery.volumes.Colormap.Companion.fromColorTable
 import graphics.scenery.volumes.Volume
 import net.imagej.lut.LUTService
-import net.imglib2.RandomAccessibleInterval
 import net.imglib2.display.ColorTable
-import net.imglib2.type.numeric.RealType
 import org.joml.Quaternionf
 import org.joml.Vector3f
 import org.joml.Vector4f
@@ -90,95 +87,95 @@ class Properties : InteractiveCommand() {
     @Parameter(required = false, style = ChoiceWidget.LIST_BOX_STYLE, callback = "refreshSceneNodeInDialog")
     private val sceneNode: String? = null
 
-    @Parameter(label = "[Basic]Visible", callback = "updateNodeProperties")
+    @Parameter(label = "Visible", callback = "updateNodeProperties", style = "group:Basic")
     private var visible = false
 
-    @Parameter(label = "[Basic]Color", required = false, callback = "updateNodeProperties")
+    @Parameter(label = "Color", required = false, callback = "updateNodeProperties", style = "group:Basic")
     private var colour: ColorRGB? = null
 
-    @Parameter(label = "[Camera]Active", required = false, callback = "updateNodeProperties")
+    @Parameter(label = "Active", required = false, callback = "updateNodeProperties", style = "group:Camera")
     private var active = false
 
-    @Parameter(label = "[Basic]Name", callback = "updateNodeProperties")
+    @Parameter(label = "Name", callback = "updateNodeProperties", style = "group:Basic")
     private var name: String = ""
 
-    @Parameter(label = "[Volume]Timepoint", callback = "updateNodeProperties", style = NumberWidget.SLIDER_STYLE)
+    @Parameter(label = "Timepoint", callback = "updateNodeProperties", style = NumberWidget.SLIDER_STYLE+"group:Volume")
     private var timepoint = 0
 
-    @Parameter(label = "[Volume]Play", callback = "playTimeSeries")
+    @Parameter(label = "Play", callback = "playTimeSeries", style = "group:Volume")
     private var playPauseButton: Button? = null
 
     @Volatile
-    @Parameter(label = "[Volume]Speed", min = "1", max = "10", style = NumberWidget.SCROLL_BAR_STYLE, persist = false)
+    @Parameter(label = "Speed", min = "1", max = "10", style = NumberWidget.SCROLL_BAR_STYLE + ",group:Volume", persist = false)
     private var playSpeed = 4
 
-    @Parameter(label = "[Volume]Min", callback = "updateNodeProperties")
+    @Parameter(label = "Min", callback = "updateNodeProperties", style = "group:Volume")
     private var min = 0
 
-    @Parameter(label = "[Volume]Max", callback = "updateNodeProperties")
+    @Parameter(label = "Max", callback = "updateNodeProperties", style = "group:Volume")
     private var max = 255
 
-    @Parameter(label = "[Volume]Color map", choices = [], callback = "updateNodeProperties")
+    @Parameter(label = "Color map", choices = [], callback = "updateNodeProperties", style = "group:Volume")
     private var colormapName: String = "Red"
 
-    @Parameter(label = "[Volume] ")
+    @Parameter(label = " ", style = "group:Volume")
     private var colormap = dummyColorTable
 
-    @Parameter(label = "[Lighting]Intensity", style = NumberWidget.SPINNER_STYLE, stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "Intensity", style = NumberWidget.SPINNER_STYLE+ ",group:Lighting", stepSize = "0.1", callback = "updateNodeProperties")
     private var intensity = 0f
 
-    @Parameter(label = "[Basic]Position X", style = NumberWidget.SPINNER_STYLE, stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "Position X", style = NumberWidget.SPINNER_STYLE+ ",group:Basic", stepSize = "0.1", callback = "updateNodeProperties")
     private var positionX = 0f
 
-    @Parameter(label = "[Basic]Position Y", style = NumberWidget.SPINNER_STYLE, stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "Position Y", style = NumberWidget.SPINNER_STYLE+ ",group:Basic", stepSize = "0.1", callback = "updateNodeProperties")
     private var positionY = 0f
 
-    @Parameter(label = "[Basic]Position Z", style = NumberWidget.SPINNER_STYLE, stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "Position Z", style = NumberWidget.SPINNER_STYLE+ ",group:Lighting", stepSize = "0.1", callback = "updateNodeProperties")
     private var positionZ = 0f
 
-    @Parameter(label = "[Rotation & Scaling]Scale X", style = NumberWidget.SPINNER_STYLE, stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "[Rotation & Scaling]Scale X", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling", stepSize = "0.1", callback = "updateNodeProperties")
     private var scaleX = 1f
 
-    @Parameter(label = "[Rotation & Scaling]Scale Y", style = NumberWidget.SPINNER_STYLE, stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "[Rotation & Scaling]Scale Y", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling", stepSize = "0.1", callback = "updateNodeProperties")
     private var scaleY = 1f
 
-    @Parameter(label = "[Rotation & Scaling]Scale Z", style = NumberWidget.SPINNER_STYLE, stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "[Rotation & Scaling]Scale Z", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling", stepSize = "0.1", callback = "updateNodeProperties")
     private var scaleZ = 1f
 
-    @Parameter(label = "[Rotation & Scaling]Rotation Phi", style = NumberWidget.SPINNER_STYLE, min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
+    @Parameter(label = "[Rotation & Scaling]Rotation Phi", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling", min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
     private var rotationPhi = 0f
 
-    @Parameter(label = "[Rotation & Scaling]Rotation Theta", style = NumberWidget.SPINNER_STYLE, min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
+    @Parameter(label = "[Rotation & Scaling]Rotation Theta", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling", min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
     private var rotationTheta = 0f
 
-    @Parameter(label = "[Rotation & Scaling]Rotation Psi", style = NumberWidget.SPINNER_STYLE, min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
+    @Parameter(label = "[Rotation & Scaling]Rotation Psi", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling", min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
     private var rotationPsi = 0f
 
     /* Volume properties */
-    @Parameter(label = "[Volume]Rendering Mode", style = ChoiceWidget.LIST_BOX_STYLE, callback = "updateNodeProperties")
+    @Parameter(label = "Mode", style = ChoiceWidget.LIST_BOX_STYLE+"group:Volume", callback = "updateNodeProperties")
     private var renderingMode: String = Volume.RenderingMethod.AlphaBlending.name
 
-    @Parameter(label = "[Volume]AO steps", style = NumberWidget.SPINNER_STYLE, callback = "updateNodeProperties")
+    @Parameter(label = "AO steps", style = NumberWidget.SPINNER_STYLE+"group:Volume", callback = "updateNodeProperties")
     private val occlusionSteps = 0
 
     /* Bounding Grid properties */
-    @Parameter(label = "[Grid]Grid Color", callback = "updateNodeProperties")
+    @Parameter(label = "Grid Color", callback = "updateNodeProperties", style = "group:Grid")
     private var gridColor: ColorRGB? = null
 
-    @Parameter(label = "[Grid]Ticks only", callback = "updateNodeProperties")
+    @Parameter(label = "Ticks only", callback = "updateNodeProperties", style = "group:Grid")
     private var ticksOnly = false
 
     /* TextBoard properties */
-    @Parameter(label = "[Text]Text", callback = "updateNodeProperties")
+    @Parameter(label = "Text", callback = "updateNodeProperties", style = "group:Text")
     private var text: String? = null
 
-    @Parameter(label = "[Text]Text Color", callback = "updateNodeProperties")
+    @Parameter(label = "Text Color", callback = "updateNodeProperties", style = "group:Text")
     private var fontColor: ColorRGB? = null
 
-    @Parameter(label = "[Text]Background Color", callback = "updateNodeProperties")
+    @Parameter(label = "Background Color", callback = "updateNodeProperties", style = "group:Text")
     private var backgroundColor: ColorRGB? = null
 
-    @Parameter(label = "[Text]Transparent Background", callback = "updateNodeProperties")
+    @Parameter(label = "Transparent Background", callback = "updateNodeProperties", style = "group:Text")
     private var transparentBackground = false
     private val renderingModeChoices = Arrays.asList(*Volume.RenderingMethod.values())
     var fieldsUpdating = true
