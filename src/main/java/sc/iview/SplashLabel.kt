@@ -74,8 +74,9 @@ class SplashLabel : JPanel(), ItemListener {
         val y = 100
 
         g2d.drawImage(splashImage, x, y, splashImage.width / 2, splashImage.height / 2, null)
-        g2d.color = Color.DARK_GRAY
+        g2d.color = Color.LIGHT_GRAY
         g2d.drawString(versionString, x, y + splashImage.height / 2 + 20)
+        g2d.drawString("made with 💗 at CASUS Görlitz, MDC Berlin, University of Idaho, Moscow & MPI-CBG Dresden", x, y + splashImage.height / 2 + 40)
     }
 
     private fun getGitHashFor(clazz: Class<*>): String {
