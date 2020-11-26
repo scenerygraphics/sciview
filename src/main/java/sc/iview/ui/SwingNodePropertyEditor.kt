@@ -126,34 +126,29 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
 
     @EventHandler
     private fun onEvent(evt: NodeAddedEvent) {
-        val node = evt.node
+        val node = evt.node ?: return
         log.trace("Node added: $node");
         rebuildTree()
     }
 
     @EventHandler
     private fun onEvent(evt: NodeRemovedEvent) {
-        val node = evt.node
+        val node = evt.node ?: return
         log.trace("Node removed: $node");
         rebuildTree()
     }
 
     @EventHandler
     private fun onEvent(evt: NodeChangedEvent) {
-        val node = evt.node
-        if (node === sciView.activeNode) {
+        val node = evt.node ?: return
+        if (node != sciView.activeNode) {
             updateProperties(sciView.activeNode)
         }
     }
 
     @EventHandler
     private fun onEvent(evt: NodeActivatedEvent) {
-        val node = evt.node
-        //        if(node != null) {
-//            log.info("Node activated: " + node + " (" + node.getName() + ")");
-//        } else {
-//            log.info("Node activated: " + node);
-//        }
+        val node = evt.node ?: return
         updateProperties(node)
     }
 
@@ -165,7 +160,7 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
         p.layout = BorderLayout()
         createTree()
         props = JBPanel<Nothing>()
-        props.setLayout(MigLayout("inset 0", "[grow,fill]", "[grow,fill]"))
+        props.layout = MigLayout("inset 0", "[grow,fill]", "[grow,fill]")
         updateProperties(null)
         val splitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT,  //
                 JScrollPane(tree),  //
@@ -294,7 +289,7 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                 // Build the panel.
                 try {
                     harvester.buildPanel(inputPanel, module)
-                    updatePropertiesPanel(inputPanel.getComponent())
+                    updatePropertiesPanel(inputPanel.component)
                 } catch (exc: ModuleException) {
                     log.error(exc)
                     val stackTrace = DebugUtils.getStackTrace(exc)
