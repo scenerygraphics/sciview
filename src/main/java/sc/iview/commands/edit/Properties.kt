@@ -130,7 +130,7 @@ class Properties : InteractiveCommand() {
     @Parameter(label = "Position Y", style = NumberWidget.SPINNER_STYLE+ ",group:Basic", stepSize = "0.1", callback = "updateNodeProperties")
     private var positionY = 0f
 
-    @Parameter(label = "Position Z", style = NumberWidget.SPINNER_STYLE+ ",group:Lighting", stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "Position Z", style = NumberWidget.SPINNER_STYLE+ ",group:Basic", stepSize = "0.1", callback = "updateNodeProperties")
     private var positionZ = 0f
 
     @Parameter(label = "[Rotation & Scaling]Scale X", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling", stepSize = "0.1", callback = "updateNodeProperties")
