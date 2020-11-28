@@ -120,7 +120,7 @@ public class REPLEditor extends EditorPane {
             outputPane.append("REPL error occured\n");
             logService.warn("REPL error occured");
           }
-          varsPane.update();
+          //varsPane.update();
         });
       });
 
