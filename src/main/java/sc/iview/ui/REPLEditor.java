@@ -29,6 +29,7 @@
 package sc.iview.ui;
 
 import org.scijava.Context;
+import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.script.ScriptLanguage;
 import org.scijava.script.ScriptREPL;
@@ -56,6 +57,9 @@ public class REPLEditor extends EditorPane {
 
   @Parameter
   private ScriptService scriptService;
+
+  @Parameter
+  private LogService logService;
 
   protected OutputPane outputPane;
 
@@ -113,8 +117,8 @@ public class REPLEditor extends EditorPane {
         threadService().queue(() -> {
           executing = false;
           if (!result) {
-            outputPane.append("Umm, error occured\n");
-            System.out.println("Umm, error occured");
+            outputPane.append("REPL error occured\n");
+            logService.warn("REPL error occured");
           }
           varsPane.update();
         });
