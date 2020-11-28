@@ -22,7 +22,6 @@ import java.awt.event.*
 import java.util.*
 import javax.script.ScriptException
 import javax.swing.*
-import kotlin.concurrent.thread
 
 /**
  * Class for Swing-based main window.
@@ -83,6 +82,7 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
             x = 10
             y = 10
         }
+
         frame = JFrame("SciView")
         frame.layout = BorderLayout(0, 0)
         frame.setSize(sciview.windowWidth, sciview.windowHeight)
@@ -100,7 +100,6 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
         frame.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
         nodePropertyEditor = SwingNodePropertyEditor(sciview)
 
-        val p = JPanel(BorderLayout(0, 0))
         sceneryJPanel = SceneryJPanel()
         JPopupMenu.setDefaultLightWeightPopupEnabled(false)
         val swingMenuBar = JMenuBar()
@@ -118,10 +117,6 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
         swingMenuBar.add(progressLabel)
         swingMenuBar.add(bar)
         frame.jMenuBar = swingMenuBar
-
-        p.layout = OverlayLayout(p)
-        p.background = Color(50, 48, 47)
-        p.add(sceneryJPanel, BorderLayout.CENTER)
 
         sciview.taskManager.update = { current ->
             if(current != null) {
@@ -182,13 +177,13 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
         })
         initializeInterpreter()
         mainSplitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT,  //
-                p,
+                sceneryJPanel,
                 tp.component
         )
         mainSplitPane.dividerLocation = frame.size.width - 36
         mainSplitPane.border = BorderFactory.createEmptyBorder()
         mainSplitPane.dividerSize = 1
-        mainSplitPane.resizeWeight = 0.75
+        mainSplitPane.resizeWeight = 0.5
         sidebarHidden = true
 
         //frame.add(mainSplitPane, BorderLayout.CENTER);
@@ -248,6 +243,8 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
             renderer.pushMode = true
             sciview.camera!!.setPosition(1.65, 1)
             glassPane.isVisible = false
+
+            sceneryJPanel.minimumSize = Dimension(256, 256)
         }
     }
 
