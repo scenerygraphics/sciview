@@ -99,7 +99,7 @@ class Properties : InteractiveCommand() {
     @Parameter(label = "Name", callback = "updateNodeProperties", style = "group:Basic")
     private var name: String = ""
 
-    @Parameter(label = "Timepoint", callback = "updateNodeProperties", style = NumberWidget.SLIDER_STYLE+"group:Volume")
+    @Parameter(label = "Timepoint", callback = "updateNodeProperties", style = NumberWidget.SLIDER_STYLE+",group:Volume")
     private var timepoint = 0
 
     @Parameter(label = "Play", callback = "playTimeSeries", style = "group:Volume")
