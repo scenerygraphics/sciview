@@ -61,7 +61,7 @@ public class REPLPane implements UIComponent<JComponent> {
 
   private final OutputPane output;
   private final REPLEditor prompt;
-  private final VarsPane vars;
+  //private final VarsPane vars;
 
   @Parameter(required = false)
   private LogService log;
@@ -85,10 +85,11 @@ public class REPLPane implements UIComponent<JComponent> {
     ctx.setErrorWriter(writer);
     ctx.setWriter(writer);
 
-    vars = new VarsPane(context, repl);
-    vars.setBorder(new EmptyBorder(0, 0, 8, 0));
+    //vars = new VarsPane(context, repl);
+    //vars.setBorder(new EmptyBorder(0, 0, 8, 0));
 
-    prompt = new REPLEditor(repl, vars, output);
+    //prompt = new REPLEditor(repl, vars, output);
+    prompt = new REPLEditor(repl, null, output);
     context.inject(prompt);
     prompt.setREPLLanguage("Python");
     final JScrollPane promptScroll = new JScrollPane(prompt);
@@ -102,10 +103,11 @@ public class REPLPane implements UIComponent<JComponent> {
     outputAndPromptPane.setResizeWeight(1);
 //    outputAndPromptPane.setDividerSize(2);
 
-    mainPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, vars,
-            outputAndPromptPane);
-    mainPane.setDividerSize(1);
-    mainPane.setDividerLocation(0);
+//    mainPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, vars,
+//            outputAndPromptPane);
+//    mainPane.setDividerSize(1);
+//    mainPane.setDividerLocation(0);
+    mainPane = outputAndPromptPane;
   }
 
   // -- InterpreterPane methods --
