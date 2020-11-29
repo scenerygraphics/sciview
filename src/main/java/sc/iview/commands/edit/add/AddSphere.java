@@ -26,10 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit;
-
-import static sc.iview.commands.MenuWeights.EDIT;
-import static sc.iview.commands.MenuWeights.EDIT_ADD_SPHERE;
+package sc.iview.commands.edit.add;
 
 import org.joml.Vector3f;
 import org.scijava.command.Command;
@@ -40,6 +37,8 @@ import org.scijava.util.ColorRGB;
 
 import sc.iview.SciView;
 
+import static sc.iview.commands.MenuWeights.*;
+
 /**
  * Command to add a sphere in the scene
  *
@@ -48,7 +47,8 @@ import sc.iview.SciView;
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Add Sphere...", weight = EDIT_ADD_SPHERE) })
+                 @Menu(label = "Add", weight = EDIT_ADD), //
+                 @Menu(label = "Sphere...", weight = EDIT_ADD_SPHERE) })
 public class AddSphere implements Command {
 
     @Parameter

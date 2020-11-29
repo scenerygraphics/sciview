@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo;
+package sc.iview.commands.demo.basic;
 
 import org.joml.Vector3f;
 import org.scijava.command.Command;
@@ -34,26 +34,24 @@ import org.scijava.command.CommandService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.util.ColorRGB;
+import org.scijava.util.Colors;
+
 import sc.iview.SciView;
-import sc.iview.node.Line3D;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_LINES;
+import static sc.iview.commands.MenuWeights.*;
 
 /**
- * A demo of edges.
+ * A demo of lines.
  *
  * @author Kyle Harrington
+ * @author Curtis Rueden
  */
-@Plugin(type = Command.class, label = "Line3D Demo", menuRoot = "SciView", //
+@Plugin(type = Command.class, label = "Lines Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Line3D", weight = DEMO_LINES+1) })
-public class Line3DDemo implements Command {
+                 @Menu(label = "Basic", weight = DEMO_BASIC), //
+                 @Menu(label = "Lines", weight = DEMO_BASIC_LINES) })
+public class LineDemo implements Command {
 
     @Parameter
     private SciView sciView;
@@ -61,25 +59,19 @@ public class Line3DDemo implements Command {
     @Override
     public void run() {
         int numPoints = 25;
-        List<Vector3f> points = new ArrayList<>();
-        List<ColorRGB> colors = new ArrayList<>();
+        Vector3f[] points = new Vector3f[numPoints];
 
         for( int k = 0; k < numPoints; k++ ) {
-            points.add( new Vector3f( ( float ) ( 10.0f * Math.random() - 5.0f ), //
-                                            ( float ) ( 10.0f * Math.random() - 5.0f ), //
-                                            ( float ) ( 10.0f * Math.random() - 5.0f ) ) );
-            colors.add(new ColorRGB((int) (Math.random()*255), (int) (Math.random()*255), (int) (Math.random()*255)));
+            points[k] = new Vector3f( ( float ) ( 10.0f * Math.random() - 5.0f ), //
+                                      ( float ) ( 10.0f * Math.random() - 5.0f ), //
+                                      ( float ) ( 10.0f * Math.random() - 5.0f ) );
         }
 
         double edgeWidth = 0.1;
 
-        Line3D line = new Line3D(points, colors, edgeWidth);
-        line.setName( "Line3D Demo" );
+        sciView.addLine( points, Colors.LIGHTSALMON, edgeWidth ).setName( "Lines Demo" );
 
-        sciView.addNode(line, true);
-        sciView.getFloor().setVisible(false);
-
-        sciView.centerOnNode( line );
+        sciView.centerOnNode( sciView.getActiveNode() );
     }
 
     public static void main(String... args) throws Exception {
@@ -89,6 +81,6 @@ public class Line3DDemo implements Command {
 
         HashMap<String, Object> argmap = new HashMap<>();
 
-        command.run(Line3DDemo.class, true, argmap);
+        command.run(LineDemo.class, true, argmap);
     }
 }

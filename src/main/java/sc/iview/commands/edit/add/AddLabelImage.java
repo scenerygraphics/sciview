@@ -26,10 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit;
-
-import static sc.iview.commands.MenuWeights.EDIT;
-import static sc.iview.commands.MenuWeights.EDIT_ADD_LABEL_IMAGE;
+package sc.iview.commands.edit.add;
 
 import net.imagej.Dataset;
 import net.imagej.mesh.Mesh;
@@ -54,6 +51,8 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
+import static sc.iview.commands.MenuWeights.*;
+
 /**
  * Adds a label image to the scene.
  *
@@ -61,7 +60,8 @@ import sc.iview.SciView;
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Add Label Image", weight = EDIT_ADD_LABEL_IMAGE) })
+                 @Menu(label = "Add", weight = EDIT_ADD), //
+                 @Menu(label = "Label Image", weight = EDIT_ADD_LABELIMAGE) })
 public class AddLabelImage<T extends RealType<T>> implements Command {
 
     @Parameter

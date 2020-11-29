@@ -77,7 +77,7 @@ class SplashLabel : JPanel(), ItemListener {
 
         g2d.color = Color.LIGHT_GRAY
         g2d.drawString(versionString, x, height - 50)
-        g2d.drawString("made with 💗 at CASUS Görlitz, MDC Berlin, University of Idaho, Moscow & MPI-CBG Dresden", x, height - 30)
+        g2d.drawString("made with 💗 at CASUS Görlitz, MDC Berlin, University of Idaho, & MPI-CBG Dresden", x, height - 30)
     }
 
     private fun getGitHashFor(clazz: Class<*>): String {

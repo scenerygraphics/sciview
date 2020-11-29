@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo;
+package sc.iview.commands.demo.animation;
 
 import graphics.scenery.*;
 import graphics.scenery.backends.ShaderType;
@@ -46,8 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_MESH;
+import static sc.iview.commands.MenuWeights.*;
 
 /**
  * A demo of particle movement.
@@ -56,7 +55,8 @@ import static sc.iview.commands.MenuWeights.DEMO_MESH;
  */
 @Plugin(type = Command.class, label = "Particle Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Particle", weight = DEMO_MESH+100) })
+                 @Menu(label = "Animation", weight = DEMO_ANIMATION), //
+                 @Menu(label = "Particle", weight = DEMO_ANIMATION_PARTICLE) })
 public class ParticleDemo implements Command {
 
     @Parameter

@@ -26,35 +26,56 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit;
+package sc.iview.commands.edit.add;
 
-import static sc.iview.commands.MenuWeights.EDIT;
-import static sc.iview.commands.MenuWeights.EDIT_ADD_POINT_LIGHT;
-
+import org.joml.Vector3f;
 import org.scijava.command.Command;
+import org.scijava.display.DisplayService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.util.ColorRGB;
 
 import sc.iview.SciView;
 
+import static sc.iview.commands.MenuWeights.*;
+
 /**
- * Command to add a point light to the scene
+ * Command to add a box to the scene
  *
  * @author Kyle Harrington
  *
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Add Point Light", weight = EDIT_ADD_POINT_LIGHT) })
-public class AddPointLight implements Command {
+                 @Menu(label = "Add", weight = EDIT_ADD), //
+                 @Menu(label = "Box...", weight = EDIT_ADD_BOX) })
+public class AddBox implements Command {
+
+    @Parameter
+    private DisplayService displayService;
 
     @Parameter
     private SciView sciView;
 
+    // FIXME
+//    @Parameter
+//    private String position = "0; 0; 0";
+
+    @Parameter
+    private float size = 1.0f;
+
+    @Parameter
+    private ColorRGB color = SciView.DEFAULT_COLOR;
+
+    @Parameter
+    private boolean inside;
+
     @Override
     public void run() {
-        sciView.addPointLight();
+        //final Vector3 pos = ClearGLVector3.parse( position );
+        final Vector3f pos = new Vector3f(0f, 0f, 0f);
+        final Vector3f vSize = new Vector3f( size, size, size );
+        sciView.addBox( pos, vSize, color, inside );
     }
-
 }

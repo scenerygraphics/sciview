@@ -26,31 +26,35 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo;
+package sc.iview.commands.demo.basic;
 
-import cleargl.GLTypeEnum;
-import cleargl.GLVector;
 import graphics.scenery.*;
 import graphics.scenery.textures.Texture;
+import graphics.scenery.utils.Image;
 import net.imglib2.RandomAccess;
 import net.imglib2.img.Img;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.joml.Vector3f;
+import org.joml.Vector3i;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
 import org.scijava.io.IOService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.ui.UIService;
 import sc.iview.SciView;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.Random;
 
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_LINES;
+import static sc.iview.commands.MenuWeights.*;
 
 /**
  * A demo of inserting a 2D image as a plane into a scene
@@ -59,7 +63,8 @@ import static sc.iview.commands.MenuWeights.DEMO_LINES;
  */
 @Plugin(type = Command.class, label = "Image Plane Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Image Plane", weight = DEMO_LINES) })
+                 @Menu(label = "Basic", weight = DEMO_BASIC), //
+                 @Menu(label = "Image Plane", weight = DEMO_BASIC_IMAGEPLANE) })
 public class ImagePlaneDemo implements Command {
 
     @Parameter
@@ -67,6 +72,9 @@ public class ImagePlaneDemo implements Command {
 
     @Parameter
     private IOService ioService;
+
+    @Parameter
+    private UIService uiService;
 
     @Override
     public void run() {
@@ -122,11 +130,8 @@ public class ImagePlaneDemo implements Command {
         mat.setDiffuse(new Vector3f(1,1,1));
         mat.setAmbient(new Vector3f(1,1,1));
 
-        // FIXME
-//        Texture tex = new Texture(new Vector3f(img.dimension(0), img.dimension(1),1),3, GLTypeEnum.UnsignedByte, bb);
-//
-//        mat.getTextures().put("diffuse",tex);
-        //mat.setNeedsTextureReload(true);
+        Texture tex = new Texture(new Vector3i((int)img.dimension(0), (int)img.dimension(1), 1), 4, bb);
+        mat.getTextures().put("diffuse",tex);
 
         imgPlane.setMaterial(mat);
         imgPlane.setNeedsUpdate(true);
@@ -134,27 +139,27 @@ public class ImagePlaneDemo implements Command {
         sciView.addNode(imgPlane);
         sciView.centerOnNode(imgPlane);
 
-
+        uiService.show(img);
     }
 
     // This should interleave channels, but the coloring doesnt seem to happen
     private static ByteBuffer imgToByteBuffer(Img<UnsignedByteType> img) {
-        int numBytes = (int) (img.dimension(0) * img.dimension(1) * 3);
+        int numBytes = (int) (img.dimension(0) * img.dimension(1) * img.dimension(2));
         ByteBuffer bb = BufferUtils.allocateByte(numBytes);
-        byte[] rgb = new byte[]{0, 0, 0};
+        byte[] pixel = new byte[(int)img.dimension(2)];
 
         RandomAccess<UnsignedByteType> ra = img.randomAccess();
 
-        long[] pos = new long[3];
+        long[] pos = new long[(int)img.dimension(2)];
 
         for( int y = 0; y < img.dimension(1); y++ ) {
             for( int x = 0; x < img.dimension(0); x++ ) {
-                for( int c = 0; c < img.dimension(2) - 1; c++ ) {// hard coded dropping of alpha
+                for( int c = 0; c < img.dimension(2); c++ ) {
                     pos[0] = x; pos[1] = img.dimension(1) - y - 1; pos[2] = c;
                     ra.setPosition(pos);
-                    rgb[c] = ra.get().getByte();
+                    pixel[c] = ra.get().getByte();
                 }
-                bb.put(rgb);
+                bb.put(pixel);
             }
         }
         bb.flip();

@@ -26,56 +26,69 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit;
-
-import static sc.iview.commands.MenuWeights.EDIT;
-import static sc.iview.commands.MenuWeights.EDIT_ADD_BOX;
+package sc.iview.commands.demo.basic;
 
 import org.joml.Vector3f;
 import org.scijava.command.Command;
-import org.scijava.display.DisplayService;
+import org.scijava.command.CommandService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.util.ColorRGB;
-
 import sc.iview.SciView;
+import sc.iview.node.Line3D;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import static sc.iview.commands.MenuWeights.*;
 
 /**
- * Command to add a box to the scene
+ * A demo of edges.
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Add Box...", weight = EDIT_ADD_BOX) })
-public class AddBox implements Command {
-
-    @Parameter
-    private DisplayService displayService;
+@Plugin(type = Command.class, label = "Line3D Demo", menuRoot = "SciView", //
+        menu = { @Menu(label = "Demo", weight = DEMO), //
+                 @Menu(label = "Basic", weight = DEMO_BASIC), //
+                 @Menu(label = "Line3D", weight = DEMO_BASIC_LINE3D) })
+public class Line3DDemo implements Command {
 
     @Parameter
     private SciView sciView;
 
-    // FIXME
-//    @Parameter
-//    private String position = "0; 0; 0";
-
-    @Parameter
-    private float size = 1.0f;
-
-    @Parameter
-    private ColorRGB color = SciView.DEFAULT_COLOR;
-
-    @Parameter
-    private boolean inside;
-
     @Override
     public void run() {
-        //final Vector3 pos = ClearGLVector3.parse( position );
-        final Vector3f pos = new Vector3f(0f, 0f, 0f);
-        final Vector3f vSize = new Vector3f( size, size, size );
-        sciView.addBox( pos, vSize, color, inside );
+        int numPoints = 25;
+        List<Vector3f> points = new ArrayList<>();
+        List<ColorRGB> colors = new ArrayList<>();
+
+        for( int k = 0; k < numPoints; k++ ) {
+            points.add( new Vector3f( ( float ) ( 10.0f * Math.random() - 5.0f ), //
+                                            ( float ) ( 10.0f * Math.random() - 5.0f ), //
+                                            ( float ) ( 10.0f * Math.random() - 5.0f ) ) );
+            colors.add(new ColorRGB((int) (Math.random()*255), (int) (Math.random()*255), (int) (Math.random()*255)));
+        }
+
+        double edgeWidth = 0.1;
+
+        Line3D line = new Line3D(points, colors, edgeWidth);
+        line.setName( "Line3D Demo" );
+
+        sciView.addNode(line, true);
+        sciView.getFloor().setVisible(false);
+
+        sciView.centerOnNode( line );
+    }
+
+    public static void main(String... args) throws Exception {
+        SciView sv = SciView.create();
+
+        CommandService command = sv.getScijavaContext().getService(CommandService.class);
+
+        HashMap<String, Object> argmap = new HashMap<>();
+
+        command.run(Line3DDemo.class, true, argmap);
     }
 }

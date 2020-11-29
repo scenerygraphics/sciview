@@ -26,9 +26,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo;
+package sc.iview.commands.demo.basic;
 
-import cleargl.GLVector;
 import graphics.scenery.Material;
 import graphics.scenery.Node;
 import net.imagej.mesh.Mesh;
@@ -41,6 +40,7 @@ import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
+import sc.iview.commands.demo.ResourceLoader;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,8 +48,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_MESH;
+import static sc.iview.commands.MenuWeights.*;
 
 /**
  * A demo of meshes.
@@ -59,7 +58,8 @@ import static sc.iview.commands.MenuWeights.DEMO_MESH;
  */
 @Plugin(type = Command.class, label = "Multi Mesh Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "MultiMesh", weight = DEMO_MESH) })
+                 @Menu(label = "Basic", weight = DEMO_BASIC), //
+                 @Menu(label = "MultiMesh", weight = DEMO_BASIC_MULTIMESH) })
 public class MultiMeshDemo implements Command {
 
     @Parameter

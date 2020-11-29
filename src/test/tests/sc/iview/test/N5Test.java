@@ -28,7 +28,6 @@
  */
 package sc.iview.test;
 
-import net.imagej.ImageJ;
 import net.imagej.mesh.Mesh;
 import net.imagej.mesh.Triangle;
 import net.imagej.mesh.io.stl.STLMeshIO;
@@ -45,14 +44,12 @@ import org.janelia.saalfeldlab.n5.N5FSWriter;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import org.scijava.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sc.iview.commands.demo.MeshDemo;
+import sc.iview.commands.demo.basic.MeshDemo;
 import sc.iview.commands.demo.ResourceLoader;
 import sc.iview.io.N5;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

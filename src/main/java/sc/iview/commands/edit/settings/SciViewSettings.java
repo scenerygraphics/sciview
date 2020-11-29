@@ -26,61 +26,45 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo;
+package sc.iview.commands.edit.settings;
 
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_LINES;
-
-import org.joml.Vector3f;
 import org.scijava.command.Command;
-import org.scijava.command.CommandService;
+import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.util.Colors;
-
 import sc.iview.SciView;
-import java.util.HashMap;
+
+import static sc.iview.commands.MenuWeights.*;
 
 /**
- * A demo of lines.
+ * Command to adjust SciView settings
  *
  * @author Kyle Harrington
- * @author Curtis Rueden
+ *
  */
-@Plugin(type = Command.class, label = "Lines Demo", menuRoot = "SciView", //
-        menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Lines", weight = DEMO_LINES) })
-public class LineDemo implements Command {
+@Plugin(type = Command.class, menuRoot = "SciView", //
+menu = {@Menu(label = "Edit", weight = EDIT), //
+        @Menu(label = "Settings", weight = EDIT_SETTINGS), //
+        @Menu(label = "SciView", weight = EDIT_SETTINGS_SCIVIEW)})
+public class SciViewSettings implements Command {
+
+    @Parameter
+    private LogService logService;
 
     @Parameter
     private SciView sciView;
 
+    @Parameter
+    private boolean inspectorVisible;
+
+    @Parameter
+    private boolean interpreterVisible;
+
     @Override
     public void run() {
-        int numPoints = 25;
-        Vector3f[] points = new Vector3f[numPoints];
-
-        for( int k = 0; k < numPoints; k++ ) {
-            points[k] = new Vector3f( ( float ) ( 10.0f * Math.random() - 5.0f ), //
-                                      ( float ) ( 10.0f * Math.random() - 5.0f ), //
-                                      ( float ) ( 10.0f * Math.random() - 5.0f ) );
-        }
-
-        double edgeWidth = 0.1;
-
-        sciView.addLine( points, Colors.LIGHTSALMON, edgeWidth ).setName( "Lines Demo" );
-
-        sciView.centerOnNode( sciView.getActiveNode() );
+        sciView.setInspectorWindowVisibility(inspectorVisible);
+        sciView.setInterpreterWindowVisibility(interpreterVisible);
     }
 
-    public static void main(String... args) throws Exception {
-        SciView sv = SciView.create();
-
-        CommandService command = sv.getScijavaContext().getService(CommandService.class);
-
-        HashMap<String, Object> argmap = new HashMap<>();
-
-        command.run(LineDemo.class, true, argmap);
-    }
 }
