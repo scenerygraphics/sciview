@@ -105,9 +105,6 @@
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>SciView developers.</license.copyrightOwners>
 
-		<enforcer.skip>true</enforcer.skip>
-		<maven.javadoc.skip>true</maven.javadoc.skip>
-
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
