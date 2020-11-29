@@ -42,8 +42,12 @@ import java.nio.FloatBuffer
  * @author Ulrik Guenther
  */
 object MeshConverter {
+
+    /**
+     * Note that flipWindingOrder is needed for MarchingCubes meshes. This flips the order of vertices.
+     */
     @JvmOverloads @JvmStatic
-    fun toScenery(mesh: Mesh, center: Boolean = false, flipWindingOrder: Boolean = true): graphics.scenery.Mesh {
+    fun toScenery(mesh: Mesh, center: Boolean = false, flipWindingOrder: Boolean = false): graphics.scenery.Mesh {
         val vCount = Int.MAX_VALUE.toLong().coerceAtMost(mesh.vertices().size()).toInt()
         val tCount = Int.MAX_VALUE.toLong().coerceAtMost(mesh.triangles().size()).toInt()
 

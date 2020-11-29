@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo
+package sc.iview.commands.demo.basic
 
 import graphics.scenery.volumes.Volume
 import io.scif.services.DatasetIOService
@@ -44,7 +44,10 @@ import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights.DEMO
-import sc.iview.commands.MenuWeights.DEMO_VOLUME_RENDER
+import sc.iview.commands.MenuWeights.DEMO_BASIC
+import sc.iview.commands.MenuWeights.DEMO_BASIC_VOLUME
+
+import sc.iview.commands.demo.ResourceLoader
 import sc.iview.process.MeshConverter
 import java.io.IOException
 import java.util.*
@@ -55,7 +58,12 @@ import java.util.*
  * @author Kyle Harrington
  * @author Curtis Rueden
  */
-@Plugin(type = Command::class, label = "Volume Render/Isosurface Demo", menuRoot = "SciView", menu = [Menu(label = "Demo", weight = DEMO), Menu(label = "Volume Render/Isosurface", weight = DEMO_VOLUME_RENDER)])
+@Plugin(type = Command::class,
+        label = "Volume Render/Isosurface Demo",
+        menuRoot = "SciView",
+        menu = [Menu(label = "Demo", weight = DEMO),
+                Menu(label = "Basic", weight = DEMO_BASIC),
+                Menu(label = "Volume Render/Isosurface", weight = DEMO_BASIC_VOLUME)])
 class VolumeRenderDemo : Command {
     @Parameter
     private lateinit var datasetIO: DatasetIOService
@@ -93,7 +101,7 @@ class VolumeRenderDemo : Command {
             val cubeImg = cube.imgPlus.img as Img<UnsignedByteType>
             val bitImg = ops.threshold().apply(cubeImg, UnsignedByteType(isoLevel)) as Img<BitType>
             val m = ops.geom().marchingCubes(bitImg, isoLevel.toDouble(), BitTypeVertexInterpolator())
-            val isoSurfaceMesh = MeshConverter.toScenery(m, false)
+            val isoSurfaceMesh = MeshConverter.toScenery(m, false, flipWindingOrder = true)
             v.addChild(isoSurfaceMesh)
             isoSurfaceMesh.name = "Volume Render Demo Isosurface"
         }

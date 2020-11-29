@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo
+package sc.iview.commands.demo.animation
 
 import bdv.util.BdvFunctions
 import graphics.scenery.numerics.OpenSimplexNoise
@@ -54,7 +54,12 @@ import java.util.function.BiConsumer
  *
  * @author Kyle Harrington
  */
-@Plugin(type = Command::class, label = "Volume Timeseries", menuRoot = "SciView", menu = [Menu(label = "Demo", weight = MenuWeights.DEMO), Menu(label = "Volume Timeseries", weight = MenuWeights.DEMO_VOLUME_RENDER)])
+@Plugin(type = Command::class,
+        label = "Volume Timeseries",
+        menuRoot = "SciView",
+        menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
+                Menu(label = "Animation", weight = MenuWeights.DEMO_ANIMATION),
+                Menu(label = "Volume Timeseries", weight = MenuWeights.DEMO_ANIMATION_VOLUMETIMESERIES)])
 class VolumeTimeseriesDemo : Command {
     @Parameter
     private lateinit var sciView: SciView

@@ -26,51 +26,61 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit;
+package sc.iview.commands.edit.add;
 
-import static sc.iview.commands.MenuWeights.EDIT;
-import static sc.iview.commands.MenuWeights.EDIT_ADD_LINE;
+import graphics.scenery.Node;
+import net.imagej.Dataset;
+import net.imagej.ops.OpService;
 
-import org.joml.Vector3f;
 import org.scijava.command.Command;
+import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.util.ColorRGB;
 
 import sc.iview.SciView;
 
+import static sc.iview.commands.MenuWeights.*;
+
 /**
- * Command to add a line in the scene
+ * Command to add a volume to the scene.
  *
  * @author Kyle Harrington
  *
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Add Line...", weight = EDIT_ADD_LINE) })
-public class AddLine implements Command {
+                 @Menu(label = "Add", weight = EDIT_ADD), //
+                 @Menu(label = "Volume", weight = EDIT_ADD_VOLUME) })
+public class AddVolume implements Command {
+
+    @Parameter
+    private LogService log;
+
+    @Parameter
+    private OpService ops;
 
     @Parameter
     private SciView sciView;
 
-    // FIXME
-//    @Parameter(label = "First endpoint")
-//    private String start = "0; 0; 0";
-//
-//    @Parameter(label = "Second endpoint")
-//    private String stop = "1; 1; 1";
-
     @Parameter
-    private ColorRGB color = SciView.DEFAULT_COLOR;
+    private Dataset image;
 
-    @Parameter(label = "Edge width", min = "0")
-    private double edgeWidth = 1;
+    @Parameter(label = "Voxel Size X")
+    private float voxelWidth = 1.0f;
+
+    @Parameter(label = "Voxel Size Y")
+    private float voxelHeight = 1.0f;
+
+    @Parameter(label = "Voxel Size Z")
+    private float voxelDepth = 1.0f;
+
+    @Parameter(label = "Global rendering scale")
+    private float renderScale = 1.0f;
 
     @Override
     public void run() {
-        //Vector3[] endpoints = { JOMLVector3.parse( start ), JOMLVector3.parse( stop ) };
-        Vector3f[] endpoints = { new Vector3f( 0, 0, 0 ), new Vector3f( 1, 1, 1 ) };
-        sciView.addLine( endpoints, color, edgeWidth );
+        Node n = sciView.addVolume( image, new float[] { voxelWidth, voxelHeight, voxelDepth } );
     }
+
 }

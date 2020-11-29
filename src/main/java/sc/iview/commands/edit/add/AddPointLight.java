@@ -26,58 +26,35 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit;
+package sc.iview.commands.edit.add;
 
-import graphics.scenery.DetachedHeadCamera;
-import org.joml.Vector3f;
 import org.scijava.command.Command;
-import org.scijava.display.DisplayService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+
 import sc.iview.SciView;
 
-import static sc.iview.commands.MenuWeights.EDIT;
-import static sc.iview.commands.MenuWeights.EDIT_ADD_CAMERA;
+import static sc.iview.commands.MenuWeights.*;
 
 /**
- * Command to add a camera to the scene
+ * Command to add a point light to the scene
  *
  * @author Kyle Harrington
  *
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
-		menu = { @Menu(label = "Edit", weight = EDIT), //
-				@Menu(label = "Add Camera...", weight = EDIT_ADD_CAMERA) })
-public class AddCamera implements Command {
+        menu = { @Menu(label = "Edit", weight = EDIT), //
+                 @Menu(label = "Add", weight = EDIT_ADD), //
+                 @Menu(label = "Point Light", weight = EDIT_ADD_POINTLIGHT) })
+public class AddPointLight implements Command {
 
-	@Parameter
-	private DisplayService displayService;
+    @Parameter
+    private SciView sciView;
 
-	@Parameter
-	private SciView sciView;
+    @Override
+    public void run() {
+        sciView.addPointLight();
+    }
 
-	// FIXME
-//	@Parameter
-//	private String position = "0; 0; 0";
-
-	@Parameter(label = "Field of View")
-	private float fov = 50.0f;
-
-	@Parameter(label = "Near plane")
-	private float nearPlane = 0.1f;
-
-	@Parameter(label = "farPlane")
-	private float farPlane = 500.0f;
-
-	@Override
-	public void run() {
-		//final Vector3 pos = ClearGLVector3.parse( position );
-		final Vector3f pos = new Vector3f(0, 0, 0);
-		final DetachedHeadCamera cam = new DetachedHeadCamera();
-		cam.perspectiveCamera( fov, sciView.getWindowWidth(), sciView.getWindowHeight(), Math.min(nearPlane, farPlane), Math.max(nearPlane, farPlane)  );
-		cam.setPosition( pos );
-
-		sciView.addNode( cam );
-	}
 }

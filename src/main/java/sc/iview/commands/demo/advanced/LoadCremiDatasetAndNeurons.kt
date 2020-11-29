@@ -1,4 +1,4 @@
-package sc.iview.commands.demo
+package sc.iview.commands.demo.advanced
 
 import bdv.util.DefaultInterpolators
 import bdv.viewer.Interpolation
@@ -41,7 +41,12 @@ import java.io.IOException
 
 typealias NeuronsAndImage = Triple<HashMap<Long, Long>, RandomAccessibleInterval<UnsignedLongType>, RandomAccessibleInterval<UnsignedByteType>>
 
-@Plugin(type = Command::class, label = "Cremi Dataset rendering demo", menuRoot = "SciView", menu = [Menu(label = "Demo", weight = MenuWeights.DEMO), Menu(label = "Load Cremi dataset and neuron labels", weight = MenuWeights.DEMO_VOLUME_RENDER)])
+@Plugin(type = Command::class,
+        label = "Cremi Dataset rendering demo",
+        menuRoot = "SciView",
+        menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
+                Menu(label = "Advanced", weight = MenuWeights.DEMO_ADVANCED),
+                Menu(label = "Load Cremi dataset and neuron labels", weight = MenuWeights.DEMO_ADVANCED_CREMI)])
 class LoadCremiDatasetAndNeurons: Command {
     @Parameter
     private lateinit var ui: UIService
@@ -149,7 +154,7 @@ class LoadCremiDatasetAndNeurons: Command {
 
             log.info("Converting neuron ${i + 1}/${largestNeuronLabels.size} to scenery format...")
             // Convert the mesh into a scenery mesh for visualization
-            val mesh = MeshConverter.toScenery(m, false)
+            val mesh = MeshConverter.toScenery(m, false, flipWindingOrder = true)
             mesh.scale = Vector3f(0.01f, 0.01f, 0.06f)
             mesh.material.diffuse = colormapNeurons.lookupARGB(0.0, 255.0, kotlin.random.Random.nextDouble(0.0, 255.0)).toRGBColor().xyz()
             mesh.material.roughness = 0.0f

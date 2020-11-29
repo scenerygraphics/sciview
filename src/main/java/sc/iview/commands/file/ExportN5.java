@@ -39,7 +39,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.FileWidget;
 import sc.iview.SciView;
-import sc.iview.commands.demo.MeshDemo;
+import sc.iview.commands.demo.basic.MeshDemo;
 import sc.iview.io.N5;
 import sc.iview.process.MeshConverter;
 
@@ -47,8 +47,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
-import static sc.iview.commands.MenuWeights.FILE;
-import static sc.iview.commands.MenuWeights.FILE_EXPORT_STL;
+import static sc.iview.commands.MenuWeights.*;
 
 /**
  * Command to export the currently active Node to N5
@@ -58,7 +57,8 @@ import static sc.iview.commands.MenuWeights.FILE_EXPORT_STL;
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "File", weight = FILE), //
-                 @Menu(label = "Export Node as N5...", weight = FILE_EXPORT_STL) })
+                 @Menu(label = "Export", weight = FILE_EXPORT), //
+                 @Menu(label = "N5...", weight = FILE_EXPORT_N5) })
 public class ExportN5 implements Command {
 
     @Parameter

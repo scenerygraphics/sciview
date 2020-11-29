@@ -26,9 +26,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo;
+package sc.iview.commands.demo.basic;
 
-import cleargl.GLVector;
 import graphics.scenery.Material;
 import graphics.scenery.Node;
 import graphics.scenery.TextBoard;
@@ -43,6 +42,7 @@ import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
+import sc.iview.commands.demo.ResourceLoader;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,7 +57,8 @@ import static sc.iview.commands.MenuWeights.*;
  */
 @Plugin(type = Command.class, label = "Mesh Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Text Demo", weight = DEMO_TEXT) })
+                 @Menu(label = "Basic", weight = DEMO_BASIC), //
+                 @Menu(label = "Text Demo", weight = DEMO_BASIC_TEXT) })
 public class TextDemo implements Command {
 
     @Parameter

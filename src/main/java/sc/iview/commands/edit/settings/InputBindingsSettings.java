@@ -1,4 +1,4 @@
-package sc.iview.commands.edit;
+package sc.iview.commands.edit.settings;
 
 import org.scijava.command.Command;
 import org.scijava.plugin.Menu;
@@ -13,7 +13,9 @@ import static sc.iview.commands.MenuWeights.*;
  * @author Vladimir Ulman
  */
 @Plugin(type = Command.class, menuRoot = "SciView",
-        menu = { @Menu(label = "Edit", weight = EDIT), @Menu(label = "Inputs Bindings", weight = EDIT_SCIVIEW_SETTINGS+2) })
+        menu = { @Menu(label = "Edit", weight = EDIT),
+                 @Menu(label = "Settings", weight = EDIT_SETTINGS),
+                 @Menu(label = "Inputs Bindings", weight = EDIT_SETTINGS_BINDINGS) })
 public class InputBindingsSettings implements Command
 {
     @Parameter

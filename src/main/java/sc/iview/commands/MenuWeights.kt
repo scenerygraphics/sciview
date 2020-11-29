@@ -42,18 +42,30 @@ object MenuWeights {
     const val DEMO = 4.0
     const val HELP = 4.0
     const val FILE_OPEN = 0.0
-    const val FILE_EXPORT_STL = 100.0
+    const val FILE_EXPORT = 1.0
+    // File/Export
+    const val FILE_EXPORT_N5 = 0.0
+    const val FILE_EXPORT_STL = 1.0
+    const val FILE_EXPORT_XYZ = 2.0
+    // Edit
+    const val EDIT_ADD = 0.0
+    const val EDIT_SETTINGS = 2.0
+    const val EDIT_TOGGLE_FLOOR = 50.0
+    const val EDIT_DELETE_OBJECT = 100.0
+    // Edit/Add
     const val EDIT_ADD_BOX = 0.0
     const val EDIT_ADD_SPHERE = 1.0
     const val EDIT_ADD_LINE = 2.0
-    const val EDIT_ADD_POINT_LIGHT = 3.0
-    const val EDIT_ADD_LABEL_IMAGE = 4.0
+    const val EDIT_ADD_POINTLIGHT = 3.0
+    const val EDIT_ADD_LABELIMAGE = 4.0
     const val EDIT_ADD_VOLUME = 5.0
     const val EDIT_ADD_CAMERA = 6.0
-    const val EDIT_ADD_COMPASS = 49.0
-    const val EDIT_TOGGLE_FLOOR = 50.0
-    const val EDIT_DELETE_OBJECT = 100.0
-    const val EDIT_SCIVIEW_SETTINGS = 200.0
+    const val EDIT_ADD_COMPASS = 7.0
+    // Edit/Settings
+    const val EDIT_SETTINGS_BINDINGS = 0.0
+    const val EDIT_SETTINGS_CONTROLS = 1.0
+    const val EDIT_SETTINGS_SCIVIEW = 0.0
+
     const val PROCESS_ISOSURFACE = 0.0
     const val PROCESS_CONVEX_HULL = 1.0
     const val PROCESS_MESH_TO_IMAGE = 2.0
@@ -76,13 +88,29 @@ object MenuWeights {
     const val VIEW_TOGGLE_INSPECTOR = 302.0
     const val VIEW_RENDER_TO_OPENVR = 303.0
     const val VIEW_SET_TRANSFER_FUNCTION = 400.0
-    const val DEMO_LINES = 0.0
-    const val DEMO_MESH = 1.0
-    const val DEMO_MESH_TEXTURE = 2.0
-    const val DEMO_VOLUME_RENDER = 3.0
-    const val DEMO_GAME_OF_LIFE = 4.0
-    const val DEMO_TEXT = 5.0
-    const val DEMO_EMBRYO = 6.0
+    // Demo menus (1st level)
+    const val DEMO_BASIC = 0.0
+    const val DEMO_ANIMATION = 1.0
+    const val DEMO_ADVANCED = 2.0
+    // Demo/Basic
+    const val DEMO_BASIC_LINES = 0.0
+    const val DEMO_BASIC_LINE3D = 1.0
+    const val DEMO_BASIC_MESH = 2.0
+    const val DEMO_BASIC_MULTIMESH = 3.0
+    const val DEMO_BASIC_TEXT = 4.0
+    const val DEMO_BASIC_IMAGEPLANE = 4.0
+    const val DEMO_BASIC_VOLUME = 6.0
+    // Demo/Animation
+    const val DEMO_ANIMATION_PARTICLE = 0.0
+    const val DEMO_ANIMATION_VOLUMETIMESERIES = 1.0
+    const val DEMO_ANIMATION_SCENERIGGING = 2.0
+    const val DEMO_ANIMATION_GOL3D = 3.0
+    // Demo/Advanced
+    const val DEMO_ADVANCED_SEGMENTATION = 0.0
+    const val DEMO_ADVANCED_CREMI = 1.0
+    const val DEMO_ADVANCED_BDVSLICING = 2.0
+    const val DEMO_ADVANCED_MESHTEXTURE = 3.0
+    // Help
     const val HELP_HELP = 0.0
     const val HELP_ABOUT = 200.0
 }
