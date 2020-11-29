@@ -40,8 +40,7 @@ import sc.iview.Utils;
 
 import java.io.File;
 
-import static sc.iview.commands.MenuWeights.FILE;
-import static sc.iview.commands.MenuWeights.FILE_EXPORT_STL;
+import static sc.iview.commands.MenuWeights.*;
 
 /**
  * Command to export a XYZ file for the currently active Mesh
@@ -51,7 +50,8 @@ import static sc.iview.commands.MenuWeights.FILE_EXPORT_STL;
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "File", weight = FILE), //
-                 @Menu(label = "Export XYZ...", weight = FILE_EXPORT_STL) })
+                 @Menu(label = "Export", weight = FILE_EXPORT), //
+                 @Menu(label = "XYZ...", weight = FILE_EXPORT_XYZ) })
 public class ExportXYZ implements Command {
 
     @Parameter

@@ -42,7 +42,11 @@ object MenuWeights {
     const val DEMO = 4.0
     const val HELP = 4.0
     const val FILE_OPEN = 0.0
-    const val FILE_EXPORT_STL = 100.0
+    const val FILE_EXPORT = 1.0
+    // File/Export
+    const val FILE_EXPORT_N5 = 0.0
+    const val FILE_EXPORT_STL = 1.0
+    const val FILE_EXPORT_XYZ = 2.0
     // Edit
     const val EDIT_ADD = 0.0
     const val EDIT_SETTINGS = 2.0

@@ -28,9 +28,6 @@
  */
 package sc.iview.commands.file;
 
-import static sc.iview.commands.MenuWeights.FILE;
-import static sc.iview.commands.MenuWeights.FILE_EXPORT_STL;
-
 import java.io.File;
 
 import org.scijava.command.Command;
@@ -45,6 +42,8 @@ import sc.iview.SciView;
 import graphics.scenery.Mesh;
 import sc.iview.Utils;
 
+import static sc.iview.commands.MenuWeights.*;
+
 /**
  * Command to export a STL of the currently active Node
  *
@@ -53,7 +52,8 @@ import sc.iview.Utils;
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "File", weight = FILE), //
-                 @Menu(label = "Export STL...", weight = FILE_EXPORT_STL) })
+                 @Menu(label = "Export", weight = FILE_EXPORT), //
+                 @Menu(label = "STL...", weight = FILE_EXPORT_STL) })
 public class ExportSTL implements Command {
 
     @Parameter
