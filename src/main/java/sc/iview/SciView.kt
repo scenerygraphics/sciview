@@ -720,7 +720,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             addNode(fromXML(source, hub, VolumeViewerOptions()))
             return
         }
-        if (source.endsWith(".pdb")) {
+        if (source.takeLast(4).equals(".pdb", true)) {
             val protein = Protein.fromFile(source)
             val ribbon = RibbonDiagram(protein)
             ribbon.position = Vector3f(0f, 0f, 0f)
