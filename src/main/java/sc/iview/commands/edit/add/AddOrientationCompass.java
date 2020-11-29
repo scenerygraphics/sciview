@@ -26,10 +26,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit;
+package sc.iview.commands.edit.add;
 
 import graphics.scenery.*;
-import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -39,12 +38,10 @@ import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
-import sc.iview.node.Line3D;
 
 import java.util.HashMap;
 
-import static sc.iview.commands.MenuWeights.EDIT;
-import static sc.iview.commands.MenuWeights.EDIT_ADD_COMPASS;
+import static sc.iview.commands.MenuWeights.*;
 
 /**
  * Command to orientation compass (R,G,B cylinders oriented along X,Y,Z axes, respectively) to the scene
@@ -54,7 +51,8 @@ import static sc.iview.commands.MenuWeights.EDIT_ADD_COMPASS;
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Add Compass", weight = EDIT_ADD_COMPASS) })
+                 @Menu(label = "Add", weight = EDIT_ADD), //
+                 @Menu(label = "Compass", weight = EDIT_ADD_COMPASS) })
 public class AddOrientationCompass implements Command {
 
     @Parameter

@@ -1,4 +1,4 @@
-package sc.iview.commands.edit;
+package sc.iview.commands.edit.settings;
 
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
@@ -18,7 +18,9 @@ import static sc.iview.commands.MenuWeights.*;
  * @author Vladimir Ulman
  */
 @Plugin(type = Command.class, initializer = "setupBoundsFromSciView", menuRoot = "SciView",
-        menu = { @Menu(label = "Edit", weight = EDIT), @Menu(label = "Controls Settings", weight = EDIT_SCIVIEW_SETTINGS+1) },
+        menu = { @Menu(label = "Edit", weight = EDIT),
+                 @Menu(label = "Settings", weight = EDIT_SETTINGS),
+                 @Menu(label = "Controls", weight = EDIT_SETTINGS_CONTROLS) },
         label = "Input Controls Step Sizes and Mouse Sensitivities")
 public class NavigationControlsSettings extends InteractiveCommand
 {

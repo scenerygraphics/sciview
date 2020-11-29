@@ -43,17 +43,25 @@ object MenuWeights {
     const val HELP = 4.0
     const val FILE_OPEN = 0.0
     const val FILE_EXPORT_STL = 100.0
+    // Edit
+    const val EDIT_ADD = 0.0
+    const val EDIT_SETTINGS = 2.0
+    const val EDIT_TOGGLE_FLOOR = 50.0
+    const val EDIT_DELETE_OBJECT = 100.0
+    // Edit/Add
     const val EDIT_ADD_BOX = 0.0
     const val EDIT_ADD_SPHERE = 1.0
     const val EDIT_ADD_LINE = 2.0
-    const val EDIT_ADD_POINT_LIGHT = 3.0
-    const val EDIT_ADD_LABEL_IMAGE = 4.0
+    const val EDIT_ADD_POINTLIGHT = 3.0
+    const val EDIT_ADD_LABELIMAGE = 4.0
     const val EDIT_ADD_VOLUME = 5.0
     const val EDIT_ADD_CAMERA = 6.0
-    const val EDIT_ADD_COMPASS = 49.0
-    const val EDIT_TOGGLE_FLOOR = 50.0
-    const val EDIT_DELETE_OBJECT = 100.0
-    const val EDIT_SCIVIEW_SETTINGS = 200.0
+    const val EDIT_ADD_COMPASS = 7.0
+    // Edit/Settings
+    const val EDIT_SETTINGS_BINDINGS = 0.0
+    const val EDIT_SETTINGS_CONTROLS = 1.0
+    const val EDIT_SETTINGS_SCIVIEW = 0.0
+
     const val PROCESS_ISOSURFACE = 0.0
     const val PROCESS_CONVEX_HULL = 1.0
     const val PROCESS_MESH_TO_IMAGE = 2.0

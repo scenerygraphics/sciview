@@ -26,10 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit;
-
-import static sc.iview.commands.MenuWeights.EDIT;
-import static sc.iview.commands.MenuWeights.EDIT_ADD_BOX;
+package sc.iview.commands.edit.add;
 
 import org.joml.Vector3f;
 import org.scijava.command.Command;
@@ -41,6 +38,8 @@ import org.scijava.util.ColorRGB;
 
 import sc.iview.SciView;
 
+import static sc.iview.commands.MenuWeights.*;
+
 /**
  * Command to add a box to the scene
  *
@@ -49,7 +48,8 @@ import sc.iview.SciView;
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Add Box...", weight = EDIT_ADD_BOX) })
+                 @Menu(label = "Add", weight = EDIT_ADD), //
+                 @Menu(label = "Box...", weight = EDIT_ADD_BOX) })
 public class AddBox implements Command {
 
     @Parameter

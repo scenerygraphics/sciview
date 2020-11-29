@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit;
+package sc.iview.commands.edit.settings;
 
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
@@ -45,7 +45,8 @@ import static sc.iview.commands.MenuWeights.*;
  */
 @Plugin(type = Command.class, menuRoot = "SciView", //
 menu = {@Menu(label = "Edit", weight = EDIT), //
-        @Menu(label = "SciView Settings", weight = EDIT_SCIVIEW_SETTINGS)})
+        @Menu(label = "Settings", weight = EDIT_SETTINGS), //
+        @Menu(label = "SciView", weight = EDIT_SETTINGS_SCIVIEW)})
 public class SciViewSettings implements Command {
 
     @Parameter
