@@ -11,7 +11,7 @@
 
 	<groupId>sc.iview</groupId>
 	<artifactId>sciview</artifactId>
-	<version>0.2.0-beta-9-SNAPSHOT</version>
+	<version>0.2.0-beta-9</version>
 
 	<name>SciView</name>
 	<description>Scenery-backed 3D visualization package for ImageJ.</description>
@@ -85,7 +85,7 @@
 	<scm>
 		<connection>scm:git:git://github.com/scenerygraphics/sciview</connection>
 		<developerConnection>scm:git:git@github.com:scenerygraphics/sciview</developerConnection>
-		<tag>sciview-0.2.0-beta-6</tag>
+		<tag>sciview-0.2.0-beta-9</tag>
 		<url>https://github.com/scenerygraphics/sciview</url>
 	</scm>
 	<issueManagement>
@@ -106,6 +106,7 @@
 		<license.copyrightOwners>SciView developers.</license.copyrightOwners>
 
 		<enforcer.skip>true</enforcer.skip>
+		<maven.javadoc.skip>true</maven.javadoc.skip>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
