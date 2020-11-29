@@ -26,82 +26,79 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo;
+package sc.iview.commands.demo.advanced;
 
-import graphics.scenery.BufferUtils;
-import graphics.scenery.Node;
-import graphics.scenery.textures.Texture;
-import kotlin.Triple;
+import bdv.util.*;
+import bdv.viewer.SourceAndConverter;
+import graphics.scenery.volumes.Volume;
+import io.scif.services.DatasetIOService;
+import net.imagej.Dataset;
+import net.imagej.ops.OpService;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
-import org.joml.Vector3i;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
+import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
+import sc.iview.commands.demo.ResourceLoader;
 
-import java.nio.ByteBuffer;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_MESH_TEXTURE;
+import static sc.iview.commands.MenuWeights.*;
 
 /**
- * A demo of mesh textures.
+ * A demo of slicing a BDV plane through a volume
  *
  * @author Kyle Harrington
- * @author Curtis Rueden
  */
-@Plugin(type = Command.class, label = "Mesh Texture Demo", menuRoot = "SciView", //
+@Plugin(type = Command.class, label = "BigDataViewer Slicing Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Mesh Texture", weight = DEMO_MESH_TEXTURE) })
-public class MeshTextureDemo implements Command {
+                 @Menu(label = "Advanced", weight = DEMO_ADVANCED), //
+                 @Menu(label = "BigDataViewer Slicing", weight = DEMO_ADVANCED_BDVSLICING) })
+public class BDVSlicingDemo implements Command {
+
+    @Parameter
+    private DatasetIOService datasetIO;
+
+    @Parameter
+    private LogService log;
+
+    @Parameter
+    private OpService ops;
 
     @Parameter
     private SciView sciView;
 
     @Override
     public void run() {
-        Node msh = sciView.addBox();
-        msh.setName( "Mesh Texture Demo" );
-        msh.fitInto( 10.0f, true );
+        final Dataset cube;
+        try {
+            File cubeFile = ResourceLoader.createFile( getClass(), "/cored_cube_var2_8bit.tif" );
 
-        Texture texture = generateTexture();
-
-        msh.getMaterial().getTextures().put( "diffuse", texture );
-        //msh.getMaterial().setDoubleSided( true );
-        //msh.getMaterial().setNeedsTextureReload( true );
-
-        msh.setNeedsUpdate( true );
-        msh.setDirty( true );
-
-        sciView.centerOnNode( sciView.getActiveNode() );
-    }
-
-    private static Texture generateTexture() {
-        int width = 64;
-        int height = 128;
-
-        Vector3i dims = new Vector3i( width, height, 1 );
-        int nChannels = 1;
-
-        ByteBuffer bb = BufferUtils.Companion.allocateByte( width * height * nChannels );
-
-        for( int x = 0; x < width; x++ ) {
-            for( int y = 0; y < height; y++ ) {
-                bb.put( ( byte ) ( Math.random() * 255 ) );
-            }
+            cube = datasetIO.open( cubeFile.getAbsolutePath() );
         }
-        bb.flip();
+        catch (IOException exc) {
+            log.error( exc );
+            return;
+        }
 
-        return new Texture( dims,
-				nChannels,
-				new UnsignedByteType(),
-				bb,
-				new Triple(Texture.RepeatMode.Repeat,
-				    Texture.RepeatMode.Repeat,
-				    Texture.RepeatMode.ClampToEdge));
+        Volume v = (Volume) sciView.addVolume( cube, new float[] { 1, 1, 1 } );
+        v.setPixelToWorldRatio(0.1f);// FIXME
+        v.setName( "Volume Render Demo" );
+        v.setDirty(true);
+        v.setNeedsUpdate(true);
+
+        List<SourceAndConverter<UnsignedByteType>> sources = (List<SourceAndConverter<UnsignedByteType>>) v.getMetadata().get("sources");
+
+        BdvFunctions.show(sources.get(0).getSpimSource(), new BdvOptions().frameTitle("slice of " + v.getName()));
+
+        sciView.setActiveNode(v);
+        sciView.centerOnNode( sciView.getActiveNode() );
     }
 
     public static void main(String... args) throws Exception {
@@ -109,8 +106,8 @@ public class MeshTextureDemo implements Command {
 
         CommandService command = sv.getScijavaContext().getService(CommandService.class);
 
-        HashMap<String, Object> argmap = new HashMap<>();
+        HashMap<String, Object> argmap = new HashMap<String, Object>();
 
-        command.run(MeshTextureDemo.class, true, argmap);
+        command.run(BDVSlicingDemo.class, true, argmap);
     }
 }

@@ -26,52 +26,82 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo;
+package sc.iview.commands.demo.advanced;
 
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_LINES;
-
-import org.joml.Vector3f;
+import graphics.scenery.BufferUtils;
+import graphics.scenery.Node;
+import graphics.scenery.textures.Texture;
+import kotlin.Triple;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import org.joml.Vector3i;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.util.Colors;
-
 import sc.iview.SciView;
+
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 
+import static sc.iview.commands.MenuWeights.*;
+
 /**
- * A demo of lines.
+ * A demo of mesh textures.
  *
  * @author Kyle Harrington
  * @author Curtis Rueden
  */
-@Plugin(type = Command.class, label = "Lines Demo", menuRoot = "SciView", //
+@Plugin(type = Command.class, label = "Mesh Texture Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Lines", weight = DEMO_LINES) })
-public class LineDemo implements Command {
+                 @Menu(label = "Advanced", weight = DEMO_ADVANCED), //
+                 @Menu(label = "Mesh Texture", weight = DEMO_ADVANCED_MESHTEXTURE) })
+public class MeshTextureDemo implements Command {
 
     @Parameter
     private SciView sciView;
 
     @Override
     public void run() {
-        int numPoints = 25;
-        Vector3f[] points = new Vector3f[numPoints];
+        Node msh = sciView.addBox();
+        msh.setName( "Mesh Texture Demo" );
+        msh.fitInto( 10.0f, true );
 
-        for( int k = 0; k < numPoints; k++ ) {
-            points[k] = new Vector3f( ( float ) ( 10.0f * Math.random() - 5.0f ), //
-                                      ( float ) ( 10.0f * Math.random() - 5.0f ), //
-                                      ( float ) ( 10.0f * Math.random() - 5.0f ) );
-        }
+        Texture texture = generateTexture();
 
-        double edgeWidth = 0.1;
+        msh.getMaterial().getTextures().put( "diffuse", texture );
+        //msh.getMaterial().setDoubleSided( true );
+        //msh.getMaterial().setNeedsTextureReload( true );
 
-        sciView.addLine( points, Colors.LIGHTSALMON, edgeWidth ).setName( "Lines Demo" );
+        msh.setNeedsUpdate( true );
+        msh.setDirty( true );
 
         sciView.centerOnNode( sciView.getActiveNode() );
+    }
+
+    private static Texture generateTexture() {
+        int width = 64;
+        int height = 128;
+
+        Vector3i dims = new Vector3i( width, height, 1 );
+        int nChannels = 1;
+
+        ByteBuffer bb = BufferUtils.Companion.allocateByte( width * height * nChannels );
+
+        for( int x = 0; x < width; x++ ) {
+            for( int y = 0; y < height; y++ ) {
+                bb.put( ( byte ) ( Math.random() * 255 ) );
+            }
+        }
+        bb.flip();
+
+        return new Texture( dims,
+				nChannels,
+				new UnsignedByteType(),
+				bb,
+				new Triple(Texture.RepeatMode.Repeat,
+				    Texture.RepeatMode.Repeat,
+				    Texture.RepeatMode.ClampToEdge));
     }
 
     public static void main(String... args) throws Exception {
@@ -81,6 +111,6 @@ public class LineDemo implements Command {
 
         HashMap<String, Object> argmap = new HashMap<>();
 
-        command.run(LineDemo.class, true, argmap);
+        command.run(MeshTextureDemo.class, true, argmap);
     }
 }

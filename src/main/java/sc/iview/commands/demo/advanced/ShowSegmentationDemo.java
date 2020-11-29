@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo;
+package sc.iview.commands.demo.advanced;
 
 import graphics.scenery.volumes.Volume;
 import io.scif.services.DatasetIOService;
@@ -59,8 +59,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_VOLUME_RENDER;
+import static sc.iview.commands.MenuWeights.*;
 
 /**
  * A demo of rendering meshes
@@ -69,7 +68,8 @@ import static sc.iview.commands.MenuWeights.DEMO_VOLUME_RENDER;
  */
 @Plugin(type = Command.class, label = "Show segmentation", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Show segmentation", weight = DEMO_VOLUME_RENDER) })
+                 @Menu(label = "Advanced", weight = DEMO_ADVANCED), //
+                 @Menu(label = "Show segmentation", weight = DEMO_ADVANCED_SEGMENTATION) })
 public class ShowSegmentationDemo implements Command {
 
     @Parameter

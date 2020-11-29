@@ -26,86 +26,51 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo;
-
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_MESH;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-
-import net.imagej.mesh.Mesh;
+package sc.iview.commands.demo.basic;
 
 import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
-import org.scijava.io.IOService;
-import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.util.Colors;
 
 import sc.iview.SciView;
+import java.util.HashMap;
 
-import cleargl.GLVector;
-import graphics.scenery.Material;
-import graphics.scenery.Node;
+import static sc.iview.commands.MenuWeights.*;
 
 /**
- * A demo of meshes.
+ * A demo of lines.
  *
  * @author Kyle Harrington
  * @author Curtis Rueden
  */
-@Plugin(type = Command.class, label = "Mesh Demo", menuRoot = "SciView", //
+@Plugin(type = Command.class, label = "Lines Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Mesh", weight = DEMO_MESH) })
-public class MeshDemo implements Command {
-
-    @Parameter
-    private IOService io;
-
-    @Parameter
-    private LogService log;
+                 @Menu(label = "Basic", weight = DEMO_BASIC), //
+                 @Menu(label = "Lines", weight = DEMO_BASIC_LINES) })
+public class LineDemo implements Command {
 
     @Parameter
     private SciView sciView;
 
-    @Parameter
-    private CommandService commandService;
-
     @Override
     public void run() {
-        final Mesh m;
-        try {
-            File meshFile = ResourceLoader.createFile( getClass(), "/WieseRobert_simplified_Cip1.stl" );
-            m = (Mesh) io.open( meshFile.getAbsolutePath() );
+        int numPoints = 25;
+        Vector3f[] points = new Vector3f[numPoints];
+
+        for( int k = 0; k < numPoints; k++ ) {
+            points[k] = new Vector3f( ( float ) ( 10.0f * Math.random() - 5.0f ), //
+                                      ( float ) ( 10.0f * Math.random() - 5.0f ), //
+                                      ( float ) ( 10.0f * Math.random() - 5.0f ) );
         }
-        catch (IOException exc) {
-            log.error( exc );
-            return;
-        }
 
-        Node msh = sciView.addMesh( m );
-        msh.setName( "Mesh Demo" );
+        double edgeWidth = 0.1;
 
-        //msh.fitInto( 15.0f, true );
+        sciView.addLine( points, Colors.LIGHTSALMON, edgeWidth ).setName( "Lines Demo" );
 
-        Material mat = new Material();
-        mat.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
-        mat.setDiffuse( new Vector3f( 0.8f, 0.5f, 0.4f ) );
-        mat.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-        //mat.setDoubleSided( true );
-
-        msh.setMaterial( mat );
-
-        msh.setNeedsUpdate( true );
-        msh.setDirty( true );
-
-        sciView.getFloor().setPosition(new Vector3f(0, -25, 0));
-
-        sciView.setActiveNode(msh);
         sciView.centerOnNode( sciView.getActiveNode() );
     }
 
@@ -116,6 +81,6 @@ public class MeshDemo implements Command {
 
         HashMap<String, Object> argmap = new HashMap<>();
 
-        command.run(MeshDemo.class, true, argmap);
+        command.run(LineDemo.class, true, argmap);
     }
 }

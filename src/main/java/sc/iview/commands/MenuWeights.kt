@@ -76,13 +76,29 @@ object MenuWeights {
     const val VIEW_TOGGLE_INSPECTOR = 302.0
     const val VIEW_RENDER_TO_OPENVR = 303.0
     const val VIEW_SET_TRANSFER_FUNCTION = 400.0
-    const val DEMO_LINES = 0.0
-    const val DEMO_MESH = 1.0
-    const val DEMO_MESH_TEXTURE = 2.0
-    const val DEMO_VOLUME_RENDER = 3.0
-    const val DEMO_GAME_OF_LIFE = 4.0
-    const val DEMO_TEXT = 5.0
-    const val DEMO_EMBRYO = 6.0
+    // Demo menus (1st level)
+    const val DEMO_BASIC = 0.0
+    const val DEMO_ANIMATION = 1.0
+    const val DEMO_ADVANCED = 2.0
+    // Demo/Basic
+    const val DEMO_BASIC_LINES = 0.0
+    const val DEMO_BASIC_LINE3D = 1.0
+    const val DEMO_BASIC_MESH = 2.0
+    const val DEMO_BASIC_MULTIMESH = 3.0
+    const val DEMO_BASIC_TEXT = 4.0
+    const val DEMO_BASIC_IMAGEPLANE = 4.0
+    const val DEMO_BASIC_VOLUME = 6.0
+    // Demo/Animation
+    const val DEMO_ANIMATION_PARTICLE = 0.0
+    const val DEMO_ANIMATION_VOLUMETIMESERIES = 1.0
+    const val DEMO_ANIMATION_SCENERIGGING = 2.0
+    const val DEMO_ANIMATION_GOL3D = 3.0
+    // Demo/Advanced
+    const val DEMO_ADVANCED_SEGMENTATION = 0.0
+    const val DEMO_ADVANCED_CREMI = 1.0
+    const val DEMO_ADVANCED_BDVSLICING = 2.0
+    const val DEMO_ADVANCED_MESHTEXTURE = 3.0
+    // Help
     const val HELP_HELP = 0.0
     const val HELP_ABOUT = 200.0
 }

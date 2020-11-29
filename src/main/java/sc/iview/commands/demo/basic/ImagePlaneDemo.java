@@ -26,12 +26,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo;
+package sc.iview.commands.demo.basic;
 
-import cleargl.GLTypeEnum;
-import cleargl.GLVector;
 import graphics.scenery.*;
-import graphics.scenery.textures.Texture;
 import net.imglib2.RandomAccess;
 import net.imglib2.img.Img;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -49,8 +46,7 @@ import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.Random;
 
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_LINES;
+import static sc.iview.commands.MenuWeights.*;
 
 /**
  * A demo of inserting a 2D image as a plane into a scene
@@ -59,7 +55,8 @@ import static sc.iview.commands.MenuWeights.DEMO_LINES;
  */
 @Plugin(type = Command.class, label = "Image Plane Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Image Plane", weight = DEMO_LINES) })
+                 @Menu(label = "Basic", weight = DEMO_BASIC), //
+                 @Menu(label = "Image Plane", weight = DEMO_BASIC_IMAGEPLANE) })
 public class ImagePlaneDemo implements Command {
 
     @Parameter

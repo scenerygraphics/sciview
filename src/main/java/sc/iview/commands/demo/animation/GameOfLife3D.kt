@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo
+package sc.iview.commands.demo.animation
 
 import graphics.scenery.BoundingGrid
 import graphics.scenery.volumes.Volume
@@ -59,7 +59,11 @@ import java.util.*
  * @author Kyle Harrington
  * @author Ulrik Guenther
  */
-@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Demo", weight = MenuWeights.DEMO), Menu(label = "Game of Life 3D", weight = MenuWeights.DEMO_GAME_OF_LIFE)])
+@Plugin(type = Command::class,
+        menuRoot = "SciView",
+        menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
+                Menu(label = "Animation", weight = MenuWeights.DEMO_ANIMATION),
+                Menu(label = "Game of Life 3D", weight = MenuWeights.DEMO_ANIMATION_GOL3D)])
 class GameOfLife3D : Command {
     @Parameter
     private lateinit var sciView: SciView

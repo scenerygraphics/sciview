@@ -26,23 +26,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo;
+package sc.iview.commands.demo.animation;
 
 import graphics.scenery.*;
 import ij.gui.GenericDialog;
 import ij.gui.NonBlockingGenericDialog;
 import net.imagej.mesh.Mesh;
-import net.imglib2.Cursor;
-import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.converter.Converters;
-import net.imglib2.display.ScaledARGBConverter;
 import net.imglib2.img.Img;
-import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.view.Views;
 import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
@@ -53,14 +47,14 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
 import sc.iview.SciView;
+import sc.iview.commands.demo.ResourceLoader;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
 import static sc.iview.Utils.convertToARGB;
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_MESH;
+import static sc.iview.commands.MenuWeights.*;
 
 /**
  * An example of rigging/staging a scene for creating a visualization
@@ -69,7 +63,8 @@ import static sc.iview.commands.MenuWeights.DEMO_MESH;
  */
 @Plugin(type = Command.class, label = "Scene Rigging Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Scene Rigging", weight = DEMO_MESH) })
+                 @Menu(label = "Animation", weight = DEMO), //
+                 @Menu(label = "Scene Rigging", weight = DEMO_ANIMATION_SCENERIGGING) })
 public class SceneRiggingDemo implements Command {
 
     @Parameter

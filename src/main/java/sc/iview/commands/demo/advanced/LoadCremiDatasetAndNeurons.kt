@@ -1,4 +1,4 @@
-package sc.iview.commands.demo
+package sc.iview.commands.demo.advanced
 
 import bdv.util.DefaultInterpolators
 import bdv.viewer.Interpolation
@@ -41,7 +41,12 @@ import java.io.IOException
 
 typealias NeuronsAndImage = Triple<HashMap<Long, Long>, RandomAccessibleInterval<UnsignedLongType>, RandomAccessibleInterval<UnsignedByteType>>
 
-@Plugin(type = Command::class, label = "Cremi Dataset rendering demo", menuRoot = "SciView", menu = [Menu(label = "Demo", weight = MenuWeights.DEMO), Menu(label = "Load Cremi dataset and neuron labels", weight = MenuWeights.DEMO_VOLUME_RENDER)])
+@Plugin(type = Command::class,
+        label = "Cremi Dataset rendering demo",
+        menuRoot = "SciView",
+        menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
+                Menu(label = "Advanced", weight = MenuWeights.DEMO_ADVANCED),
+                Menu(label = "Load Cremi dataset and neuron labels", weight = MenuWeights.DEMO_ADVANCED_CREMI)])
 class LoadCremiDatasetAndNeurons: Command {
     @Parameter
     private lateinit var ui: UIService

@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo;
+package sc.iview.commands.demo.basic;
 
 import org.joml.Vector3f;
 import org.scijava.command.Command;
@@ -42,8 +42,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_LINES;
+import static sc.iview.commands.MenuWeights.*;
 
 /**
  * A demo of edges.
@@ -52,7 +51,8 @@ import static sc.iview.commands.MenuWeights.DEMO_LINES;
  */
 @Plugin(type = Command.class, label = "Line3D Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Line3D", weight = DEMO_LINES+1) })
+                 @Menu(label = "Basic", weight = DEMO_BASIC), //
+                 @Menu(label = "Line3D", weight = DEMO_BASIC_LINE3D) })
 public class Line3DDemo implements Command {
 
     @Parameter

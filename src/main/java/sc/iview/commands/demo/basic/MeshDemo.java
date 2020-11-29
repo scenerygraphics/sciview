@@ -26,12 +26,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo;
+package sc.iview.commands.demo.basic;
 
-import cleargl.GLVector;
-import graphics.scenery.Material;
-import graphics.scenery.Node;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+
 import net.imagej.mesh.Mesh;
+
 import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
@@ -40,16 +42,14 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+
 import sc.iview.SciView;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Random;
+import graphics.scenery.Material;
+import graphics.scenery.Node;
+import sc.iview.commands.demo.ResourceLoader;
 
-import static sc.iview.commands.MenuWeights.DEMO;
-import static sc.iview.commands.MenuWeights.DEMO_MESH;
+import static sc.iview.commands.MenuWeights.*;
 
 /**
  * A demo of meshes.
@@ -57,13 +57,11 @@ import static sc.iview.commands.MenuWeights.DEMO_MESH;
  * @author Kyle Harrington
  * @author Curtis Rueden
  */
-@Plugin(type = Command.class, label = "Multi Mesh Demo", menuRoot = "SciView", //
+@Plugin(type = Command.class, label = "Mesh Demo", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "MultiMesh", weight = DEMO_MESH) })
-public class MultiMeshDemo implements Command {
-
-    @Parameter
-    private int numMeshes;
+                 @Menu(label = "Basic", weight = DEMO_BASIC), //
+                 @Menu(label = "Mesh", weight = DEMO_BASIC_MESH) })
+public class MeshDemo implements Command {
 
     @Parameter
     private IOService io;
@@ -89,46 +87,26 @@ public class MultiMeshDemo implements Command {
             return;
         }
 
+        Node msh = sciView.addMesh( m );
+        msh.setName( "Mesh Demo" );
+
+        //msh.fitInto( 15.0f, true );
+
         Material mat = new Material();
         mat.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
         mat.setDiffuse( new Vector3f( 0.8f, 0.5f, 0.4f ) );
         mat.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
         //mat.setDoubleSided( true );
 
-        Random RNG = new Random();
+        msh.setMaterial( mat );
 
-        float shellR = 100;
+        msh.setNeedsUpdate( true );
+        msh.setDirty( true );
 
-        ArrayList<Node> meshes = new ArrayList<>();
+        sciView.getFloor().setPosition(new Vector3f(0, -25, 0));
 
-        for( int k = 0; k < numMeshes; k++ ) {
-
-            Node msh = sciView.addMesh(m);
-            msh.setName("Mesh_" + k);
-
-            msh.setPosition( new Vector3f( ( RNG.nextFloat() * shellR - shellR ), ( RNG.nextFloat() * shellR - shellR ), ( RNG.nextFloat() * shellR - shellR ) ) );
-
-            //msh.fitInto( 15.0f, true );
-
-            msh.setMaterial(mat);
-
-            msh.setNeedsUpdate(true);
-            msh.setDirty(true);
-
-            meshes.add(msh);
-        }
-
-        // Wait for everything to settle before framing the view
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        sciView.getFloor().setVisible(false);
-        sciView.surroundLighting();
-
-        sciView.centerOnScene();
+        sciView.setActiveNode(msh);
+        sciView.centerOnNode( sciView.getActiveNode() );
     }
 
     public static void main(String... args) throws Exception {
@@ -138,6 +116,6 @@ public class MultiMeshDemo implements Command {
 
         HashMap<String, Object> argmap = new HashMap<>();
 
-        command.run(MultiMeshDemo.class, true, argmap);
+        command.run(MeshDemo.class, true, argmap);
     }
 }
