@@ -183,6 +183,11 @@ open class Controls(val sciview: SciView) {
         //update scene inspector
         h.addBehaviour("update scene graph", ClickBehaviour { _: Int, _: Int -> sciview.requestPropEditorRefresh() })
         h.addKeyBinding("update scene graph", "shift ctrl I")
+
+        //ruler
+        val ruler = Ruler(sciview)
+        h.addBehaviour("ruler: keep the button pressed and drag with the mouse", ruler)
+        h.addKeyBinding("ruler: keep the button pressed and drag with the mouse", "E")
     }
 
     /*
