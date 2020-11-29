@@ -149,7 +149,7 @@ class LoadCremiDatasetAndNeurons: Command {
 
             log.info("Converting neuron ${i + 1}/${largestNeuronLabels.size} to scenery format...")
             // Convert the mesh into a scenery mesh for visualization
-            val mesh = MeshConverter.toScenery(m, false)
+            val mesh = MeshConverter.toScenery(m, false, flipWindingOrder = true)
             mesh.scale = Vector3f(0.01f, 0.01f, 0.06f)
             mesh.material.diffuse = colormapNeurons.lookupARGB(0.0, 255.0, kotlin.random.Random.nextDouble(0.0, 255.0)).toRGBColor().xyz()
             mesh.material.roughness = 0.0f

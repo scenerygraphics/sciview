@@ -43,7 +43,7 @@ import java.nio.FloatBuffer
  */
 object MeshConverter {
     @JvmOverloads @JvmStatic
-    fun toScenery(mesh: Mesh, center: Boolean = false, flipWindingOrder: Boolean = true): graphics.scenery.Mesh {
+    fun toScenery(mesh: Mesh, center: Boolean = false, flipWindingOrder: Boolean = false): graphics.scenery.Mesh {
         val vCount = Int.MAX_VALUE.toLong().coerceAtMost(mesh.vertices().size()).toInt()
         val tCount = Int.MAX_VALUE.toLong().coerceAtMost(mesh.triangles().size()).toInt()
 

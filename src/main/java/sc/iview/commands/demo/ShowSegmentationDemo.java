@@ -108,7 +108,7 @@ public class ShowSegmentationDemo implements Command {
             Mesh m = Meshes.marchingCubes(region);
 
             // Convert the mesh into a scenery mesh for visualization
-            graphics.scenery.Mesh isoSurfaceMesh = MeshConverter.toScenery(m,false);
+            graphics.scenery.Mesh isoSurfaceMesh = MeshConverter.toScenery(m,false, true);
 
             // Name the mesh after the segment label
             isoSurfaceMesh.setName( "region " + region );

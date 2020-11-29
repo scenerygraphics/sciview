@@ -93,7 +93,7 @@ class VolumeRenderDemo : Command {
             val cubeImg = cube.imgPlus.img as Img<UnsignedByteType>
             val bitImg = ops.threshold().apply(cubeImg, UnsignedByteType(isoLevel)) as Img<BitType>
             val m = ops.geom().marchingCubes(bitImg, isoLevel.toDouble(), BitTypeVertexInterpolator())
-            val isoSurfaceMesh = MeshConverter.toScenery(m, false)
+            val isoSurfaceMesh = MeshConverter.toScenery(m, false, flipWindingOrder = true)
             v.addChild(isoSurfaceMesh)
             isoSurfaceMesh.name = "Volume Render Demo Isosurface"
         }
