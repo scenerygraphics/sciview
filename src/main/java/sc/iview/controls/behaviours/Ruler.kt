@@ -25,11 +25,12 @@ class Ruler(protected val sciView: SciView): DragBehaviour {
 
     /** Setup the line and delete the old one */
     override fun init(p0: Int, p1: Int) {
+        sciView.deleteNode(line)
         origin.set(getMousePositionIn3D(p0, p1))
         line.addPoint(origin)
         sciView.addNode(line)
         sciView.allSceneNodes.forEach {
-            if(it.name == "TextBoard" && it is Mesh) {
+            if(it.name == "DistanceTextBoard" && it is Mesh) {
                 sciView.removeMesh(it)
             }
         }
@@ -52,16 +53,16 @@ class Ruler(protected val sciView: SciView): DragBehaviour {
         endPosition.sub(origin, finalLength)
         logger.info("The line is ${finalLength.length()}")
         val board = TextBoard()
-        board.text = "Distance: ${finalLength.length()} units"
+        board.text = "Distance: ${finalLength.length()}"
         board.name = "DistanceTextBoard"
         board.transparent = 0
         board.fontColor = Vector4f(0.0f, 0.0f, 0.0f, 1.0f)
-        board.backgroundColor = Vector4f(100f, 100f, 100f, 1.0f)
+        board.backgroundColor = Vector4f(50f, 50f, 50f, 1.0f)
         val boardPosition = Vector3f()
         origin.add(endPosition, boardPosition).mul(0.5f)
         board.position = boardPosition.mul(0.5f)
-        board.scale = Vector3f(0.5f, 0.5f, 0.5f)
-        sciView.addMesh(board)
+        board.scale = Vector3f(0.3f, 0.3f, 0.3f)
+        sciView.addNode(board)
     }
 
     /** Get the position of your mouse in 3D world coordinates*/
