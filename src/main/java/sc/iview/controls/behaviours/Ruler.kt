@@ -57,7 +57,7 @@ class Ruler(protected val sciView: SciView): DragBehaviour {
         board.name = "DistanceTextBoard"
         board.transparent = 0
         board.fontColor = Vector4f(0.0f, 0.0f, 0.0f, 1.0f)
-        board.backgroundColor = Vector4f(50f, 50f, 50f, 1.0f)
+        board.backgroundColor = Vector4f(1f, 1f, 1f, 1.0f)
         val boardPosition = Vector3f()
         origin.add(endPosition, boardPosition).mul(0.5f)
         board.position = boardPosition.mul(0.5f)
