@@ -97,7 +97,7 @@ public class PointCloudDemo implements Command {
             spots.add(new RealPoint(x, y, z));
         }
 
-        sciView.addPointCloud(spots, "Point Cloud Demo", 2.0f);
+        sciView.addPointCloud(spots, "Point Cloud Demo", 50.0f);
     }
 
     public static void main(String... args) throws Exception {

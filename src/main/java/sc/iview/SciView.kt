@@ -761,7 +761,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @JvmOverloads
     fun addPointCloud(points: Collection<RealLocalizable>,
                       name: String? = "PointCloud",
-                      pointSize : Float = 0.25f): Node? {
+                      pointSize : Float = 1.0f): Node? {
         val flatVerts = FloatArray(points.size * 3)
         var k = 0
         for (point in points) {
@@ -771,7 +771,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             k++
         }
         val pointCloud = PointCloud(pointSize, name!!)
-        val material = Material()
         val vBuffer: FloatBuffer = BufferUtils.allocateFloat(flatVerts.size * 4)
         val nBuffer: FloatBuffer = BufferUtils.allocateFloat(0)
         vBuffer.put(flatVerts)
@@ -779,11 +778,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         pointCloud.vertices = vBuffer
         pointCloud.normals = nBuffer
         pointCloud.indices = BufferUtils.allocateInt(0)
-        material.ambient = Vector3f(1.0f, 1.0f, 1.0f)
-        material.diffuse = Vector3f(1.0f, 1.0f, 1.0f)
-        material.specular = Vector3f(1.0f, 1.0f, 1.0f)
-        pointCloud.material = material
         pointCloud.position = Vector3f(0f, 0f, 0f)
+
         pointCloud.setupPointCloud()
         return addNode(pointCloud)
     }
@@ -795,9 +791,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     fun addPointCloud(pointCloud: PointCloud): Node? {
         pointCloud.setupPointCloud()
-        pointCloud.material.ambient = Vector3f(1.0f, 1.0f, 1.0f)
-        pointCloud.material.diffuse = Vector3f(1.0f, 1.0f, 1.0f)
-        pointCloud.material.specular = Vector3f(1.0f, 1.0f, 1.0f)
         pointCloud.position = Vector3f(0f, 0f, 0f)
         return addNode(pointCloud)
     }
