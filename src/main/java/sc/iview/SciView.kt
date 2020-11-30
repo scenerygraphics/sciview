@@ -702,13 +702,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     /**
-     * Return the default point size to use for point clouds
-     * @return default point size used for point clouds
-     */
-    private val defaultPointSize: Float
-        get() = 0.025f
-
-    /**
      * Open a file specified by the source path. The file can be anything that SciView knows about: mesh, volume, point cloud
      * @param source string of a data source
      * @throws IOException
@@ -767,7 +760,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     @JvmOverloads
     fun addPointCloud(points: Collection<RealLocalizable>,
-                      name: String? = "PointCloud"): Node? {
+                      name: String? = "PointCloud",
+                      pointSize : Float = 0.25f): Node? {
         val flatVerts = FloatArray(points.size * 3)
         var k = 0
         for (point in points) {
@@ -776,7 +770,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             flatVerts[k * 3 + 2] = point.getFloatPosition(2)
             k++
         }
-        val pointCloud = PointCloud(defaultPointSize, name!!)
+        val pointCloud = PointCloud(pointSize, name!!)
         val material = Material()
         val vBuffer: FloatBuffer = BufferUtils.allocateFloat(flatVerts.size * 4)
         val nBuffer: FloatBuffer = BufferUtils.allocateFloat(0)
@@ -785,12 +779,12 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         pointCloud.vertices = vBuffer
         pointCloud.normals = nBuffer
         pointCloud.indices = BufferUtils.allocateInt(0)
-        pointCloud.setupPointCloud()
         material.ambient = Vector3f(1.0f, 1.0f, 1.0f)
         material.diffuse = Vector3f(1.0f, 1.0f, 1.0f)
         material.specular = Vector3f(1.0f, 1.0f, 1.0f)
         pointCloud.material = material
         pointCloud.position = Vector3f(0f, 0f, 0f)
+        pointCloud.setupPointCloud()
         return addNode(pointCloud)
     }
 

@@ -16,6 +16,7 @@ import org.scijava.ui.behaviour.Behaviour
 import org.scijava.ui.behaviour.ClickBehaviour
 import sc.iview.commands.help.Help
 import sc.iview.controls.behaviours.*
+import sc.iview.controls.behaviours.Ruler
 import java.util.*
 import java.util.function.Supplier
 import kotlin.concurrent.thread
