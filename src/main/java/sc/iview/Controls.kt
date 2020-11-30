@@ -4,10 +4,13 @@ import graphics.scenery.*
 import graphics.scenery.controls.behaviours.FPSCameraControl
 import graphics.scenery.controls.behaviours.MovementCommand
 import graphics.scenery.controls.behaviours.SelectCommand
+import graphics.scenery.numerics.Random
 import graphics.scenery.utils.LazyLogger
+import graphics.scenery.utils.extensions.plus
 import org.joml.Quaternionf
 import org.joml.Vector2f
 import org.joml.Vector3f
+import org.joml.Vector4f
 import org.scijava.command.CommandService
 import org.scijava.ui.behaviour.Behaviour
 import org.scijava.ui.behaviour.ClickBehaviour
@@ -15,6 +18,7 @@ import sc.iview.commands.help.Help
 import sc.iview.controls.behaviours.*
 import java.util.*
 import java.util.function.Supplier
+import kotlin.concurrent.thread
 import kotlin.math.acos
 
 /**
@@ -142,6 +146,7 @@ open class Controls(val sciview: SciView) {
 
         // node-selection and node-manipulation (translate & rotate) controls
         setObjectSelectionMode()
+        setDistanceMeasurer()
         val nodeTranslateControl = NodeTranslateControl(sciview)
         h.addBehaviour("node: move selected one left, right, up, or down", nodeTranslateControl)
         h.addKeyBinding("node: move selected one left, right, up, or down", "ctrl button1")
@@ -410,7 +415,76 @@ open class Controls(val sciview: SciView) {
                         selectAction!!))
         h.addKeyBinding("node: choose one from the view panel", "double-click button1")
     }
-    
+
+    private var secondNode = false
+
+    fun setDistanceMeasurer() {
+        var lastNode = Node("lastNode")
+        val distanceAction = { nearest: Scene.RaycastResult, x: Int, y: Int ->
+            if (nearest.matches.isNotEmpty()) {
+                // copy reference on the last object picking result into "public domain"
+                // (this must happen before the ContextPopUpNodeChooser menu!)
+                objectSelectionLastResult = nearest
+
+                // Setup the context menu for this picking
+                // (in the menu, the user will chose node herself)
+                sciview.showContextNodeChooser(x, y)
+            }
+            val line = Line(simple = true)
+            if (!secondNode) {
+                if(sciview.activeNode != null) {
+                    lastNode = sciview.activeNode!!
+                }
+            } else {
+                if (sciview.activeNode != null) {
+                    sciview.allSceneNodes.forEach {
+                        if(it.name == "DistanceMeasureTextBoard" || it.name == "distanceMeasureLine") {
+                            sciview.deleteNode(it)
+                        }
+                    }
+                    val position0 = lastNode.position
+                    val position1 = sciview.activeNode!!.position
+                    val lastToPresent = Vector3f()
+                    position1.sub(position0, lastToPresent)
+                    line.addPoint(position0)
+                    line.addPoint(position1)
+                    line.name = "distanceMeasureLine"
+                    sciview.addNode(line)
+                    val board = TextBoard()
+                    board.text = "Distance: ${lastToPresent.length()}"
+                    board.name = "DistanceMeasureTextBoard"
+                    board.transparent = 0
+                    board.fontColor = Vector4f(0.0f, 0.0f, 0.0f, 1.0f)
+                    board.backgroundColor = Vector4f(100f, 100f, 100f, 1.0f)
+                    val boardPosition = Vector3f()
+                    position0.add(position1, boardPosition)
+                    board.position = boardPosition.mul(0.5f)
+                    board.scale = Vector3f(0.5f, 0.5f, 0.5f)
+                    sciview.addNode(board)
+                }
+            }
+            secondNode = !secondNode
+        }
+        setDistanceMeasurer(distanceAction)
+    }
+
+    fun setDistanceMeasurer(selectAction: Function3<Scene.RaycastResult, Int, Int, Unit>?) {
+        val h = inputHandler
+        val ignoredObjects = ArrayList<Class<*>>()
+        ignoredObjects.add(BoundingGrid::class.java)
+        ignoredObjects.add(Camera::class.java) //do not mess with "scene params", allow only "scene data" to be selected
+        ignoredObjects.add(DetachedHeadCamera::class.java)
+        ignoredObjects.add(DirectionalLight::class.java)
+        ignoredObjects.add(PointLight::class.java)
+
+        h.addBehaviour("distanceMeasurement: click, choose first node, click again and choose second node",
+                SelectCommand("DistanceMeasurer", sciview.getSceneryRenderer()!!, sciview.currentScene,
+                        { sciview.currentScene.findObserver() }, false, ignoredObjects,
+                        selectAction!!))
+        h.addKeyBinding("distanceMeasurement: click, choose first node, click again and choose second node",
+                "M")
+    }
+
     fun centerOnPosition(currentPos: Vector3f?) {
         val camera = sciview.camera ?: return
 
