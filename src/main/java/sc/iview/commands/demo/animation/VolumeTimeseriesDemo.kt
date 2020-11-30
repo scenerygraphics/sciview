@@ -69,13 +69,13 @@ class VolumeTimeseriesDemo : Command {
 
         val bdv = BdvFunctions.show(dataset, "test")
         val v = sciView.addVolume(dataset, floatArrayOf(1f, 1f, 1f, 1f)) as Volume?
-        v!!.pixelToWorldRatio = 0.1f // FIXME
-        v.name = "Volume Render Demo"
-        v.dirty = true
-        v.needsUpdate = true
+        v?.pixelToWorldRatio = 10f
+        v?.name = "Volume Render Demo"
+        v?.dirty = true
+        v?.needsUpdate = true
 
         bdv.bdvHandle.viewerPanel.addTimePointListener { t ->
-            v.goToTimepoint(t.coerceIn(0, v.timepointCount-1))
+            v?.goToTimepoint(t.coerceIn(0, v.timepointCount-1))
         }
 
         sciView.setActiveNode(v)
@@ -83,7 +83,7 @@ class VolumeTimeseriesDemo : Command {
     }
 
     fun makeDataset(): RandomAccessibleInterval<UnsignedByteType> {
-        // Interval is 30x30x30 w/ 10 timepoints
+        // Interval is 30x30x30 w/ 100 timepoints
         val interval = FinalInterval(longArrayOf(0, 0, 0, 0), longArrayOf(30, 30, 30, 100))
         val center = (interval.max(2) / 2).toDouble()
         val noise = OpenSimplexNoise()
