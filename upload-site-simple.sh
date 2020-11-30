@@ -29,6 +29,8 @@ echo "Found launcher: $launcher"
 
 echo "Removing TrainableSegmentation JAR"
 rm -f plugins/Trainable_Segmentation*
+rm -f jars/imagej-mesh*
+wget https://maven.scijava.org/service/local/repositories/jitpack/content/net/imagej/imagej-mesh/a40d46f/imagej-mesh-a40d46f.jar -O jars/imagej-mesh-a40d46f.jar
 # upload complete update site
 password=$WIKI_UPLOAD_PASS
 ./$launcher --update edit-update-site $update_site $url "webdav:$webdav_user:$password" .
