@@ -36,6 +36,7 @@ import org.scijava.widget.FileWidget
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
 import sc.iview.process.MeshConverter
+import java.io.File
 import java.io.FileFilter
 import java.io.IOException
 
