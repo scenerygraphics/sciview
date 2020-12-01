@@ -17,6 +17,7 @@ import org.scijava.ui.behaviour.ClickBehaviour
 import sc.iview.commands.help.Help
 import sc.iview.controls.behaviours.*
 import sc.iview.controls.behaviours.Ruler
+import java.io.File
 import java.util.*
 import java.util.function.Supplier
 import kotlin.concurrent.thread
@@ -194,6 +195,9 @@ open class Controls(val sciview: SciView) {
         val ruler = Ruler(sciview)
         h.addBehaviour("ruler: keep the button pressed and drag with the mouse", ruler)
         h.addKeyBinding("ruler: keep the button pressed and drag with the mouse", "E")
+
+        val configFile = File(System.getProperty("user.home")).resolve(".sciview.keybindings.yaml")
+        inputHandler.readFromFile(configFile)
     }
 
     /*
