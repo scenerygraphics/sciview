@@ -108,7 +108,7 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
-		<scenery.version>2804a53</scenery.version>
+		<scenery.version>695be9b</scenery.version>
 <!--		<scijava-common.version>2.84.0</scijava-common.version>-->
 		<ui-behaviour.version>2.0.3</ui-behaviour.version>
 		<imagej-mesh.version>a40d46f</imagej-mesh.version>
