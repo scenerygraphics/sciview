@@ -460,16 +460,22 @@ open class Controls(val sciview: SciView) {
                     line.addPoint(position1)
                     line.name = "distanceMeasureLine"
                     sciview.addNode(line)
+                    val distance = lastToPresent.length()
                     val board = TextBoard()
-                    board.text = "Distance: ${lastToPresent.length()}"
+                    board.text = "Distance: $distance"
                     board.name = "DistanceMeasureTextBoard"
                     board.transparent = 0
                     board.fontColor = Vector4f(0.0f, 0.0f, 0.0f, 1.0f)
-                    board.backgroundColor = Vector4f(100f, 100f, 100f, 1.0f)
+                    board.backgroundColor = Vector4f(1f, 1f, 1f, 1.0f)
                     val boardPosition = Vector3f()
                     position0.add(position1, boardPosition)
                     board.position = boardPosition.mul(0.5f)
-                    board.scale = Vector3f(0.5f, 0.5f, 0.5f)
+                    if(distance < 5f) {
+                        board.scale = Vector3f(0.5f, 0.5f, 0.5f)
+                    }
+                    else {
+                        board.scale = Vector3f(distance/10f, distance/10f, distance/10f)
+                    }
                     sciview.addNode(board)
                 }
             }
