@@ -50,6 +50,7 @@ import graphics.scenery.utils.ExtractsNatives.Companion.getPlatform
 import graphics.scenery.utils.LogbackUtils
 import graphics.scenery.utils.SceneryPanel
 import graphics.scenery.utils.Statistics
+import graphics.scenery.utils.extensions.times
 import graphics.scenery.volumes.Colormap
 import graphics.scenery.volumes.RAIVolume
 import graphics.scenery.volumes.Volume
@@ -1051,6 +1052,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     @JvmOverloads
     fun deleteNode(node: Node?, activePublish: Boolean = true) {
+        if(node is Volume) {
+            node.volumeManager.remove(node)
+        }
+
         for (child in node!!.children) {
             deleteNode(child, activePublish)
         }
@@ -1124,6 +1129,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             val inValue = image.axis(d).averageScale(0.0, 1.0)
             if (image.axis(d).unit() == null) voxelDims[d] = inValue.toFloat() else voxelDims[d] = unitService.value(inValue, image.axis(d).unit(), axis(d)!!.unit()).toFloat()
         }
+        logger.info("Adding with ${voxelDims.joinToString(",")}")
         return addVolume(image, voxelDims)
     }
 
@@ -1347,6 +1353,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         v.name = name
         v.metadata["sources"] = sources
         v.metadata["VoxelDimensions"] = voxelDimensions
+        v.scale = Vector3f(1.0f, voxelDimensions[1]/voxelDimensions[0], voxelDimensions[2]/voxelDimensions[0]) * v.pixelToWorldRatio * 10.0f
         val tf = v.transferFunction
         val rampMin = 0f
         val rampMax = 0.1f

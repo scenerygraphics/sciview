@@ -38,6 +38,7 @@ import net.imglib2.Sampler
 import net.imglib2.img.Img
 import net.imglib2.img.array.ArrayImgs
 import net.imglib2.type.numeric.integer.UnsignedByteType
+import org.joml.Vector3f
 import org.scijava.command.Command
 import org.scijava.command.CommandInfo
 import org.scijava.command.CommandService
@@ -297,6 +298,7 @@ class GameOfLife3D : Command {
 
             volume!!.transferFunction.addControlPoint(0.0f, 0.0f)
             volume!!.transferFunction.addControlPoint(0.4f, 0.3f)
+            volume!!.scale = Vector3f(10.0f, 10.0f, 10.0f)
             volume!!.name = "Game of Life 3D"
             sciView.centerOnNode(volume)
 

@@ -26,61 +26,37 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add;
+package sc.iview.commands.edit.add
 
-import graphics.scenery.Node;
-import net.imagej.Dataset;
-import net.imagej.ops.OpService;
-
-import org.scijava.command.Command;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-
-import sc.iview.SciView;
-
-import static sc.iview.commands.MenuWeights.*;
+import graphics.scenery.Protein
+import graphics.scenery.RibbonDiagram
+import org.joml.Vector3f
+import org.scijava.command.Command
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights
+import sc.iview.commands.MenuWeights.EDIT_ADD
 
 /**
- * Command to add a volume to the scene.
+ * Command to add a box to the scene
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Add", weight = EDIT_ADD), //
-                 @Menu(label = "Volume", weight = EDIT_ADD_VOLUME) })
-public class AddVolume implements Command {
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Edit", weight = MenuWeights.EDIT), Menu(label = "Add", weight = EDIT_ADD), Menu(label = "Protein from PDB ...", weight = MenuWeights.EDIT_ADD_BOX)])
+class AddProtein : Command {
 
     @Parameter
-    private LogService log;
+    private lateinit var sciView: SciView
 
-    @Parameter
-    private OpService ops;
+    @Parameter(label = "Protein")
+    private var protein: String = "2rnm"
 
-    @Parameter
-    private SciView sciView;
-
-    @Parameter
-    private Dataset image;
-
-    @Parameter(label = "Voxel Size X")
-    private float voxelWidth = 1.0f;
-
-    @Parameter(label = "Voxel Size Y")
-    private float voxelHeight = 1.0f;
-
-    @Parameter(label = "Voxel Size Z")
-    private float voxelDepth = 1.0f;
-
-    @Parameter(label = "Global rendering scale")
-    private float renderScale = 1.0f;
-
-    @Override
-    public void run() {
-        Node n = sciView.addVolume( image, new float[] { voxelWidth, voxelHeight, voxelDepth } );
+    override fun run() {
+        val ribbon = RibbonDiagram(Protein.fromID(protein))
+        ribbon.name = protein
+        ribbon.scale = Vector3f(0.1f)
+        sciView.addNode(ribbon, true)
     }
-
 }
