@@ -190,7 +190,7 @@ gradle-app.setting
 /.settings/
 
 # IntelliJ
-#.idea/ Wrong
+.idea/
 #*.ipr Duplicate
 #*.iml Duplicate
 
