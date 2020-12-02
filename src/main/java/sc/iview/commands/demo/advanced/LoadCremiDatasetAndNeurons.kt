@@ -99,7 +99,7 @@ class LoadCremiDatasetAndNeurons: Command {
         }
         val files = ui.chooseFiles(null, emptyList(), filter, FileWidget.OPEN_STYLE)
 
-        val nai = readCremiHDF5(files.first().canonicalPath, 0.5)
+        val nai = readCremiHDF5(files.first().canonicalPath, 1.0)
 
         if(nai == null) {
             log.error("Could not get neuron IDs")
@@ -114,7 +114,7 @@ class LoadCremiDatasetAndNeurons: Command {
 
         val volume = sciview.addVolume(nai.third, files.first().name) as? Volume
         volume?.origin = Origin.FrontBottomLeft
-        volume?.scale = Vector3f(0.04f, 0.04f, 2.5f)
+        volume?.scale = Vector3f(0.08f, 0.08f, 5.0f)
         volume?.transferFunction = TransferFunction.ramp(0.3f, 0.1f, 0.1f)
         // min 20, max 180, color map fire
 
