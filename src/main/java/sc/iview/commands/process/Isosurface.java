@@ -66,7 +66,7 @@ public class Isosurface<T extends RealType> implements Command {
     @Parameter
     private SciView sciView;
 
-    @Parameter
+    @Parameter(persist = false)
     private IterableInterval<T> image;
 
     @Parameter
