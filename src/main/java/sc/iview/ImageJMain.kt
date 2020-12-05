@@ -28,17 +28,7 @@
  */
 package sc.iview
 
-import net.imagej.lut.LUTService
-import net.imagej.ops.OpService
-import net.imagej.units.UnitService
-import org.scijava.Context
-import org.scijava.console.ConsoleService
-import org.scijava.io.IOService
-import org.scijava.menu.MenuService
-import org.scijava.options.OptionsService
-import org.scijava.tool.ToolService
 import org.scijava.ui.UIService
-import org.scijava.ui.swing.SwingIconService
 
 /**
  * Entry point for testing SciView functionality.

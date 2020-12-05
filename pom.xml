@@ -108,10 +108,12 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
+		<scijava.jvm.build.version>11</scijava.jvm.build.version>
+
 		<scenery.version>5de0b1e</scenery.version>
 <!--		<scijava-common.version>2.84.0</scijava-common.version>-->
 		<ui-behaviour.version>2.0.3</ui-behaviour.version>
-		<imagej-mesh.version>a40d46f</imagej-mesh.version>
+		<imagej-mesh.version>0.8.1</imagej-mesh.version>
 		<bigdataviewer-vistools.version>1.0.0-beta-21</bigdataviewer-vistools.version>
 
 		<kotlin.version>1.4.20</kotlin.version>
@@ -442,4 +444,18 @@
 		</plugins>
 	</build>
 
+	<profiles>
+		<profile>
+			<id>sciview</id>
+			<activation>
+				<jdk>[8,)</jdk>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<properties>
+			  <scijava.jvm.version>11</scijava.jvm.version>
+			        <org.apache.maven.plugins.enforcer.RequireJavaVersion>[8,)</org.apache.maven.plugins.enforcer.RequireJavaVersion>
+				<maven.compiler.release>${scijava.jvm.version}</maven.compiler.release>
+			</properties>
+		</profile>
+	</profiles>
 </project>
