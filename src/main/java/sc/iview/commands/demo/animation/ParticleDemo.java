@@ -32,6 +32,7 @@ import graphics.scenery.*;
 import graphics.scenery.backends.ShaderType;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
 import org.scijava.io.IOService;
@@ -105,7 +106,7 @@ public class ParticleDemo implements Command {
         master.setMaterial(mat);
         master.setName("Agent_Master");
         master.getInstancedProperties().put("ModelMatrix", master::getModel);
-        master.getInstancedProperties().put("Color", () -> new Vector3f(0.5f, 0.5f, 0.5f));
+        master.getInstancedProperties().put("Color", () -> new Vector4f(0.5f, 0.5f, 0.5f, 1.0f));
         //master.getInstancedProperties().put("Material", master::getMaterial);
         sciView.addNode(master);
 
@@ -122,7 +123,7 @@ public class ParticleDemo implements Command {
 
             Vector3f vel = new Vector3f(rng.nextFloat(),rng.nextFloat(),rng.nextFloat());
 
-            final Vector3f col = new Vector3f(rng.nextFloat(),rng.nextFloat(), ((float) k) / ((float) numAgents));
+            final Vector4f col = new Vector4f(rng.nextFloat(),rng.nextFloat(), ((float) k) / ((float) numAgents), 1.0f);
 
             n.getInstancedProperties().put("Color", () -> col);
             n.setMaterial(master.getMaterial());
@@ -153,6 +154,7 @@ public class ParticleDemo implements Command {
 
                 agent.setPosition(pos.add(vel.mul(dt)));
                 agent.setNeedsUpdate(true);
+                agent.setNeedsUpdateWorld(true);
             }
         }));
 
