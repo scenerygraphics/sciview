@@ -145,14 +145,13 @@ public class ParticleDemo implements Command {
                 if( pos.lengthSquared() > maxL2 ) {
                     // Switch velocity to point toward center + some random perturbation
                     Vector3f perturb = new Vector3f(threadRng.nextFloat() - 0.5f, threadRng.nextFloat() - 0.5f, threadRng.nextFloat() - 0.5f);
-                    vel = pos.mul(-1).add(perturb).normalize();
+                    vel = new Vector3f(pos).mul(-1).add(perturb).normalize();
                     faceNodeAlongVelocity(agent, vel);
-
                 } else {
                     vel = (Vector3f) agent.getMetadata().get("velocity");
                 }
 
-                agent.setPosition(pos.add(vel.mul(dt)));
+                agent.setPosition(pos.add(new Vector3f(vel).mul(dt)));
                 agent.setNeedsUpdate(true);
                 agent.setNeedsUpdateWorld(true);
             }
