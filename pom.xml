@@ -108,7 +108,9 @@
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
-		<scijava.jvm.build.version>11</scijava.jvm.build.version>
+		<scijava.jvm.build.version>8</scijava.jvm.build.version>
+		<scijava.jvm.test.version>${scijava.jvm.version}</scijava.jvm.test.version>
+		<scijava.jvm.build.version>[1.8.0-101,)</scijava.jvm.build.version>
 
 		<scenery.version>5de0b1e</scenery.version>
 <!--		<scijava-common.version>2.84.0</scijava-common.version>-->
@@ -446,14 +448,11 @@
 
 	<profiles>
 		<profile>
-			<id>sciview</id>
+			<id>java-9</id>
 			<activation>
-				<jdk>[8,)</jdk>
-				<activeByDefault>true</activeByDefault>
+				<jdk>[9,)</jdk>
 			</activation>
 			<properties>
-			  <scijava.jvm.version>11</scijava.jvm.version>
-			        <org.apache.maven.plugins.enforcer.RequireJavaVersion>[8,)</org.apache.maven.plugins.enforcer.RequireJavaVersion>
 				<maven.compiler.release>${scijava.jvm.version}</maven.compiler.release>
 			</properties>
 		</profile>
