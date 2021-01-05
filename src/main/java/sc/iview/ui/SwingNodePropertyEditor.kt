@@ -151,7 +151,7 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
     @EventHandler
     private fun onEvent(evt: NodeChangedEvent) {
         val node = evt.node ?: return
-        if (node != sciView.activeNode) {
+        if (node == sciView.activeNode) {
             updateProperties(sciView.activeNode)
         }
         updateTree(node)
