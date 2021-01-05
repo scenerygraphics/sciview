@@ -347,13 +347,22 @@ class Properties : InteractiveCommand() {
             val lutNameItem = info.getMutableInput("colormapName", String::class.java)
             lutNameItem.setChoices(lutService.findLUTs().keys.toMutableList())
 
-            timepoint = node.currentTimepoint
-            info.getMutableInput("timepoint", java.lang.Integer::class.java).minimumValue = java.lang.Integer.valueOf(0) as java.lang.Integer
+            val timeMax = node.timepointCount - 1
 
-            info.getMutableInput("timepoint", java.lang.Integer::class.java).maximumValue = java.lang.Integer.valueOf(node.timepointCount-1) as java.lang.Integer
+            if(timeMax > 0) {
+                timepoint = node.currentTimepoint
+                info.getMutableInput("timepoint", java.lang.Integer::class.java).minimumValue = java.lang.Integer.valueOf(0) as java.lang.Integer
 
-            min = node.converterSetups[0].displayRangeMin.toInt()
-            max = node.converterSetups[0].displayRangeMax.toInt()
+                info.getMutableInput("timepoint", java.lang.Integer::class.java).maximumValue = java.lang.Integer.valueOf(timeMax) as java.lang.Integer
+
+                min = node.converterSetups[0].displayRangeMin.toInt()
+                max = node.converterSetups[0].displayRangeMax.toInt()
+            } else {
+                maybeRemoveInput("timepoint", java.lang.Integer::class.java)
+                maybeRemoveInput("playPauseButton", Button::class.java)
+                maybeRemoveInput("playSpeed", java.lang.Integer::class.java)
+            }
+
             maybeRemoveInput("colour", ColorRGB::class.java)
         } else {
             maybeRemoveInput("renderingMode", String::class.java)
