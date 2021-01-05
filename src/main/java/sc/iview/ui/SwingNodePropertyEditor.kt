@@ -285,6 +285,7 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                 val pluginInstance = pluginService.createInstance(pluginInfo)
                 val harvester = pluginInstance as SwingGroupingInputHarvester
                 inputPanel = harvester.createInputPanel()
+                inputPanel.component.layout = MigLayout("fillx,wrap 1", "[right,fill,grow]")
 
                 // Build the panel.
                 try {
