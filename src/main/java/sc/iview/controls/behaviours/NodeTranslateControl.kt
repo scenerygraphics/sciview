@@ -59,7 +59,8 @@ class NodeTranslateControl(protected val sciView: SciView) : DragBehaviour, Scro
     override fun drag(x: Int, y: Int) {
         val targetedNode = sciView.activeNode;
         val cam = sciView.camera ?: return
-        if (targetedNode == null || !targetedNode.lock.tryLock()) return
+        val renderable = targetedNode?.renderable() ?: return
+        if (!renderable.lock.tryLock()) return
 
         cam.right.mul((x - lastX) * sciView.getFPSSpeedSlow() * sciView.getMouseSpeed(), dragPosUpdater )
         targetedNode.position.add( dragPosUpdater )
@@ -67,7 +68,7 @@ class NodeTranslateControl(protected val sciView: SciView) : DragBehaviour, Scro
         targetedNode.position.add( dragPosUpdater )
         targetedNode.needsUpdate = true
 
-        targetedNode.lock.unlock()
+        renderable.lock.unlock()
 
         lastX = x
         lastY = y
@@ -79,13 +80,14 @@ class NodeTranslateControl(protected val sciView: SciView) : DragBehaviour, Scro
     override fun scroll(wheelRotation: Double, isHorizontal: Boolean, x: Int, y: Int) {
         val targetedNode = sciView.activeNode;
         val cam = sciView.camera ?: return
-        if (targetedNode == null || !targetedNode.lock.tryLock()) return
+        val renderable = targetedNode?.renderable() ?: return
+        if (!renderable.lock.tryLock()) return
 
         cam.forward.mul( wheelRotation.toFloat() * sciView.getFPSSpeedSlow() * sciView.getMouseSpeed(), scrollPosUpdater )
         targetedNode.position.add( scrollPosUpdater );
         targetedNode.needsUpdate = true
 
-        targetedNode.lock.unlock()
+        renderable.lock.unlock()
     }
 
     //aux vars to prevent from re-creating them over and over

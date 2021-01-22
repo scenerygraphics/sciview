@@ -12,9 +12,9 @@ import java.util.ArrayList
  *
  * @author Kyle Harrington
  */
-class Line3D : Node {
-    private var edges: MutableList<Node>
-    private var joints: MutableList<Node>? = null
+class Line3D : RenderableNode {
+    private var edges: MutableList<RenderableNode>
+    private var joints: MutableList<RenderableNode>? = null
     private var edgeWidth = 0.05
     private var defaultColor = Colors.LIGHTSALMON
     private val sphereJoints = true
@@ -30,7 +30,7 @@ class Line3D : Node {
         if (sphereJoints) joints = ArrayList()
         for (k in points.indices) {
             if (k > 0) {
-                val edge: Node = Cylinder.betweenPoints(
+                val edge = Cylinder.betweenPoints(
                         points[k - 1],
                         points[k],
                         edgeWidth.toFloat(),
@@ -39,7 +39,7 @@ class Line3D : Node {
                 addLine(edge)
             }
             if (sphereJoints) {
-                val joint: Node = Sphere(edgeWidth.toFloat(), 15)
+                val joint = Sphere(edgeWidth.toFloat(), 15)
                 joint.position = points[k]
                 joints!!.add(joint)
                 addChild(joint)
@@ -58,17 +58,17 @@ class Line3D : Node {
             mat.ambient = c
             mat.specular = c
             if (k > 0) {
-                val edge: Node = Cylinder.betweenPoints(
+                val edge = Cylinder.betweenPoints(
                         points[k - 1],
                         points[k],
                         edgeWidth.toFloat(),
                         1f,
                         15)
-                edge.material = mat
+                edge.renderable().material = mat
                 addLine(edge)
             }
             if (sphereJoints) {
-                val joint: Node = Sphere(edgeWidth.toFloat(), 15)
+                val joint = Sphere(edgeWidth.toFloat(), 15)
                 joint.material = mat
                 joint.position = points[k]
                 joints!!.add(joint)
@@ -93,13 +93,13 @@ class Line3D : Node {
         }
     }
 
-    fun addLine(l: Node) {
+    fun addLine(l: RenderableNode) {
         edges.add(l)
         addChild(l)
         generateBoundingBox()
     }
 
-    fun getEdges(): List<Node> {
+    fun getEdges(): List<RenderableNode> {
         return edges
     }
 
@@ -108,7 +108,7 @@ class Line3D : Node {
      * geometry information into consideration if this Node implements [HasGeometry].
      * In case a bounding box cannot be determined, the function will return null.
      */
-    override fun generateBoundingBox(): OrientedBoundingBox? {
+    override fun generateBoundingBox(): OrientedBoundingBox {
         var bb = OrientedBoundingBox(this, 0.0f, 0.0f, 0.0f,
                 0.0f, 0.0f, 0.0f)
         for (n in children) {

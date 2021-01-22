@@ -28,7 +28,12 @@
  */
 package sc.iview.commands.edit.add;
 
-import graphics.scenery.*;
+import graphics.scenery.Camera;
+import graphics.scenery.Cylinder;
+import graphics.scenery.Icosphere;
+import graphics.scenery.Material;
+import graphics.scenery.Node;
+import graphics.scenery.RenderableNode;
 import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -41,7 +46,9 @@ import sc.iview.SciView;
 
 import java.util.HashMap;
 
-import static sc.iview.commands.MenuWeights.*;
+import static sc.iview.commands.MenuWeights.EDIT;
+import static sc.iview.commands.MenuWeights.EDIT_ADD;
+import static sc.iview.commands.MenuWeights.EDIT_ADD_COMPASS;
 
 /**
  * Command to orientation compass (R,G,B cylinders oriented along X,Y,Z axes, respectively) to the scene
@@ -93,7 +100,7 @@ public class AddOrientationCompass implements Command {
 
     @Override
     public void run() {
-        final Node root = new Node("Scene orientation compass");
+        final Node root = new RenderableNode("Scene orientation compass");
 
         //NB: RGB colors ~ XYZ axes
         //x axis:

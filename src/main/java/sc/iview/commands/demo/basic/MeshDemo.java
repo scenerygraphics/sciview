@@ -100,9 +100,6 @@ public class MeshDemo implements Command {
 
         msh.setMaterial( mat );
 
-        msh.setNeedsUpdate( true );
-        msh.setDirty( true );
-
         sciView.getFloor().setPosition(new Vector3f(0, -25, 0));
 
         sciView.setActiveNode(msh);

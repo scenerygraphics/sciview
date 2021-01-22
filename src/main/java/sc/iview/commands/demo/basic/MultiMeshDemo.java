@@ -112,9 +112,6 @@ public class MultiMeshDemo implements Command {
 
             msh.setMaterial(mat);
 
-            msh.setNeedsUpdate(true);
-            msh.setDirty(true);
-
             meshes.add(msh);
         }
 

@@ -99,9 +99,6 @@ public class TextDemo implements Command {
 
         msh.setMaterial( mat );
 
-        msh.setNeedsUpdate( true );
-        msh.setDirty( true );
-
         TextBoard board = new TextBoard();
         board.setText("This mesh was contributed by Robert Wiese!");
         board.setName("TextBoard");

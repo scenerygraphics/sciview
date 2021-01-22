@@ -108,9 +108,6 @@ public class SceneRiggingDemo implements Command {
 
         msh.setMaterial( mat );
 
-        msh.setNeedsUpdate( true );
-        msh.setDirty( true );
-
         sciView.centerOnNode( sciView.getActiveNode() );
 
         for( PointLight light : sciView.getLights() ) {

@@ -429,7 +429,7 @@ open class Controls(val sciview: SciView) {
     private var secondNode = false
 
     fun setDistanceMeasurer() {
-        var lastNode = Node("lastNode")
+        var lastNode : Node = RenderableNode("lastNode")
         val distanceAction = { nearest: Scene.RaycastResult, x: Int, y: Int ->
             if (nearest.matches.isNotEmpty()) {
                 // copy reference on the last object picking result into "public domain"

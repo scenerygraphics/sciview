@@ -1237,7 +1237,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         n.metadata["sciviewColormap"] = colorTable
         if (n is Volume) {
             n.colormap = Colormap.fromColorTable(colorTable)
-            n.dirty = true
+            n.renderable()?.dirty = true
             n.needsUpdate = true
         }
     }

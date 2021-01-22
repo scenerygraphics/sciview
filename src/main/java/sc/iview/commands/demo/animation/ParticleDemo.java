@@ -89,7 +89,7 @@ public class ParticleDemo implements Command {
 
         float maxL2 = maxX * maxX + maxY * maxY + maxZ * maxZ;
 
-        Node master = new Cone(5, 10, 25, new Vector3f(0,0,1));
+        Cone master = new Cone(5, 10, 25, new Vector3f(0,0,1));
         //Material mat = ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag");
         List<ShaderType> sList = new ArrayList<>();
         sList.add(ShaderType.VertexShader);
@@ -105,17 +105,13 @@ public class ParticleDemo implements Command {
         mat.setRoughness(0.5f);
         master.setMaterial(mat);
         master.setName("Agent_Master");
-        master.getInstancedProperties().put("ModelMatrix", master::getModel);
-        master.getInstancedProperties().put("Color", () -> new Vector4f(0.5f, 0.5f, 0.5f, 1.0f));
-        //master.getInstancedProperties().put("Material", master::getMaterial);
+        InstancedNode instancedNode = new InstancedNode(master, "Agent");
+        instancedNode.getProperties().put("Color", () -> new Vector4f(0.5f, 0.5f, 0.5f, 1.0f));
         sciView.addNode(master);
 
         for( int k = 0; k < numAgents; k++ ) {
-            Node n = new graphics.scenery.Mesh();
+            InstancedNode.Instance n = instancedNode.addInstance();
             n.setName("agent_" + k);
-            n.getInstancedProperties().put("ModelMatrix", n::getWorld);
-
-            //n.getInstancedProperties().put("Material", n::getMaterial);
 
             float x = rng.nextFloat()*maxX;
             float y = rng.nextFloat()*maxY;
@@ -125,13 +121,12 @@ public class ParticleDemo implements Command {
 
             final Vector4f col = new Vector4f(rng.nextFloat(),rng.nextFloat(), ((float) k) / ((float) numAgents), 1.0f);
 
-            n.getInstancedProperties().put("Color", () -> col);
+            n.getProperties().put("Color", () -> col);
             n.setMaterial(master.getMaterial());
 
             n.setPosition(new Vector3f(x,y,z));
             faceNodeAlongVelocity(n, vel);
 
-            master.getInstances().add(n);
             //sciView.addNode(n);
             agents.add(n);
         }

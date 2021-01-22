@@ -71,7 +71,7 @@ class VolumeTimeseriesDemo : Command {
         val v = sciView.addVolume(dataset, floatArrayOf(1f, 1f, 1f, 1f)) as Volume?
         v?.pixelToWorldRatio = 10f
         v?.name = "Volume Render Demo"
-        v?.dirty = true
+        v?.renderable()?.dirty = true
         v?.needsUpdate = true
 
         bdv.bdvHandle.viewerPanel.addTimePointListener { t ->
