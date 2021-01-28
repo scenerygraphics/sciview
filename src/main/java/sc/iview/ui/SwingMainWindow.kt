@@ -57,21 +57,6 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
             System.err.println("Failed to initialize Flat Light LaF, falling back to Swing default.")
         }
 
-        // TODO: check for jdk 8 v. jdk 11 on linux and choose renderer accordingly
-        if (Platform.get() === Platform.LINUX) {
-            var version = System.getProperty("java.version")
-            if (version.startsWith("1.")) {
-                version = version.substring(2, 3)
-            } else {
-                val dot = version.indexOf(".")
-                if (dot != -1) {
-                    version = version.substring(0, dot)
-                }
-            }
-
-            // If Linux and JDK 8, then use OpenGLRenderer
-            if (version == "8") System.setProperty("scenery.Renderer", "OpenGLRenderer")
-        }
         var x: Int
         var y: Int
         try {
