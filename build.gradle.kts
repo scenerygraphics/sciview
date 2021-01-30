@@ -136,18 +136,7 @@ tasks {
     }
     // https://docs.gradle.org/current/userguide/java_testing.html#test_filtering
     test {
-        // apparently `testLotsOfProteins` needs also a lot of heap..
-        maxHeapSize = "1G"
-        // [Debug] before running every test, prints out its name
-        //        beforeTest(closureOf<TestDescriptor?> { logger.lifecycle("Running test: $this") })
-        val gpuPresent = project.properties["gpu"]?.toString()?.toBoolean() == true
-        println("gpuPresent=$gpuPresent")
-        if (!gpuPresent)
-            filter { excludeTestsMatching("ExampleRunner") }
         finalizedBy(jacocoTestReport) // report is always generated after tests run
-    }
-    register("testMeAll", Test::class) { // lets take this for comfortability in local development
-        filter { includeTestsMatching("ExampleRunner") }
     }
     jar {
         archiveVersion.set(rootProject.version.toString())
@@ -158,7 +147,7 @@ tasks {
         dokkaSourceSets.configureEach {
             sourceLink {
                 localDirectory.set(file("src/main/kotlin"))
-                remoteUrl.set(URL("https://github.com/scenerygraphics/scenery/tree/master/src/main/kotlin"))
+                remoteUrl.set(URL("https://github.com/scenerygraphics/sciview/tree/master/src/main/kotlin"))
                 remoteLineSuffix.set("#L")
             }
         }
