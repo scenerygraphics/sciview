@@ -68,17 +68,18 @@ class VolumeTimeseriesDemo : Command {
         val dataset = makeDataset()
 
         val bdv = BdvFunctions.show(dataset, "test")
-        val v = sciView.addVolume(dataset, floatArrayOf(1f, 1f, 1f, 1f)) as Volume?
-        v?.pixelToWorldRatio = 10f
-        v?.name = "Volume Render Demo"
-        v?.dirty = true
-        v?.needsUpdate = true
+        sciView.addVolume(dataset, floatArrayOf(1f, 1f, 1f, 1f)) {
+            pixelToWorldRatio = 10f
+            name = "Volume Render Demo"
+            dirty = true
+            needsUpdate = true
 
-        bdv.bdvHandle.viewerPanel.addTimePointListener { t ->
-            v?.goToTimepoint(t.coerceIn(0, v.timepointCount-1))
+            bdv.bdvHandle.viewerPanel.addTimePointListener { t ->
+                goToTimepoint(t.coerceIn(0, timepointCount-1))
+            }
+
+            sciView.setActiveNode(this)
         }
-
-        sciView.setActiveNode(v)
         sciView.centerOnNode(sciView.activeNode)
     }
 

@@ -576,7 +576,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     @JvmOverloads
     fun addBox(position: Vector3f = Vector3f(0.0f, 0.0f, 0.0f), size: Vector3f = Vector3f(1.0f, 1.0f, 1.0f), color: ColorRGB = DEFAULT_COLOR,
-               inside: Boolean = false): Box {
+               inside: Boolean = false, block: Box.() -> Unit = {}): Box {
         // TODO: use a material from the current palate by default
         val boxmaterial = Material()
         boxmaterial.ambient = Vector3f(1.0f, 0.0f, 0.0f)
@@ -586,7 +586,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         val box = Box(size, inside)
         box.material = boxmaterial
         box.position = position
-        return addNode(box)
+        return addNode(box, block = block)
     }
 
     /**
@@ -594,7 +594,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return the Node corresponding to the sphere
      */
     @JvmOverloads
-    fun addSphere(position: Vector3f = Vector3f(0.0f, 0.0f, 0.0f), radius: Float = 1f, color: ColorRGB = DEFAULT_COLOR): Sphere {
+    fun addSphere(position: Vector3f = Vector3f(0.0f, 0.0f, 0.0f), radius: Float = 1f, color: ColorRGB = DEFAULT_COLOR, block: Sphere.() -> Unit = {}): Sphere {
         val material = Material()
         material.ambient = Vector3f(1.0f, 0.0f, 0.0f)
         material.diffuse = Utils.convertToVector3f(color)
@@ -603,8 +603,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         val sphere = Sphere(radius, 20)
         sphere.material = material
         sphere.position = position
-
-        return addNode(sphere)
+        return addNode(sphere, block = block)
     }
 
     /**
@@ -615,10 +614,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param num_segments number of segments to represent the cylinder
      * @return  the Node corresponding to the cylinder
      */
-    fun addCylinder(position: Vector3f, radius: Float, height: Float, num_segments: Int): Cylinder {
+    fun addCylinder(position: Vector3f, radius: Float, height: Float, num_segments: Int, block: Cylinder.() -> Unit = {}): Cylinder {
         val cyl = Cylinder(radius, height, num_segments)
         cyl.position = position
-        return addNode(cyl)
+        return addNode(cyl, block = block)
     }
 
     /**
@@ -629,10 +628,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param num_segments number of segments used to represent cone
      * @return  the Node corresponding to the cone
      */
-    fun addCone(position: Vector3f, radius: Float, height: Float, num_segments: Int): Cone {
+    fun addCone(position: Vector3f, radius: Float, height: Float, num_segments: Int, block: Cone.() -> Unit = {}): Cone {
         val cone = Cone(radius, height, num_segments, Vector3f(0.0f, 0.0f, 1.0f))
         cone.position = position
-        return addNode(cone)
+        return addNode(cone, block = block)
     }
 
     /**
@@ -643,8 +642,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return the Node corresponding to the line
      */
     @JvmOverloads
-    fun addLine(start: Vector3f = Vector3f(0.0f, 0.0f, 0.0f), stop: Vector3f = Vector3f(1.0f, 1.0f, 1.0f), color: ColorRGB = DEFAULT_COLOR): Line {
-        return addLine(arrayOf(start, stop), color, 0.1)
+    fun addLine(start: Vector3f = Vector3f(0.0f, 0.0f, 0.0f), stop: Vector3f = Vector3f(1.0f, 1.0f, 1.0f), color: ColorRGB = DEFAULT_COLOR, block: Line.() -> Unit = {}): Line {
+        return addLine(arrayOf(start, stop), color, 0.1, block)
     }
 
     /**
@@ -654,7 +653,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param edgeWidth width of line segments
      * @return the Node corresponding to the line
      */
-    fun addLine(points: Array<Vector3f>, color: ColorRGB, edgeWidth: Double): Line {
+    @JvmOverloads
+    fun addLine(points: Array<Vector3f>, color: ColorRGB, edgeWidth: Double, block: Line.() -> Unit = {}): Line {
         val material = Material()
         material.ambient = Vector3f(1.0f, 1.0f, 1.0f)
         material.diffuse = Utils.convertToVector3f(color)
@@ -666,14 +666,15 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         line.edgeWidth = edgeWidth.toFloat()
         line.material = material
         line.position = points[0]
-        return addNode(line)
+        return addNode(line, block = block)
     }
 
     /**
      * Add a PointLight source at the origin
      * @return a Node corresponding to the PointLight
      */
-    fun addPointLight(): PointLight {
+    @JvmOverloads
+    fun addPointLight(block: PointLight.() -> Unit = {}): PointLight {
         val material = Material()
         material.ambient = Vector3f(1.0f, 0.0f, 0.0f)
         material.diffuse = Vector3f(0.0f, 1.0f, 0.0f)
@@ -682,7 +683,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         light.material = material
         light.position = Vector3f(0.0f, 0.0f, 0.0f)
         lights!!.add(light)
-        return addNode(light)
+        return addNode(light, block = block)
     }
 
     /**
@@ -762,7 +763,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @JvmOverloads
     fun addPointCloud(points: Collection<RealLocalizable>,
                       name: String? = "PointCloud",
-                      pointSize : Float = 1.0f): PointCloud {
+                      pointSize : Float = 1.0f,
+                      block: PointCloud.() -> Unit = {}): PointCloud {
         val flatVerts = FloatArray(points.size * 3)
         var k = 0
         for (point in points) {
@@ -782,7 +784,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         pointCloud.position = Vector3f(0f, 0f, 0f)
 
         pointCloud.setupPointCloud()
-        return addNode(pointCloud)
+        return addNode(pointCloud, block = block)
     }
 
     /**
@@ -790,10 +792,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param pointCloud existing PointCloud to add to scene
      * @return a Node corresponding to the PointCloud
      */
-    fun addPointCloud(pointCloud: PointCloud): PointCloud {
+    @JvmOverloads
+    fun addPointCloud(pointCloud: PointCloud, block: PointCloud.() -> Unit = {}): PointCloud {
         pointCloud.setupPointCloud()
         pointCloud.position = Vector3f(0f, 0f, 0f)
-        return addNode(pointCloud)
+        return addNode(pointCloud, block = block)
     }
 
     /**
@@ -803,8 +806,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return a Node corresponding to the Node
      */
     @JvmOverloads
-    fun <N: Node?> addNode(n: N, activePublish: Boolean = true): N {
+    fun <N: Node?> addNode(n: N, activePublish: Boolean = true, block: N.() -> Unit = {}): N {
         n?.let {
+            it.block()
             scene.addChild(it)
             objectService.addObject(n)
             if (blockOnNewNodes) {
@@ -1123,14 +1127,15 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param image image to add as a volume
      * @return a Node corresponding to the Volume
      */
-    fun addVolume(image: Dataset): Volume {
+    @JvmOverloads
+    fun addVolume(image: Dataset, block: Volume.() -> Unit = {}): Volume {
         val voxelDims = FloatArray(image.numDimensions())
         for (d in voxelDims.indices) {
             val inValue = image.axis(d).averageScale(0.0, 1.0)
             if (image.axis(d).unit() == null) voxelDims[d] = inValue.toFloat() else voxelDims[d] = unitService.value(inValue, image.axis(d).unit(), axis(d)!!.unit()).toFloat()
         }
         logger.info("Adding with ${voxelDims.joinToString(",")}")
-        return addVolume(image, voxelDims)
+        return addVolume(image, voxelDims, block)
     }
 
     /**
@@ -1139,10 +1144,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param voxelDimensions dimensions of voxels in volume
      * @return a Node corresponding to the Volume
      */
+    @JvmOverloads
     @Suppress("UNCHECKED_CAST")
-    fun addVolume(image: Dataset, voxelDimensions: FloatArray): Volume {
+    fun addVolume(image: Dataset, voxelDimensions: FloatArray, block: Volume.() -> Unit = {}): Volume {
         return addVolume<RealType<*>>(image.imgPlus as RandomAccessibleInterval<RealType<*>>, image.name ?: "Volume",
-                *voxelDimensions)
+                *voxelDimensions, block = block)
     }
 
     /**
@@ -1151,8 +1157,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param <T> pixel type of image
      * @return a Node corresponding to the volume
     </T> */
-    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, name: String = "Volume"): Volume {
-        return addVolume(image, name, 1f, 1f, 1f)
+    @JvmOverloads
+    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, name: String = "Volume", block: Volume.() -> Unit = {}): Volume {
+        return addVolume(image, name, 1f, 1f, 1f, block = block)
     }
 
     /**
@@ -1161,8 +1168,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param <T> pixel type of image
      * @return a Node corresponding to the volume
     </T> */
-    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, voxelDimensions: FloatArray): Volume {
-        return addVolume(image, "volume", *voxelDimensions)
+    @JvmOverloads
+    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, voxelDimensions: FloatArray, block: Volume.() -> Unit = {}): Volume {
+        return addVolume(image, "volume", *voxelDimensions, block = block)
     }
 
     /**
@@ -1251,13 +1259,15 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param <T> Type of the dataset.
      * @return THe node corresponding to the volume just added.
     </T> */
+    @JvmOverloads
     fun <T : RealType<T>> addVolume(sac: SourceAndConverter<T>,
                                     numTimepoints: Int,
                                     name: String = "Volume",
-                                    vararg voxelDimensions: Float): Volume {
+                                    vararg voxelDimensions: Float,
+                                    block: Volume.() -> Unit = {}): Volume {
         val sources: MutableList<SourceAndConverter<T>> = ArrayList()
         sources.add(sac)
-        return addVolume(sources, numTimepoints, name, *voxelDimensions)
+        return addVolume(sources, numTimepoints, name, *voxelDimensions, block = block)
     }
 
     /**
@@ -1269,8 +1279,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param <T> pixel type of image
      * @return a Node corresponding to the Volume
     </T> */
+    @JvmName("addVolume1")
+    @JvmOverloads
     fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, name: String = "Volume",
-                                    vararg voxelDimensions: Float): Volume {
+                                    vararg voxelDimensions: Float, block: Volume.() -> Unit = {}): Volume {
         //log.debug( "Add Volume " + name + " image: " + image );
         val dimensions = LongArray(image.numDimensions())
         image.dimensions(dimensions)
@@ -1299,7 +1311,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             converterSetups.add(BigDataViewer.createConverterSetup(source, setupId.getAndIncrement()))
             sources.add(source)
         }
-        val v = addVolume(sources, numTimepoints, name, *voxelDimensions)
+        val v = addVolume(sources, numTimepoints, name, *voxelDimensions, block = block)
         v.metadata.set("RandomAccessibleInterval", image)
         return v
     }
@@ -1315,12 +1327,14 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param <T> Type of the dataset.
      * @return THe node corresponding to the volume just added.
     </T> */
+    @JvmOverloads
     @Suppress("UNCHECKED_CAST")
     fun <T : NumericType<T>> addVolume(sources: List<SourceAndConverter<T>>,
                                        converterSetups: ArrayList<ConverterSetup>,
                                        numTimepoints: Int,
                                        name: String = "Volume",
-                                       vararg voxelDimensions: Float): Volume {
+                                       vararg voxelDimensions: Float,
+                                       block: Volume.() -> Unit = {}): Volume {
         var timepoints = numTimepoints
         var cacheControl: CacheControl? = null
 
@@ -1363,7 +1377,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         tf.addControlPoint(1.0f, rampMax)
         val bg = BoundingGrid()
         bg.node = v
-        return addNode(v)
+        return addNode(v, block = block)
     }
 
     /**
@@ -1375,16 +1389,18 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param <T> Type of the dataset.
      * @return THe node corresponding to the volume just added.
     </T> */
+    @JvmOverloads
     fun <T : RealType<T>> addVolume(sources: List<SourceAndConverter<T>>,
                                     numTimepoints: Int,
                                     name: String = "Volume",
-                                    vararg voxelDimensions: Float): Volume {
+                                    vararg voxelDimensions: Float,
+                                    block: Volume.() -> Unit = {}): Volume {
         var setupId = 0
         val converterSetups = ArrayList<ConverterSetup>()
         for (source in sources) {
             converterSetups.add(BigDataViewer.createConverterSetup(source, setupId++))
         }
-        return addVolume(sources, converterSetups, numTimepoints, name, *voxelDimensions)
+        return addVolume(sources, converterSetups, numTimepoints, name, *voxelDimensions, block = block)
     }
 
     /**
@@ -1399,7 +1415,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     </T> */
     @Suppress("UNCHECKED_CAST")
     fun <T : RealType<T>> updateVolume(image: IterableInterval<T>, name: String,
-                                       voxelDimensions: FloatArray, v: Volume): Node {
+                                       voxelDimensions: FloatArray, v: Volume): Volume {
         val sacs = v.metadata["sources"] as List<SourceAndConverter<T>>?
         val source = sacs!![0].spimSource.getSource(0, 0) // hard coded to timepoint and mipmap 0
         val sCur = Views.iterable(source).cursor()

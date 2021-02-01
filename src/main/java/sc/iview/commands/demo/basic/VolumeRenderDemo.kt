@@ -89,11 +89,12 @@ class VolumeRenderDemo : Command {
             log.error(exc)
             return
         }
-        val v = sciView.addVolume(cube, floatArrayOf(1f, 1f, 1f))
-        v.pixelToWorldRatio = 10f
-        v.name = "Volume Render Demo"
-        v.dirty = true
-        v.needsUpdate = true
+        val v = sciView.addVolume(cube, floatArrayOf(1f, 1f, 1f)) {
+            pixelToWorldRatio = 10f
+            name = "Volume Render Demo"
+            dirty = true
+            needsUpdate = true
+        }
         if (iso) {
             val isoLevel = 1
 

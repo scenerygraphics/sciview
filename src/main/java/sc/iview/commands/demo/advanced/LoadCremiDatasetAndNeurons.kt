@@ -112,19 +112,20 @@ class LoadCremiDatasetAndNeurons: Command {
             cursor.get().set(0)
         }
 
-        val volume = sciview.addVolume(nai.third, files.first().name) as? Volume
-        volume?.origin = Origin.FrontBottomLeft
-        volume?.scale = Vector3f(0.08f, 0.08f, 5.0f)
-        volume?.transferFunction = TransferFunction.ramp(0.3f, 0.1f, 0.1f)
-        // min 20, max 180, color map fire
-
-        volume?.transferFunction?.addControlPoint(0.3f, 0.5f)
-        volume?.transferFunction?.addControlPoint(0.8f, 0.01f)
-        volume?.converterSetups?.get(0)?.setDisplayRange(20.0, 220.0)
-        val colormap = lut.loadLUT(lut.findLUTs().get("Grays.lut"))
+        val colormapVolume = lut.loadLUT(lut.findLUTs().get("Grays.lut"))
         val colormapNeurons = lut.loadLUT(lut.findLUTs().get("Fire.lut"))
 
-        volume?.colormap = Colormap.fromColorTable(colormap)
+        sciview.addVolume(nai.third, files.first().name) {
+            origin = Origin.FrontBottomLeft
+            scale = Vector3f(0.08f, 0.08f, 5.0f)
+            transferFunction = TransferFunction.ramp(0.3f, 0.1f, 0.1f)
+            // min 20, max 180, color map fire
+
+            transferFunction.addControlPoint(0.3f, 0.5f)
+            transferFunction.addControlPoint(0.8f, 0.01f)
+            converterSetups.get(0).setDisplayRange(20.0, 220.0)
+            colormap = Colormap.fromColorTable(colormapVolume)
+        }
 
 
         task.status = "Creating labeling"
@@ -156,12 +157,12 @@ class LoadCremiDatasetAndNeurons: Command {
             log.info("Converting neuron ${i + 1}/${largestNeuronLabels.size} to scenery format...")
             // Convert the mesh into a scenery mesh for visualization
             val mesh = MeshConverter.toScenery(m, false, flipWindingOrder = true)
-            mesh.scale = Vector3f(0.01f, 0.01f, 0.06f)
-            mesh.material.diffuse = colormapNeurons.lookupARGB(0.0, 255.0, kotlin.random.Random.nextDouble(0.0, 255.0)).toRGBColor().xyz()
-            mesh.material.roughness = 0.0f
-
-            mesh.name = "Neuron $i"
-            sciview.addNode(mesh)
+            sciview.addNode(mesh) {
+                scale = Vector3f(0.01f, 0.01f, 0.06f)
+                material.diffuse = colormapNeurons.lookupARGB(0.0, 255.0, kotlin.random.Random.nextDouble(0.0, 255.0)).toRGBColor().xyz()
+                material.roughness = 0.0f
+                name = "Neuron $i"
+            }
             val completion = 10.0f + ((i+1)/largestNeuronLabels.size.toFloat())*90.0f
             task.completion = completion
         }
