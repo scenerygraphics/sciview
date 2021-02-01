@@ -23,7 +23,7 @@ repositories {
     maven("https://maven.scijava.org/content/groups/public")
 }
 
-val sceneryVersion = "0b1a367f"
+val sceneryVersion = "886a7492"
 "scijava-common"("2.84.0")
 "ui-behaviour"("2.0.3")
 "imagej-mesh"("0.8.1")
