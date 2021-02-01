@@ -1,10 +1,3 @@
-pluginManagement {
-    repositories {
-        mavenLocal()
-        gradlePluginPortal()
-    }
-}
-
 rootProject.name = "sciview"
 
 gradle.rootProject {
