@@ -89,7 +89,7 @@ class VolumeRenderDemo : Command {
             log.error(exc)
             return
         }
-        val v = sciView.addVolume(cube, floatArrayOf(1f, 1f, 1f)) as Volume
+        val v = sciView.addVolume(cube, floatArrayOf(1f, 1f, 1f))
         v.pixelToWorldRatio = 10f
         v.name = "Volume Render Demo"
         v.dirty = true

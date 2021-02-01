@@ -292,7 +292,7 @@ class GameOfLife3D : Command {
         if (volume == null) {
             name = "Life Simulation"
             voxelDims = floatArrayOf(1f, 1f, 1f)
-            volume = sciView.addVolume(img as RandomAccessibleInterval<UnsignedByteType>, name, *voxelDims) as Volume?
+            volume = sciView.addVolume(img as RandomAccessibleInterval<UnsignedByteType>, name, *voxelDims)
             val bg = BoundingGrid()
             bg.node = volume
 
