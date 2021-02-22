@@ -1147,7 +1147,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @JvmOverloads
     @Suppress("UNCHECKED_CAST")
     fun addVolume(image: Dataset, voxelDimensions: FloatArray, block: Volume.() -> Unit = {}): Volume {
-        return addVolume<RealType<*>>(image.imgPlus as RandomAccessibleInterval<RealType<*>>, image.name ?: "Volume",
+        return addVolume(image.imgPlus as RandomAccessibleInterval<RealType<*>>, image.name ?: "Volume",
                 *voxelDimensions, block = block)
     }
 
@@ -1168,8 +1168,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param <T> pixel type of image
      * @return a Node corresponding to the volume
     </T> */
-    @JvmOverloads
-    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, voxelDimensions: FloatArray, block: Volume.() -> Unit = {}): Volume {
+    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, voxelDimensions: FloatArray, block: Volume.() -> Unit): Volume {
         return addVolume(image, "volume", *voxelDimensions, block = block)
     }
 
@@ -1181,7 +1180,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     </T> */
     @Suppress("UNCHECKED_CAST")
     @Throws(Exception::class)
-    fun <T : RealType<T>?> addVolume(image: IterableInterval<T>): Volume {
+    fun <T : RealType<T>> addVolume(image: IterableInterval<T>): Volume {
         return if (image is RandomAccessibleInterval<*>) {
             addVolume(image as RandomAccessibleInterval<RealType<*>>, "Volume")
         } else {
@@ -1198,7 +1197,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     </T> */
     @Suppress("UNCHECKED_CAST")
     @Throws(Exception::class)
-    fun <T : RealType<T>?> addVolume(image: IterableInterval<T>, name: String = "Volume"): Volume {
+    fun <T : RealType<T>> addVolume(image: IterableInterval<T>, name: String = "Volume"): Volume {
         return if (image is RandomAccessibleInterval<*>) {
             addVolume(image as RandomAccessibleInterval<RealType<*>>, name, 1f, 1f, 1f)
         } else {
@@ -1279,7 +1278,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param <T> pixel type of image
      * @return a Node corresponding to the Volume
     </T> */
-    @JvmName("addVolume1")
     @JvmOverloads
     fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, name: String = "Volume",
                                     vararg voxelDimensions: Float, block: Volume.() -> Unit = {}): Volume {
