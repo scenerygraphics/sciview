@@ -6,5 +6,16 @@ gradle.rootProject {
     description = "Scenery-backed 3D visualization package for ImageJ."
 }
 
-//includeBuild("sciJava")
+//pluginManagement {
+//    resolutionStrategy {
+//        eachPlugin {
+//            if(requested.id.id == "sciJava")
+//                useModule("com.github.elect86:sciJava:3978bb0c")//.also { println("found") }
+//        }
+//    }
+//    repositories {
+//        gradlePluginPortal()
+//        maven("https://jitpack.io")
+//    }
+//}
 

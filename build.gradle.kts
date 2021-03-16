@@ -24,6 +24,7 @@ repositories {
 }
 
 val sceneryVersion = "886a7492"
+// here we set some versions
 "scijava-common"("2.84.0")
 "ui-behaviour"("2.0.3")
 "imagej-mesh"("0.8.1")
@@ -105,12 +106,11 @@ dependencies {
     sciJava("org.janelia.saalfeldlab:n5"["", "-hdf5", "-imglib2"])
     sciJava("sc.fiji:spim_data")
 
+    implementation(platform(kotlin("bom")))
     implementation(kotlin("stdlib-jdk8"))
-    sciJava("org.jetbrains.kotlin:kotlin-test-junit:\$kotlin")
+    testImplementation(kotlin("test-junit"))
 
-    sciJava("sc.fiji:bigdataviewer-core")
-    sciJava("sc.fiji:bigdataviewer-vistools")
-    sciJava("sc.fiji:bigvolumeviewer")
+    sciJava("sc.fiji"["bigdataviewer-core", "bigdataviewer-vistools", "bigvolumeviewer"])
 
     implementation(platform("org.lwjgl:lwjgl-bom:3.2.3"))
     val os = getCurrentOperatingSystem()
@@ -123,6 +123,8 @@ dependencies {
     implementation("org.lwjgl:lwjgl")
     runtimeOnly("org.lwjgl", "lwjgl", classifier = lwjglNatives)
 }
+
+
 
 tasks {
     withType<KotlinCompile>().all {
@@ -165,31 +167,22 @@ tasks {
     }
 }
 
-//val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
-//    dependsOn(tasks.dokkaJavadoc)
-//    from(tasks.dokkaJavadoc.get().outputDirectory.get())
-//    archiveClassifier.set("javadoc")
-//}
-//
-//val dokkaHtmlJar by tasks.register<Jar>("dokkaHtmlJar") {
-//    dependsOn(tasks.dokkaHtml)
-//    from(tasks.dokkaHtml.get().outputDirectory.get())
-//    archiveClassifier.set("html-doc")
-//}
-
-val sourceJar = task("sourceJar", Jar::class) {
-    dependsOn(tasks.classes)
-    archiveClassifier.set("sources")
-    from(sourceSets.main.get().allSource)
+val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
+    dependsOn(tasks.dokkaJavadoc)
+    from(tasks.dokkaJavadoc.get().outputDirectory.get())
+    archiveClassifier.set("javadoc")
 }
+
+val dokkaHtmlJar by tasks.register<Jar>("dokkaHtmlJar") {
+    dependsOn(tasks.dokkaHtml)
+    from(tasks.dokkaHtml.get().outputDirectory.get())
+    archiveClassifier.set("html-doc")
+}
+
 
 artifacts {
-    //    archives(dokkaJavadocJar)
-    //    archives(dokkaHtmlJar)
-    archives(sourceJar)
+    archives(dokkaJavadocJar)
+    archives(dokkaHtmlJar)
 }
 
-java {
-//    withJavadocJar()
-    withSourcesJar()
-}
+java.withSourcesJar()
