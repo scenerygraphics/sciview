@@ -23,7 +23,7 @@ repositories {
     maven("https://maven.scijava.org/content/groups/public")
 }
 
-val sceneryVersion = "886a7492"
+val sceneryVersion = "eeb7210e2a"
 // here we set some versions
 "scijava-common"("2.84.0")
 "ui-behaviour"("2.0.3")
@@ -38,10 +38,12 @@ dependencies {
 
     // Graphics dependencies
 
-    api("com.github.scenerygraphics:scenery:$sceneryVersion") {
+//    testImplementation(":scenery")
+//    api(":scenery") {
+    api("com.github.scenerygraphics:scenery:$sceneryVersion")/* {
         for (mod in listOf("glfw", "jemalloc", "vulkan", "opengl", "openvr", "xxhash", "remotery"))
             exclude("org.lwjgl", "lwjgl-$mod")
-    }
+    }*/
 
     sciJava("net.clearvolume:cleargl")
     sciJava("net.clearcontrol:coremem")
@@ -112,6 +114,7 @@ dependencies {
 
     sciJava("sc.fiji"["bigdataviewer-core", "bigdataviewer-vistools", "bigvolumeviewer"])
 
+    // this apparently is still necessary
     implementation(platform("org.lwjgl:lwjgl-bom:3.2.3"))
     val os = getCurrentOperatingSystem()
     val lwjglNatives = "natives-" + when {
@@ -120,8 +123,16 @@ dependencies {
         os.isMacOsX -> "macos"
         else -> error("invalid")
     }
-    implementation("org.lwjgl:lwjgl")
-    runtimeOnly("org.lwjgl", "lwjgl", classifier = lwjglNatives)
+    listOf("", "-glfw", "-jemalloc", "-vulkan", "-opengl", "-openvr", "-xxhash", "-remotery").forEach {
+        implementation("org.lwjgl:lwjgl$it")
+        if (it != "-vulkan")
+            runtimeOnly("org.lwjgl", "lwjgl$it", classifier = lwjglNatives)
+    }
+
+    sciJava("graphics.scenery:spirvcrossj:0.7.0-1.1.106.0")
+    runtimeOnly("graphics.scenery", "spirvcrossj", "0.7.0-1.1.106.0", classifier = lwjglNatives)
+
+    sciJava("net.java.jinput:jinput:2.0.9", native = "natives-all")
 }
 
 
@@ -153,6 +164,10 @@ tasks {
                 remoteLineSuffix.set("#L")
             }
         }
+    }
+
+    dokkaJavadoc {
+        enabled = false
     }
 
     jacocoTestReport {

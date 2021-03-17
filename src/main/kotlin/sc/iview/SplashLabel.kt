@@ -92,7 +92,7 @@ class SplashLabel : JPanel(), ItemListener {
             val jarConnection = url.openConnection() as JarURLConnection
             val manifest = jarConnection.manifest
             val attributes = manifest.mainAttributes
-            attributes.getValue("Implementation-Build").substring(0, 8)
+            attributes.getValue("Implementation-Build")
         } catch (ioe: IOException) {
             ""
         }
