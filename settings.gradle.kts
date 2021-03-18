@@ -7,17 +7,3 @@ gradle.rootProject {
 }
 
 //includeBuild("../scenery")
-
-//pluginManagement {
-//    resolutionStrategy {
-//        eachPlugin {
-//            if(requested.id.id == "sciJava")
-//                useModule("com.github.elect86:sciJava:3978bb0c")//.also { println("found") }
-//        }
-//    }
-//    repositories {
-//        gradlePluginPortal()
-//        maven("https://jitpack.io")
-//    }
-//}
-

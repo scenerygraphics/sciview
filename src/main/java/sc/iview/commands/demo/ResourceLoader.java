@@ -6,13 +6,13 @@
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -51,27 +51,29 @@ public final class ResourceLoader {
         // NB: Prevent instantiation of utility class.
     }
 
-    /** Creates a temporary file on disk with the contents of the given resource. */
-    public static File createFile( Class<?> c, String resourcePath ) throws IOException {
+    /**
+     * Creates a temporary file on disk with the contents of the given resource.
+     */
+    public static File createFile(Class<?> c, String resourcePath) throws IOException {
         final byte[] bytes;
-        try (InputStream in = c.getResourceAsStream( resourcePath )) {
-            bytes = readStreamFully( in );
+        try (InputStream in = c.getResourceAsStream(resourcePath)) {
+            bytes = readStreamFully(in);
         }
 
-        String extension = "." + FileUtils.getExtension( resourcePath );
-        File configFile = File.createTempFile( "SciView", extension );
-        FileUtils.writeFile( configFile, bytes );
+        String extension = "." + FileUtils.getExtension(resourcePath);
+        File configFile = File.createTempFile("SciView", extension);
+        FileUtils.writeFile(configFile, bytes);
         configFile.deleteOnExit();
         return configFile;
     }
 
-    private static byte[] readStreamFully( final InputStream in ) throws IOException {
+    private static byte[] readStreamFully(final InputStream in) throws IOException {
         final ByteBank bank = new ByteArrayByteBank();
         byte[] buf = new byte[256 * 1024];
-        while( true ) {
-            final int r = in.read( buf );
-            if( r <= 0 ) break;
-            bank.appendBytes( buf, r );
+        while (true) {
+            final int r = in.read(buf);
+            if (r <= 0) break;
+            bank.appendBytes(buf, r);
         }
         return bank.toByteArray();
     }

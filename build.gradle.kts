@@ -25,7 +25,7 @@ repositories {
 
 val sceneryVersion = "eeb7210e2a"
 // here we set some versions
-"scijava-common"("2.84.0")
+//"scijava-common"("2.84.0")
 "ui-behaviour"("2.0.3")
 "imagej-mesh"("0.8.1")
 "bigdataviewer-vistools"("1.0.0-beta-21")
@@ -38,12 +38,7 @@ dependencies {
 
     // Graphics dependencies
 
-//    testImplementation(":scenery")
-//    api(":scenery") {
-    api("com.github.scenerygraphics:scenery:$sceneryVersion")/* {
-        for (mod in listOf("glfw", "jemalloc", "vulkan", "opengl", "openvr", "xxhash", "remotery"))
-            exclude("org.lwjgl", "lwjgl-$mod")
-    }*/
+    api("graphics.scenery:scenery:$sceneryVersion")
 
     sciJava("net.clearvolume:cleargl")
     sciJava("net.clearcontrol:coremem")
