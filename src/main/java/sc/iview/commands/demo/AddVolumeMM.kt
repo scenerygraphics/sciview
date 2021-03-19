@@ -28,7 +28,9 @@
  */
 package sc.iview.commands.demo
 
+import graphics.scenery.numerics.Random
 import graphics.scenery.utils.RingBuffer
+import graphics.scenery.utils.extensions.plus
 import graphics.scenery.volumes.BufferedVolume
 import graphics.scenery.volumes.Colormap
 import graphics.scenery.volumes.Volume
@@ -47,6 +49,8 @@ import sc.iview.SciView
 import sc.iview.commands.MenuWeights
 import java.nio.ByteBuffer
 import java.nio.ShortBuffer
+import kotlin.concurrent.thread
+import kotlin.concurrent.withLock
 
 /**
  */
@@ -92,21 +96,32 @@ class AddVolumeMM : Command {
         val width = core.imageWidth;
         val height = core.imageHeight;
 
-
-
-        val volumeBuffer = RingBuffer<ByteBuffer>(2) { MemoryUtil.memAlloc((width*height*10*Short.SIZE_BYTES).toInt()) }
-        val currentBuffer  = volumeBuffer.get()
-        captureStack(currentBuffer.asShortBuffer())
-
         val volume = createVolume()
+
+
         sciView.addNode(volume)
 
-        var count = 0
+        thread {
+            var count = 0
+            val volumeBuffer = RingBuffer<ByteBuffer>(2) { MemoryUtil.memAlloc((width*height*10*Short.SIZE_BYTES).toInt()) }
 
-        volume.addTimepoint("t-${count}", currentBuffer)
-        volume.goToLastTimepoint()
+            while(sciView.running && !sciView.isClosed) {
+                if(volume.metadata["animating"] == true) {
+                    volume.lock.withLock {
+                        val currentBuffer = volumeBuffer.get()
+                        captureStack(currentBuffer.asShortBuffer())
 
-        volume.purgeFirst(10, 10)
+                        volume.addTimepoint("t-${count}", currentBuffer)
+                        volume.goToLastTimepoint()
+                        volume.purgeFirst(10, 10)
+
+                        count++
+                    }
+                }
+
+                //Thread.sleep(33L)
+            }
+        }
 
     }
 
@@ -115,15 +130,13 @@ class AddVolumeMM : Command {
 
         volume.name = "volume"
         volume.position = Vector3f(0.0f, 0.0f, 0.0f)
+        volume.scale = Vector3f(0.1f,0.1f,10f)
         volume.colormap = Colormap.get("hot")
         volume.pixelToWorldRatio = 0.03f
 
         with(volume.transferFunction) {
             addControlPoint(0.0f, 0.0f)
-            addControlPoint(0.2f, 0.0f)
-            addControlPoint(0.4f, 0.5f)
-            addControlPoint(0.8f, 0.5f)
-            addControlPoint(1.0f, 0.0f)
+            addControlPoint(7000.0f, 1.0f)
         }
 
         volume.metadata["animating"] = true
