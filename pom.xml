@@ -322,6 +322,24 @@
 <!--			<scope>test</scope>-->
 		</dependency>
 
+		<!--<dependency>
+			<groupId>org.micromanager</groupId>
+			<artifactId>MMCoreJ</artifactId>
+			<version>2.0.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.micromanager</groupId>
+			<artifactId>MMJ_</artifactId>
+			<version>2.0.0-SNAPSHOT</version>
+		</dependency>
+		-->
+		<dependency>
+			<groupId>org.micromanager</groupId>
+			<artifactId>MMCoreJ</artifactId>
+			<version>2.0.0-SNAPSHOT</version>
+			<scope>system</scope>
+			<systemPath>C:/Program Files/Micro-Manager-2.0gamma/plugins/Micro-Manager/MMCoreJ.jar</systemPath>
+		</dependency>
 
 		<dependency>
 			<groupId>org.janelia.saalfeldlab</groupId>
@@ -399,10 +417,6 @@
 								<source>target/generated-sources/kaptKotlin</source>
 							</sourceDirs>
 							<jvmTarget>${kotlin.compiler.jvmTarget}</jvmTarget>
-							<args>
-								<arg>-Werror</arg>
-								<arg>-Xopt-in=kotlin.RequiresOptIn</arg>
-							</args>
 						</configuration>
 					</execution>
 					<execution>
@@ -418,10 +432,6 @@
 				</executions>
 				<configuration>
 					<jvmTarget>${kotlin.compiler.jvmTarget}</jvmTarget>
-					<args>
-						<arg>-Werror</arg>
-						<arg>-Xopt-in=kotlin.RequiresOptIn</arg>
-					</args>
 				</configuration>
 			</plugin>
 			<plugin>
