@@ -28,21 +28,16 @@
  */
 package sc.iview.commands.demo
 
-import graphics.scenery.volumes.RAIVolume
+import graphics.scenery.utils.RingBuffer
+import graphics.scenery.volumes.BufferedVolume
+import graphics.scenery.volumes.Colormap
+import graphics.scenery.volumes.Volume
 import mmcorej.CMMCore
-import net.imagej.Dataset
-import net.imagej.DefaultDataset
-import net.imagej.axis.DefaultAxisType
-import net.imagej.axis.DefaultLinearAxis
 import net.imagej.ops.OpService
 import net.imagej.units.UnitService
-import net.imglib2.img.array.ArrayImg
-import net.imglib2.img.array.ArrayImgFactory
-import net.imglib2.img.array.ArrayImgs
-import net.imglib2.img.display.imagej.ImageJFunctions
-import net.imglib2.type.numeric.integer.ShortType
-import net.imglib2.util.Fraction
-import org.scijava.Context
+import net.imglib2.type.numeric.integer.UnsignedShortType
+import org.joml.Vector3f
+import org.lwjgl.system.MemoryUtil
 import org.scijava.command.Command
 import org.scijava.log.LogService
 import org.scijava.plugin.Menu
@@ -50,7 +45,8 @@ import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
-import sc.iview.commands.MenuWeights.EDIT_ADD
+import java.nio.ByteBuffer
+import java.nio.ShortBuffer
 
 /**
  */
@@ -85,8 +81,9 @@ class AddVolumeMM : Command {
     @Parameter(label = "Voxel Size Z")
     private var voxelDepth = 1.0f
 
+    private val core = CMMCore()
+
     override fun run() {
-        val core = CMMCore()
         val info = core.versionInfo
         println(info)
         core.loadSystemConfiguration ("C:/Program Files/Micro-Manager-2.0gamma/MMConfig_demo.cfg");
@@ -95,32 +92,54 @@ class AddVolumeMM : Command {
         val width = core.imageWidth;
         val height = core.imageHeight;
 
-        val images = mutableListOf<ShortArray>()
 
-        (0..10).forEach {
+
+        val volumeBuffer = RingBuffer<ByteBuffer>(2) { MemoryUtil.memAlloc((width*height*10*Short.SIZE_BYTES).toInt()) }
+        val currentBuffer  = volumeBuffer.get()
+        captureStack(currentBuffer.asShortBuffer())
+
+        val volume = createVolume()
+        sciView.addNode(volume)
+
+        var count = 0
+
+        volume.addTimepoint("t-${count}", currentBuffer)
+        volume.goToLastTimepoint()
+
+        volume.purgeFirst(10, 10)
+
+    }
+
+    private fun createVolume(): BufferedVolume {
+        val volume = Volume.fromBuffer(emptyList(), 512, 512, 10, UnsignedShortType(), sciView.hub)
+
+        volume.name = "volume"
+        volume.position = Vector3f(0.0f, 0.0f, 0.0f)
+        volume.colormap = Colormap.get("hot")
+        volume.pixelToWorldRatio = 0.03f
+
+        with(volume.transferFunction) {
+            addControlPoint(0.0f, 0.0f)
+            addControlPoint(0.2f, 0.0f)
+            addControlPoint(0.4f, 0.5f)
+            addControlPoint(0.8f, 0.5f)
+            addControlPoint(1.0f, 0.0f)
+        }
+
+        volume.metadata["animating"] = true
+
+        return volume
+    }
+
+    private fun captureStack(intoBuffer: ShortBuffer){
+        var offset = 0
+        (0..9).forEach {
             core.snapImage();
-            images.add(core.image as ShortArray)
+            val sa = core.image as ShortArray
+            sa.forEach {
+                intoBuffer.put(offset, it)
+                offset += 1
+            }
         }
-
-        val img = images.flatMap { it.toList() }.toShortArray()
-        val ai2 = ArrayImgs.unsignedShorts(img,width,height,10)
-
-        ImageJFunctions.show(ai2)
-
-        val vol = sciView.addVolume(ai2,floatArrayOf(1f, 1f, 1000f))
-
-        vol.let {
-            val v = it as RAIVolume
-
-        }
-
-        println("${img.toString()}, ${width}, $height")
-    /*if (inheritFromImage) {
-            val n = sciView.addVolume(image)
-            n?.name = image.name ?: "Volume"
-        } else {
-            val n = sciView.addVolume(image, floatArrayOf(voxelWidth, voxelHeight, voxelDepth))
-            n?.name = image.name ?: "Volume"
-        }*/
     }
 }
