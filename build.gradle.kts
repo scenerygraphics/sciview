@@ -38,6 +38,8 @@ dependencies {
 
     // Graphics dependencies
 
+    annotationProcessor("org.scijava:scijava-common:${versions["scijava-common"]}")
+
     api("graphics.scenery:scenery:$sceneryVersion")
 
     sciJava("net.clearvolume:cleargl")
