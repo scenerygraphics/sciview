@@ -104,6 +104,7 @@
 
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>SciView developers.</license.copyrightOwners>
+		<license.excludes>**/com/intellij/**,**/gnu/newtrove/**</license.excludes>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
