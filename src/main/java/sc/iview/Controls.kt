@@ -197,7 +197,10 @@ open class Controls(val sciview: SciView) {
         h.addKeyBinding("ruler: keep the button pressed and drag with the mouse", "E")
 
         val configFile = File(System.getProperty("user.home")).resolve(".sciview.keybindings.yaml")
-        inputHandler.readFromFile(configFile)
+        if( configFile.exists() )
+            inputHandler.readFromFile(configFile)
+        else
+            inputHandler.useDefaultBindings(configFile.absolutePath)
     }
 
     /*
