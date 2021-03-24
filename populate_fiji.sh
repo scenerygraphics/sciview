@@ -138,6 +138,11 @@ chmod +x $FijiDirectory/ImageJ-win64
 rm $FijiDirectory/jars/miglayout-3.7.4-swing.jar
 install "com.miglayout:miglayout-swing:5.2" $FijiDirectory/jars
 
+# -- Fix imagej-mesh versions with jitpack version clashing (temporary)
+
+rm $FijiDirectory/jars/imagej-mesh-*
+install "net.imagej:imagej-mesh:0.8.1" $FijiDirectory/jars
+
 # -- Get the list of native libraries --
 
 # [NB] dependency:list emits G:A:P:C:V but dependency:copy needs G:A:V:P:C.
