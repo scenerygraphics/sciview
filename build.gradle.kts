@@ -8,6 +8,7 @@ plugins {
     val ktVersion = "1.4.20"
     java
     kotlin("jvm") version ktVersion
+    kotlin("kapt") version ktVersion
     sciview.publish
     sciview.sign
     id("com.github.elect86.sciJava") version "0.0.4"
@@ -38,7 +39,9 @@ dependencies {
 
     // Graphics dependencies
 
-    annotationProcessor("org.scijava:scijava-common:${versions["scijava-common"]}")
+    val sciJava = "org.scijava:scijava-common:${versions["scijava-common"]}"
+    annotationProcessor(sciJava)
+    kapt(sciJava)
 
     api("graphics.scenery:scenery:$sceneryVersion")
 
@@ -132,7 +135,13 @@ dependencies {
     sciJava("net.java.jinput:jinput:2.0.9", native = "natives-all")
 }
 
-
+kapt {
+    useBuildCache = false // safe
+    arguments {
+        arg("-Werror")
+        arg("-Xopt-in", "kotlin.RequiresOptIn")
+    }
+}
 
 tasks {
     withType<KotlinCompile>().all {
