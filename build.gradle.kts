@@ -39,9 +39,9 @@ dependencies {
 
     // Graphics dependencies
 
-    val sciJava = "org.scijava:scijava-common:${versions["scijava-common"]}"
-    annotationProcessor(sciJava)
-    kapt(sciJava)
+    val sciJavaCommon = "org.scijava:scijava-common:${versions["scijava-common"]}"
+    annotationProcessor(sciJavaCommon)
+    kapt(sciJavaCommon)
 
     api("graphics.scenery:scenery:$sceneryVersion")
 
