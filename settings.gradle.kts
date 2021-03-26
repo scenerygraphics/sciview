@@ -6,4 +6,4 @@ gradle.rootProject {
     description = "Scenery-backed 3D visualization package for ImageJ."
 }
 
-//includeBuild("../scenery")
+includeBuild("../scenery")
