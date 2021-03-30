@@ -55,6 +55,9 @@ dependencies {
 
     sciJava("org.scijava"["scijava-common", "ui-behaviour", "script-editor", "scijava-ui-swing",
             "scijava-ui-awt", "scijava-search", "scripting-jython"])
+    implementation("org.scijava:scijava-common:2.83.0") {
+        version { strictly("2.83.3") }
+    }
     sciJava("com.miglayout:miglayout-swing")
 
     // ImageJ dependencies
@@ -185,6 +188,14 @@ tasks {
             }
         }
         dependsOn(test) // tests are required to run before generating the report
+    }
+    register("runApp", JavaExec::class.java) {
+        classpath = sourceSets.main.get().runtimeClasspath
+
+        main = "sc.iview.commands.demo.basic.MeshDemo"
+
+        // arguments to pass to the application
+        //    args 'appArg1'
     }
 }
 
