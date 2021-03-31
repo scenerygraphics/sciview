@@ -292,15 +292,16 @@ class GameOfLife3D : Command {
         if (volume == null) {
             name = "Life Simulation"
             voxelDims = floatArrayOf(1f, 1f, 1f)
-            volume = sciView.addVolume(img as RandomAccessibleInterval<UnsignedByteType>, name, *voxelDims) as Volume?
-            val bg = BoundingGrid()
-            bg.node = volume
+            volume = sciView.addVolume(img as RandomAccessibleInterval<UnsignedByteType>, name, *voxelDims) {
+                val bg = BoundingGrid()
+                bg.node = this
 
-            volume!!.transferFunction.addControlPoint(0.0f, 0.0f)
-            volume!!.transferFunction.addControlPoint(0.4f, 0.3f)
-            volume!!.scale = Vector3f(10.0f, 10.0f, 10.0f)
-            volume!!.name = "Game of Life 3D"
-            sciView.centerOnNode(volume)
+                transferFunction.addControlPoint(0.0f, 0.0f)
+                transferFunction.addControlPoint(0.4f, 0.3f)
+                scale = Vector3f(10.0f, 10.0f, 10.0f)
+                name = "Game of Life 3D"
+                sciView.centerOnNode(this)
+            }
 
             // NB: Create dynamic metadata lazily.
             val commandInfo: CommandInfo = commandService.getCommand(javaClass)
