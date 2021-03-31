@@ -136,6 +136,8 @@ class GameOfLife3D : Command {
 
     /** Randomizes a new bit field.  */
     fun randomize() {
+        if( img == null )
+            img = ArrayImgs.unsignedBytes(w.toLong(), h.toLong(), d.toLong())
         val cursor = img!!.localizingCursor()
         val chance = saturation / 100.0
         while (cursor.hasNext()) {
@@ -202,7 +204,6 @@ class GameOfLife3D : Command {
     }
 
     override fun run() {
-        img = ArrayImgs.unsignedBytes(w.toLong(), h.toLong(), d.toLong())
         randomize()
         dialog = GenericDialog("Game of Life 3D")
         dialog!!.addNumericField("Starvation threshold", starvation.toDouble(), 0)
