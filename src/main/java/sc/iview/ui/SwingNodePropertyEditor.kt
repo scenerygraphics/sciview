@@ -65,10 +65,20 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
-import javax.swing.*
+import javax.swing.JFrame
+import javax.swing.JLabel
+import javax.swing.JMenuItem
+import javax.swing.JPanel
+import javax.swing.JPopupMenu
+import javax.swing.JScrollPane
+import javax.swing.JSplitPane
+import javax.swing.JTextArea
+import javax.swing.JTree
+import javax.swing.WindowConstants
 import javax.swing.event.TreeSelectionEvent
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
+import javax.swing.tree.TreeNode
 import javax.swing.tree.TreePath
 import javax.swing.tree.TreeSelectionModel
 
@@ -141,15 +151,17 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
     @EventHandler
     private fun onEvent(evt: NodeChangedEvent) {
         val node = evt.node ?: return
-        if (node != sciView.activeNode) {
+        if (node == sciView.activeNode) {
             updateProperties(sciView.activeNode)
         }
+        updateTree(node)
     }
 
     @EventHandler
     private fun onEvent(evt: NodeActivatedEvent) {
         val node = evt.node ?: return
         updateProperties(node)
+        updateTree(node)
     }
 
     /** Initializes [.panel].  */
@@ -240,6 +252,21 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
         })
     }
 
+    private fun updateTree(node: Node) {
+        val treeNode = getTreeNode(node, treeModel.root as TreeNode)?: return
+        treeModel.nodeChanged(treeNode)
+    }
+
+    private fun getTreeNode(node: Node, parent: TreeNode): TreeNode? {
+        for(i in 0..treeModel.getChildCount(parent)-1) {
+            val child = treeModel.getChild(parent, i) as SwingSceneryTreeNode
+            if(child.node == node) return child
+            val treeNode = getTreeNode(node, child)
+            if(treeNode != null) return treeNode
+        }
+        return null;
+    }
+
     var currentNode: Node? = null
         private set
     private var currentProperties: Properties? = null
@@ -285,6 +312,7 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                 val pluginInstance = pluginService.createInstance(pluginInfo)
                 val harvester = pluginInstance as SwingGroupingInputHarvester
                 inputPanel = harvester.createInputPanel()
+                inputPanel.component.layout = MigLayout("fillx,wrap 1", "[right,fill,grow]")
 
                 // Build the panel.
                 try {

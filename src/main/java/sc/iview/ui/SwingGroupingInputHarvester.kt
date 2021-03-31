@@ -88,7 +88,7 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
                  * @param e the event to be processed
                  */
                 override fun mouseClicked(e: MouseEvent?) {
-                    if(e?.clickCount == 2) {
+                    if(e?.clickCount == 1) {
                         panel.component.isVisible = !panel.component.isVisible
 
                         if(panel.component.isVisible) {
