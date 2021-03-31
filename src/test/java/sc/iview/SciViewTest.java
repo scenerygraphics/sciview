@@ -34,11 +34,13 @@ import io.scif.SCIFIOService;
 import net.imagej.ImageJService;
 import org.joml.Vector3f;
 import org.junit.Assert;
+import org.junit.Test;
 import org.scijava.Context;
 import org.scijava.service.SciJavaService;
 import org.scijava.thread.ThreadService;
 import sc.iview.SciView;
 import sc.iview.SciViewService;
+import scala.xml.Null;
 
 public class SciViewTest {
 
@@ -98,5 +100,67 @@ public class SciViewTest {
 
     // sceneResetTest()
 
+    /* Tests what happens if a function calculates a new position for the camera and returns a Vector with at least one value
+    being NaN. Ideally the logger should print a warning and the camera should keep its old position.
+     */
+    //TODO this doesn't behave like it should
+    @Test
+    public void falseCalculatedParameterVector() throws Exception {
+        SceneryBase.xinitThreads();
 
+        System.setProperty( "scijava.log.level:sc.iview", "debug" );
+        Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
+
+        SciViewService sciViewService = context.service( SciViewService.class );
+        SciView sciView = sciViewService.getOrCreateActiveSciView();
+
+        Vector3f position = sciView.getCamera().getPosition();
+
+        float[] falsePosition = {Float.NaN, 2f, 3f};
+
+        sciView.moveCamera(falsePosition);
+
+        Assert.assertEquals(sciView.getCamera().getPosition(), position);
+
+    }
+
+    //TODO: Test this one: //Assert.assertThrows(sciView.addCylinder( new Vector3f(1f, 2f, 3f), 4f, 5f, 6, cylinder -> {return null;}), ); it throws a NullPointer
+
+    @Test
+    public void deleteActiveMesh() throws Exception {
+        SceneryBase.xinitThreads();
+
+        System.setProperty( "scijava.log.level:sc.iview", "debug" );
+        Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
+
+        SciViewService sciViewService = context.service( SciViewService.class );
+        SciView sciView = sciViewService.getOrCreateActiveSciView();
+
+        Node sphere = sciView.addSphere();
+
+        sciView.setActiveNode(sphere);
+
+        sciView.deleteActiveNode();
+
+        Assert.assertNull(sciView.getActiveNode());
+    }
+
+    @Test
+    public void deletedNodeNotFindable() throws Exception {
+        SceneryBase.xinitThreads();
+
+        System.setProperty( "scijava.log.level:sc.iview", "debug" );
+        Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
+
+        SciViewService sciViewService = context.service( SciViewService.class );
+        SciView sciView = sciViewService.getOrCreateActiveSciView();
+
+        Node sphere = sciView.addSphere();
+
+        sphere.setName("sphere");
+
+        sciView.deleteNode(sphere);
+
+        Assert.assertNotEquals(sphere, sciView.find("sphere"));
+    }
 }
