@@ -1,3 +1,31 @@
+/*-
+ * #%L
+ * Scenery-backed 3D visualization package for ImageJ.
+ * %%
+ * Copyright (C) 2016 - 2021 SciView developers.
+ * %%
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ * #L%
+ */
 package sc.iview.commands.demo.animation
 
 import bdv.util.BdvFunctions
@@ -30,8 +58,8 @@ import java.util.function.BiConsumer
         label = "Volume Timeseries",
         menuRoot = "SciView",
         menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
-            Menu(label = "Animation", weight = MenuWeights.DEMO_ANIMATION),
-            Menu(label = "Volume Timeseries", weight = MenuWeights.DEMO_ANIMATION_VOLUMETIMESERIES)])
+                Menu(label = "Animation", weight = MenuWeights.DEMO_ANIMATION),
+                Menu(label = "Volume Timeseries", weight = MenuWeights.DEMO_ANIMATION_VOLUMETIMESERIES)])
 class VolumeTimeseriesDemo : Command {
     @Parameter
     private lateinit var sciView: SciView
@@ -40,17 +68,18 @@ class VolumeTimeseriesDemo : Command {
         val dataset = makeDataset()
 
         val bdv = BdvFunctions.show(dataset, "test")
-        val v = sciView.addVolume(dataset, floatArrayOf(1f, 1f, 1f, 1f)) as Volume?
-        v?.pixelToWorldRatio = 10f
-        v?.name = "Volume Render Demo"
-        v?.dirty = true
-        v?.needsUpdate = true
+        sciView.addVolume(dataset, floatArrayOf(1f, 1f, 1f, 1f)) {
+            pixelToWorldRatio = 10f
+            name = "Volume Render Demo"
+            dirty = true
+            needsUpdate = true
 
-        bdv.bdvHandle.viewerPanel.addTimePointListener { t ->
-            v?.goToTimepoint(t.coerceIn(0, v.timepointCount-1))
+            bdv.bdvHandle.viewerPanel.addTimePointListener { t ->
+                goToTimepoint(t.coerceIn(0, timepointCount-1))
+            }
+
+            sciView.setActiveNode(this)
         }
-
-        sciView.setActiveNode(v)
         sciView.centerOnNode(sciView.activeNode)
     }
 
