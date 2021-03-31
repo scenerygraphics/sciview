@@ -1,3 +1,31 @@
+/*-
+ * #%L
+ * Scenery-backed 3D visualization package for ImageJ.
+ * %%
+ * Copyright (C) 2016 - 2021 SciView developers.
+ * %%
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ * #L%
+ */
 package sc.iview.commands.demo.basic
 
 import graphics.scenery.volumes.Volume
@@ -15,11 +43,14 @@ import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import sc.iview.SciView
-import sc.iview.commands.MenuWeights
+import sc.iview.commands.MenuWeights.DEMO
+import sc.iview.commands.MenuWeights.DEMO_BASIC
+import sc.iview.commands.MenuWeights.DEMO_BASIC_VOLUME
+
 import sc.iview.commands.demo.ResourceLoader
 import sc.iview.process.MeshConverter
 import java.io.IOException
-import java.util.HashMap
+import java.util.*
 
 /**
  * A demo of volume rendering.
@@ -30,9 +61,9 @@ import java.util.HashMap
 @Plugin(type = Command::class,
         label = "Volume Render/Isosurface Demo",
         menuRoot = "SciView",
-        menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
-            Menu(label = "Basic", weight = MenuWeights.DEMO_BASIC),
-            Menu(label = "Volume Render/Isosurface", weight = MenuWeights.DEMO_BASIC_VOLUME)])
+        menu = [Menu(label = "Demo", weight = DEMO),
+                Menu(label = "Basic", weight = DEMO_BASIC),
+                Menu(label = "Volume Render/Isosurface", weight = DEMO_BASIC_VOLUME)])
 class VolumeRenderDemo : Command {
     @Parameter
     private lateinit var datasetIO: DatasetIOService
@@ -58,11 +89,12 @@ class VolumeRenderDemo : Command {
             log.error(exc)
             return
         }
-        val v = sciView.addVolume(cube, floatArrayOf(1f, 1f, 1f)) as Volume
-        v.pixelToWorldRatio = 10f
-        v.name = "Volume Render Demo"
-        v.dirty = true
-        v.needsUpdate = true
+        val v = sciView.addVolume(cube, floatArrayOf(1f, 1f, 1f)) {
+            pixelToWorldRatio = 10f
+            name = "Volume Render Demo"
+            dirty = true
+            needsUpdate = true
+        }
         if (iso) {
             val isoLevel = 1
 
