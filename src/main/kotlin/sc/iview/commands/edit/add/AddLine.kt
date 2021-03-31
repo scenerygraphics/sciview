@@ -33,6 +33,7 @@ import org.scijava.command.Command
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
+import org.scijava.util.ColorRGB
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights.EDIT
 import sc.iview.commands.MenuWeights.EDIT_ADD
@@ -53,7 +54,7 @@ import sc.iview.commands.MenuWeights.EDIT_ADD_LINE
 )
 class AddLine : Command {
     @Parameter
-    private val sciView: SciView? = null
+    private lateinit var sciView: SciView
 
     // FIXME
     //    @Parameter(label = "First endpoint")
@@ -62,13 +63,18 @@ class AddLine : Command {
     //    @Parameter(label = "Second endpoint")
     //    private String stop = "1; 1; 1";
     @Parameter
-    private val color = SciView.DEFAULT_COLOR
+    private lateinit var color: ColorRGB
 
     @Parameter(label = "Edge width", min = "0")
-    private val edgeWidth = 1.0
+    private var edgeWidth = 1.0
+
     override fun run() {
         //Vector3[] endpoints = { JOMLVector3.parse( start ), JOMLVector3.parse( stop ) };
         val endpoints = arrayOf(Vector3f(0f, 0f, 0f), Vector3f(1f, 1f, 1f))
-        sciView!!.addLine(endpoints, color, edgeWidth)
+        if( !this::color.isInitialized ) {
+            color = SciView.DEFAULT_COLOR
+        }
+
+        sciView.addLine(endpoints, color, edgeWidth)
     }
 }

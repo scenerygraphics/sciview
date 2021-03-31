@@ -26,56 +26,61 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add;
+package sc.iview.commands.edit.add
 
-import org.joml.Vector3f;
-import org.scijava.command.Command;
-import org.scijava.display.DisplayService;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import org.scijava.util.ColorRGB;
-
-import sc.iview.SciView;
-
-import static sc.iview.commands.MenuWeights.*;
+import org.joml.Vector3f
+import org.scijava.command.Command
+import org.scijava.display.DisplayService
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import org.scijava.util.ColorRGB
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.EDIT
+import sc.iview.commands.MenuWeights.EDIT_ADD
+import sc.iview.commands.MenuWeights.EDIT_ADD_BOX
 
 /**
  * Command to add a box to the scene
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Add", weight = EDIT_ADD), //
-                 @Menu(label = "Box...", weight = EDIT_ADD_BOX) })
-public class AddBox implements Command {
+@Plugin(
+    type = Command::class,
+    menuRoot = "SciView",
+    menu = [Menu(label = "Edit", weight = EDIT), Menu(label = "Add", weight = EDIT_ADD), Menu(
+        label = "Box...",
+        weight = EDIT_ADD_BOX
+    )]
+)
+class AddBox : Command {
+    @Parameter
+    private lateinit var displayService: DisplayService
 
     @Parameter
-    private DisplayService displayService;
-
-    @Parameter
-    private SciView sciView;
+    private lateinit var sciView: SciView
 
     // FIXME
-//    @Parameter
-//    private String position = "0; 0; 0";
+    //    @Parameter
+    //    private String position = "0; 0; 0";
+    @Parameter
+    private var size = 1.0f
 
     @Parameter
-    private float size = 1.0f;
+    private lateinit var color: ColorRGB
 
     @Parameter
-    private ColorRGB color = SciView.DEFAULT_COLOR;
+    private var inside = false
 
-    @Parameter
-    private boolean inside;
-
-    @Override
-    public void run() {
+    override fun run() {
         //final Vector3 pos = ClearGLVector3.parse( position );
-        final Vector3f pos = new Vector3f(0f, 0f, 0f);
-        final Vector3f vSize = new Vector3f( size, size, size );
-        sciView.addBox( pos, vSize, color, inside );
+        val pos = Vector3f(0f, 0f, 0f)
+        val vSize = Vector3f(size, size, size)
+
+        if( !this::color.isInitialized ) {
+            color = SciView.DEFAULT_COLOR
+        }
+
+        sciView.addBox(pos, vSize, color, inside)
     }
 }
