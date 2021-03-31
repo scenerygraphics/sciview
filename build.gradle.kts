@@ -24,7 +24,7 @@ repositories {
     maven("https://maven.scijava.org/content/groups/public")
 }
 
-val sceneryVersion = "eeb7210e2a"
+val sceneryVersion = "4a0c1f7"
 // here we set some versions
 //"scijava-common"("2.84.0")
 "ui-behaviour"("2.0.3")
@@ -43,7 +43,8 @@ dependencies {
     annotationProcessor(sciJavaCommon)
     kapt(sciJavaCommon)
 
-    api("graphics.scenery:scenery:$sceneryVersion")
+//    api("graphics.scenery:scenery:$sceneryVersion")
+    api("com.github.scenerygraphics:scenery:$sceneryVersion")
 
     sciJava("net.clearvolume:cleargl")
     sciJava("net.clearcontrol:coremem")
