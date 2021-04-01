@@ -176,45 +176,46 @@ EOL
 fi
 
 # Configure conda environment, if one is needed.
-if [ -f environment.yml ]
-then
-	echo travis_fold:start:scijava-conda
-	echo "= Conda setup ="
-
-	condaDir=$HOME/miniconda
-	condaSh=$condaDir/etc/profile.d/conda.sh
-	if [ ! -f "$condaSh" ]; then
-		echo
-		echo "== Installing conda =="
-		wget -nv https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-		rm -rf "$condaDir"
-		bash miniconda.sh -b -p "$condaDir"
-		checkSuccess $?
-	fi
-
-	echo
-	echo "== Updating conda =="
-	. "$condaSh" &&
-	conda config --set always_yes yes --set changeps1 no &&
-	conda update -q conda &&
-	conda info -a
-	checkSuccess $?
-
-	echo
-	echo "== Configuring environment =="
-	condaEnv=travis-scijava
-	test -d "$condaDir/envs/$condaEnv" && condaAction=update || condaAction=create
-	conda env "$condaAction" -n "$condaEnv" -f environment.yml &&
-	conda activate "$condaEnv"
-	checkSuccess $?
-
-	echo
-	echo "== Run CI code =="
-	python3 .travis/ci.py
-    checkSuccess $?
-
-	echo travis_fold:end:scijava-conda
-fi
+# TODO temporarily disabled
+#if [ -f environment.yml ]
+#then
+#	echo travis_fold:start:scijava-conda
+#	echo "= Conda setup ="
+#
+#	condaDir=$HOME/miniconda
+#	condaSh=$condaDir/etc/profile.d/conda.sh
+#	if [ ! -f "$condaSh" ]; then
+#		echo
+#		echo "== Installing conda =="
+#		wget -nv https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+#		rm -rf "$condaDir"
+#		bash miniconda.sh -b -p "$condaDir"
+#		checkSuccess $?
+#	fi
+#
+#	echo
+#	echo "== Updating conda =="
+#	. "$condaSh" &&
+#	conda config --set always_yes yes --set changeps1 no &&
+#	conda update -q conda &&
+#	conda info -a
+#	checkSuccess $?
+#
+#	echo
+#	echo "== Configuring environment =="
+#	condaEnv=travis-scijava
+#	test -d "$condaDir/envs/$condaEnv" && condaAction=update || condaAction=create
+#	conda env "$condaAction" -n "$condaEnv" -f environment.yml &&
+#	conda activate "$condaEnv"
+#	checkSuccess $?
+#
+#	echo
+#	echo "== Run CI code =="
+#	python3 .travis/ci.py
+#    checkSuccess $?
+#
+#	echo travis_fold:end:scijava-conda
+#fi
 
 # Execute Jupyter notebooks.
 if which jupyter >/dev/null 2>/dev/null
