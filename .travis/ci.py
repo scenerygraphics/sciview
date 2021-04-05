@@ -58,7 +58,7 @@ def package_conda():
 
     subprocess.check_call(['mv', 'dist/sciview', exe_name])
 
-package_conda()
+#package_conda()
 
 # Update sites
 print('')
@@ -84,8 +84,8 @@ if ( branch == 'master' and not is_PR and travis_secure ) or \
 ## - release
 
 # TODO: check branch == <pom-release-version>
-if ( not is_PR and travis_secure and release_properties_exists ) or \
-    ( '[SV_IJ_DEPLOY_PRIMARY]' in commit_message ):
-    print('Upload to SciView')
-    subprocess.check_call(['sh', 'sciview_deploy.sh'])
+# if ( not is_PR and travis_secure and release_properties_exists ) or \
+#     ( '[SV_IJ_DEPLOY_PRIMARY]' in commit_message ):
+#     print('Upload to SciView')
+#     subprocess.check_call(['sh', 'sciview_deploy.sh'])
 
