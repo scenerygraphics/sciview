@@ -41,11 +41,23 @@ tasks {
             "unzip fiji-nojre.zip".ex()
 
             println("--> Updating Fiji")
-            "Fiji.app/$launcher --update update-force-pristine".ex()
-//            val fijiDirectory = "Fiji.app"
-//
-//            println("--> Copying dependencies into Fiji installation")
-//            println(configurations.named<Configuration>("default"))
+            //            "Fiji.app/$launcher --update update-force-pristine".ex()
+            val fijiDirectory = "Fiji.app"
+
+            println("--> Copying dependencies into Fiji installation")
+            copy {
+                //                from(configurations.named<Configuration>("default")).into("$fijiDirectory/dependencies")
+                from(configurations.named<Configuration>("default")).into("$fijiDirectory/jars")
+            }
+
+            // Now that we populated fiji, let's double check that it works --
+
+            println("--> Testing installation with command: sc.iview.commands.help.About")
+            val about = "$fijiDirectory//$launcher --headless --run sc.iview.commands.help.About".read()
+            println("Test " + when {
+                about.isEmpty() -> "failed"
+                else -> "passed"
+            })
         }
     }
 }

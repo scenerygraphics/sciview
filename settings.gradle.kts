@@ -7,4 +7,4 @@ gradle.rootProject {
 }
 
 //if (System.getProperty("CI") == "false")
-    includeBuild("../scenery")
+//    includeBuild("../scenery")

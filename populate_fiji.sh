@@ -85,123 +85,123 @@ echo "--> Copying dependencies into Fiji installation"
 (set -x; mvn -Dscijava.app.directory=$FijiDirectory) ||
     die "Failed to copy dependencies into Fiji directory"
 
-#echo "--> Removing slf4j bindings"
-#(set -x; rm -f $FijiDirectory/jars/slf4j-simple-*.jar) ||
-#    die "Failed to remove slf4j bindings"
-#
-## -- Put back jar/gluegen-rt and jar/jogl-all --
-#echo
-#echo "--> Reinstalling gluegen-rt, jogl-all, jocl, jinput, and ffmpeg"
-#gluegenJar=$(echo $FijiDirectory/jars/gluegen-rt-main-*.jar)
-#gluegenVersion=$(mid "$gluegenJar" "-" ".jar")
-#install "org.jogamp.gluegen:gluegen-rt:$gluegenVersion" $FijiDirectory/jars
-#
-#joglJar=$(echo $FijiDirectory/jars/jogl-all-main-*.jar)
-#joglVersion=$(mid "$joglJar" "-" ".jar")
-#install "org.jogamp.jogl:jogl-all:$joglVersion" $FijiDirectory/jars
-#
-#joclGAV=$(mvn dependency:tree | grep jocl | awk -e '{print $NF}' | cut -d: -f1-4 | sed 's/:jar//g')
-#installWithGroupId "$joclGAV" $FijiDirectory/jars
-#
-#jinputGAV=$(mvn dependency:tree | grep jinput | head -n1 | awk -e '{print $NF}' | cut -d: -f1-4 | sed 's/:jar//g' | sed 's/:compile//g')
-#install "$jinputGAV" $FijiDirectory/jars
-#installWithGroupId "$jinputGAV:jar:natives-all" $FijiDirectory/jars/win64
-#installWithGroupId "$jinputGAV:jar:natives-all" $FijiDirectory/jars/linux64
-#installWithGroupId "$jinputGAV:jar:natives-all" $FijiDirectory/jars/macosx
-#echo "--> Removing jinput natives from JAR root"
-#(set -x; rm -f $FijiDirectory/jars/jinput-*-natives-all.jar)
-#
-#ffmpegGAV=$(mvn dependency:tree | grep 'ffmpeg:jar' | head -n1 | awk -e '{print $NF}' | cut -d: -f1-4 | sed 's/:jar//g' | sed 's/:compile//g')
-#installWithGroupId "$ffmpegGAV" $FijiDirectory/jars
-#installWithGroupId "$ffmpegGAV:jar:windows-x86_64" $FijiDirectory/jars/win64
-#installWithGroupId "$ffmpegGAV:jar:linux-x86_64" $FijiDirectory/jars/linux64
-#installWithGroupId "$ffmpegGAV:jar:macosx-x86_64" $FijiDirectory/jars/macosx
-#
-## -- Get the latest imagej-launcher -- [CHECK IF THIS CAN BE REMOVED]
-#
-#wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-linux64.exe" -O $FijiDirectory/ImageJ-linux64 ||
-#    die "Could not get linux64 launcher"
-#chmod +x $FijiDirectory/ImageJ-linux64
-#mkdir -p $FijiDirectory/Contents/MacOS/
-#wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-macosx.exe" -O $FijiDirectory/Contents/MacOS/ImageJ-macosx ||
-#    die "Could not get macOS launcher"
-#chmod +x $FijiDirectory/Contents/MacOS/ImageJ-macosx
-#wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-win32.exe" -O $FijiDirectory/ImageJ-win32 ||
-#    die "Could not get Win32 launcher"
-#chmod +x $FijiDirectory/ImageJ-win32
-#wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-win64.exe" -O $FijiDirectory/ImageJ-win64 ||
-#    die "Could not get Win64 launcher"
-#chmod +x $FijiDirectory/ImageJ-win64
-#
-## -- Fix old miglayout
-#
-#rm $FijiDirectory/jars/miglayout-3.7.4-swing.jar
-#install "com.miglayout:miglayout-swing:5.2" $FijiDirectory/jars
-#
-## -- Fix imagej-mesh versions with jitpack version clashing (temporary)
-#
-#rm $FijiDirectory/jars/imagej-mesh-*
-#install "net.imagej:imagej-mesh:0.8.1" $FijiDirectory/jars
-#
-## -- Get the list of native libraries --
-#
-## [NB] dependency:list emits G:A:P:C:V but dependency:copy needs G:A:V:P:C.
-#echo
-#echo "--> Extracting list of native dependencies"
-#natives=$(mvn -B dependency:list |
-#  grep natives |
-#  sed -e 's/^\[INFO\] *\([^:]*\):\([^:]*\):\([^:]*\):\([^:]*\):\([^:]*\):.*/\1:\2:\5:\3:\4/' |
-#  grep -v -- '-\(android\|armv6\|solaris\)' |
-#  sort)
-#for gavpc in $natives
-#do
-#  gavp=$(left "$gavpc" ':')
-#  gav=$(left "$gavp" ':')
-#  ga=$(left "$gav" ':')
-#  g=$(left "$ga" ':')
-#  a=$(right "$ga" ':')
-#  v=$(right "$gav" ':')
-#  p=$(right "$gavp" ':')
-#  c=$(right "$gavpc" ':')
-#  echo
-#  echo "[$a-$v-$c]"
-#  case "$g" in
-#    org.lwjgl|graphics.scenery)
-#      deleteNatives "$a"
-#      # [NB] Install all architectures manually; only one is a dependency.
-#      install "$gavp:natives-windows" $FijiDirectory/jars/win64
-#      install "$gavp:natives-macos" $FijiDirectory/jars/macosx
-#      install "$gavp:natives-linux" $FijiDirectory/jars/linux64
-#      ;;
-#    *)
-#      deleteNative "$a" "$c"
-#      case "$c" in
-#        natives-win*-i586) continue ;;
-#        natives-win*) platform=win64 ;;
-#        natives-linux*-i586) continue ;;
-#        natives-linux*) platform=linux64 ;;
-#        natives-osx|natives-mac*) platform=macosx ;;
-#        natives-all*) continue ;;
-#        *) die "Unsupported platform: $c" ;;
-#      esac
-#      install "$gavpc" "$FijiDirectory/jars/$platform"
-#      ;;
-#  esac
-#done
-#
-## -- Now that we populated fiji, let's double check that it works --
-#
-#echo
-#echo "--> Testing installation with command: sc.iview.commands.help.About"
-#EXE="$FijiDirectory//$launcher"
-#OUT_TEST=$($EXE --headless --run sc.iview.commands.help.About)
-#echo $OUT_TEST
-#
-#if [ -z "$OUT_TEST" ]
-#then
-#    echo "Test failed"
-#    exit 1
-#else
-#    echo "Test passed"
-#fi
-#
+echo "--> Removing slf4j bindings"
+(set -x; rm -f $FijiDirectory/jars/slf4j-simple-*.jar) ||
+    die "Failed to remove slf4j bindings"
+
+# -- Put back jar/gluegen-rt and jar/jogl-all --
+echo
+echo "--> Reinstalling gluegen-rt, jogl-all, jocl, jinput, and ffmpeg"
+gluegenJar=$(echo $FijiDirectory/jars/gluegen-rt-main-*.jar)
+gluegenVersion=$(mid "$gluegenJar" "-" ".jar")
+install "org.jogamp.gluegen:gluegen-rt:$gluegenVersion" $FijiDirectory/jars
+
+joglJar=$(echo $FijiDirectory/jars/jogl-all-main-*.jar)
+joglVersion=$(mid "$joglJar" "-" ".jar")
+install "org.jogamp.jogl:jogl-all:$joglVersion" $FijiDirectory/jars
+
+joclGAV=$(mvn dependency:tree | grep jocl | awk -e '{print $NF}' | cut -d: -f1-4 | sed 's/:jar//g')
+installWithGroupId "$joclGAV" $FijiDirectory/jars
+
+jinputGAV=$(mvn dependency:tree | grep jinput | head -n1 | awk -e '{print $NF}' | cut -d: -f1-4 | sed 's/:jar//g' | sed 's/:compile//g')
+install "$jinputGAV" $FijiDirectory/jars
+installWithGroupId "$jinputGAV:jar:natives-all" $FijiDirectory/jars/win64
+installWithGroupId "$jinputGAV:jar:natives-all" $FijiDirectory/jars/linux64
+installWithGroupId "$jinputGAV:jar:natives-all" $FijiDirectory/jars/macosx
+echo "--> Removing jinput natives from JAR root"
+(set -x; rm -f $FijiDirectory/jars/jinput-*-natives-all.jar)
+
+ffmpegGAV=$(mvn dependency:tree | grep 'ffmpeg:jar' | head -n1 | awk -e '{print $NF}' | cut -d: -f1-4 | sed 's/:jar//g' | sed 's/:compile//g')
+installWithGroupId "$ffmpegGAV" $FijiDirectory/jars
+installWithGroupId "$ffmpegGAV:jar:windows-x86_64" $FijiDirectory/jars/win64
+installWithGroupId "$ffmpegGAV:jar:linux-x86_64" $FijiDirectory/jars/linux64
+installWithGroupId "$ffmpegGAV:jar:macosx-x86_64" $FijiDirectory/jars/macosx
+
+# -- Get the latest imagej-launcher -- [CHECK IF THIS CAN BE REMOVED]
+
+wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-linux64.exe" -O $FijiDirectory/ImageJ-linux64 ||
+    die "Could not get linux64 launcher"
+chmod +x $FijiDirectory/ImageJ-linux64
+mkdir -p $FijiDirectory/Contents/MacOS/
+wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-macosx.exe" -O $FijiDirectory/Contents/MacOS/ImageJ-macosx ||
+    die "Could not get macOS launcher"
+chmod +x $FijiDirectory/Contents/MacOS/ImageJ-macosx
+wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-win32.exe" -O $FijiDirectory/ImageJ-win32 ||
+    die "Could not get Win32 launcher"
+chmod +x $FijiDirectory/ImageJ-win32
+wget "https://maven.scijava.org/service/local/repositories/releases/content/net/imagej/imagej-launcher/5.0.2/imagej-launcher-5.0.2-win64.exe" -O $FijiDirectory/ImageJ-win64 ||
+    die "Could not get Win64 launcher"
+chmod +x $FijiDirectory/ImageJ-win64
+
+# -- Fix old miglayout
+
+rm $FijiDirectory/jars/miglayout-3.7.4-swing.jar
+install "com.miglayout:miglayout-swing:5.2" $FijiDirectory/jars
+
+# -- Fix imagej-mesh versions with jitpack version clashing (temporary)
+
+rm $FijiDirectory/jars/imagej-mesh-*
+install "net.imagej:imagej-mesh:0.8.1" $FijiDirectory/jars
+
+# -- Get the list of native libraries --
+
+# [NB] dependency:list emits G:A:P:C:V but dependency:copy needs G:A:V:P:C.
+echo
+echo "--> Extracting list of native dependencies"
+natives=$(mvn -B dependency:list |
+  grep natives |
+  sed -e 's/^\[INFO\] *\([^:]*\):\([^:]*\):\([^:]*\):\([^:]*\):\([^:]*\):.*/\1:\2:\5:\3:\4/' |
+  grep -v -- '-\(android\|armv6\|solaris\)' |
+  sort)
+for gavpc in $natives
+do
+  gavp=$(left "$gavpc" ':')
+  gav=$(left "$gavp" ':')
+  ga=$(left "$gav" ':')
+  g=$(left "$ga" ':')
+  a=$(right "$ga" ':')
+  v=$(right "$gav" ':')
+  p=$(right "$gavp" ':')
+  c=$(right "$gavpc" ':')
+  echo
+  echo "[$a-$v-$c]"
+  case "$g" in
+    org.lwjgl|graphics.scenery)
+      deleteNatives "$a"
+      # [NB] Install all architectures manually; only one is a dependency.
+      install "$gavp:natives-windows" $FijiDirectory/jars/win64
+      install "$gavp:natives-macos" $FijiDirectory/jars/macosx
+      install "$gavp:natives-linux" $FijiDirectory/jars/linux64
+      ;;
+    *)
+      deleteNative "$a" "$c"
+      case "$c" in
+        natives-win*-i586) continue ;;
+        natives-win*) platform=win64 ;;
+        natives-linux*-i586) continue ;;
+        natives-linux*) platform=linux64 ;;
+        natives-osx|natives-mac*) platform=macosx ;;
+        natives-all*) continue ;;
+        *) die "Unsupported platform: $c" ;;
+      esac
+      install "$gavpc" "$FijiDirectory/jars/$platform"
+      ;;
+  esac
+done
+
+# -- Now that we populated fiji, let's double check that it works --
+
+echo
+echo "--> Testing installation with command: sc.iview.commands.help.About"
+EXE="$FijiDirectory//$launcher"
+OUT_TEST=$($EXE --headless --run sc.iview.commands.help.About)
+echo $OUT_TEST
+
+if [ -z "$OUT_TEST" ]
+then
+    echo "Test failed"
+    exit 1
+else
+    echo "Test passed"
+fi
+
