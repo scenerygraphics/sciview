@@ -11,6 +11,7 @@ plugins {
     kotlin("kapt") version ktVersion
     sciview.publish
     sciview.sign
+    sciview.populateFiji
     id("com.github.elect86.sciJava") version "0.0.4"
     id("org.jetbrains.dokka") version ktVersion
     jacoco
