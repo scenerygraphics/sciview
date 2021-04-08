@@ -30,7 +30,7 @@ val sceneryVersion = "4a0c1f7"
 "ui-behaviour"("2.0.3")
 "imagej-mesh"("0.8.1")
 "bigdataviewer-vistools"("1.0.0-beta-21")
-"bigvolumeviewer"("0.1.8") // added from Gradle conversion
+//"bigvolumeviewer"("0.1.8") // added from Gradle conversion
 
 "kotlin"("1.4.20")
 "kotlinx-coroutines-core"("1.3.9")
@@ -116,7 +116,8 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     testImplementation(kotlin("test-junit"))
 
-    sciJava("sc.fiji"["bigdataviewer-core", "bigdataviewer-vistools", "bigvolumeviewer"])
+    sciJava("sc.fiji"["bigdataviewer-core", "bigdataviewer-vistools"])
+    implementation("com.github.skalarproduktraum:jogl-minimal:1c86442")
 
     // this apparently is still necessary
     implementation(platform("org.lwjgl:lwjgl-bom:3.2.3"))
