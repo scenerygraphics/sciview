@@ -44,8 +44,8 @@ dependencies {
     annotationProcessor(sciJavaCommon)
     kapt(sciJavaCommon)
 
-//    api("graphics.scenery:scenery:$sceneryVersion")
-    api("com.github.scenerygraphics:scenery:$sceneryVersion")
+    api("graphics.scenery:scenery:$sceneryVersion")
+//    api("com.github.scenerygraphics:scenery:$sceneryVersion")
 
     sciJava("net.clearvolume:cleargl")
     sciJava("net.clearcontrol:coremem")
@@ -163,6 +163,7 @@ tasks {
         finalizedBy(jacocoTestReport) // report is always generated after tests run
     }
     jar {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
         archiveVersion.set(rootProject.version.toString())
     }
 
