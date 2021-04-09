@@ -39,6 +39,7 @@ import net.imglib2.img.array.ArrayImgs
 import net.imglib2.position.FunctionRandomAccessible
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import net.imglib2.view.Views
+import org.joml.Matrix4f
 import org.scijava.command.Command
 import org.scijava.command.CommandService
 import org.scijava.plugin.Menu
@@ -76,6 +77,14 @@ class VolumeTimeseriesDemo : Command {
 
             bdv.bdvHandle.viewerPanel.addTimePointListener { t ->
                 goToTimepoint(t.coerceIn(0, timepointCount-1))
+            }
+            bdv.bdvHandle.viewerPanel.addTransformListener {
+
+                val dar = (0..15).map { i -> i.toDouble() }.toDoubleArray()
+                it.toArray(dar)
+                val far = dar.map { d -> d.toFloat() }.toFloatArray()
+                this.world.set(far)
+
             }
 
             sciView.setActiveNode(this)
