@@ -117,6 +117,11 @@ dependencies {
     testImplementation(kotlin("test-junit"))
 
     sciJava("sc.fiji"["bigdataviewer-core", "bigdataviewer-vistools"])
+    implementation("net.imglib2:imglib2") { // do the same for imglib2-realtransform
+        version { strictly("5.6.3") }
+        because("jan gets TransformListenerClassNotFound")
+    }
+
     implementation("com.github.skalarproduktraum:jogl-minimal:1c86442")
 
     // this apparently is still necessary
