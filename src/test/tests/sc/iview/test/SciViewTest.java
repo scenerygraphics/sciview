@@ -28,7 +28,6 @@
  */
 package sc.iview.test;
 
-import cleargl.GLVector;
 import graphics.scenery.*;
 import io.scif.SCIFIOService;
 import net.imagej.ImageJService;
@@ -40,7 +39,8 @@ import org.scijava.service.SciJavaService;
 import org.scijava.thread.ThreadService;
 import sc.iview.SciView;
 import sc.iview.SciViewService;
-import scala.xml.Null;
+
+import java.io.FileNotFoundException;
 
 public class SciViewTest {
 
@@ -48,19 +48,19 @@ public class SciViewTest {
     public void nodeDeletionTest() throws Exception {
         SceneryBase.xinitThreads();
 
-        System.setProperty( "scijava.log.level:sc.iview", "debug" );
-        Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
+        System.setProperty("scijava.log.level:sc.iview", "debug");
+        Context context = new Context(ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
 
-        SciViewService sciViewService = context.service( SciViewService.class );
+        SciViewService sciViewService = context.service(SciViewService.class);
         SciView sciView = sciViewService.getOrCreateActiveSciView();
 
         Node sphere = sciView.addSphere();
 
-        Assert.assertEquals( sciView.getAllSceneNodes().length, 7 );
+        Assert.assertEquals(sciView.getAllSceneNodes().length, 7);
 
         sciView.deleteNode(sphere);
 
-        Assert.assertEquals( sciView.getAllSceneNodes().length, 6 );
+        Assert.assertEquals(sciView.getAllSceneNodes().length, 6);
 
         sciView.closeWindow();
     }
@@ -69,31 +69,31 @@ public class SciViewTest {
     public void nestedNodeDeletionTest() throws Exception {
         SceneryBase.xinitThreads();
 
-        System.setProperty( "scijava.log.level:sc.iview", "debug" );
-        Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
+        System.setProperty("scijava.log.level:sc.iview", "debug");
+        Context context = new Context(ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
 
-        SciViewService sciViewService = context.service( SciViewService.class );
+        SciViewService sciViewService = context.service(SciViewService.class);
         SciView sciView = sciViewService.getOrCreateActiveSciView();
 
         Group group = new Group();
 
         final Material material = new Material();
-        material.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
-        material.setDiffuse( new Vector3f( 1.0f, 0.0f, 0.0f ) );
-        material.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
+        material.setAmbient(new Vector3f(1.0f, 0.0f, 0.0f));
+        material.setDiffuse(new Vector3f(1.0f, 0.0f, 0.0f));
+        material.setSpecular(new Vector3f(1.0f, 1.0f, 1.0f));
 
-        final Sphere sphere = new Sphere( 1, 20 );
-        sphere.setMaterial( material );
-        sphere.setPosition( new Vector3f(0,0,0) );
+        final Sphere sphere = new Sphere(1, 20);
+        sphere.setMaterial(material);
+        sphere.setPosition(new Vector3f(0, 0, 0));
         //sphere.setParent(group);
         group.addChild(sphere);
         sciView.addNode(group);
 
-        Assert.assertEquals( sciView.getAllSceneNodes().length, 7 );
+        Assert.assertEquals(sciView.getAllSceneNodes().length, 7);
 
         sciView.deleteNode(group);
 
-        Assert.assertEquals( sciView.getAllSceneNodes().length, 6 );
+        Assert.assertEquals(sciView.getAllSceneNodes().length, 6);
 
         sciView.closeWindow();
     }
@@ -108,10 +108,10 @@ public class SciViewTest {
     public void falseCalculatedParameterVector() throws Exception {
         SceneryBase.xinitThreads();
 
-        System.setProperty( "scijava.log.level:sc.iview", "debug" );
-        Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
+        System.setProperty("scijava.log.level:sc.iview", "debug");
+        Context context = new Context(ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
 
-        SciViewService sciViewService = context.service( SciViewService.class );
+        SciViewService sciViewService = context.service(SciViewService.class);
         SciView sciView = sciViewService.getOrCreateActiveSciView();
 
         Vector3f position = sciView.getCamera().getPosition();
@@ -130,10 +130,10 @@ public class SciViewTest {
     public void deleteActiveMesh() throws Exception {
         SceneryBase.xinitThreads();
 
-        System.setProperty( "scijava.log.level:sc.iview", "debug" );
-        Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
+        System.setProperty("scijava.log.level:sc.iview", "debug");
+        Context context = new Context(ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
 
-        SciViewService sciViewService = context.service( SciViewService.class );
+        SciViewService sciViewService = context.service(SciViewService.class);
         SciView sciView = sciViewService.getOrCreateActiveSciView();
 
         Node sphere = sciView.addSphere();
@@ -149,10 +149,10 @@ public class SciViewTest {
     public void deletedNodeNotFindable() throws Exception {
         SceneryBase.xinitThreads();
 
-        System.setProperty( "scijava.log.level:sc.iview", "debug" );
-        Context context = new Context( ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
+        System.setProperty("scijava.log.level:sc.iview", "debug");
+        Context context = new Context(ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
 
-        SciViewService sciViewService = context.service( SciViewService.class );
+        SciViewService sciViewService = context.service(SciViewService.class);
         SciView sciView = sciViewService.getOrCreateActiveSciView();
 
         Node sphere = sciView.addSphere();
@@ -163,4 +163,22 @@ public class SciViewTest {
 
         Assert.assertNotEquals(sphere, sciView.find("sphere"));
     }
+
+    @Test(expected = FileNotFoundException.class)
+    public void testOpenFunction() throws Exception {
+        SceneryBase.xinitThreads();
+
+        System.setProperty("scijava.log.level:sc.iview", "debug");
+        Context context = new Context(ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
+
+        SciViewService sciViewService = context.service(SciViewService.class);
+        SciView sciView = sciViewService.getOrCreateActiveSciView();
+
+        sciView.open("ThisShouldNotWork");
+    }
+
+
+
+
+
 }
