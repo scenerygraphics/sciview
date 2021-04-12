@@ -190,6 +190,20 @@ public class SciViewTest {
         sciView.open("src/test/resources/mockFiles/mockFile");
     }
 
+    //TODO maybe a safeguard against trashed volume files?
+    @Test(expected = IllegalArgumentException.class)
+    public void testBrokenVolume() throws Exception {
+        SceneryBase.xinitThreads();
+
+        System.setProperty("scijava.log.level:sc.iview", "debug");
+        Context context = new Context(ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
+
+        SciViewService sciViewService = context.service(SciViewService.class);
+        SciView sciView = sciViewService.getOrCreateActiveSciView();
+
+        sciView.open("src/test/resources/mockFiles/trashedVolume.tif");
+    }
+
 
 
 
