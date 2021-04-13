@@ -204,8 +204,36 @@ public class SciViewTest {
         sciView.open("src/test/resources/mockFiles/trashedVolume.tif");
     }
 
+    //Very simple, yet may tell if something is completely off. Data-set taken from https://graphics.stanford.edu/data/voldata/
+    //TODO doesn't work
+    @Test
+    public void testCorrectVolume() throws Exception {
+        SceneryBase.xinitThreads();
 
+        System.setProperty("scijava.log.level:sc.iview", "debug");
+        Context context = new Context(ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
 
+        SciViewService sciViewService = context.service(SciViewService.class);
+        SciView sciView = sciViewService.getOrCreateActiveSciView();
+        sciView.open("src/test/resources/mockFiles/correctVolume.tif");
+        Assert.assertNull(null);
+    }
+
+    @Test
+    public void verifyNullCheckForCenterOnPosition() throws Exception {
+        SceneryBase.xinitThreads();
+
+        System.setProperty("scijava.log.level:sc.iview", "debug");
+        Context context = new Context(ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
+
+        SciViewService sciViewService = context.service(SciViewService.class);
+        SciView sciView = sciViewService.getOrCreateActiveSciView();
+
+        sciView.centerOnPosition(null);
+
+        Assert.assertNull(null);
+
+    }
 
 
 
