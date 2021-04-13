@@ -480,7 +480,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Center the camera on the specified Node
      */
     fun centerOnPosition(currentPos: Vector3f?) {
-        controls.centerOnPosition(currentPos)
+        if(currentPos != null) {
+            controls.centerOnPosition(currentPos)
+        }
+        else { logger.info("The current position is null.") }
     }
 
     /**
