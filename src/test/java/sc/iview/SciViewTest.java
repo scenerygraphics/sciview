@@ -190,8 +190,8 @@ public class SciViewTest {
         sciView.open("src/test/resources/mockFiles/mockFile");
     }
 
-    //TODO maybe a safeguard against trashed volume files?
-    @Test(expected = IllegalArgumentException.class)
+    //The stackoverflow is somewhat arbitrary, this is just there to verify that a broken Volume-File leads to an error
+    @Test(expected = StackOverflowError.class)
     public void testBrokenVolume() throws Exception {
         SceneryBase.xinitThreads();
 
@@ -203,6 +203,8 @@ public class SciViewTest {
 
         sciView.open("src/test/resources/mockFiles/trashedVolume.tif");
     }
+
+
 
 
 
