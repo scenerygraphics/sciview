@@ -43,8 +43,8 @@ dependencies {
     annotationProcessor(sciJavaCommon)
     kapt(sciJavaCommon)
 
-//    api("graphics.scenery:scenery:$sceneryVersion")
-    api("com.github.scenerygraphics:scenery:$sceneryVersion")
+    api("graphics.scenery:scenery:$sceneryVersion")
+//    api("com.github.scenerygraphics:scenery:$sceneryVersion")
 
     sciJava("net.clearvolume:cleargl")
     sciJava("net.clearcontrol:coremem")
