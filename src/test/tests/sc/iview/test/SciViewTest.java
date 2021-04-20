@@ -29,7 +29,10 @@
 package sc.iview.test;
 
 import graphics.scenery.*;
+import graphics.scenery.volumes.Volume;
 import io.scif.SCIFIOService;
+import io.scif.services.DatasetIOService;
+import net.imagej.Dataset;
 import net.imagej.ImageJService;
 import org.joml.Vector3f;
 import org.junit.Assert;
@@ -41,6 +44,7 @@ import sc.iview.SciView;
 import sc.iview.SciViewService;
 
 import java.io.FileNotFoundException;
+import java.util.Objects;
 
 public class SciViewTest {
 
@@ -205,39 +209,23 @@ public class SciViewTest {
     }
 
     //Very simple, yet may tell if something is completely off. Data-set taken from https://graphics.stanford.edu/data/voldata/
-    //TODO doesn't work
     @Test
     public void testCorrectVolume() throws Exception {
-        SceneryBase.xinitThreads();
+        SciView sciView = SciView.create();
+        DatasetIOService datasetService = Objects.requireNonNull(sciView.getScijavaContext()).service(DatasetIOService.class);
 
-        System.setProperty("scijava.log.level:sc.iview", "debug");
-        Context context = new Context(ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
+        Dataset ds = datasetService.open("src/test/resources/mockFiles/correctVolume.tif");
 
-        SciViewService sciViewService = context.service(SciViewService.class);
-        SciView sciView = sciViewService.getOrCreateActiveSciView();
-        sciView.open("src/test/resources/mockFiles/correctVolume.tif");
+        Volume volume = sciView.addVolume(ds);
         Assert.assertNull(null);
     }
 
     @Test
     public void verifyNullCheckForCenterOnPosition() throws Exception {
-        SceneryBase.xinitThreads();
-
-        System.setProperty("scijava.log.level:sc.iview", "debug");
-        Context context = new Context(ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
-
-        SciViewService sciViewService = context.service(SciViewService.class);
-        SciView sciView = sciViewService.getOrCreateActiveSciView();
+        SciView sciView = SciView.create();
 
         sciView.centerOnPosition(null);
 
         Assert.assertNull(null);
-
     }
-
-
-
-
-
-
 }
