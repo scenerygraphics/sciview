@@ -2,6 +2,7 @@ import org.gradle.kotlin.dsl.implementation
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import sciJava.*
+import sciview.implementation
 import java.net.URL
 
 plugins {
@@ -14,28 +15,26 @@ plugins {
     id("com.github.elect86.sciJava") version "0.0.4"
     id("org.jetbrains.dokka") version ktVersion
     jacoco
-    idea
+    id("sciJava.platform") version "30.0.0+11"
 }
 
 repositories {
     mavenCentral()
     jcenter()
-    maven("https://jitpack.io")
     maven("https://maven.scijava.org/content/groups/public")
+    maven("https://raw.githubusercontent.com/kotlin-graphics/mary/master")
+    maven("https://jitpack.io")
 }
 
-val sceneryVersion = "4a0c1f7"
 // here we set some versions
-//"scijava-common"("2.84.0")
-"ui-behaviour"("2.0.3")
-"imagej-mesh"("0.8.1")
-"bigdataviewer-vistools"("1.0.0-beta-21")
+//"ui-behaviour"("2.0.3")
+//"imagej-mesh"("0.8.1")
+//"bigdataviewer-vistools"("1.0.0-beta-21")
 //"bigvolumeviewer"("0.1.8") // added from Gradle conversion
 
-"kotlin"("1.4.20")
-"kotlinx-coroutines-core"("1.3.9")
-
 dependencies {
+
+    //    implementation(platform("sciJava:platform:30.0.0+6"))
 
     // Graphics dependencies
 
@@ -43,46 +42,54 @@ dependencies {
     annotationProcessor(sciJavaCommon)
     kapt(sciJavaCommon)
 
-    api("graphics.scenery:scenery:$sceneryVersion")
-//    api("com.github.scenerygraphics:scenery:$sceneryVersion")
+    //    api("graphics.scenery:scenery:861b4bc")
+    api("com.github.scenerygraphics:scenery:861b4bc")
 
-    sciJava("net.clearvolume:cleargl")
-    sciJava("net.clearcontrol:coremem")
-    sciJava("org.jogamp.jogl:jogl-all", native = joglNative)
+    implementation(misc.cleargl)
+    implementation(misc.coreMem)
+    implementation(jogamp.jogl, native = joglNative)
 
     implementation("com.formdev:flatlaf:0.38")
 
     // SciJava dependencies
 
-    sciJava("org.scijava"["scijava-common", "ui-behaviour", "script-editor", "scijava-ui-swing",
-            "scijava-ui-awt", "scijava-search", "scripting-jython"])
-    implementation("org.scijava:scijava-common:2.83.0") {
-        version { strictly("2.83.3") }
-    }
-    sciJava("com.miglayout:miglayout-swing")
+    implementation(sciJava.common) // { version { strictly("2.83.3") } } CHECKME
+    implementation(sciJava.uiBehaviour)
+    implementation(sciJava.scriptEditor)
+    implementation(sciJava.uiSwing)
+    implementation(sciJava.uiAwt)
+    implementation(sciJava.search)
+    implementation(sciJava.scriptingJython)
+    implementation(migLayout.swing)
 
     // ImageJ dependencies
 
-    sciJava("net.imagej") {
-        exclude("org.scijava", "scripting-renjin")
-        exclude("org.scijava", "scripting-jruby")
-    }
-
-    sciJava("net.imagej:imagej-"["common", "mesh", "mesh-io", "ops", "launcher", "ui-swing", "legacy"])
-    sciJava("io.scif:scifio"["", "-bf-compat"])
+    implementation(imagej.core)
+    //    sciJava("net.imagej") {
+    //        exclude("org.scijava", "scripting-renjin")
+    //        exclude("org.scijava", "scripting-jruby")
+    //    }
+    implementation(imagej.common)
+    implementation(imagej.mesh) { version { strictly("0.8.1") } } // FIXME
+    implementation(imagej.meshIo)
+    implementation(imagej.ops)
+    implementation(imagej.launcher)
+    implementation(imagej.uiSwing)
+    implementation(imagej.legacy)
+    implementation(scifio.scifio)
+    implementation(scifio.bfCompat)
 
     // ImgLib2 dependencies
-
-    sciJava("net.imglib2:imglib2"["-roi", ""])
+    implementation(imgLib2.core)
+    implementation(imgLib2.roi)
 
     // Math dependencies
-
-    sciJava("org.apache.commons:commons-math3")
-    sciJava("org.joml")
+    implementation(commons.math3)
+    implementation(misc.joml)
 
     // Kotlin dependencies
 
-    sciJava("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9")
 
     // Optional dependencies - for sc.iview.Main only! -->
     //		<dependency>
@@ -104,19 +111,21 @@ dependencies {
 
     // Test scope
 
-    testSciJava("junit")
-    sciJava("net.imagej:ij", test = false)
-    sciJava("net.imglib2:imglib2-ij", test = false)
+    testImplementation(misc.junit4)
+    implementation(imagej.ij)
+    implementation(imgLib2.ij)
 
-
-    sciJava("org.janelia.saalfeldlab:n5"["", "-hdf5", "-imglib2"])
-    sciJava("sc.fiji:spim_data")
+    implementation(n5.core)
+    implementation(n5.hdf5)
+    implementation(n5.imglib2)
+    implementation(bigDataViewer.spimData)
 
     implementation(platform(kotlin("bom")))
     implementation(kotlin("stdlib-jdk8"))
     testImplementation(kotlin("test-junit"))
 
-    sciJava("sc.fiji"["bigdataviewer-core", "bigdataviewer-vistools"])
+    implementation(bigDataViewer.core)
+    implementation(bigDataViewer.visTools)
     implementation("com.github.skalarproduktraum:jogl-minimal:1c86442")
 
     // this apparently is still necessary

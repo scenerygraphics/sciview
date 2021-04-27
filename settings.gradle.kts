@@ -1,3 +1,15 @@
+
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven("https://raw.githubusercontent.com/kotlin-graphics/mary/master")
+    }
+}
+
+plugins {
+    id("sciJava.catalogs") version "30.0.0+57"
+}
+
 rootProject.name = "sciview"
 
 gradle.rootProject {
@@ -7,5 +19,5 @@ gradle.rootProject {
 }
 
 if (System.getProperty("CI").toBoolean() != true && System.getenv("CI").toBoolean() != true) {
-    includeBuild("../scenery")
+//    includeBuild("../scenery")
 }
