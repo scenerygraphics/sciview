@@ -1,6 +1,6 @@
 package sc.iview
 
-import junit.framework.Assert.assertNull
+import junit.framework.Assert.assertNotNull
 import org.junit.Test
 import sc.iview.node.Line3D
 
@@ -10,6 +10,6 @@ class Line3DTests {
     @Test
     fun testBoundingBox() {
         val line = Line3D()
-        assertNull(line.generateBoundingBox())
+        assertNotNull(line.generateBoundingBox())
     }
 }
