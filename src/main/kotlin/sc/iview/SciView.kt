@@ -806,10 +806,18 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return a Node corresponding to the Node
      */
     @JvmOverloads
-    fun <N: Node?> addNode(n: N, activePublish: Boolean = true, block: N.() -> Unit = {}): N {
+    fun <N: Node?> addNode(n: N, activePublish: Boolean = true, withPivot: Boolean = false, block: N.() -> Unit = {}): N {
+        val pivot = Node()
+        pivot.name = (n?.name ?: "") +" pivot"
+        scene.addChild(pivot)
+        objectService.addObject(pivot)
         n?.let {
             it.block()
-            scene.addChild(it)
+            if (withPivot){
+                pivot.addChild(it)
+            } else {
+                scene.addChild(it)
+            }
             objectService.addObject(n)
             if (blockOnNewNodes) {
                 Utils.blockWhile({ this.find(n.name) == null }, 20)
@@ -825,6 +833,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             }
         }
         return n
+
     }
 
     /**
@@ -1375,7 +1384,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         tf.addControlPoint(1.0f, rampMax)
         val bg = BoundingGrid()
         bg.node = v
-        return addNode(v, block = block)
+        return addNode(v, block = block, withPivot = true)
     }
 
     /**

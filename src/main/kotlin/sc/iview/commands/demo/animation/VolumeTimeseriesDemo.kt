@@ -28,24 +28,44 @@
  */
 package sc.iview.commands.demo.animation
 
+import bdv.util.Affine3DHelpers
 import bdv.util.BdvFunctions
+import graphics.scenery.Box
+import graphics.scenery.Node
+import graphics.scenery.Origin
+import graphics.scenery.backends.vulkan.VulkanNodeHelpers.rendererMetadata
 import graphics.scenery.numerics.OpenSimplexNoise
-import graphics.scenery.volumes.Volume
+import graphics.scenery.utils.extensions.minus
+import graphics.scenery.utils.extensions.plusAssign
+import graphics.scenery.utils.extensions.times
+import ij.IJ
+import ij.ImagePlus
+import io.scif.services.DatasetIOService
+import net.imagej.Dataset
 import net.imglib2.FinalInterval
 import net.imglib2.Localizable
 import net.imglib2.RandomAccessibleInterval
 import net.imglib2.img.Img
 import net.imglib2.img.array.ArrayImgs
+import net.imglib2.img.display.imagej.ImageJFunctions
 import net.imglib2.position.FunctionRandomAccessible
 import net.imglib2.type.numeric.integer.UnsignedByteType
+import net.imglib2.type.numeric.integer.UnsignedShortType
 import net.imglib2.view.Views
+import org.joml.Matrix3f
+import org.joml.Matrix4f
+import org.joml.Quaternionf
+import org.joml.Vector3f
 import org.scijava.command.Command
 import org.scijava.command.CommandService
+import org.scijava.log.LogService
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
+import sc.iview.commands.demo.ResourceLoader
+import java.io.IOException
 import java.util.*
 import java.util.function.BiConsumer
 
@@ -63,24 +83,112 @@ import java.util.function.BiConsumer
 class VolumeTimeseriesDemo : Command {
     @Parameter
     private lateinit var sciView: SciView
+    @Parameter
+    private lateinit var datasetIO: DatasetIOService
+    @Parameter
+    private lateinit var log: LogService
 
     override fun run() {
-        val dataset = makeDataset()
+        //val dataset = makeDataset()
+
+        val cubeFile = ResourceLoader.createFile(javaClass, "/t1-head.tif")
+        val imp: ImagePlus = IJ.openImage(cubeFile.absolutePath)
+        val dataset: Img<UnsignedShortType> = ImageJFunctions.wrapShort(imp)
 
         val bdv = BdvFunctions.show(dataset, "test")
         sciView.addVolume(dataset, floatArrayOf(1f, 1f, 1f, 1f)) {
-            pixelToWorldRatio = 10f
+            pixelToWorldRatio = 1f
             name = "Volume Render Demo"
             dirty = true
             needsUpdate = true
+            origin = Origin.Center
+            //scale = Vector3f(1f)
 
-            bdv.bdvHandle.viewerPanel.addTimePointListener { t ->
-                goToTimepoint(t.coerceIn(0, timepointCount-1))
+
+            val pivot = Node()
+            //sciView.sceneNodes.first().addChild(pivot)
+            this.addChild(pivot)
+
+            //pivot.position = Vector3f(384f,384f,128f);
+
+
+
+            val sliceP = Box(Vector3f(200f,200f,0.05f)) //Box(Vector3f(5f))//SlicingPlane()
+            //sliceP.addTargetVolume(this)
+            //this.slicingMode = Volume.SlicingMode.Both
+            pivot.addChild(sliceP)
+
+
+            //bdv.bdvHandle.viewerPanel.addTimePointListener { t ->
+            //    goToTimepoint(t.coerceIn(0, timepointCount-1))
+            //}
+            //bdv.bdvHandle.viewerPanel.transform
+
+            bdv.bdvHandle.viewerPanel.addTransformListener {
+
+                val vt = bdv.bdvHandle.viewerPanel.state().viewerTransform
+
+
+                val w = 800
+                val h = 577
+                // window center offset
+                it.set(it.get(0, 3) - w + 0.5, 0, 3)
+                it.set(it.get(1, 3) - h + 0.5, 1, 3)
+                //it.scale(1/18.612903225806452)
+
+                it.scale(1/2.25390625)
+                it.scale(0.3)
+
+                //println(it)
+
+                val m = DoubleArray(4)
+                Affine3DHelpers.extractRotationAnisotropic(it,m)
+
+                val t = it.translation
+                val tv = Vector3f(t[0].toFloat(), t[1].toFloat() * -1f,t[2].toFloat())
+                val fixedDistnace = Vector3f()
+                tv.normalize(2f,fixedDistnace)
+
+                //log.warn(tv)
+
+
+                //sliceP.position = tv -fixedDistnace //* 0.05f
+                //pivot.rotation = Quaternionf(m[1],m[2],m[3],m[0]).normalize()
+
+/*
+                val rot = sciView.camera?.let { cam ->
+                    cam.position = Vector3f(t[0].toFloat(), t[1].toFloat(), t[2].toFloat())
+                    cam.rotation = Quaternionf().lookAlong(this.worldPosition() - cam.worldPosition(), cam.up)
+                }
+*/
+                //sciView.camera?.position = Vector3f(t[0].toFloat(), t[1].toFloat(), t[2].toFloat())
+                //println(this.position)
+
+
+                val volumePivot = sciView.find("volume pivot")
+
+
+                val dar = DoubleArray(16)
+                it.toArray(dar)
+                val far = dar.map { d -> d.toFloat() }.toFloatArray()
+                val viewerMatrix = Matrix4f().set(far).invertAffine()
+                volumePivot?.world = viewerMatrix
+                this.updateWorld(true,true)
+                //sliceP.world = sliceP.world.set(far)//.transpose()
+
+                /* other way around
+                val w = AffineTransform3D()
+                val arr = FloatArray(16)
+                Matrix4f(this.world).transpose().get(it)
+
+                w.set(*arr.map { it.toDouble() }.toDoubleArray())
+                */
             }
 
             sciView.setActiveNode(this)
         }
         sciView.centerOnNode(sciView.activeNode)
+        sciView.camera!!.position += Vector3f(0f,0f,50f)
     }
 
     fun makeDataset(): RandomAccessibleInterval<UnsignedByteType> {
