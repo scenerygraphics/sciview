@@ -31,7 +31,10 @@ val sceneryVersion = "4a0c1f7"
 "imagej-mesh"("0.8.1")
 "bigdataviewer-vistools"("1.0.0-beta-21")
 //"bigvolumeviewer"("0.1.8") // added from Gradle conversion
-
+"ffmpeg"("4.2.1-1.5.2")
+"jeromq"("0.4.3")
+"jackson-dataformat-msgpack"("0.8.20")
+"msgpack-core"("0.8.20")
 "kotlin"("1.4.20")
 "kotlinx-coroutines-core"("1.3.9")
 
@@ -108,6 +111,11 @@ dependencies {
     sciJava("net.imagej:ij", test = false)
     sciJava("net.imglib2:imglib2-ij", test = false)
 
+    implementation("org.bytedeco:ffmpeg-platform:4.4-1.5.6-SNAPSHOT")
+    api("org.zeromq:jeromq:0.4.3")
+
+    api("org.msgpack:msgpack-core:${sciJava.versions["msgpack-core"]}")
+    api("org.msgpack:jackson-dataformat-msgpack:${sciJava.versions["jackson-dataformat-msgpack"]}")
 
     sciJava("org.janelia.saalfeldlab:n5"["", "-hdf5", "-imglib2"])
     sciJava("sc.fiji:spim_data")
