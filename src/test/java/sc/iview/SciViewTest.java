@@ -166,32 +166,6 @@ public class SciViewTest {
         sciView.open("src/test/resources/mockFiles/mockFile");
     }
 
-    //The stackoverflow is somewhat arbitrary, this is just there to verify that a broken Volume-File leads to an error
-    @Test(expected = StackOverflowError.class)
-    public void testBrokenVolume() throws Exception {
-        SceneryBase.xinitThreads();
-
-        System.setProperty("scijava.log.level:sc.iview", "debug");
-        Context context = new Context(ImageJService.class, SciJavaService.class, SCIFIOService.class, ThreadService.class);
-
-        SciViewService sciViewService = context.service(SciViewService.class);
-        SciView sciView = sciViewService.getOrCreateActiveSciView();
-
-        sciView.open("src/test/resources/mockFiles/trashedVolume.tif");
-    }
-
-    //Very simple, yet may tell if something is completely off. Data-set taken from https://graphics.stanford.edu/data/voldata/
-    @Test
-    public void testCorrectVolume() throws Exception {
-        SciView sciView = SciView.create();
-        DatasetIOService datasetService = Objects.requireNonNull(sciView.getScijavaContext()).service(DatasetIOService.class);
-
-        Dataset ds = datasetService.open("src/test/resources/mockFiles/correctVolume.tif");
-
-        Volume volume = sciView.addVolume(ds);
-        Assert.assertNull(null);
-    }
-
     @Test
     public void verifyNullCheckForCenterOnPosition() throws Exception {
         SciView sciView = SciView.create();

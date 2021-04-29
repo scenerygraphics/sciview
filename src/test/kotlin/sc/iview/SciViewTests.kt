@@ -44,7 +44,8 @@ import sc.iview.SciView.Companion.create
 import java.io.FileNotFoundException
 import java.util.*
 
-class SciViewTest {
+class SciViewTests {
+
     @Test
     @Throws(Exception::class)
     fun nodeDeletionTest() {
@@ -122,32 +123,16 @@ class SciViewTest {
         sciView.open("ThisShouldNotWork")
     }
 
+    @Test
+    fun testAlreadyOpenVolume() {
+        //TODO Implement
+    }
+
     @Test(expected = IllegalArgumentException::class)
     @Throws(Exception::class)
     fun testOpenFunctionMockFile() {
         val sciView = create()
         sciView.open("src/test/resources/mockFiles/mockFile")
-    }
-
-    //The stackoverflow is somewhat arbitrary, this is just there to verify that a broken Volume-File leads to an error
-    @Test(expected = StackOverflowError::class)
-    @Throws(Exception::class)
-    fun testBrokenVolume() {
-        val sciView = create()
-        sciView.open("src/test/resources/mockFiles/trashedVolume.tif")
-    }
-
-    //Very simple, yet may tell if something is completely off. Data-set taken from https://graphics.stanford.edu/data/voldata/
-    @Test
-    @Throws(Exception::class)
-    fun testCorrectVolume() {
-        val sciView = create()
-        val datasetService = Objects.requireNonNull(sciView.scijavaContext)!!.service(
-            DatasetIOService::class.java
-        )
-        val ds = datasetService.open("src/test/resources/mockFiles/correctVolume.tif")
-        val volume = sciView.addVolume(ds)
-        Assert.assertNull(null)
     }
 
     @Test
