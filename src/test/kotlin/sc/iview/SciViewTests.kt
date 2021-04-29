@@ -33,6 +33,7 @@ import graphics.scenery.*
 import graphics.scenery.SceneryBase.Companion.xinitThreads
 import io.scif.SCIFIOService
 import io.scif.services.DatasetIOService
+import net.imagej.ImageJ
 import net.imagej.ImageJService
 import org.joml.Vector3f
 import org.junit.Assert
@@ -40,6 +41,7 @@ import org.junit.Test
 import org.scijava.Context
 import org.scijava.service.SciJavaService
 import org.scijava.thread.ThreadService
+import org.scijava.ui.UIService
 import sc.iview.SciView.Companion.create
 import java.io.FileNotFoundException
 import java.util.*
@@ -124,8 +126,20 @@ class SciViewTests {
     }
 
     @Test
+    fun openVolume() {
+        val sv = create()
+        val numberOfNodes = sv.allSceneNodes.size
+        sv.open("src/test/resources/mockFiles/sampleVolume.tiff")
+        assert(sv.allSceneNodes.size == numberOfNodes +1)
+    }
+
+    @Test
     fun testAlreadyOpenVolume() {
-        //TODO Implement
+        val sv = create()
+        val context = sv.scijavaContext
+        val ui = context?.service(UIService::class.java)
+        //TODO actually, how does one open voulme files in SciJava on the coding level?
+
     }
 
     @Test(expected = IllegalArgumentException::class)
