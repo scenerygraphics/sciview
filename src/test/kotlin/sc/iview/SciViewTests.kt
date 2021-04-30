@@ -144,8 +144,8 @@ class SciViewTests {
         System.setProperty("java.awt.headless", "false"); //Disables headless
         val sv = create()
         val context = sv.scijavaContext
-        val ui = context?.service(UIService::class.java)
-        //TODO actually, how does one open voulme files in SciJava on the coding level?
+//        val ui = context?.service(UIService::class.java)
+        //TODO actually, how does one open volume files in SciJava on the coding level?
 
     }
 
