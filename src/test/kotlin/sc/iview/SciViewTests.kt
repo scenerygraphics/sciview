@@ -142,7 +142,7 @@ class SciViewTests {
     @Test
     fun testAlreadyOpenVolume() {
         System.setProperty("java.awt.headless", "false"); //Disables headless
-        val sv = create()
+//        val sv = create()
 //        val context = sv.scijavaContext
 //        val ui = context?.service(UIService::class.java)
         //TODO actually, how does one open volume files in SciJava on the coding level?
