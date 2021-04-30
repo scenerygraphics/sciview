@@ -1,8 +1,6 @@
-package sc.iview.test
+package sc.iview
 
 import graphics.scenery.Mesh
-import graphics.scenery.Sphere
-import net.imagej.mesh.naive.NaiveDoubleMesh
 import org.junit.Test
 import sc.iview.process.MeshConverter
 import kotlin.test.assertEquals

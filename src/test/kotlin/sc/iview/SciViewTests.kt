@@ -48,6 +48,8 @@ import java.util.*
 
 class SciViewTests {
 
+
+
     @Test
     @Throws(Exception::class)
     fun nodeDeletionTest() {
@@ -101,6 +103,7 @@ class SciViewTests {
     @Test
     @Throws(Exception::class)
     fun deleteActiveMesh() {
+        System.setProperty("java.awt.headless", "false"); //Disables headless
         val sciView = create()
         val sphere: Node = sciView.addSphere()
         sciView.setActiveNode(sphere)
@@ -111,6 +114,7 @@ class SciViewTests {
     @Test
     @Throws(Exception::class)
     fun deletedNodeNotFindable() {
+        System.setProperty("java.awt.headless", "false"); //Disables headless
         val sciView = create()
         val sphere: Node = sciView.addSphere()
         sphere.name = "sphere"
@@ -121,12 +125,14 @@ class SciViewTests {
     @Test(expected = FileNotFoundException::class)
     @Throws(Exception::class)
     fun testOpenFunction() {
+        System.setProperty("java.awt.headless", "false"); //Disables headless
         val sciView = create()
         sciView.open("ThisShouldNotWork")
     }
 
     @Test
     fun openVolume() {
+        System.setProperty("java.awt.headless", "false"); //Disables headless
         val sv = create()
         val numberOfNodes = sv.allSceneNodes.size
         sv.open("src/test/resources/mockFiles/sampleVolume.tiff")
@@ -135,6 +141,7 @@ class SciViewTests {
 
     @Test
     fun testAlreadyOpenVolume() {
+        System.setProperty("java.awt.headless", "false"); //Disables headless
         val sv = create()
         val context = sv.scijavaContext
         val ui = context?.service(UIService::class.java)
@@ -145,6 +152,7 @@ class SciViewTests {
     @Test(expected = IllegalArgumentException::class)
     @Throws(Exception::class)
     fun testOpenFunctionMockFile() {
+        System.setProperty("java.awt.headless", "false"); //Disables headless
         val sciView = create()
         sciView.open("src/test/resources/mockFiles/mockFile")
     }
@@ -152,6 +160,7 @@ class SciViewTests {
     @Test
     @Throws(Exception::class)
     fun verifyNullCheckForCenterOnPosition() {
+        System.setProperty("java.awt.headless", "false"); //Disables headless
         val sciView = create()
         sciView.centerOnPosition(null)
         Assert.assertNull(null)
