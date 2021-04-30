@@ -1,3 +1,4 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.kotlin.dsl.implementation
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -161,6 +162,22 @@ tasks {
     // https://docs.gradle.org/current/userguide/java_testing.html#test_filtering
     test {
         finalizedBy(jacocoTestReport) // report is always generated after tests run
+        testLogging {
+            // set options for log level LIFECYCLE
+//            events "failed"
+//            exceptionFormat "short"
+
+            // set options for log level DEBUG
+            debug {
+//                events "started", "skipped", "failed"
+                exceptionFormat = TestExceptionFormat.FULL
+            }
+
+            // remove standard output/error logging from --info builds
+            // by assigning only 'failed' and 'skipped' events
+//            info.events = ["failed", "skipped"]
+            showStandardStreams = true
+        }
     }
     jar {
         archiveVersion.set(rootProject.version.toString())
