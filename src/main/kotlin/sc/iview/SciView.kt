@@ -1678,14 +1678,14 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             System.setProperty("scijava.log.level:sc.iview", "debug")
             val context = Context(ImageJService::class.java, SciJavaService::class.java, SCIFIOService::class.java, ThreadService::class.java)
             val sciViewService = context.service(SciViewService::class.java)
-            lateinit var sv: SciView
+            var sv: SciView? = null
             val thread = Thread {
                 sv = sciViewService.orCreateActiveSciView
             }
-            while( !sv.isInitialized ) {
+            while( sv == null || !sv!!.isInitialized ) {
                 Thread.sleep(10)
             }
-            return sv
+            return sv as SciView
         }
 
         /**
