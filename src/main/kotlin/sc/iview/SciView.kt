@@ -1668,6 +1668,28 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
         /**
          * Static launching method
+         *
+         * @return a newly created SciView
+         */
+        @JvmStatic
+        @Throws(Exception::class)
+        fun createThreaded(): SciView {
+            xinitThreads()
+            System.setProperty("scijava.log.level:sc.iview", "debug")
+            val context = Context(ImageJService::class.java, SciJavaService::class.java, SCIFIOService::class.java, ThreadService::class.java)
+            val sciViewService = context.service(SciViewService::class.java)
+            lateinit var sv: SciView
+            val thread = Thread {
+                sv = sciViewService.orCreateActiveSciView
+            }
+            while( !sv.isInitialized ) {
+                Thread.sleep(10)
+            }
+            return sv
+        }
+
+        /**
+         * Static launching method
          * DEPRECATED use SciView.create() instead
          *
          * @return a newly created SciView
