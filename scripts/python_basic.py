@@ -12,12 +12,14 @@ from scyjava import jimport, config
 # Setup maven repositories
 config.add_repositories(
     {'scijava.public': 'https://maven.scijava.org/content/groups/public'})
-config.add_repositories({'jitpack': 'https://jitpack.io'})
+#config.add_repositories({'jitpack': 'https://jitpack.io'})
 
 # Import/load dependencies
 # This is a maven based version, transitive versions behave properly
 sciview_ageratum = [
-    'graphics.scenery:scenery:5de0b1e', 'sc.iview:sciview:92add67'
+    'graphics.scenery:scenery:5de0b1e', 'sc.iview:sciview:92add67',
+    'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.20',
+    'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9'
 ]
 
 # There seem to be transitive dep issues with the gradle versions
@@ -25,9 +27,14 @@ sciview_gradle = [
     'graphics.scenery:scenery:4a0c1f7', 'sc.iview:sciview:0e36b9b'
 ]
 
+ome_imports = [
+    'ome:formats-gpl:6.1.1',
+    'ome:formats-bsd:6.1.1',
+]
+
 dependencies = [
-    'net.imagej:imagej:2.1.0',
-] + sciview_ageratum
+    'net.imagej:imagej:2.1.0', 'sc.fiji:bigdataviewer-core:10.1.1-SNAPSHOT'
+] + ome_imports + sciview_ageratum
 
 for dep in dependencies:
     config.add_endpoints(dep)
@@ -35,6 +42,21 @@ for dep in dependencies:
 # Setup classes
 HashMap = jimport('java.util.HashMap')
 SciView = jimport('sc.iview.SciView')
+ImageJ = jimport('net.imagej.ImageJ')
 
 # Launch sciview
 sv = SciView.create()
+
+# Open ImageJ, if you launch sciview this way you get better stack traces if SciView.create() failed silently
+#imagej = ImageJ()
+#imagej.ui().showUI()
+
+input('waiting')
+
+#VolumeRenderDemo = jimport('sc.iview.commands.demo.basic.VolumeRenderDemo')
+#CommandService = jimport("org.scijava.command.CommandService")
+#command = sv.getScijavaContext().getService(CommandService)
+
+#argmap = HashMap()
+
+#command.run(VolumeRenderDemo, True, argmap)
