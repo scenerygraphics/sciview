@@ -43,7 +43,7 @@ dependencies {
     kapt(sciJavaCommon)
 
     //    api("graphics.scenery:scenery:861b4bc")
-    api("com.github.scenerygraphics:scenery:861b4bc")
+    api("com.github.scenerygraphics:scenery:f24fc10")
 
     implementation(misc.cleargl)
     implementation(misc.coreMem)
