@@ -7,7 +7,7 @@ pluginManagement {
 }
 
 plugins {
-    id("sciJava.catalogs") version "30.0.0+57"
+    id("sciJava.catalogs") version "30.0.0+64"
 }
 
 rootProject.name = "sciview"

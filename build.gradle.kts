@@ -15,7 +15,7 @@ plugins {
     id("com.github.elect86.sciJava") version "0.0.4"
     id("org.jetbrains.dokka") version ktVersion
     jacoco
-    id("sciJava.platform") version "30.0.0+11"
+    id("sciJava.platform") version "30.0.0+14"
 }
 
 repositories {
@@ -43,7 +43,7 @@ dependencies {
     kapt(sciJavaCommon)
 
     //    api("graphics.scenery:scenery:861b4bc")
-    api("com.github.scenerygraphics:scenery:f24fc10")
+    api("com.github.scenerygraphics:scenery:36fbf8c")
 
     implementation(misc.cleargl)
     implementation(misc.coreMem)
@@ -76,7 +76,7 @@ dependencies {
     implementation(imagej.launcher)
     implementation(imagej.uiSwing)
     implementation(imagej.legacy)
-    implementation(scifio.scifio)
+    implementation(scifio.core)
     implementation(scifio.bfCompat)
 
     // ImgLib2 dependencies
