@@ -26,55 +26,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.demo;
+package sc.iview.commands.view
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-
-import org.scijava.io.ByteArrayByteBank;
-import org.scijava.io.ByteBank;
-import org.scijava.util.FileUtils;
+import org.scijava.command.Command
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.VIEW
+import sc.iview.commands.MenuWeights.VIEW_TOGGLE_INSPECTOR
 
 /**
- * A helper class to facilitate loading resources from JARs.
- * <p>
- * This class is temporary until the SciJava I/O API evolves to support
- * locations inside of JAR files.
- * </p>
+ * Command that displays a [SwingNodePropertyEditor] window.
  *
  * @author Curtis Rueden
  */
-public final class ResourceLoader {
+@Plugin(type = Command::class, initializer = "initValues", menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Toggle Inspector", weight = VIEW_TOGGLE_INSPECTOR)])
+class ToggleInspector : Command {
+    @Parameter
+    private lateinit var sciView: SciView
 
-    private ResourceLoader() {
-        // NB: Prevent instantiation of utility class.
-    }
-
-    /**
-     * Creates a temporary file on disk with the contents of the given resource.
-     */
-    public static File createFile(Class<?> c, String resourcePath) throws IOException {
-        final byte[] bytes;
-        try (InputStream in = c.getResourceAsStream(resourcePath)) {
-            bytes = readStreamFully(in);
-        }
-
-        String extension = "." + FileUtils.getExtension(resourcePath);
-        File configFile = File.createTempFile("SciView", extension);
-        FileUtils.writeFile(configFile, bytes);
-        configFile.deleteOnExit();
-        return configFile;
-    }
-
-    private static byte[] readStreamFully(final InputStream in) throws IOException {
-        final ByteBank bank = new ByteArrayByteBank();
-        byte[] buf = new byte[256 * 1024];
-        while (true) {
-            final int r = in.read(buf);
-            if (r <= 0) break;
-            bank.appendBytes(buf, r);
-        }
-        return bank.toByteArray();
+    override fun run() {
+        sciView.toggleInspectorWindow()
     }
 }
