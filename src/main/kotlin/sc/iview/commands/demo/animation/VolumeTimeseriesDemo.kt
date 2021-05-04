@@ -33,15 +33,12 @@ import bdv.util.BdvFunctions
 import graphics.scenery.Box
 import graphics.scenery.Node
 import graphics.scenery.Origin
-import graphics.scenery.backends.vulkan.VulkanNodeHelpers.rendererMetadata
 import graphics.scenery.numerics.OpenSimplexNoise
-import graphics.scenery.utils.extensions.minus
 import graphics.scenery.utils.extensions.plusAssign
 import graphics.scenery.utils.extensions.times
 import ij.IJ
 import ij.ImagePlus
 import io.scif.services.DatasetIOService
-import net.imagej.Dataset
 import net.imglib2.FinalInterval
 import net.imglib2.Localizable
 import net.imglib2.RandomAccessibleInterval
@@ -52,9 +49,7 @@ import net.imglib2.position.FunctionRandomAccessible
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import net.imglib2.type.numeric.integer.UnsignedShortType
 import net.imglib2.view.Views
-import org.joml.Matrix3f
 import org.joml.Matrix4f
-import org.joml.Quaternionf
 import org.joml.Vector3f
 import org.scijava.command.Command
 import org.scijava.command.CommandService
@@ -65,7 +60,6 @@ import org.scijava.plugin.Plugin
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
 import sc.iview.commands.demo.ResourceLoader
-import java.io.IOException
 import java.util.*
 import java.util.function.BiConsumer
 
@@ -102,12 +96,12 @@ class VolumeTimeseriesDemo : Command {
             dirty = true
             needsUpdate = true
             origin = Origin.Center
-            //scale = Vector3f(1f)
+            scale *= Vector3f(1f,1f,2f)
 
 
             val pivot = Node()
             //sciView.sceneNodes.first().addChild(pivot)
-            this.addChild(pivot)
+            //sciView.addChild(pivot)
 
             //pivot.position = Vector3f(384f,384f,128f);
 
@@ -136,8 +130,7 @@ class VolumeTimeseriesDemo : Command {
                 it.set(it.get(1, 3) - h + 0.5, 1, 3)
                 //it.scale(1/18.612903225806452)
 
-                it.scale(1/2.25390625)
-                it.scale(0.3)
+                //it.scale(1/2.25390625)
 
                 //println(it)
 
@@ -166,15 +159,30 @@ class VolumeTimeseriesDemo : Command {
 
 
                 val volumePivot = sciView.find("volume pivot")
+                volumePivot?.wantsComposeModel = false
 
 
                 val dar = DoubleArray(16)
-                it.toArray(dar)
+                it.inverse().toArray(dar)
+                dar[15] = 1.0
                 val far = dar.map { d -> d.toFloat() }.toFloatArray()
-                val viewerMatrix = Matrix4f().set(far).invertAffine()
-                volumePivot?.world = viewerMatrix
+
+                val bb = this.boundingBox?.max ?: Vector3f(1f)
+                val trans = Vector3f(far[3] / bb.x,far[7] / bb.y,far[11] / bb.z)*-15f //TODO: pixel to world or something
+                val trans2 = Vector3f(far[3] ,far[7] ,far[11] )
+                log.warn(trans2)
+
+                far[3+0*4] = 0.0f //-dar[2+0*4]
+                far[3+1*4] = 0.0f //-dar[2+1*4]
+                far[3+2*4] = 0.0f //-dar[2+2*4]
+
+                val rotation = Matrix4f().set(far)
+                val inverseViewerMatrix = Matrix4f().rotateZYX(Math.PI.toFloat(),Math.PI.toFloat(),0f).mul(rotation).translate(trans)
+
+                volumePivot?.world = inverseViewerMatrix
                 this.updateWorld(true,true)
                 //sliceP.world = sliceP.world.set(far)//.transpose()
+
 
                 /* other way around
                 val w = AffineTransform3D()
