@@ -26,12 +26,6 @@ repositories {
     maven("https://jitpack.io")
 }
 
-// here we set some versions
-//"ui-behaviour"("2.0.3")
-//"imagej-mesh"("0.8.1")
-//"bigdataviewer-vistools"("1.0.0-beta-21")
-//"bigvolumeviewer"("0.1.8") // added from Gradle conversion
-
 dependencies {
 
     //    implementation(platform("sciJava:platform:30.0.0+6"))
@@ -43,7 +37,7 @@ dependencies {
     kapt(sciJavaCommon)
 
     //    api("graphics.scenery:scenery:861b4bc")
-    api("com.github.scenerygraphics:scenery:937ba10")
+    api("graphics.scenery:scenery:937ba10")
 
     implementation(misc.cleargl)
     implementation(misc.coreMem)
@@ -126,27 +120,6 @@ dependencies {
 
     implementation(bigDataViewer.core)
     implementation(bigDataViewer.visTools)
-    implementation("com.github.skalarproduktraum:jogl-minimal:1c86442")
-
-    // this apparently is still necessary
-    implementation(platform("org.lwjgl:lwjgl-bom:3.2.3"))
-    val os = getCurrentOperatingSystem()
-    val lwjglNatives = "natives-" + when {
-        os.isWindows -> "windows"
-        os.isLinux -> "linux"
-        os.isMacOsX -> "macos"
-        else -> error("invalid")
-    }
-    listOf("", "-glfw", "-jemalloc", "-vulkan", "-opengl", "-openvr", "-xxhash", "-remotery").forEach {
-        implementation("org.lwjgl:lwjgl$it")
-        if (it != "-vulkan")
-            runtimeOnly("org.lwjgl", "lwjgl$it", classifier = lwjglNatives)
-    }
-
-    sciJava("graphics.scenery:spirvcrossj:0.7.0-1.1.106.0")
-    runtimeOnly("graphics.scenery", "spirvcrossj", "0.7.0-1.1.106.0", classifier = lwjglNatives)
-
-    sciJava("net.java.jinput:jinput:2.0.9", native = "natives-all")
 }
 
 kapt {
