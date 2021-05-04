@@ -25,3 +25,4 @@ dependencies:
       - pathlib
       - requests
       - pyinstaller
+      - jgo>=1.0.1
