@@ -10,9 +10,9 @@ from scyjava import jimport, config
 #print(os.environ['JAVA_HOME'])
 
 # Setup maven repositories
+config.add_repositories({'jitpack': 'https://jitpack.io'})
 config.add_repositories(
     {'scijava.public': 'https://maven.scijava.org/content/groups/public'})
-#config.add_repositories({'jitpack': 'https://jitpack.io'})
 
 # Import/load dependencies
 # This is a maven based version, transitive versions behave properly
@@ -24,7 +24,9 @@ sciview_ageratum = [
 
 # There seem to be transitive dep issues with the gradle versions
 sciview_gradle = [
-    'graphics.scenery:scenery:4a0c1f7', 'sc.iview:sciview:0e36b9b'
+    'sc.iview:sciview:f4dd286', 'graphics.scenery:scenery:937ba10',
+    'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.20',
+    'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9'
 ]
 
 ome_imports = [
@@ -34,7 +36,7 @@ ome_imports = [
 
 dependencies = [
     'net.imagej:imagej:2.1.0', 'sc.fiji:bigdataviewer-core:10.1.1-SNAPSHOT'
-] + ome_imports + sciview_ageratum
+] + sciview_gradle
 
 for dep in dependencies:
     config.add_endpoints(dep)
