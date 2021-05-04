@@ -89,7 +89,7 @@ dependencies {
 
     // Kotlin dependencies
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
 
     // Optional dependencies - for sc.iview.Main only! -->
     //		<dependency>
