@@ -120,6 +120,8 @@ dependencies {
 
     implementation(bigDataViewer.core)
     implementation(bigDataViewer.visTools)
+
+    implementation(platform("org.lwjgl:lwjgl-bom:3.2.3"))
 }
 
 kapt {
