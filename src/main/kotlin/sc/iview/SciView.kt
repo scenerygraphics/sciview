@@ -58,6 +58,8 @@ import graphics.scenery.volumes.Volume.Companion.fromXML
 import graphics.scenery.volumes.Volume.Companion.setupId
 import graphics.scenery.volumes.Volume.VolumeDataSource.RAISource
 import io.scif.SCIFIOService
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import net.imagej.Dataset
 import net.imagej.ImageJService
 import net.imagej.axis.CalibratedAxis
@@ -1664,6 +1666,29 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             val context = Context(ImageJService::class.java, SciJavaService::class.java, SCIFIOService::class.java, ThreadService::class.java)
             val sciViewService = context.service(SciViewService::class.java)
             return sciViewService.orCreateActiveSciView
+        }
+
+        /**
+         * Static launching method
+         *
+         * @return a newly created SciView
+         */
+        @JvmStatic
+        @Throws(Exception::class)
+        fun createThreaded(): SciView {
+            xinitThreads()
+            System.setProperty("scijava.log.level:sc.iview", "debug")
+            val context = Context(ImageJService::class.java, SciJavaService::class.java, SCIFIOService::class.java, ThreadService::class.java)
+            val sciViewService = context.service(SciViewService::class.java)
+
+            var sciView: SciView? = null
+            runBlocking {
+                launch { sciView = sciViewService.orCreateActiveSciView }
+            }
+            while( sciView == null || !sciView!!.isInitialized ) {
+                Thread.sleep(20)
+            }
+            return sciView!!
         }
 
         /**
