@@ -15,7 +15,7 @@ plugins {
     sciview.sign
     id("org.jetbrains.dokka") version ktVersion
     jacoco
-    id("sciJava.platform") version "30.0.0+14"
+    id("sciJava.platform") version "30.0.0+15"
 }
 
 repositories {
@@ -33,12 +33,10 @@ dependencies {
     // Graphics dependencies
 
     annotationProcessor(sciJava.common)
-    kapt(sciJava.common) {
-        exclude("org.lwjgl")
-    }
+    kapt(sciJava.common)
 
-    val scenery = "c6080e1"
-    api("graphics.scenery:scenery:$scenery") //{ constraints { version { strictly("f6b4e75") }  } }
+    val scenery = "96e8a96"
+    implementation("graphics.scenery:scenery:$scenery") // { version { strictly(scenery) } }
     // check if build is triggered
     // if not, uncomment this only to trigger it
 //    api("com.github.scenerygraphics:scenery:$scenery")
