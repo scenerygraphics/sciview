@@ -1,8 +1,9 @@
 import org.gradle.kotlin.dsl.implementation
-import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import sciJava.*
+import sciview.api
 import sciview.implementation
+import sciview.joglNatives
+import sciview.lwjglNatives
 import java.net.URL
 
 plugins {
@@ -12,7 +13,6 @@ plugins {
     kotlin("kapt") version ktVersion
     sciview.publish
     sciview.sign
-    id("com.github.elect86.sciJava") version "0.0.4"
     id("org.jetbrains.dokka") version ktVersion
     jacoco
     id("sciJava.platform") version "30.0.0+14"
@@ -32,16 +32,28 @@ dependencies {
 
     // Graphics dependencies
 
-    val sciJavaCommon = "org.scijava:scijava-common:${versions["scijava-common"]}"
-    annotationProcessor(sciJavaCommon)
-    kapt(sciJavaCommon)
+    annotationProcessor(sciJava.common)
+    kapt(sciJava.common) {
+        exclude("org.lwjgl")
+    }
 
-    //    api("graphics.scenery:scenery:861b4bc")
-    api("graphics.scenery:scenery:937ba10")
+    val scenery = "c6080e1"
+    api("graphics.scenery:scenery:$scenery") //{ constraints { version { strictly("f6b4e75") }  } }
+    // check if build is triggered
+    // if not, uncomment this only to trigger it
+//    api("com.github.scenerygraphics:scenery:$scenery")
+
+    implementation(platform("org.lwjgl:lwjgl-bom:3.2.3"))
+    //    listOf("", "-glfw", "-jemalloc", "-vulkan", "-opengl", "-openvr", "-xxhash", "-remotery").forEach {
+    //        if (it == "-vulkan")
+    //            implementation("org.lwjgl:lwjgl$it")
+    //        else
+    //            implementation("org.lwjgl:lwjgl$it", lwjglNatives)
+    //    }
 
     implementation(misc.cleargl)
     implementation(misc.coreMem)
-    implementation(jogamp.jogl, native = joglNative)
+    implementation(jogamp.jogl, joglNatives)
 
     implementation("com.formdev:flatlaf:0.38")
 
@@ -120,8 +132,6 @@ dependencies {
 
     implementation(bigDataViewer.core)
     implementation(bigDataViewer.visTools)
-
-    implementation(platform("org.lwjgl:lwjgl-bom:3.2.3"))
 }
 
 kapt {

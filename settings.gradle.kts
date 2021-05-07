@@ -26,4 +26,3 @@ if (System.getProperty("CI").toBoolean() != true
         logger.warn("Including local scenery project instead of version declared in build, set -PuseLocalScenery=false to use declared version instead.")
         includeBuild("../scenery")
     }
-
