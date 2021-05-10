@@ -36,7 +36,7 @@ dependencies {
     kapt(sciJava.common)
 
     val scenery = "96e8a96"
-    implementation("graphics.scenery:scenery:$scenery") // { version { strictly(scenery) } }
+    api("graphics.scenery:scenery:$scenery") // { version { strictly(scenery) } }
     // check if build is triggered
     // if not, uncomment this only to trigger it
 //    api("com.github.scenerygraphics:scenery:$scenery")
@@ -212,3 +212,4 @@ artifacts {
 }
 
 java.withSourcesJar()
+
