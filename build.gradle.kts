@@ -1,7 +1,7 @@
 import org.gradle.kotlin.dsl.implementation
-import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import sciJava.*
+import sciview.implementation
+import sciview.joglNatives
 import java.net.URL
 
 plugins {
@@ -11,133 +11,98 @@ plugins {
     kotlin("kapt") version ktVersion
     sciview.publish
     sciview.sign
-    id("com.github.elect86.sciJava") version "0.0.4"
     id("org.jetbrains.dokka") version ktVersion
     jacoco
-    idea
+    id("sciJava.platform") version "30.0.0+15"
 }
 
 repositories {
     mavenCentral()
     jcenter()
-    maven("https://jitpack.io")
     maven("https://maven.scijava.org/content/groups/public")
+    maven("https://raw.githubusercontent.com/kotlin-graphics/mary/master")
+    maven("https://jitpack.io")
 }
-
-val sceneryVersion = "4a0c1f7"
-// here we set some versions
-//"scijava-common"("2.84.0")
-"ui-behaviour"("2.0.3")
-"imagej-mesh"("0.8.1")
-"bigdataviewer-vistools"("1.0.0-beta-21")
-//"bigvolumeviewer"("0.1.8") // added from Gradle conversion
-
-"kotlin"("1.4.20")
-"kotlinx-coroutines-core"("1.3.9")
 
 dependencies {
 
     // Graphics dependencies
 
-    val sciJavaCommon = "org.scijava:scijava-common:${versions["scijava-common"]}"
-    annotationProcessor(sciJavaCommon)
-    kapt(sciJavaCommon)
+    annotationProcessor(sciJava.common)
+    kapt(sciJava.common)
 
+    val sceneryVersion = "96e8a96"
     api("graphics.scenery:scenery:$sceneryVersion")
-//    api("com.github.scenerygraphics:scenery:$sceneryVersion")
+    // check if build is triggered on https://jitpack.io/#scenerygraphics/sciview `build` tab
+    // if not, uncomment this only to trigger it
+//    api("com.github.scenerygraphics:scenery:$scenery")
 
-    sciJava("net.clearvolume:cleargl")
-    sciJava("net.clearcontrol:coremem")
-    sciJava("org.jogamp.jogl:jogl-all", native = joglNative)
+    // This seams to be still necessary
+    implementation(platform("org.lwjgl:lwjgl-bom:3.2.3"))
+
+    implementation(misc.cleargl)
+    implementation(misc.coreMem)
+    implementation(jogamp.jogl, joglNatives)
 
     implementation("com.formdev:flatlaf:0.38")
 
     // SciJava dependencies
 
-    sciJava("org.scijava"["scijava-common", "ui-behaviour", "script-editor", "scijava-ui-swing",
-            "scijava-ui-awt", "scijava-search", "scripting-jython"])
-    implementation("org.scijava:scijava-common:2.83.0") {
-        version { strictly("2.83.3") }
-    }
-    sciJava("com.miglayout:miglayout-swing")
+    implementation(sciJava.common)
+    implementation(sciJava.uiBehaviour)
+    implementation(sciJava.scriptEditor)
+    implementation(sciJava.uiSwing)
+    implementation(sciJava.uiAwt)
+    implementation(sciJava.search)
+    implementation(sciJava.scriptingJython)
+    implementation(migLayout.swing)
 
     // ImageJ dependencies
 
-    sciJava("net.imagej") {
-        exclude("org.scijava", "scripting-renjin")
-        exclude("org.scijava", "scripting-jruby")
-    }
-
-    sciJava("net.imagej:imagej-"["common", "mesh", "mesh-io", "ops", "launcher", "ui-swing", "legacy"])
-    sciJava("io.scif:scifio"["", "-bf-compat"])
+    implementation(imagej.core)
+    //    sciJava("net.imagej") {
+    //        exclude("org.scijava", "scripting-renjin")
+    //        exclude("org.scijava", "scripting-jruby")
+    //    }
+    implementation(imagej.common)
+    implementation(imagej.mesh) { version { strictly("0.8.1") } } // FIXME
+    implementation(imagej.meshIo)
+    implementation(imagej.ops)
+    implementation(imagej.launcher)
+    implementation(imagej.uiSwing)
+    implementation(imagej.legacy)
+    implementation(scifio.core)
+    implementation(scifio.bfCompat)
 
     // ImgLib2 dependencies
-
-    sciJava("net.imglib2:imglib2"["-roi", ""])
+    implementation(imgLib2.core)
+    implementation(imgLib2.roi)
 
     // Math dependencies
-
-    sciJava("org.apache.commons:commons-math3")
-    sciJava("org.joml")
+    implementation(commons.math3)
+    implementation(misc.joml)
 
     // Kotlin dependencies
 
-    sciJava("org.jetbrains.kotlinx:kotlinx-coroutines-core")
-
-    // Optional dependencies - for sc.iview.Main only! -->
-    //		<dependency>
-    //			<groupId>org.scijava</groupId>
-    //			<artifactId>scijava-plugins-commands</artifactId>
-    //			<scope>runtime</scope>
-    //			<optional>true</optional>
-    //		</dependency>
-    //		<dependency>
-    //			<groupId>net.imagej</groupId>
-    //			<artifactId>imagej-plugins-commands</artifactId>
-    //			<scope>runtime</scope>
-    //			<optional>true</optional>
-    //		</dependency>
-    //		<dependency>
-    //			<groupId>ch.qos.logback</groupId>
-    //			<artifactId>logback-classic</artifactId>
-    //		</dependency>
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
 
     // Test scope
 
-    testSciJava("junit")
-    sciJava("net.imagej:ij", test = false)
-    sciJava("net.imglib2:imglib2-ij", test = false)
+    testImplementation(misc.junit4)
+    implementation(imagej.ij)
+    implementation(imgLib2.ij)
 
-
-    sciJava("org.janelia.saalfeldlab:n5"["", "-hdf5", "-imglib2"])
-    sciJava("sc.fiji:spim_data")
+    implementation(n5.core)
+    implementation(n5.hdf5)
+    implementation(n5.imglib2)
+    implementation(bigDataViewer.spimData)
 
     implementation(platform(kotlin("bom")))
     implementation(kotlin("stdlib-jdk8"))
     testImplementation(kotlin("test-junit"))
 
-    sciJava("sc.fiji"["bigdataviewer-core", "bigdataviewer-vistools"])
-    implementation("com.github.skalarproduktraum:jogl-minimal:1c86442")
-
-    // this apparently is still necessary
-    implementation(platform("org.lwjgl:lwjgl-bom:3.2.3"))
-    val os = getCurrentOperatingSystem()
-    val lwjglNatives = "natives-" + when {
-        os.isWindows -> "windows"
-        os.isLinux -> "linux"
-        os.isMacOsX -> "macos"
-        else -> error("invalid")
-    }
-    listOf("", "-glfw", "-jemalloc", "-vulkan", "-opengl", "-openvr", "-xxhash", "-remotery").forEach {
-        implementation("org.lwjgl:lwjgl$it")
-        if (it != "-vulkan")
-            runtimeOnly("org.lwjgl", "lwjgl$it", classifier = lwjglNatives)
-    }
-
-    sciJava("graphics.scenery:spirvcrossj:0.7.0-1.1.106.0")
-    runtimeOnly("graphics.scenery", "spirvcrossj", "0.7.0-1.1.106.0", classifier = lwjglNatives)
-
-    sciJava("net.java.jinput:jinput:2.0.9", native = "natives-all")
+    implementation(bigDataViewer.core)
+    implementation(bigDataViewer.visTools)
 }
 
 kapt {
@@ -158,7 +123,6 @@ tasks {
         }
         sourceCompatibility = project.properties["sourceCompatibility"]?.toString() ?: default
     }
-    // https://docs.gradle.org/current/userguide/java_testing.html#test_filtering
     test {
         finalizedBy(jacocoTestReport) // report is always generated after tests run
     }
@@ -186,7 +150,7 @@ tasks {
             xml.isEnabled = true
             html.apply {
                 isEnabled = false
-                //                destination = file("$buildDir/jacocoHtml")
+                //destination = file("$buildDir/jacocoHtml")
             }
         }
         dependsOn(test) // tests are required to run before generating the report
@@ -197,7 +161,7 @@ tasks {
         main = "sc.iview.commands.demo.basic.MeshDemo"
 
         // arguments to pass to the application
-        //    args 'appArg1'
+        //    args("appArg1")
     }
 }
 
@@ -220,3 +184,4 @@ artifacts {
 }
 
 java.withSourcesJar()
+
