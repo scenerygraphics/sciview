@@ -972,8 +972,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Take a screenshot and save it to the specified path
      * @param path path for saving the screenshot
      */
-    fun takeScreenshot(path: String?) {
-        renderer!!.screenshot(path!!, false)
+    fun takeScreenshot(path: String?, overwrite: Boolean = false) {
+        renderer!!.screenshot(path!!, overwrite = overwrite)
     }
 
     /**
