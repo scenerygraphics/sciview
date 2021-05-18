@@ -36,6 +36,8 @@ import graphics.scenery.Origin
 import graphics.scenery.numerics.OpenSimplexNoise
 import graphics.scenery.utils.extensions.plusAssign
 import graphics.scenery.utils.extensions.times
+import graphics.scenery.volumes.SlicingPlane
+import graphics.scenery.volumes.Volume
 import ij.IJ
 import ij.ImagePlus
 import io.scif.services.DatasetIOService
@@ -49,6 +51,7 @@ import net.imglib2.position.FunctionRandomAccessible
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import net.imglib2.type.numeric.integer.UnsignedShortType
 import net.imglib2.view.Views
+import org.joml.Matrix3f
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.scijava.command.Command
@@ -83,11 +86,11 @@ class VolumeTimeseriesDemo : Command {
     private lateinit var log: LogService
 
     override fun run() {
-        //val dataset = makeDataset()
+        val dataset = makeDataset()
 
         val cubeFile = ResourceLoader.createFile(javaClass, "/t1-head.tif")
         val imp: ImagePlus = IJ.openImage(cubeFile.absolutePath)
-        val dataset: Img<UnsignedShortType> = ImageJFunctions.wrapShort(imp)
+        //val dataset: Img<UnsignedShortType> = ImageJFunctions.wrapShort(imp)
 
         val bdv = BdvFunctions.show(dataset, "test")
         sciView.addVolume(dataset, floatArrayOf(1f, 1f, 1f, 1f)) {
@@ -96,21 +99,31 @@ class VolumeTimeseriesDemo : Command {
             dirty = true
             needsUpdate = true
             origin = Origin.Center
-            scale *= Vector3f(1f,1f,2f)
+            //scale *= Vector3f(1f,1f,2f)
 
 
             val pivot = Node()
             //sciView.sceneNodes.first().addChild(pivot)
             //sciView.addChild(pivot)
 
-            //pivot.position = Vector3f(384f,384f,128f);
+            //pivot.position = Vector3f(384f,384f,128f);iukl
 
 
+            val sliceP =  SlicingPlane()//Box(Vector3f(20f,20f,0.05f))
+            sliceP.rotation = sliceP.rotation.rotateX(Math.PI.toFloat() * 0.5f)
+            //raisliceP.addTargetVolume(this)
+            //this.slicingMode = Volume.SlicingMode.Slicing
+            sliceP.position = Vector3f(0f,0f,1f)
+            sciView.addChild(sliceP)
 
-            val sliceP = Box(Vector3f(200f,200f,0.05f)) //Box(Vector3f(5f))//SlicingPlane()
-            //sliceP.addTargetVolume(this)
-            //this.slicingMode = Volume.SlicingMode.Both
-            pivot.addChild(sliceP)
+            val sliceBox = Box(Vector3f(5f,5f,0.05f))
+            sciView.addChild(sliceBox)
+            sliceBox.position = Vector3f(0f,0f,1f)
+
+            val volumePivot = sciView.find("volume pivot")
+            val pivotBox = Box(Vector3f(1f))
+            volumePivot?.addChild(pivotBox)
+
 
 
             //bdv.bdvHandle.viewerPanel.addTimePointListener { t ->
@@ -129,24 +142,14 @@ class VolumeTimeseriesDemo : Command {
                 it.set(it.get(0, 3) - w + 0.5, 0, 3)
                 it.set(it.get(1, 3) - h + 0.5, 1, 3)
                 //it.scale(1/18.612903225806452)
-
                 //it.scale(1/2.25390625)
 
+                val scaleX = Affine3DHelpers.extractScale(it,0)
+                val scaleY = Affine3DHelpers.extractScale(it,1)
+                val scaleZ = Affine3DHelpers.extractScale(it,2)
+                it.scale(1/scaleX)
+
                 //println(it)
-
-                val m = DoubleArray(4)
-                Affine3DHelpers.extractRotationAnisotropic(it,m)
-
-                val t = it.translation
-                val tv = Vector3f(t[0].toFloat(), t[1].toFloat() * -1f,t[2].toFloat())
-                val fixedDistnace = Vector3f()
-                tv.normalize(2f,fixedDistnace)
-
-                //log.warn(tv)
-
-
-                //sliceP.position = tv -fixedDistnace //* 0.05f
-                //pivot.rotation = Quaternionf(m[1],m[2],m[3],m[0]).normalize()
 
 /*
                 val rot = sciView.camera?.let { cam ->
@@ -162,25 +165,34 @@ class VolumeTimeseriesDemo : Command {
                 volumePivot?.wantsComposeModel = false
 
 
+                val dar2 = DoubleArray(16)
+                it.toArray(dar2)
+
+                // *it* is column- major with the translation at the w position of the base vectors
                 val dar = DoubleArray(16)
-                it.inverse().toArray(dar)
+                it.inverse().toArray(dar) //inverse because we are rotating the object not view
                 dar[15] = 1.0
                 val far = dar.map { d -> d.toFloat() }.toFloatArray()
 
                 val bb = this.boundingBox?.max ?: Vector3f(1f)
-                val trans = Vector3f(far[3] / bb.x,far[7] / bb.y,far[11] / bb.z)*-15f //TODO: pixel to world or something
+                val trans = Vector3f(dar2[3].toFloat(),dar2[7].toFloat(),dar2[11].toFloat())*0.1f
+                //val trans = Vector3f(far[3] / bb.x,far[7] / bb.y,far[11] / bb.z)*-15f //TODO: pixel to world or something
                 val trans2 = Vector3f(far[3] ,far[7] ,far[11] )
-                log.warn(trans2)
+                //log.warn(trans)
 
                 far[3+0*4] = 0.0f //-dar[2+0*4]
                 far[3+1*4] = 0.0f //-dar[2+1*4]
                 far[3+2*4] = 0.0f //-dar[2+2*4]
 
                 val rotation = Matrix4f().set(far)
+                val iRotation = Matrix3f()
+                rotation.get3x3(iRotation)
+                val transM =  trans.mul(iRotation.invert())
                 val inverseViewerMatrix = Matrix4f().rotateZYX(Math.PI.toFloat(),Math.PI.toFloat(),0f).mul(rotation).translate(trans)
 
-                volumePivot?.world = inverseViewerMatrix
-                this.updateWorld(true,true)
+                volumePivot?.model = inverseViewerMatrix
+                volumePivot?.needsUpdateWorld = true
+                volumePivot?.updateWorld(true,false)
                 //sliceP.world = sliceP.world.set(far)//.transpose()
 
 
