@@ -41,6 +41,7 @@ import graphics.scenery.volumes.Volume
 import ij.IJ
 import ij.ImagePlus
 import io.scif.services.DatasetIOService
+import net.imagej.Dataset
 import net.imglib2.FinalInterval
 import net.imglib2.Localizable
 import net.imglib2.RandomAccessibleInterval
@@ -56,6 +57,7 @@ import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.scijava.command.Command
 import org.scijava.command.CommandService
+import org.scijava.io.IOService
 import org.scijava.log.LogService
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
@@ -76,23 +78,28 @@ import java.util.function.BiConsumer
         menuRoot = "SciView",
         menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
                 Menu(label = "Animation", weight = MenuWeights.DEMO_ANIMATION),
-                Menu(label = "Volume Timeseries", weight = MenuWeights.DEMO_ANIMATION_VOLUMETIMESERIES)])
+                Menu(label = "Volume Timeseries, lol", weight = MenuWeights.DEMO_ANIMATION_VOLUMETIMESERIES)])
 class VolumeTimeseriesDemo : Command {
     @Parameter
     private lateinit var sciView: SciView
+
     @Parameter
-    private lateinit var datasetIO: DatasetIOService
-    @Parameter
-    private lateinit var log: LogService
+    private lateinit var io: IOService
 
     override fun run() {
+        System.err.println("run")
         val dataset = makeDataset()
 
-        val cubeFile = ResourceLoader.createFile(javaClass, "/t1-head.tif")
-        val imp: ImagePlus = IJ.openImage(cubeFile.absolutePath)
+        System.err.println("load")
+        //val cubeFile = ResourceLoader.createFile(javaClass, "/t1-head.tif")
+        //val imp: ImagePlus = IJ.openImage(cubeFile.absolutePath)
         //val dataset: Img<UnsignedShortType> = ImageJFunctions.wrapShort(imp)
 
+        //val dataset = io.open("/HisYFP-SPIM.xml") as Dataset
+
+        System.err.println("bdv")
         val bdv = BdvFunctions.show(dataset, "test")
+        System.err.println("volume")
         sciView.addVolume(dataset, floatArrayOf(1f, 1f, 1f, 1f)) {
             pixelToWorldRatio = 1f
             name = "Volume Render Demo"
@@ -136,8 +143,8 @@ class VolumeTimeseriesDemo : Command {
                 val vt = bdv.bdvHandle.viewerPanel.state().viewerTransform
 
 
-                val w = 800
-                val h = 577
+                val w = bdv.bdvHandle.viewerPanel.display.width //800
+                val h = bdv.bdvHandle.viewerPanel.display.height //577
                 // window center offset
                 it.set(it.get(0, 3) - w + 0.5, 0, 3)
                 it.set(it.get(1, 3) - h + 0.5, 1, 3)
@@ -213,7 +220,7 @@ class VolumeTimeseriesDemo : Command {
 
     fun makeDataset(): RandomAccessibleInterval<UnsignedByteType> {
         // Interval is 30x30x30 w/ 100 timepoints
-        val interval = FinalInterval(longArrayOf(0, 0, 0, 0), longArrayOf(30, 30, 30, 100))
+        val interval = FinalInterval(longArrayOf(0, 0, 0, 0), longArrayOf(60, 60, 30, 100))
         val center = (interval.max(2) / 2).toDouble()
         val noise = OpenSimplexNoise()
         val rng = Random(System.nanoTime())
