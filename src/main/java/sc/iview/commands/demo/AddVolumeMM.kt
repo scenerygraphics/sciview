@@ -28,9 +28,7 @@
  */
 package sc.iview.commands.demo
 
-import graphics.scenery.numerics.Random
 import graphics.scenery.utils.RingBuffer
-import graphics.scenery.utils.extensions.plus
 import graphics.scenery.volumes.BufferedVolume
 import graphics.scenery.volumes.Colormap
 import graphics.scenery.volumes.Volume
@@ -41,6 +39,7 @@ import net.imglib2.type.numeric.integer.UnsignedShortType
 import org.joml.Vector3f
 import org.lwjgl.system.MemoryUtil
 import org.scijava.command.Command
+import org.scijava.command.CommandService
 import org.scijava.log.LogService
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
@@ -49,6 +48,7 @@ import sc.iview.SciView
 import sc.iview.commands.MenuWeights
 import java.nio.ByteBuffer
 import java.nio.ShortBuffer
+import java.util.HashMap
 import kotlin.concurrent.thread
 import kotlin.concurrent.withLock
 
@@ -87,6 +87,8 @@ class AddVolumeMM : Command {
 
     private val core = CMMCore()
 
+    val slices = 512
+
     override fun run() {
         val info = core.versionInfo
         println(info)
@@ -99,12 +101,17 @@ class AddVolumeMM : Command {
         val volume = createVolume()
 
 
+
         sciView.addNode(volume)
 
         thread {
             var count = 0
-            val volumeBuffer = RingBuffer<ByteBuffer>(2) { MemoryUtil.memAlloc((width*height*10*Short.SIZE_BYTES).toInt()) }
+            val volumeBuffer = RingBuffer<ByteBuffer>(2) { MemoryUtil.memAlloc((width*height*slices*Short.SIZE_BYTES).toInt()) }
 
+            var secondTimer = System.currentTimeMillis()
+            var lastCount = 0
+            var deltaTime = System.currentTimeMillis()
+            var deltas = emptyList<Int>()
             while(sciView.running && !sciView.isClosed) {
                 if(volume.metadata["animating"] == true) {
                     volume.lock.withLock {
@@ -116,6 +123,15 @@ class AddVolumeMM : Command {
                         volume.purgeFirst(10, 10)
 
                         count++
+
+                        deltas = deltas + (System.currentTimeMillis() - deltaTime).toInt()
+                        deltaTime = System.currentTimeMillis()
+
+                        if (System.currentTimeMillis() - secondTimer > 1000){
+                            log.warn("sps: ${count - lastCount} mean delta: ${deltas.average()}")
+                            lastCount = count
+                            secondTimer = System.currentTimeMillis()
+                        }
                     }
                 }
 
@@ -126,7 +142,7 @@ class AddVolumeMM : Command {
     }
 
     private fun createVolume(): BufferedVolume {
-        val volume = Volume.fromBuffer(emptyList(), 512, 512, 10, UnsignedShortType(), sciView.hub)
+        val volume = Volume.fromBuffer(emptyList(), 512, 512, slices, UnsignedShortType(), sciView.hub)
 
         volume.name = "volume"
         volume.position = Vector3f(0.0f, 0.0f, 0.0f)
@@ -146,13 +162,25 @@ class AddVolumeMM : Command {
 
     private fun captureStack(intoBuffer: ShortBuffer){
         var offset = 0
-        (0..9).forEach {
+        (0..slices-1).forEach {
             core.snapImage();
             val sa = core.image as ShortArray
             sa.forEach {
                 intoBuffer.put(offset, it)
                 offset += 1
             }
+        }
+    }
+
+    companion object {
+        @Throws(Exception::class)
+        @JvmStatic
+        fun main(args: Array<String>) {
+            val sv = SciView.create()
+
+            val command = sv.scijavaContext!!.getService(CommandService::class.java)
+            val argmap = HashMap<String, Any>()
+            command.run(AddVolumeMM::class.java, true, argmap)
         }
     }
 }

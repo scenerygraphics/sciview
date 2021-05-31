@@ -31,7 +31,7 @@ dependencies {
     annotationProcessor(sciJava.common)
     kapt(sciJava.common)
 
-    val sceneryVersion = "96e8a96"
+    val sceneryVersion = "dabb0c5f"
     api("graphics.scenery:scenery:$sceneryVersion")
     // check if build is triggered on https://jitpack.io/#scenerygraphics/sciview `build` tab
     // if not, uncomment this only to trigger it
@@ -103,6 +103,8 @@ dependencies {
 
     implementation(bigDataViewer.core)
     implementation(bigDataViewer.visTools)
+
+    implementation(files("C:/Program Files/Micro-Manager-2.0gamma/plugins/Micro-Manager/MMCoreJ.jar"))
 }
 
 kapt {
