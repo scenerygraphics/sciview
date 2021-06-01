@@ -40,10 +40,16 @@ import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.RealType;
 import org.joml.Vector3f;
 import org.scijava.command.Command;
+import org.scijava.command.DynamicCommand;
+import org.scijava.module.MethodCallException;
+import org.scijava.module.MethodRef;
+import org.scijava.module.ModuleItem;
+import org.scijava.module.MutableModuleItem;
 import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
+import org.scijava.widget.NumberWidget;
 import sc.iview.SciView;
 
 import static sc.iview.commands.MenuWeights.PROCESS;
@@ -58,7 +64,7 @@ import static sc.iview.commands.MenuWeights.PROCESS_ISOSURFACE;
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = {@Menu(label = "Process", weight = PROCESS), //
                 @Menu(label = "Isosurface", weight = PROCESS_ISOSURFACE)})
-public class Isosurface<T extends RealType> implements Command {
+public class Isosurface<T extends RealType> extends DynamicCommand {
 
     @Parameter
     private OpService ops;
@@ -66,27 +72,49 @@ public class Isosurface<T extends RealType> implements Command {
     @Parameter
     private SciView sciView;
 
-    @Parameter(persist = false)
+    @Parameter(persist = false, callback = "imageChanged")
     private IterableInterval<T> image;
 
-    @Parameter
+    @Parameter(callback = "isoValueChanged", style = "slider", min = "0", max = "700", stepSize = "1")
     private double isoLevel;
 
     @Parameter
     private UIService uiService;
 
+    private Node currentMesh;
+    private T tmp;
+
     @Override
     public void run() {
-        T tmp = (T) image.firstElement().createVariable();
-        tmp.setReal(isoLevel);
+        currentMesh = null;
+    }
 
+    public void isoValueChanged() {
+        if(currentMesh != null) {
+            sciView.deleteNode(currentMesh);
+        }
+        if(tmp == null) {
+            tmp = (T) image.firstElement().createVariable();
+        }
+        tmp.setReal(isoLevel);
         Img<BitType> bitImg = (Img<BitType>) ops.threshold().apply(image, tmp);
 
         Mesh m = Meshes.marchingCubes(bitImg);
 
-        Node scMesh = sciView.addMesh(m);
-        ((HasGeometry)scMesh).recalculateNormals();
-        scMesh.setScale(new Vector3f(0.001f, 0.001f, 0.001f));
+        currentMesh = sciView.addMesh(m);
+        ((HasGeometry)currentMesh).recalculateNormals();
+        currentMesh.setScale(new Vector3f(0.001f, 0.001f, 0.001f));
     }
 
+    public void imageChanged() {
+        tmp = (T) image.firstElement().createVariable();
+        isoValueChanged();
+    }
+
+    @Override
+    public void cancel() {
+        if(currentMesh != null) {
+            sciView.deleteNode(currentMesh);
+        }
+    }
 }
