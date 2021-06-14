@@ -119,7 +119,7 @@
 		<imagej-mesh.version>0.8.1</imagej-mesh.version>
 		<bigdataviewer-vistools.version>1.0.0-beta-21</bigdataviewer-vistools.version>
 
-		<kotlin.version>1.4.20</kotlin.version>
+		<kotlin.version>1.4.32-release-371</kotlin.version>
 		<kotlinx-coroutines-core.version>1.3.9</kotlinx-coroutines-core.version>
 		<kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
 	</properties>
@@ -350,11 +350,27 @@
 			<version>${kotlin.version}</version>
 			<scope>test</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test</artifactId>
+            <version>${kotlin.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
 
-	</dependencies>
+    </dependencies>
 
 	<build>
-		<testSourceDirectory>src/test/tests</testSourceDirectory>
+		<testSourceDirectory>src/test</testSourceDirectory>
 		<plugins>
 			<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -390,34 +406,34 @@
 					</execution>
 					<execution>
 						<id>compile</id>
-						<phase>validate</phase>
+						<phase>compile</phase>
 						<goals> <goal>compile</goal> </goals>
 						<configuration>
-							<sourceDirs>
-								<source>src/main/java</source>
-								<source>target/generated-sources/kapt</source>
-								<source>target/generated-sources/kaptKotlin</source>
-							</sourceDirs>
-							<jvmTarget>${kotlin.compiler.jvmTarget}</jvmTarget>
+                            <jvmTarget>${kotlin.compiler.jvmTarget}</jvmTarget>
 							<args>
 								<arg>-Werror</arg>
 								<arg>-Xopt-in=kotlin.RequiresOptIn</arg>
 							</args>
-						</configuration>
+                            <sourceDirs>
+                                <source>src/main/java</source>
+                                <source>src/main/kotlin</source>
+                            </sourceDirs>
+                        </configuration>
 					</execution>
 					<execution>
 						<id>test-compile</id>
 						<phase>test-compile</phase>
 						<goals> <goal>test-compile</goal> </goals>
-						<configuration>
-							<sourceDirs>
-								<sourceDir>${project.basedir}/src/test/tests</sourceDir>
-							</sourceDirs>
-						</configuration>
-					</execution>
+                        <configuration>
+                            <sourceDirs>
+                                <source>src/test/java</source>
+                                <source>src/test/kotlin</source>
+                            </sourceDirs>
+                        </configuration>
+                    </execution>
 				</executions>
 				<configuration>
-					<jvmTarget>${kotlin.compiler.jvmTarget}</jvmTarget>
+					<jvmTarget>1.8</jvmTarget>
 					<args>
 						<arg>-Werror</arg>
 						<arg>-Xopt-in=kotlin.RequiresOptIn</arg>
@@ -442,7 +458,15 @@
 							<goal>testCompile</goal>
 						</goals>
 					</execution>
-				</executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <phase>none</phase>
+                    </execution>
+                    <execution>
+                        <id>default-testCompile</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
 			</plugin>
 		</plugins>
 	</build>
