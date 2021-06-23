@@ -294,10 +294,10 @@ open class Controls(val sciview: SciView) {
         var mcA: MovementCommand
         var mcS: MovementCommand
         var mcD: MovementCommand
-        mcW = MovementCommand("move_forward", "forward", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
-        mcS = MovementCommand("move_backward", "back", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
-        mcA = MovementCommand("move_left", "left", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
-        mcD = MovementCommand("move_right", "right", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
+        mcW = MovementCommand("forward", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
+        mcS = MovementCommand("back", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
+        mcA = MovementCommand("left", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
+        mcD = MovementCommand("right", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
         parameters.registerSlowStepMover(mcW)
         parameters.registerSlowStepMover(mcS)
         parameters.registerSlowStepMover(mcA)
@@ -309,10 +309,10 @@ open class Controls(val sciview: SciView) {
         // 'WASD' keys are registered already in scenery
 
         //override shift+'WASD' from Scenery
-        mcW = MovementCommand("move_forward_fast", "forward", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
-        mcS = MovementCommand("move_backward_fast", "back", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
-        mcA = MovementCommand("move_left_fast", "left", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
-        mcD = MovementCommand("move_right_fast", "right", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
+        mcW = MovementCommand("forward", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
+        mcS = MovementCommand("back", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
+        mcA = MovementCommand("left", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
+        mcD = MovementCommand("right", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
         parameters.registerFastStepMover(mcW)
         parameters.registerFastStepMover(mcS)
         parameters.registerFastStepMover(mcA)
@@ -324,10 +324,10 @@ open class Controls(val sciview: SciView) {
         // shift+'WASD' keys are registered already in scenery
 
         //define additionally shift+ctrl+'WASD'
-        mcW = MovementCommand("move_forward_veryfast", "forward", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
-        mcS = MovementCommand("move_back_veryfast", "back", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
-        mcA = MovementCommand("move_left_veryfast", "left", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
-        mcD = MovementCommand("move_right_veryfast", "right", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
+        mcW = MovementCommand("forward", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
+        mcS = MovementCommand("back", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
+        mcA = MovementCommand("left", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
+        mcD = MovementCommand("right", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
         parameters.registerVeryFastStepMover(mcW)
         parameters.registerVeryFastStepMover(mcS)
         parameters.registerVeryFastStepMover(mcA)
@@ -344,24 +344,24 @@ open class Controls(val sciview: SciView) {
         // Keyboard only move up/down (XC keys)
         //
         //[[ctrl]+shift]+'XC'
-        mcW = MovementCommand("move_up", "up", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
-        mcS = MovementCommand("move_down", "down", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
+        mcW = MovementCommand("up", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
+        mcS = MovementCommand("down", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
         parameters.registerSlowStepMover(mcW)
         parameters.registerSlowStepMover(mcS)
         h.addBehaviour("move_up", mcW)
         h.addBehaviour("move_down", mcS)
         h.addKeyBinding("move_up", "C")
         h.addKeyBinding("move_down", "X")
-        mcW = MovementCommand("move_up_fast", "up", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
-        mcS = MovementCommand("move_down_fast", "down", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
+        mcW = MovementCommand("up", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
+        mcS = MovementCommand("down", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
         parameters.registerFastStepMover(mcW)
         parameters.registerFastStepMover(mcS)
         h.addBehaviour("move_up_fast", mcW)
         h.addBehaviour("move_down_fast", mcS)
         h.addKeyBinding("move_up_fast", "shift C")
         h.addKeyBinding("move_down_fast", "shift X")
-        mcW = MovementCommand("move_up_veryfast", "up", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
-        mcS = MovementCommand("move_down_veryfast", "down", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
+        mcW = MovementCommand("up", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
+        mcS = MovementCommand("down", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
         parameters.registerVeryFastStepMover(mcW)
         parameters.registerVeryFastStepMover(mcS)
         h.addBehaviour("move_up_veryfast", mcW)

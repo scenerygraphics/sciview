@@ -5,13 +5,15 @@ import sciview.joglNatives
 import java.net.URL
 
 plugins {
-    val ktVersion = "1.4.20"
+    val ktVersion = "1.5.10"
+    val dokkaVersion = "1.4.32"
+
     java
     kotlin("jvm") version ktVersion
     kotlin("kapt") version ktVersion
     sciview.publish
     sciview.sign
-    id("org.jetbrains.dokka") version ktVersion
+    id("org.jetbrains.dokka") version dokkaVersion
     jacoco
     id("sciJava.platform") version "30.0.0+15"
 }
@@ -31,7 +33,7 @@ dependencies {
     annotationProcessor(sciJava.common)
     kapt(sciJava.common)
 
-    val sceneryVersion = "96e8a96"
+    val sceneryVersion = "e1e0b7e"
     api("graphics.scenery:scenery:$sceneryVersion")
     // check if build is triggered on https://jitpack.io/#scenerygraphics/sciview `build` tab
     // if not, uncomment this only to trigger it
@@ -84,7 +86,7 @@ dependencies {
 
     // Kotlin dependencies
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
 
     // Test scope
 
@@ -177,6 +179,9 @@ val dokkaHtmlJar by tasks.register<Jar>("dokkaHtmlJar") {
     archiveClassifier.set("html-doc")
 }
 
+jacoco {
+    toolVersion = "0.8.7"
+}
 
 artifacts {
     archives(dokkaJavadocJar)

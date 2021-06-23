@@ -130,7 +130,7 @@ public class ImagePlaneDemo implements Command {
         mat.setDiffuse(new Vector3f(1,1,1));
         mat.setAmbient(new Vector3f(1,1,1));
 
-        Texture tex = new Texture(new Vector3i((int)img.dimension(0), (int)img.dimension(1), 1), 4, bb);
+        Texture tex = new Texture(new Vector3i((int)img.dimension(0), (int)img.dimension(1), 1), 4, new UnsignedByteType(), bb);
         mat.getTextures().put("diffuse",tex);
 
         imgPlane.setMaterial(mat);
