@@ -39,10 +39,7 @@ import org.scijava.Context
 import org.scijava.command.CommandService
 import org.scijava.event.EventHandler
 import org.scijava.log.LogService
-import org.scijava.module.Module
-import org.scijava.module.ModuleException
-import org.scijava.module.ModuleItem
-import org.scijava.module.ModuleService
+import org.scijava.module.*
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.PluginService
 import org.scijava.service.Service
@@ -300,10 +297,12 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                 p.setSceneNode(sceneNode)
 
                 @Suppress("UNCHECKED_CAST")
-                val additionalUI = sceneNode.metadata["sciview-inspector"] as? List<ModuleItem<*>>
+                val additionalUI = sceneNode.metadata["sciview-inspector"] as? CustomPropertyUI
                 if (additionalUI != null) {
-                    for (moduleItem in additionalUI) {
-                        p.addInput(moduleItem)
+                    log.info("Module is ${additionalUI.module}")
+                    for (moduleItem in additionalUI.getMutableInputs()) {
+                        log.info("Got additional UI item ${moduleItem.name}/${moduleItem.label}")
+                        p.addInput(moduleItem, additionalUI.module)
                     }
                 }
 

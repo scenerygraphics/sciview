@@ -39,6 +39,7 @@ import org.scijava.plugin.Plugin
 import org.scijava.ui.swing.widget.SwingInputHarvester
 import org.scijava.ui.swing.widget.SwingInputPanel
 import org.scijava.widget.*
+import sc.iview.commands.edit.Properties
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import java.util.*
@@ -136,6 +137,7 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
             inputPanel.component.add(panel.component, "wrap,hidemode 3")
 
             for (item in group.value) {
+                log.info("Adding input ${item.label}/${item.name} ${item.info}")
                 val model = addInput(panel, module, item)
                 if (model != null) models.add(model)
             }
@@ -151,7 +153,13 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
     // -- Helper methods --
     @Throws(ModuleException::class)
     private fun <T, P, W> addInput(inputPanel: InputPanel<P, W>,
-                                   module: Module, item: ModuleItem<T>): WidgetModel? {
+                                   m: Module, item: ModuleItem<T>): WidgetModel? {
+        val module = if(m is Properties) {
+            m.getCustomModuleForModuleItem(item) ?: m
+        } else {
+            m
+        }
+
         val name = item.name
         if(item.label.contains("[") && item.label.contains("]")) {
             item.label = item.label.substringAfterLast("]")
