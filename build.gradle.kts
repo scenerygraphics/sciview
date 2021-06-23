@@ -179,6 +179,9 @@ val dokkaHtmlJar by tasks.register<Jar>("dokkaHtmlJar") {
     archiveClassifier.set("html-doc")
 }
 
+jacoco {
+    toolVersion = "0.8.7"
+}
 
 artifacts {
     archives(dokkaJavadocJar)
