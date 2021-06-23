@@ -38,7 +38,6 @@ import graphics.scenery.backends.Renderer
 import graphics.scenery.utils.LazyLogger
 import graphics.scenery.utils.SceneryJPanel
 import org.joml.Vector2f
-import org.lwjgl.system.Platform
 import org.scijava.menu.MenuService
 import org.scijava.ui.swing.menu.SwingJMenuBarCreator
 import sc.iview.SciView
