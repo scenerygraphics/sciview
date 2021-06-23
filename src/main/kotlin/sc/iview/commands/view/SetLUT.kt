@@ -41,6 +41,7 @@ import sc.iview.SciView
 import sc.iview.commands.MenuWeights.VIEW
 import sc.iview.commands.MenuWeights.VIEW_SET_LUT
 import java.io.IOException
+import java.net.URL
 import java.util.*
 
 /**
@@ -69,7 +70,7 @@ class SetLUT : DynamicCommand() {
     protected fun lutNameChanged() {
         val lutNameItem = info.getMutableInput("lutName", String::class.java)
         try {
-            colorTable = lutService.loadLUT(lutService.findLUTs()[lutNameItem])
+            colorTable = lutService.loadLUT(lutService.findLUTs()[lutNameItem.toString()])
         } catch (e: IOException) {
             e.printStackTrace()
         }
