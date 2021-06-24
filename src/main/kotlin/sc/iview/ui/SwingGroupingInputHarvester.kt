@@ -137,7 +137,6 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
             inputPanel.component.add(panel.component, "wrap,hidemode 3")
 
             for (item in group.value) {
-                log.info("Adding input ${item.label}/${item.name} ${item.info}")
                 val model = addInput(panel, module, item)
                 if (model != null) models.add(model)
             }
