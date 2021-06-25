@@ -33,33 +33,44 @@ import graphics.scenery.RibbonDiagram
 import org.joml.Vector3f
 import org.scijava.command.Command
 import org.scijava.command.DynamicCommand
+import org.scijava.command.InteractiveCommand
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
+import org.scijava.ui.UIService
+import org.scijava.widget.Button
+import org.scijava.widget.FileWidget
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
+import java.io.File
+import java.io.FileFilter
 
 /**
  * Command to add a box to the scene
  *
  * @author Kyle Harrington
  */
-@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Edit", weight = MenuWeights.EDIT), Menu(label = "Add", weight = MenuWeights.EDIT_ADD), Menu(label = "Protein from PDB  ID ...", weight = MenuWeights.EDIT_ADD_BOX)])
-class AddProtein : DynamicCommand() {
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Edit", weight = MenuWeights.EDIT), Menu(label = "Add", weight = MenuWeights.EDIT_ADD), Menu(label = "Protein from files ...", weight = MenuWeights.EDIT_ADD_BOX)])
+class AddProteinFromFiles : DynamicCommand() {
 
     @Parameter
     private lateinit var sciView: SciView
 
-    @Parameter(label = "Protein ID", persist = false)
-    private var protein: String = "2rnm"
+    @Parameter
+    private lateinit var ui: UIService
+
+    @Parameter(label = "Protein files", style = "extensions:pdb/mmtf/cif")
+    private lateinit var files: Array<File>
 
     @Parameter(label = "Scale")
     private var scale: Float = 0.1f
 
     override fun run() {
-        val ribbon = RibbonDiagram(Protein.fromID(protein))
-        ribbon.name = protein
-        ribbon.scale = Vector3f(scale)
-        sciView.addNode(ribbon, true)
+        files.forEach { file ->
+            val ribbon = RibbonDiagram(Protein.fromID(file.absolutePath))
+            ribbon.name = file.name
+            ribbon.scale = Vector3f(scale)
+            sciView.addNode(ribbon, true)
+        }
     }
 }
