@@ -32,6 +32,7 @@ import graphics.scenery.Protein
 import graphics.scenery.RibbonDiagram
 import org.joml.Vector3f
 import org.scijava.command.Command
+import org.scijava.command.DynamicCommand
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
@@ -43,19 +44,22 @@ import sc.iview.commands.MenuWeights
  *
  * @author Kyle Harrington
  */
-@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Edit", weight = MenuWeights.EDIT), Menu(label = "Add", weight = MenuWeights.EDIT_ADD), Menu(label = "Protein from PDB ...", weight = MenuWeights.EDIT_ADD_BOX)])
-class AddProtein : Command {
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Edit", weight = MenuWeights.EDIT), Menu(label = "Add", weight = MenuWeights.EDIT_ADD), Menu(label = "Protein from PDB  ID ...", weight = MenuWeights.EDIT_ADD_BOX)])
+class AddProtein : DynamicCommand() {
 
     @Parameter
     private lateinit var sciView: SciView
 
-    @Parameter(label = "Protein")
+    @Parameter(label = "Protein ID", persist = false)
     private var protein: String = "2rnm"
+
+    @Parameter(label = "Scale")
+    private var scale: Float = 0.1f
 
     override fun run() {
         val ribbon = RibbonDiagram(Protein.fromID(protein))
         ribbon.name = protein
-        ribbon.scale = Vector3f(0.1f)
+        ribbon.scale = Vector3f(scale)
         sciView.addNode(ribbon, true)
     }
 }
