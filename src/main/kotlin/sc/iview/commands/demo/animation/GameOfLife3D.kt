@@ -98,6 +98,10 @@ class GameOfLife3D : InteractiveCommand() {
 
     @Parameter(callback = "pause", style = "group:Game of Life")
     private lateinit var pause: Button
+
+    @Parameter(label = "Activate roflcopter", style = "group:Game of Life")
+    private var roflcopter: Boolean = false
+
     private val w = 64
     private val h = 64
     private val d = 64
@@ -189,19 +193,6 @@ class GameOfLife3D : InteractiveCommand() {
 
     override fun run() {
         randomize()
-        dialog = GenericDialog("Game of Life 3D")
-        dialog!!.addNumericField("Starvation threshold", starvation.toDouble(), 0)
-        dialog!!.addNumericField("Birth threshold", birth.toDouble(), 0)
-        dialog!!.addNumericField("Suffocation threshold", suffocation.toDouble(), 0)
-        dialog!!.addNumericField("Initial saturation % when randomizing", saturation.toDouble(), 0)
-        dialog!!.showDialog()
-        if (dialog!!.wasCanceled()) return
-        starvation = dialog!!.nextNumber.toInt()
-        birth = dialog!!.nextNumber.toInt()
-        suffocation = dialog!!.nextNumber.toInt()
-        saturation = dialog!!.nextNumber.toInt()
-        randomize()
-        play()
     }
 
     // -- Helper methods --
@@ -281,7 +272,8 @@ class GameOfLife3D : InteractiveCommand() {
                     "connectedness",
                     "playSpeed",
                     "play",
-                    "pause"
+                    "pause",
+                    "roflcopter"
                 )
             )
         } else {
