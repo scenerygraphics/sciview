@@ -16,6 +16,7 @@ class CustomPropertyUI(val module: Module, val items: List<String>) {
         val inputNames = module.inputs.map { it.key }
         items.forEach {
             if(it !in inputNames) {
+                System.err.println("$it is not in known inputs of $module (${inputNames.joinToString(", ")})")
                 throw IllegalStateException("Input $it not in list of known inputs for module $module.")
             }
         }

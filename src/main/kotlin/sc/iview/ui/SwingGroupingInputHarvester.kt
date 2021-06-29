@@ -138,7 +138,12 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
 
             for (item in group.value) {
                 val model = addInput(panel, module, item)
-                if (model != null) models.add(model)
+                if (model != null) {
+                    log.info("Adding input ${item.name}/${item.label}")
+                    models.add(model)
+                } else {
+                    log.error("Model for ${item.name}/${item.label} is null!")
+                }
             }
         }
 
@@ -164,20 +169,25 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
             item.label = item.label.substringAfterLast("]")
         }
         val resolved = module.isInputResolved(name)
-        if (resolved) return null // skip resolved inputs
+        if (resolved && module == m) {
+            log.warn("Input ${item.name} is resolved, skipping")
+            return null
+        } // skip resolved inputs
         val type = item.type
         val model = widgetService.createModel(inputPanel, module, item, getObjects(type))
-        val widgetType: Class<W> = inputPanel.getWidgetComponentType()
+        val widgetType = inputPanel.widgetComponentType
         val widget = widgetService.create(model)
         if (widget == null) {
-            log.debug("No widget found for input: " + model.item.name)
+            log.warn("No widget found for input: " + model.item.name)
         }
         if (widget != null && widget.componentType == widgetType) {
-            @Suppress("UNCHECKED_CAST") val typedWidget = widget as InputWidget<*, W>
+            @Suppress("UNCHECKED_CAST")
+            val typedWidget = widget as InputWidget<*, W>
             inputPanel.addWidget(typedWidget)
             return model
         }
         if (item.isRequired) {
+            log.warn("${item.name} is required but doesn't exist")
             throw ModuleException("A " + type.simpleName +
                     " is required but none exist.")
         }

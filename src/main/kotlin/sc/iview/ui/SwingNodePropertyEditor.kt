@@ -299,7 +299,9 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                 @Suppress("UNCHECKED_CAST")
                 val additionalUI = sceneNode.metadata["sciview-inspector"] as? CustomPropertyUI
                 if (additionalUI != null) {
+                    log.info("additional UI requested")
                     for (moduleItem in additionalUI.getMutableInputs()) {
+                        log.info("${moduleItem.name}/${moduleItem.label} added, based on ${additionalUI.module}")
                         p.addInput(moduleItem, additionalUI.module)
                     }
                 }
