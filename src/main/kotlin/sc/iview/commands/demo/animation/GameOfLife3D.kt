@@ -263,19 +263,20 @@ class GameOfLife3D : InteractiveCommand() {
             }
 
             // NB: Create dynamic metadata lazily.
-            volume!!.metadata["sciview-inspector"] = CustomPropertyUI(
-                this,
-                listOf(
-                    "starvation",
-                    "suffocation",
-                    "birth",
-                    "connectedness",
-                    "playSpeed",
-                    "play",
-                    "pause",
-                    "roflcopter"
-                )
-            )
+            sciView.attachCustomPropertyUIToNode(volume!!,
+                CustomPropertyUI(
+                    this,
+                    listOf(
+                        "starvation",
+                        "suffocation",
+                        "birth",
+                        "connectedness",
+                        "playSpeed",
+                        "play",
+                        "pause",
+                        "roflcopter"
+                    )
+                ))
         } else {
             // NB: Name must be unique each time.
             sciView.updateVolume(img as IterableInterval<UnsignedByteType>, name + "-" + ++tick, voxelDims, volume!!)

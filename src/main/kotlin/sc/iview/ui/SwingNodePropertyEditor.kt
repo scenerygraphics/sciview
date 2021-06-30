@@ -296,13 +296,18 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                 currentProperties = p
                 p.setSceneNode(sceneNode)
 
+                val additionalUIs = sceneNode.metadata
+                    .filter { it.key.startsWith("sciview-inspector-") }
+                    .filter { it.value as? CustomPropertyUI != null }
+
                 @Suppress("UNCHECKED_CAST")
-                val additionalUI = sceneNode.metadata["sciview-inspector"] as? CustomPropertyUI
-                if (additionalUI != null) {
-                    log.info("additional UI requested")
-                    for (moduleItem in additionalUI.getMutableInputs()) {
-                        log.info("${moduleItem.name}/${moduleItem.label} added, based on ${additionalUI.module}")
-                        p.addInput(moduleItem, additionalUI.module)
+                additionalUIs.forEach { (name, value) ->
+                    val ui = value as CustomPropertyUI
+                    log.info("Additional UI requested by $name, module ${ui.module.info.name}")
+
+                    for (moduleItem in ui.getMutableInputs()) {
+                        log.info("${moduleItem.name}/${moduleItem.label} added, based on ${ui.module}")
+                        p.addInput(moduleItem, ui.module)
                     }
                 }
 

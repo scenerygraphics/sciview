@@ -98,6 +98,7 @@ import sc.iview.event.NodeAddedEvent
 import sc.iview.event.NodeChangedEvent
 import sc.iview.event.NodeRemovedEvent
 import sc.iview.process.MeshConverter
+import sc.iview.ui.CustomPropertyUI
 import sc.iview.ui.MainWindow
 import sc.iview.ui.SwingMainWindow
 import sc.iview.ui.TaskManager
@@ -1632,6 +1633,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     fun requestPropEditorRefresh(n: Node?) {
         eventService.publish(NodeChangedEvent(n))
+    }
+
+    fun attachCustomPropertyUIToNode(node: Node, ui: CustomPropertyUI) {
+        node.metadata["sciview-inspector-${ui.module.info.name}"] = ui
     }
 
     companion object {
