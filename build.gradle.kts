@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import sciview.implementation
 import sciview.joglNatives
 import java.net.URL
+//import sc.iview.*
 
 plugins {
     val ktVersion = "1.5.10"
