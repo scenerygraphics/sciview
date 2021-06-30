@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import sciview.implementation
 import sciview.joglNatives
 import java.net.URL
-//import sc.iview.*
+import sciview.*
 
 plugins {
     val ktVersion = "1.5.10"
@@ -12,6 +12,7 @@ plugins {
     java
     kotlin("jvm") version ktVersion
     kotlin("kapt") version ktVersion
+    sciview.base
     sciview.publish
     sciview.sign
     id("org.jetbrains.dokka") version dokkaVersion
