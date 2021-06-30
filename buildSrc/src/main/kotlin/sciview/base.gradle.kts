@@ -1,4 +1,4 @@
-package sc.iview
+package sciview
 
 plugins {
     jacoco
@@ -7,7 +7,7 @@ plugins {
 tasks {
 
     register<JavaExec>("run") {
-        classpath = sourceSets.test.get().runtimeClasspath
+        classpath = sourceSets.main.get().runtimeClasspath
         if (project.hasProperty("target")) {
             project.property("target")?.let { target ->
                 val file = sourceSets.test.get().allSource.files.first { "class $target" in it.readText() }
@@ -39,4 +39,7 @@ val Project.sourceSets: SourceSetContainer
 
 val SourceSetContainer.test: NamedDomainObjectProvider<SourceSet>
     get() = named<SourceSet>("test")
+
+val SourceSetContainer.main: NamedDomainObjectProvider<SourceSet>
+    get() = named<SourceSet>("main")
 
