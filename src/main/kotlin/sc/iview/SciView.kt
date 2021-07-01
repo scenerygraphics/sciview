@@ -398,6 +398,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     fun closeWindow() {
         mainWindow.close()
+        dispose()
     }
 
     /*
