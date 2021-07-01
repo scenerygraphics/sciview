@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import sciview.implementation
 import sciview.joglNatives
 import java.net.URL
+import sciview.*
 
 plugins {
     val ktVersion = "1.5.10"
@@ -157,13 +158,96 @@ tasks {
         }
         dependsOn(test) // tests are required to run before generating the report
     }
-    register("runApp", JavaExec::class.java) {
+
+    register("runMain", JavaExec::class.java) {
         classpath = sourceSets.main.get().runtimeClasspath
 
-        main = "sc.iview.commands.demo.basic.MeshDemo"
+        main = "sc.iview.Main"
 
-        // arguments to pass to the application
-        //    args("appArg1")
+        val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
+
+        val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
+        allJvmArgs = if (additionalArgs != null) {
+            allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
+        } else {
+            allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
+        }
+    }
+
+    register("runImageJMain", JavaExec::class.java) {
+        classpath = sourceSets.main.get().runtimeClasspath
+
+        main = "sc.iview.ImageJMain"
+
+        val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
+
+        val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
+        allJvmArgs = if (additionalArgs != null) {
+            allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
+        } else {
+            allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
+        }
+    }
+
+    sourceSets.main.get().allSource.files
+        .filter { it.path.contains("demo") && (it.name.endsWith(".kt") || it.name.endsWith(".java")) }
+        .map {
+            val p = it.path
+            if(p.endsWith(".kt")) {
+                p.substringAfter("kotlin${File.separatorChar}").replace(File.separatorChar, '.').substringBefore(".kt")
+            } else {
+                p.substringAfter("java${File.separatorChar}").replace(File.separatorChar, '.').substringBefore(".java")
+            }
+        }
+        .forEach { className ->
+            println("Working on $className")
+            val exampleName = className.substringAfterLast(".")
+            val exampleType = className.substringBeforeLast(".").substringAfterLast(".")
+
+            println("Registering $exampleName of $exampleType")
+            register<JavaExec>(name = className.substringAfterLast(".")) {
+                classpath = sourceSets.test.get().runtimeClasspath
+                main = className
+                group = "demos.$exampleType"
+
+                val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
+
+                val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
+                allJvmArgs = if (additionalArgs != null) {
+                    allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
+                } else {
+                    allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
+                }
+            }
+        }
+
+    register<JavaExec>(name = "run") {
+        classpath = sourceSets.main.get().runtimeClasspath
+        if (project.hasProperty("target")) {
+            project.property("target")?.let { target ->
+                classpath = sourceSets.test.get().runtimeClasspath
+
+                println("Target is $target")
+//                if(target.endsWith(".kt")) {
+//                    main = target.substringAfter("kotlin${File.separatorChar}").replace(File.separatorChar, '.').substringBefore(".kt")
+//                } else {
+//                    main = target.substringAfter("java${File.separatorChar}").replace(File.separatorChar, '.').substringBefore(".java")
+//                }
+
+                main = "$target"
+                val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
+
+                val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
+                allJvmArgs = if (additionalArgs != null) {
+                    allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
+                } else {
+                    allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
+                }
+
+                println("Will run target $target with classpath $classpath, main=$main")
+                println("JVM arguments passed to target: $allJvmArgs")
+          }
+        }
     }
 }
 
