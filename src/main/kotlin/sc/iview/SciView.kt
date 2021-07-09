@@ -101,6 +101,7 @@ import sc.iview.process.MeshConverter
 import sc.iview.ui.MainWindow
 import sc.iview.ui.SwingMainWindow
 import sc.iview.ui.TaskManager
+import sc.iview.Utils
 import tpietzsch.example2.VolumeViewerOptions
 import java.awt.event.WindowListener
 import java.awt.image.BufferedImage
@@ -1085,6 +1086,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         }
         scijavaContext!!.service(SciViewService::class.java).close(this)
         close()
+        // if scijavaContext was not created by ImageJ, then system exit
+        if( objectService.getObjects(Utils.SciviewStandalone::class.java).size > 0 ) {
+            log.info("Was running as sciview standalone, shutting down JVM")
+            System.exit(0)
+        }
     }
 
     override fun close() {
@@ -1662,7 +1668,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         fun create(): SciView {
             xinitThreads()
             System.setProperty("scijava.log.level:sc.iview", "debug")
-            val context = Context(ImageJService::class.java, SciJavaService::class.java, SCIFIOService::class.java, ThreadService::class.java)
+            val context = Context(ImageJService::class.java, SciJavaService::class.java, SCIFIOService::class.java, ThreadService::class.java, ObjectService::class.java)
+            val objectService = context.getService(ObjectService::class.java)
+            objectService.addObject(Utils.SciviewStandalone())
             val sciViewService = context.service(SciViewService::class.java)
             return sciViewService.orCreateActiveSciView
         }

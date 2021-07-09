@@ -228,4 +228,12 @@ object Utils {
             e.printStackTrace()
         }
     }
+
+    class SciviewStandalone {
+    }
+    
+    @JvmStatic
+    fun createSciviewStandaloneObject() : SciviewStandalone {
+        return SciviewStandalone()        
+    }
 }
