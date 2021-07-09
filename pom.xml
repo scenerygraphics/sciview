@@ -107,7 +107,7 @@
 		<license.excludes>**/com/intellij/**,**/gnu/newtrove/**</license.excludes>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
-		<releaseProfiles>deploy-to-scijava</releaseProfiles>
+		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 
 		<scijava.jvm.build.version>8</scijava.jvm.build.version>
 		<scijava.jvm.test.version>${scijava.jvm.version}</scijava.jvm.test.version>
