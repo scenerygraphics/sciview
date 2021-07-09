@@ -327,6 +327,6 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
      */
     override fun close() {
         frame.dispose()
-        sciview.close()
+        sciview.dispose()
     }
 }
