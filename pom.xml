@@ -93,8 +93,8 @@
 		<url>https://github.com/scenerygraphics/sciview/issues</url>
 	</issueManagement>
 	<ciManagement>
-		<system>Travis CI</system>
-		<url>https://travis-ci.org/scenerygraphics/sciview</url>
+		<system>GitHub Actions</system>
+		<url>https://github.com/scenerygraphics/sciview/actions</url>
 	</ciManagement>
 
 
