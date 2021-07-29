@@ -15,10 +15,9 @@ sciview running the [Game of Life 3D](https://en.wikipedia.org/wiki/Game_of_Life
 
 ## Adding to Fiji
 
-In Fiji, go to `Help -> Update` and activate the `SciView` update site. In case you need to add it manually, the address is `https://sites.imagej.net/SciView`.
+Detailed [installation instructions](https://docs.scenery.graphics/sciview/installation/installing-the-sciview-plugin-for-fiji) can be found in the [sciview gitbook](https://docs.scenery.graphics/sciview/).
 
-**Note** you can access the latest version of SciView (as reflected by the *master* branch of this repository) by adding this update site to ImageJ manually:  
-https://sites.imagej.net/SciView-Unstable/ 
+Should you experience any issues, [please try the latest development version](https://docs.scenery.graphics/sciview/installation/installing-the-development-sciview-plugin-for-fiji), which includes all the latest features and fixes. 
 
 ## Developers
 
