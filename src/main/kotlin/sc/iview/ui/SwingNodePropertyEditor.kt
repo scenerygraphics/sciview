@@ -197,9 +197,9 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
         tree.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 super.mouseClicked(e)
-                if (e.clickCount == 2) {
+                if (e.clickCount == 2 && e.button == MouseEvent.BUTTON1) {
                     val n = tree.lastSelectedPathComponent as? SwingSceneryTreeNode ?: return
-                    val node = n.userObject as Node
+                    val node = n.userObject as? Node ?: return
                     sciView.setActiveCenteredNode(node)
                 } else if (e.button == MouseEvent.BUTTON3) {
                     val x = e.x
@@ -207,9 +207,14 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                     val tree = e.source as JTree
                     val path = tree.getPathForLocation(x, y) ?: return
                     tree.selectionPath = path
-                    val obj = path.lastPathComponent as SwingSceneryTreeNode
+                    val obj = path.lastPathComponent as? SwingSceneryTreeNode ?: return
                     val popup = JPopupMenu()
-                    val labelItem = JMenuItem(obj.node.name)
+
+                    val labelItem = if(obj.node == null) {
+                        return
+                    } else {
+                        JMenuItem(obj.node.name)
+                    }
                     labelItem.isEnabled = false
                     popup.add(labelItem)
                     if (obj.node is Camera) {
