@@ -19,6 +19,10 @@ Detailed [installation instructions](https://docs.scenery.graphics/sciview/insta
 
 Should you experience any issues, [please try the latest development version](https://docs.scenery.graphics/sciview/installation/installing-the-development-sciview-plugin-for-fiji), which includes all the latest features and fixes. 
 
+## Quick Start
+
+![Overview of sciview's user interface](https://gblobscdn.gitbook.com/assets%2F-LqBCy3SBefXis0YnrcI%2F-MK5WLQvMLIvw2GF6Rn2%2F-MK5WMGzmSavDTwlGro2%2Fmain-cheatsheet.jpg?alt=media&token=70c82549-e939-4752-af12-1756492a5f01)
+
 ## Developers
 
 [Kyle Harrington](https://kyleharrington.com), University of Idaho & [Ulrik Guenther](https://ulrik.is/writing), MPI-CBG
