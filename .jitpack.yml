@@ -1,0 +1,7 @@
+jdk:
+  - openjdk8
+install:
+   - echo "Running a custom install command"
+   - ./gradlew clean build generatePomFileForPubNamePublication
+   - sh scripts/process_pom.sh 
+   - ./gradlew publishToMavenLocal
