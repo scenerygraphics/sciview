@@ -3,5 +3,7 @@ jdk:
 install:
    - echo "Running a custom install command"
    - ./gradlew clean build generatePomFileForMavenPublication
-   - sh scripts/process_pom.sh 
-   - ./gradlew publishToMavenLocal
+   - echo "Done with clean, now customizing the pom.xml"   
+   - sh scripts/process_pom.sh
+   - echo "Publish to local maven"
+   - ./gradlew publishMavenPublicationToMavenLocal
