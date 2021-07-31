@@ -18,6 +18,8 @@ plugins {
     jacoco
     id("sciJava.platform") version "30.0.0+15"
     `maven-publish`
+    `java-library`
+    signing
 }
 
 repositories {
@@ -99,8 +101,8 @@ dependencies {
     implementation(n5.core)
     implementation(n5.hdf5)
     implementation(n5.imglib2)
-    implementation("org.janelia.saalfeldlab:n5-aws-s3")
-    implementation("org.janelia.saalfeldlab:n5-ij:2.0.1-SNAPSHOT")
+//    implementation("org.janelia.saalfeldlab:n5-aws-s3")
+//    implementation("org.janelia.saalfeldlab:n5-ij:2.0.1-SNAPSHOT")
     implementation(bigDataViewer.spimData)
 
     implementation(platform(kotlin("bom")))
@@ -129,6 +131,9 @@ kapt {
     }
 }
 
+
+
+
 tasks {
     withType<KotlinCompile>().all {
         val version = System.getProperty("java.version").substringBefore('.').toInt()
@@ -144,6 +149,20 @@ tasks {
     }
     jar {
         archiveVersion.set(rootProject.version.toString())
+    }
+
+    withType<GenerateMavenPom>().configureEach {
+        val matcher = Regex("""generatePomFileFor(\w+)Publication""").matchEntire(name)
+        val publicationName = matcher?.let { it.groupValues[1] }
+        //destination = layout.buildDirectory.file("poms/${publicationName}-pom.xml").get().asFile
+
+        pom.withXml {
+            var parent = asNode().appendNode("parent")
+            parent.appendNode("groupId", "org.scijava")
+            parent.appendNode("artifactId", "pom-scijava")
+            parent.appendNode("version", "30.0.0")
+            parent.appendNode("relativePath")
+        }
     }
 
     dokkaHtml {
