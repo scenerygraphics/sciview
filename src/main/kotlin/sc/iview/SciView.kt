@@ -53,6 +53,7 @@ import graphics.scenery.utils.Statistics
 import graphics.scenery.utils.extensions.times
 import graphics.scenery.volumes.Colormap
 import graphics.scenery.volumes.RAIVolume
+import graphics.scenery.volumes.TransferFunction
 import graphics.scenery.volumes.Volume
 import graphics.scenery.volumes.Volume.Companion.fromXML
 import graphics.scenery.volumes.Volume.Companion.setupId
@@ -110,6 +111,7 @@ import java.io.File
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
+import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.Future
 import java.util.function.Consumer
@@ -703,6 +705,22 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             light.position = Vector3f(x, y, z)
         }
     }
+
+    @Throws(IOException::class)
+    fun openDirTiff(source: Path)
+    {
+        val v = Volume.fromPath(source, hub)
+        v.name = "volume"
+        v.position = Vector3f(0.0f, 1.0f, 0.0f)
+        v.colormap = Colormap.get("jet")
+        v.scale = Vector3f(10.0f, 10.0f,30.0f)
+        v.transferFunction = TransferFunction.ramp(0.05f, 0.8f)
+        v.metadata["animating"] = true
+        v.converterSetups.firstOrNull()?.setDisplayRange(0.0, 1500.0)
+        v.visible = false
+        addNode(v)
+    }
+
 
     /**
      * Open a file specified by the source path. The file can be anything that SciView knows about: mesh, volume, point cloud
