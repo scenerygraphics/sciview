@@ -39,10 +39,9 @@ import net.imglib2.img.Img
 import net.imglib2.img.array.ArrayImgs
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import org.joml.Vector3f
-import org.scijava.command.Command
-import org.scijava.command.CommandInfo
-import org.scijava.command.CommandService
+import org.scijava.command.*
 import org.scijava.event.EventHandler
+import org.scijava.module.Module
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
@@ -51,10 +50,11 @@ import org.scijava.widget.NumberWidget
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
 import sc.iview.event.NodeRemovedEvent
+import sc.iview.ui.CustomPropertyUI
 import java.util.*
 
 /**
- * Conway's Game of Lifein 3D!
+ * Conway's Game of Life in 3D!
  *
  * @author Curtis Rueden
  * @author Kyle Harrington
@@ -65,43 +65,43 @@ import java.util.*
         menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
                 Menu(label = "Animation", weight = MenuWeights.DEMO_ANIMATION),
                 Menu(label = "Game of Life 3D", weight = MenuWeights.DEMO_ANIMATION_GOL3D)])
-class GameOfLife3D : Command {
+class GameOfLife3D : InteractiveCommand() {
     @Parameter
     private lateinit var sciView: SciView
 
-    @Parameter
-    private lateinit var commandService: CommandService
-
-    @Parameter(label = "Starvation threshold", min = "0", max = "26", persist = false, style = "group:Game of Life")
+    @Volatile @Parameter(label = "Starvation threshold", min = "0", max = "26", persist = false, style = "group:Game of Life")
     private var starvation = 5
 
-    @Parameter(label = "Birth threshold", min = "0", max = "26", persist = false, style = "group:Game of Life")
+    @Volatile @Parameter(label = "Birth threshold", min = "0", max = "26", persist = false, style = "group:Game of Life")
     private var birth = 6
 
-    @Parameter(label = "Suffocation threshold", min = "0", max = "26", persist = false, style = "group:Game of Life")
+    @Volatile @Parameter(label = "Suffocation threshold", min = "0", max = "26", persist = false, style = "group:Game of Life")
     private var suffocation = 9
 
-    @Parameter(label = "Connectedness", choices = [SIX, EIGHTEEN, TWENTY_SIX], persist = false, style = "group:Game of Life")
+    @Volatile @Parameter(label = "Connectedness", choices = [SIX, EIGHTEEN, TWENTY_SIX], persist = false, style = "group:Game of Life")
     private var connectedness = TWENTY_SIX
 
-    @Parameter(label = "Initial saturation % when randomizing", min = "1", max = "99", style = NumberWidget.SCROLL_BAR_STYLE, persist = false)
+    @Volatile @Parameter(label = "Initial saturation % when randomizing", min = "1", max = "99", style = NumberWidget.SCROLL_BAR_STYLE, persist = false)
     private var saturation = 10
 
-    //    @Parameter(label = "Play speed", min = "1", max="100", style = NumberWidget.SCROLL_BAR_STYLE, persist = false)
-    private val playSpeed = 10
+    @Volatile @Parameter(label = "Play speed", min = "1", max="100", style = NumberWidget.SCROLL_BAR_STYLE + ",group:Game of Life", persist = false)
+    private var playSpeed: Int = 10
 
-    //
     @Parameter(callback = "iterate")
     private lateinit var iterate: Button
 
     @Parameter(callback = "randomize")
     private lateinit var randomize: Button
 
-    @Parameter(callback = "play")
+    @Parameter(callback = "play", style = "group:Game of Life")
     private lateinit var play: Button
 
-    @Parameter(callback = "pause")
+    @Parameter(callback = "pause", style = "group:Game of Life")
     private lateinit var pause: Button
+
+    @Parameter(label = "Activate roflcopter", style = "group:Game of Life")
+    private var roflcopter: Boolean = false
+
     private val w = 64
     private val h = 64
     private val d = 64
@@ -158,7 +158,6 @@ class GameOfLife3D : Command {
         // compute the new image field
         val access = img!!.randomAccess()
 
-        //RandomAccess<UnsignedByteType> access = ((SourceAndConverter) ((Volume.VolumeDataSource.RAIISource) volume.getDataSource()).getSources().get(0)).getSpimSource().getSource(0, 0).randomAccess();
         for (z in 0 until d) {
             for (y in 0 until h) {
                 for (x in 0 until w) {
@@ -169,10 +168,10 @@ class GameOfLife3D : Command {
                     access.setPosition(y, 2)
                     if (alive(access)) {
                         // Living cell stays alive within (starvation, suffocation).
-                        bits[i] = n > starvation && n < suffocation
+                        bits[i] = n in (starvation + 1) until suffocation
                     } else {
                         // New cell forms within [birth, suffocation).
-                        bits[i] = n >= birth && n < suffocation
+                        bits[i] = n in birth until suffocation
                     }
                 }
             }
@@ -189,52 +188,11 @@ class GameOfLife3D : Command {
             cursor.get().set(if (alive) ALIVE else DEAD)
         }
 
-//        for( int z = 0; z < d; z++ ) {
-//            for( int y = 0; y < h; y++ ) {
-//                for( int x = 0; x < w; x++ ) {
-//                    access.setPosition( x, 0 );
-//                    access.setPosition( y, 1 );
-//                    access.setPosition( y, 2 );
-//                    final boolean alive = bits[z * w * h + y * w + x];
-//                    access.get().set( alive ? ALIVE : DEAD );
-//                }
-//            }
-//        }
         updateVolume()
     }
 
     override fun run() {
         randomize()
-        dialog = GenericDialog("Game of Life 3D")
-        dialog!!.addNumericField("Starvation threshold", starvation.toDouble(), 0)
-        dialog!!.addNumericField("Birth threshold", birth.toDouble(), 0)
-        dialog!!.addNumericField("Suffocation threshold", suffocation.toDouble(), 0)
-        dialog!!.addNumericField("Initial saturation % when randomizing", saturation.toDouble(), 0)
-        dialog!!.showDialog()
-        if (dialog!!.wasCanceled()) return
-        starvation = dialog!!.nextNumber.toInt()
-        birth = dialog!!.nextNumber.toInt()
-        suffocation = dialog!!.nextNumber.toInt()
-        saturation = dialog!!.nextNumber.toInt()
-        randomize()
-        play()
-
-//
-//    @Parameter(callback = "iterate")
-//    private Button iterate;
-//
-//    @Parameter(callback = "randomize")
-//    private Button randomize;
-//
-//    @Parameter(callback = "play")
-//    private Button play;
-//
-//    @Parameter(callback = "pause")
-//    private Button pause;
-
-        //play();
-
-        //eventService.subscribe(this);
     }
 
     // -- Helper methods --
@@ -305,30 +263,23 @@ class GameOfLife3D : Command {
             }
 
             // NB: Create dynamic metadata lazily.
-            val commandInfo: CommandInfo = commandService.getCommand(javaClass)
-            volume!!.metadata["sciview-inspector"] = listOf(
-                    commandInfo.getInput("starvation"),
-                    commandInfo.getInput("suffocation"),
-                    commandInfo.getInput("birth"),
-                    commandInfo.getInput("connectedness")
-            )
+            sciView.attachCustomPropertyUIToNode(volume!!,
+                CustomPropertyUI(
+                    this,
+                    listOf(
+                        "starvation",
+                        "suffocation",
+                        "birth",
+                        "connectedness",
+                        "playSpeed",
+                        "play",
+                        "pause",
+                        "roflcopter"
+                    )
+                ))
         } else {
             // NB: Name must be unique each time.
             sciView.updateVolume(img as IterableInterval<UnsignedByteType>, name + "-" + ++tick, voxelDims, volume!!)
-
-//            RandomAccessibleIntervalSource<UnsignedByteType> newSource = new RandomAccessibleIntervalSource<UnsignedByteType>(field, new UnsignedByteType(), name + "-" + ++tick);
-//
-//            SourceAndConverter<UnsignedByteType> sourceAndConverter = BigDataViewer.wrapWithTransformedSource(
-//                    new SourceAndConverter<>(newSource, BigDataViewer.createConverterToARGB(new UnsignedByteType())));
-//
-//            ((Volume.VolumeDataSource.RAISource) volume.getDataSource()).getSources().set(0, sourceAndConverter);
-//
-//            volume.getVolumeManager().notifyUpdate(volume);
-//
-//            volume.setDirty(true);
-//            volume.setNeedsUpdate(true);
-//            volume.getVolumeManager().requestRepaint();
-            //volume.getCacheControl().prepareNextFrame();
         }
     }
 

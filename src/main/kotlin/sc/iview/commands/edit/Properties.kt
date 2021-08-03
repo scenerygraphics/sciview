@@ -40,6 +40,8 @@ import org.scijava.command.Command
 import org.scijava.command.InteractiveCommand
 import org.scijava.event.EventService
 import org.scijava.log.LogService
+import org.scijava.module.Module
+import org.scijava.module.ModuleItem
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import org.scijava.ui.UIService
@@ -51,6 +53,7 @@ import sc.iview.SciView
 import sc.iview.event.NodeChangedEvent
 import java.io.IOException
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
 
 /**
@@ -520,10 +523,23 @@ class Properties : InteractiveCommand() {
         return "" + node.name + "[" + count + "]"
     }
 
+    fun addInput(input: ModuleItem<*>, module: Module) {
+        super.addInput(input)
+        inputModuleMaps[input] = module
+    }
+
+    fun getCustomModuleForModuleItem(moduleInfo: ModuleItem<*>): Module? {
+        val custom = inputModuleMaps[moduleInfo]
+        log.info("Custom module found: $custom")
+        return custom
+    }
+
     companion object {
         private const val PI_NEG = "-3.142"
         private const val PI_POS = "3.142"
         private var dummyColorTable: ColorTable? = null
+
+        private val inputModuleMaps = ConcurrentHashMap<ModuleItem<*>, Module>()
 
         init {
             dummyColorTable = object : ColorTable {
