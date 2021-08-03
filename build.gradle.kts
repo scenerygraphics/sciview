@@ -1,3 +1,4 @@
+import groovy.util.Node
 import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import sciview.implementation
@@ -154,14 +155,50 @@ tasks {
     withType<GenerateMavenPom>().configureEach {
         val matcher = Regex("""generatePomFileFor(\w+)Publication""").matchEntire(name)
         val publicationName = matcher?.let { it.groupValues[1] }
-        //destination = layout.buildDirectory.file("poms/${publicationName}-pom.xml").get().asFile
+
+        pom.properties.empty()
 
         pom.withXml {
+            // Add parent to the generated pom
             var parent = asNode().appendNode("parent")
             parent.appendNode("groupId", "org.scijava")
             parent.appendNode("artifactId", "pom-scijava")
             parent.appendNode("version", "30.0.0")
             parent.appendNode("relativePath")
+
+            // Update the dependencies and properties
+            var dependenciesNode = asNode().appendNode("dependencies")
+            var propertiesNode = asNode().appendNode("properties")
+            propertiesNode.appendNode("inceptionYear", 2016)
+
+            configurations.implementation.allDependencies.forEach {
+                var artifactId = it.name
+
+                var propertyName = "$artifactId.version"
+                propertiesNode.appendNode(propertyName, it.version)
+
+                var dependencyNode = dependenciesNode.appendNode("dependency")
+                dependencyNode.appendNode("groupId", it.group)
+                dependencyNode.appendNode("artifactId", artifactId)
+                dependencyNode.appendNode("version", "\${$propertyName}")
+                //dependencyNode.appendNode("scope", it.scope)
+            }
+
+            var depStartIdx = "<dependencyManagement>".toRegex().find(asString())?.range?.start
+            var depEndIdx = "</dependencyManagement>".toRegex().find(asString())?.range?.last
+            if (depStartIdx != null) {
+                if (depEndIdx != null) {
+                    asString().replace(depStartIdx, depEndIdx+1, "")
+                }
+            }
+
+            depStartIdx = "<dependencies>".toRegex().find(asString())?.range?.start
+            depEndIdx = "</dependencies>".toRegex().find(asString())?.range?.last
+            if (depStartIdx != null) {
+                if (depEndIdx != null) {
+                    asString().replace(depStartIdx, depEndIdx+1, "")
+                }
+            }
         }
     }
 
