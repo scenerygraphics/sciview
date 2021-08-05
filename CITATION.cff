@@ -1,0 +1,21 @@
+# YAML 1.2
+---
+abstract: "ImageJ/Fiji is a widely-used tool in the biomedical community for performing everyday image analysis tasks. However, its 3D viewer component (aptly named 3D Viewer) has become dated and is no longer actively maintained. We set out to create an alternative tool that not only brings modern concepts and APIs from computer graphics to ImageJ, but is designed to be robust to long-term, open-source development. To achieve this we divided the visualization logic into two parts: the rendering framework, scenery, and the user-facing application, sciview. In this paper we describe the development process and design decisions made, putting an emphasis on sustainable development, community building, and software engineering best practises. We highlight the motivation for the Java Virtual Machine (JVM) as a target platform for visualisation applications. We conclude by discussing the remaining milestones and strategy for long-term sustainability."
+authors: 
+  -
+    affiliation: "Center for Advanced Systems Understanding, Görlitz, Germany / Max Planck Institute of Molecular Cell Biology and Genetics, Dresden, Germany / Center for Systems Biology, Dresden, Germany"
+    family-names: "Günther"
+    given-names: Ulrik
+    orcid: "https://orcid.org/0000-0002-1179-8228"
+  -
+    family-names: Harrington
+    given-names: "Kyle I.S."
+    orcid: "https://orcid.org/0000-0002-7237-1973"
+cff-version: "1.1.0"
+date-released: 2020-05-04
+doi: "10.2312/visgap.20201112"
+license: "BSD-2-Clause"
+message: "If you use this software, please cite it using these metadata."
+repository-code: "https://github.com/scenerygraphics/sciview"
+title: "Tales from the Trenches: Developing sciview, a new 3D viewer for the ImageJ community"
+...
