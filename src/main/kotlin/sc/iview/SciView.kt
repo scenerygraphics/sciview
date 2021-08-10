@@ -39,12 +39,16 @@ import bdv.viewer.Source
 import bdv.viewer.SourceAndConverter
 import graphics.scenery.*
 import graphics.scenery.Scene.RaycastResult
+import graphics.scenery.attribute.material.Material
 import graphics.scenery.backends.Renderer
 import graphics.scenery.backends.opengl.OpenGLRenderer
 import graphics.scenery.backends.vulkan.VulkanRenderer
 import graphics.scenery.controls.InputHandler
 import graphics.scenery.controls.OpenVRHMD
 import graphics.scenery.controls.TrackerInput
+import graphics.scenery.primitives.*
+import graphics.scenery.proteins.Protein
+import graphics.scenery.proteins.RibbonDiagram
 import graphics.scenery.utils.ExtractsNatives
 import graphics.scenery.utils.ExtractsNatives.Companion.getPlatform
 import graphics.scenery.utils.LogbackUtils
@@ -328,10 +332,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         headlight!!.name = "headlight"
         val lightSphere = Icosphere(1.0f, 2)
         headlight!!.addChild(lightSphere)
-        lightSphere.material.diffuse = headlight!!.emissionColor
-        lightSphere.material.specular = headlight!!.emissionColor
-        lightSphere.material.ambient = headlight!!.emissionColor
-        lightSphere.material.wireframe = true
+        lightSphere.material().diffuse = headlight!!.emissionColor
+        lightSphere.material().specular = headlight!!.emissionColor
+        lightSphere.material().ambient = headlight!!.emissionColor
+        lightSphere.material().wireframe = true
         lightSphere.visible = false
         //lights.add( light );
         camera!!.nearPlaneDistance = 0.01f
@@ -577,15 +581,13 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @JvmOverloads
     fun addBox(position: Vector3f = Vector3f(0.0f, 0.0f, 0.0f), size: Vector3f = Vector3f(1.0f, 1.0f, 1.0f), color: ColorRGB = DEFAULT_COLOR,
                inside: Boolean = false, block: Box.() -> Unit = {}): Box {
-        // TODO: use a material from the current palate by default
-        val boxmaterial = Material()
-        boxmaterial.ambient = Vector3f(1.0f, 0.0f, 0.0f)
-        boxmaterial.diffuse = Utils.convertToVector3f(color)
-        boxmaterial.specular = Vector3f(1.0f, 1.0f, 1.0f)
-
         val box = Box(size, inside)
-        box.material = boxmaterial
-        box.position = position
+        box.spatial().position = position
+        box.material {
+            ambient = Vector3f(1.0f, 0.0f, 0.0f)
+            diffuse = Utils.convertToVector3f(color)
+            specular = Vector3f(1.0f, 1.0f, 1.0f)
+        }
         return addNode(box, block = block)
     }
 
@@ -595,14 +597,14 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     @JvmOverloads
     fun addSphere(position: Vector3f = Vector3f(0.0f, 0.0f, 0.0f), radius: Float = 1f, color: ColorRGB = DEFAULT_COLOR, block: Sphere.() -> Unit = {}): Sphere {
-        val material = Material()
-        material.ambient = Vector3f(1.0f, 0.0f, 0.0f)
-        material.diffuse = Utils.convertToVector3f(color)
-        material.specular = Vector3f(1.0f, 1.0f, 1.0f)
-
         val sphere = Sphere(radius, 20)
-        sphere.material = material
-        sphere.position = position
+        sphere.spatial().position = position
+        sphere.material {
+            ambient = Vector3f(1.0f, 0.0f, 0.0f)
+            diffuse = Utils.convertToVector3f(color)
+            specular = Vector3f(1.0f, 1.0f, 1.0f)
+        }
+
         return addNode(sphere, block = block)
     }
 
@@ -616,7 +618,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     fun addCylinder(position: Vector3f, radius: Float, height: Float, num_segments: Int, block: Cylinder.() -> Unit = {}): Cylinder {
         val cyl = Cylinder(radius, height, num_segments)
-        cyl.position = position
+        cyl.spatial().position = position
         return addNode(cyl, block = block)
     }
 
@@ -630,7 +632,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     fun addCone(position: Vector3f, radius: Float, height: Float, num_segments: Int, block: Cone.() -> Unit = {}): Cone {
         val cone = Cone(radius, height, num_segments, Vector3f(0.0f, 0.0f, 1.0f))
-        cone.position = position
+        cone.spatial().position = position
         return addNode(cone, block = block)
     }
 
@@ -655,17 +657,17 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     @JvmOverloads
     fun addLine(points: Array<Vector3f>, color: ColorRGB, edgeWidth: Double, block: Line.() -> Unit = {}): Line {
-        val material = Material()
-        material.ambient = Vector3f(1.0f, 1.0f, 1.0f)
-        material.diffuse = Utils.convertToVector3f(color)
-        material.specular = Vector3f(1.0f, 1.0f, 1.0f)
         val line = Line(points.size)
         for (pt in points) {
             line.addPoint(pt)
         }
         line.edgeWidth = edgeWidth.toFloat()
-        line.material = material
-        line.position = points[0]
+        line.material {
+            ambient = Vector3f(1.0f, 1.0f, 1.0f)
+            diffuse = Utils.convertToVector3f(color)
+            specular = Vector3f(1.0f, 1.0f, 1.0f)
+        }
+        line.spatial().position = points[0]
         return addNode(line, block = block)
     }
 
@@ -675,13 +677,13 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     @JvmOverloads
     fun addPointLight(block: PointLight.() -> Unit = {}): PointLight {
-        val material = Material()
-        material.ambient = Vector3f(1.0f, 0.0f, 0.0f)
-        material.diffuse = Vector3f(0.0f, 1.0f, 0.0f)
-        material.specular = Vector3f(1.0f, 1.0f, 1.0f)
         val light = PointLight(5.0f)
-        light.material = material
-        light.position = Vector3f(0.0f, 0.0f, 0.0f)
+        light.material {
+            ambient = Vector3f(1.0f, 0.0f, 0.0f)
+            diffuse = Vector3f(0.0f, 1.0f, 0.0f)
+            specular = Vector3f(1.0f, 1.0f, 1.0f)
+        }
+        light.spatial().position = Vector3f(0.0f, 0.0f, 0.0f)
         lights!!.add(light)
         return addNode(light, block = block)
     }
@@ -718,7 +720,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         if (source.takeLast(4).equals(".pdb", true)) {
             val protein = Protein.fromFile(source)
             val ribbon = RibbonDiagram(protein)
-            ribbon.position = Vector3f(0f, 0f, 0f)
+            ribbon.spatial().position = Vector3f(0f, 0f, 0f)
             addNode(ribbon)
             return
         }
@@ -833,12 +835,12 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return a Node corresponding to the mesh
      */
     fun addMesh(scMesh: graphics.scenery.Mesh): graphics.scenery.Mesh {
-        val material = Material()
-        material.ambient = Vector3f(1.0f, 0.0f, 0.0f)
-        material.diffuse = Vector3f(0.0f, 1.0f, 0.0f)
-        material.specular = Vector3f(1.0f, 1.0f, 1.0f)
-        scMesh.material = material
-        scMesh.position = Vector3f(0.0f, 0.0f, 0.0f)
+        scMesh.ifMaterial {
+            ambient = Vector3f(1.0f, 0.0f, 0.0f)
+            diffuse = Vector3f(0.0f, 1.0f, 0.0f)
+            specular = Vector3f(1.0f, 1.0f, 1.0f)
+        }
+        scMesh.spatial().position = Vector3f(0.0f, 0.0f, 0.0f)
         objectService.addObject(scMesh)
         return addNode(scMesh)
     }
@@ -1534,9 +1536,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @Suppress("UNUSED_PARAMETER")
     fun setColor(n: Node, x: Float, y: Float, z: Float, w: Float) {
         val col = Vector3f(x, y, z)
-        n.material.ambient = col
-        n.material.diffuse = col
-        n.material.specular = col
+        n.ifMaterial {
+            ambient = col
+            diffuse = col
+            specular = col
+        }
     }
 
     fun setPosition(n: Node, x: Float, y: Float, z: Float) {

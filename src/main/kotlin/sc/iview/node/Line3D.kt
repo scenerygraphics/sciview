@@ -29,6 +29,8 @@
 package sc.iview.node
 
 import graphics.scenery.*
+import graphics.scenery.attribute.material.Material
+import graphics.scenery.primitives.Cylinder
 import org.joml.Vector3f
 import org.scijava.util.ColorRGB
 import org.scijava.util.Colors
@@ -40,7 +42,7 @@ import java.util.ArrayList
  *
  * @author Kyle Harrington
  */
-class Line3D : Node {
+class Line3D : Mesh {
     private var edges: MutableList<Node>
     private var joints: MutableList<Node>? = null
     private var edgeWidth = 0.05
@@ -67,8 +69,8 @@ class Line3D : Node {
                 addLine(edge)
             }
             if (sphereJoints) {
-                val joint: Node = Sphere(edgeWidth.toFloat(), 15)
-                joint.position = points[k]
+                val joint = Sphere(edgeWidth.toFloat(), 15)
+                joint.spatial().position = points[k]
                 joints!!.add(joint)
                 addChild(joint)
             }
@@ -81,24 +83,28 @@ class Line3D : Node {
         if (sphereJoints) joints = ArrayList()
         for (k in points.indices) {
             val c = Utils.convertToVector3f(colors[k])
-            val mat = Material()
-            mat.diffuse = c
-            mat.ambient = c
-            mat.specular = c
             if (k > 0) {
-                val edge: Node = Cylinder.betweenPoints(
+                val edge = Cylinder.betweenPoints(
                         points[k - 1],
                         points[k],
                         edgeWidth.toFloat(),
                         1f,
                         15)
-                edge.material = mat
+                edge.material {
+                    diffuse = c
+                    ambient = c
+                    specular = c
+                }
                 addLine(edge)
             }
             if (sphereJoints) {
-                val joint: Node = Sphere(edgeWidth.toFloat(), 15)
-                joint.material = mat
-                joint.position = points[k]
+                val joint = Sphere(edgeWidth.toFloat(), 15)
+                joint.material {
+                    diffuse = c
+                    ambient = c
+                    specular = c
+                }
+                joint.spatial().position = points[k]
                 joints!!.add(joint)
                 addChild(joint)
             }
@@ -108,16 +114,21 @@ class Line3D : Node {
     fun setColors(colors: List<ColorRGB>) {
         for (k in joints!!.indices) {
             val c = Utils.convertToVector3f(colors[k])
-            val mat = Material()
-            mat.diffuse = c
-            mat.ambient = c
-            mat.specular = c
-            joints!![k].material = mat
-            joints!![k].needsUpdate = true
-            joints!![k].dirty = true
-            edges[k].material = mat
-            edges[k].needsUpdate = true
-            edges[k].dirty = true
+            joints!![k].ifMaterial {
+                diffuse = c
+                ambient = c
+                specular = c
+            }
+            joints!![k].spatialOrNull()?.needsUpdate = true
+            joints!![k].geometryOrNull()?.dirty = true
+            edges!![k].ifMaterial {
+                diffuse = c
+                ambient = c
+                specular = c
+            }
+
+            edges[k].spatialOrNull()?.needsUpdate = true
+            edges[k].geometryOrNull()?.dirty = true
         }
     }
 

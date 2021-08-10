@@ -28,9 +28,9 @@
  */
 package sc.iview.process
 
-import graphics.scenery.Material
 import graphics.scenery.Node
 import graphics.scenery.Sphere
+import graphics.scenery.attribute.material.Material
 import org.joml.Vector3f
 import org.scijava.ui.behaviour.Behaviour
 import org.scijava.ui.behaviour.ClickBehaviour
@@ -96,10 +96,10 @@ class ControlPoints {
 
         // Create target point
         targetPoint = Sphere(DEFAULT_RADIUS, DEFAULT_SEGMENTS)
-        val mat = Material()
-        mat.ambient = Utils.convertToVector3f(TARGET_COLOR)
-        mat.diffuse = Utils.convertToVector3f(TARGET_COLOR)
-        (targetPoint as Sphere).material = mat
+        (targetPoint as Sphere).ifMaterial {
+            ambient = Utils.convertToVector3f(TARGET_COLOR)
+            diffuse = Utils.convertToVector3f(TARGET_COLOR)
+        }
         (targetPoint as Sphere).position = cam.position.add(cam.forward.mul(controlPointDistance))
         sciView.addNode(targetPoint, false)
         //sciView.getCamera().addChild(targetPoint);
@@ -125,10 +125,10 @@ class ControlPoints {
 
     private fun placeControlPoint(sciView: SciView) {
         val controlPoint = Sphere(DEFAULT_RADIUS, DEFAULT_SEGMENTS)
-        val mat = Material()
-        mat.ambient = Utils.convertToVector3f(DEFAULT_COLOR)
-        mat.diffuse = Utils.convertToVector3f(DEFAULT_COLOR)
-        controlPoint.material = mat
+        controlPoint.material {
+            ambient = Utils.convertToVector3f(DEFAULT_COLOR)
+            diffuse = Utils.convertToVector3f(DEFAULT_COLOR)
+        }
 
         //controlPoint.setPosition( sciView.getCamera().getTransformation().mult(targetPoint.getPosition().xyzw()) );
         controlPoint.position = targetPoint.position

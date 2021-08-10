@@ -28,9 +28,9 @@
  */
 package sc.iview.controls.behaviours
 
-import graphics.scenery.Line
 import graphics.scenery.Mesh
-import graphics.scenery.TextBoard
+import graphics.scenery.primitives.Line
+import graphics.scenery.primitives.TextBoard
 import graphics.scenery.utils.LazyLogger
 import org.joml.Vector2f
 import org.joml.Vector3f
@@ -90,8 +90,8 @@ class Ruler(protected val sciView: SciView): DragBehaviour {
         board.backgroundColor = Vector4f(1f, 1f, 1f, 1.0f)
         val boardPosition = Vector3f()
         origin.add(endPosition, boardPosition).mul(0.5f)
-        board.position = boardPosition.mul(0.5f)
-        board.scale = Vector3f(0.3f, 0.3f, 0.3f)
+        board.spatial().position = boardPosition.mul(0.5f)
+        board.spatial().scale = Vector3f(0.3f, 0.3f, 0.3f)
         sciView.addNode(board)
     }
 
@@ -101,8 +101,8 @@ class Ruler(protected val sciView: SciView): DragBehaviour {
         val height = cam.height
         val posX = (p0 - width / 2.0f) / (width / 2.0f)
         val posY = -1.0f * (p1 - height / 2.0f) / (height / 2.0f)
-        val mousePosition = cam.viewportToView(Vector2f(posX, posY))
-        val position4D = cam.viewToWorld(mousePosition)
+        val mousePosition = cam.spatial().viewportToView(Vector2f(posX, posY))
+        val position4D = cam.spatial().viewToWorld(mousePosition)
         return Vector3f(position4D.x(), position4D.y(), position4D.z())
     }
 }

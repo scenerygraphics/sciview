@@ -28,12 +28,8 @@
  */
 package sc.iview.commands.demo.basic;
 
-import graphics.scenery.Material;
-import graphics.scenery.Node;
-import net.imagej.mesh.Mesh;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
-import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
 import org.scijava.io.IOService;
@@ -42,10 +38,7 @@ import org.scijava.plugin.Menu;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
-import sc.iview.commands.demo.ResourceLoader;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

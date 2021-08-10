@@ -31,7 +31,7 @@ package sc.iview.io;
 import bdv.util.AxisOrder;
 import graphics.scenery.Group;
 import graphics.scenery.Node;
-import graphics.scenery.PointCloud;
+import graphics.scenery.primitives.PointCloud;
 import graphics.scenery.volumes.Volume;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;

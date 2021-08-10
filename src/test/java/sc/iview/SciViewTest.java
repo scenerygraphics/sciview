@@ -30,6 +30,7 @@ package sc.iview;
 
 import cleargl.GLVector;
 import graphics.scenery.*;
+import graphics.scenery.attribute.material.Material;
 import io.scif.SCIFIOService;
 import net.imagej.ImageJService;
 import org.joml.Vector3f;
@@ -75,15 +76,15 @@ public class SciViewTest {
 
         Group group = new Group();
 
-        final Material material = new Material();
-        material.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
-        material.setDiffuse( new Vector3f( 1.0f, 0.0f, 0.0f ) );
-        material.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
 
         final Sphere sphere = new Sphere( 1, 20 );
-        sphere.setMaterial( material );
-        sphere.setPosition( new Vector3f(0,0,0) );
-        //sphere.setParent(group);
+        sphere.ifMaterial( material -> {
+            material.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
+            material.setDiffuse( new Vector3f( 1.0f, 0.0f, 0.0f ) );
+            material.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
+            return null;
+        });
+        sphere.spatial().setPosition( new Vector3f(0,0,0) );
         group.addChild(sphere);
         sciView.addNode(group);
 
