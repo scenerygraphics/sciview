@@ -21,7 +21,6 @@ plugins {
 
 repositories {
     mavenCentral()
-    jcenter()
     maven("https://maven.scijava.org/content/groups/public")
     maven("https://raw.githubusercontent.com/kotlin-graphics/mary/master")
     maven("https://jitpack.io")
