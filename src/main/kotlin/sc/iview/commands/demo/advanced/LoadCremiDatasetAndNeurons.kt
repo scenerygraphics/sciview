@@ -183,9 +183,13 @@ class LoadCremiDatasetAndNeurons: Command {
             // Convert the mesh into a scenery mesh for visualization
             val mesh = MeshConverter.toScenery(m, false, flipWindingOrder = true)
             sciview.addNode(mesh) {
-                scale = Vector3f(0.01f, 0.01f, 0.06f)
-                material.diffuse = colormapNeurons.lookupARGB(0.0, 255.0, kotlin.random.Random.nextDouble(0.0, 255.0)).toRGBColor().xyz()
-                material.roughness = 0.0f
+                spatial().scale = Vector3f(0.01f, 0.01f, 0.06f)
+                ifMaterial {
+                    diffuse =
+                        colormapNeurons.lookupARGB(0.0, 255.0, kotlin.random.Random.nextDouble(0.0, 255.0)).toRGBColor()
+                            .xyz()
+                    roughness = 0.0f
+                }
                 name = "Neuron $i"
             }
             val completion = 10.0f + ((i+1)/largestNeuronLabels.size.toFloat())*90.0f

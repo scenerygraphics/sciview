@@ -28,9 +28,8 @@
  */
 package sc.iview.commands.demo.basic;
 
-import graphics.scenery.Material;
 import graphics.scenery.Node;
-import graphics.scenery.TextBoard;
+import graphics.scenery.primitives.TextBoard;
 import net.imagej.mesh.Mesh;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -89,18 +88,15 @@ public class TextDemo implements Command {
         Node msh = sciView.addMesh( m );
         msh.setName( filePath );
 
-        //msh.fitInto( 15.0f, true );
+        msh.ifMaterial( mat -> {
+            mat.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
+            mat.setDiffuse( new Vector3f( 0.8f, 0.5f, 0.4f ) );
+            mat.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
+            return null;
+        });
 
-        Material mat = new Material();
-        mat.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
-        mat.setDiffuse( new Vector3f( 0.8f, 0.5f, 0.4f ) );
-        mat.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-        //mat.setDoubleSided( true );
-
-        msh.setMaterial( mat );
-
-        msh.setNeedsUpdate( true );
-        msh.setDirty( true );
+        msh.ifSpatial( spatial -> { spatial.setNeedsUpdate(true); return null; });
+        msh.ifGeometry( geom -> { geom.setDirty(true); return null; });
 
         TextBoard board = new TextBoard();
         board.setText("This mesh was contributed by Robert Wiese!");
@@ -108,8 +104,8 @@ public class TextDemo implements Command {
         board.setTransparent(0);
         board.setFontColor(new Vector4f(0, 0, 0, 0));
         board.setBackgroundColor(new Vector4f(100,100,0, 0));
-        board.setPosition(msh.getPosition().add(new Vector3f(0,10,0)));
-        board.setScale(new Vector3f(10.0f,10.0f,10.0f));
+        board.spatial().setPosition(msh.spatialOrNull().getPosition().add(new Vector3f(0,10,0)));
+        board.spatial().setScale(new Vector3f(10.0f,10.0f,10.0f));
 
         sciView.addNode(board,false);
 
