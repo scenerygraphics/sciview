@@ -149,11 +149,8 @@ tasks {
 
     jacocoTestReport {
         reports {
-            xml.isEnabled = true
-            html.apply {
-                isEnabled = false
-                //destination = file("$buildDir/jacocoHtml")
-            }
+            xml.required.set(true)
+            html.required.set(true)
         }
         dependsOn(test) // tests are required to run before generating the report
     }
