@@ -70,6 +70,8 @@ import net.imagej.units.UnitService
 import net.imglib2.*
 import net.imglib2.display.ColorTable
 import net.imglib2.img.Img
+import net.imglib2.img.array.ArrayImgs
+import net.imglib2.img.display.imagej.ImageJFunctions
 import net.imglib2.realtransform.AffineTransform3D
 import net.imglib2.type.numeric.ARGBType
 import net.imglib2.type.numeric.NumericType
@@ -102,12 +104,8 @@ import sc.iview.ui.CustomPropertyUI
 import sc.iview.ui.MainWindow
 import sc.iview.ui.SwingMainWindow
 import sc.iview.ui.TaskManager
-import sc.iview.Utils
 import tpietzsch.example2.VolumeViewerOptions
 import java.awt.event.WindowListener
-import java.awt.image.BufferedImage
-import java.awt.image.DataBufferByte
-import java.io.File
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
@@ -117,7 +115,6 @@ import java.util.function.Consumer
 import java.util.function.Function
 import java.util.function.Predicate
 import java.util.stream.Collectors
-import javax.imageio.ImageIO
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -983,23 +980,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Take a screenshot and return it as an Img
      * @return an Img of type UnsignedByteType
      */
-    val screenshot: Img<UnsignedByteType>?
+    val screenshot: Img<UnsignedByteType>
         get() {
-            val screenshot = getSceneryRenderer()!!.requestScreenshot()
-            val image = BufferedImage(screenshot.width, screenshot.height, BufferedImage.TYPE_4BYTE_ABGR)
-            val imgData = (image.raster.dataBuffer as DataBufferByte).data
-            System.arraycopy(screenshot.data, 0, imgData, 0, screenshot.data!!.size)
-            var img: Img<UnsignedByteType>? = null
-            try {
-                val tmpFile = File.createTempFile("sciview-", "-tmp.png")
-                ImageIO.write(image, "png", tmpFile)
-                @Suppress("UNCHECKED_CAST")
-                img = io.open(tmpFile.absolutePath) as Img<UnsignedByteType>
-                tmpFile.delete()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-            return img
+            val screenshot = getSceneryRenderer()?.requestScreenshot() ?: throw IllegalStateException("No renderer present, cannot create screenshot")
+            return ArrayImgs.unsignedBytes(screenshot.data!!, screenshot.width.toLong(), screenshot.height.toLong(), 4L)
         }
 
     /**
@@ -1008,8 +992,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     val aRGBScreenshot: Img<ARGBType>
         get() {
-            val screenshot = screenshot
-            return Utils.convertToARGB(screenshot!!)
+            return Utils.convertToARGB(screenshot)
         }
 
     /**
@@ -1138,10 +1121,19 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @JvmOverloads
     fun addVolume(image: Dataset, block: Volume.() -> Unit = {}): Volume {
         val voxelDims = FloatArray(image.numDimensions())
+
         for (d in voxelDims.indices) {
             val inValue = image.axis(d).averageScale(0.0, 1.0)
-            if (image.axis(d).unit() == null) voxelDims[d] = inValue.toFloat() else voxelDims[d] = unitService.value(inValue, image.axis(d).unit(), axis(d)!!.unit()).toFloat()
+            if (image.axis(d).unit() == null) {
+                voxelDims[d] = inValue.toFloat()
+            } else {
+                val imageAxisUnit = image.axis(d).unit().replace("µ", "u")
+                val sciviewAxisUnit = axis(d)!!.unit().replace("µ", "u")
+
+                voxelDims[d] = unitService.value(inValue, imageAxisUnit, sciviewAxisUnit).toFloat()
+            }
         }
+
         logger.info("Adding with ${voxelDims.joinToString(",")}")
         return addVolume(image, voxelDims, block)
     }
