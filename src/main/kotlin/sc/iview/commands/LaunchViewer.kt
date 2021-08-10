@@ -43,7 +43,7 @@ import sc.iview.display.SciViewDisplay
  *
  * @author Kyle Harrington
  */
-@Plugin(type = Command::class, menuPath = "Plugins>SciView")
+@Plugin(type = Command::class, menuPath = "Plugins>sciview")
 class LaunchViewer : Command {
     @Parameter
     private lateinit var displayService: DisplayService

@@ -28,8 +28,8 @@
  */
 package sc.iview.commands.edit.add
 
-import graphics.scenery.Protein
-import graphics.scenery.RibbonDiagram
+import graphics.scenery.proteins.Protein
+import graphics.scenery.proteins.RibbonDiagram
 import org.joml.Vector3f
 import org.scijava.command.Command
 import org.scijava.command.DynamicCommand
@@ -59,7 +59,7 @@ class AddProtein : DynamicCommand() {
     override fun run() {
         val ribbon = RibbonDiagram(Protein.fromID(protein))
         ribbon.name = protein
-        ribbon.scale = Vector3f(scale)
+        ribbon.spatial().scale = Vector3f(scale)
         sciView.addNode(ribbon, true)
     }
 }

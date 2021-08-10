@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
+import graphics.scenery.attribute.material.Material;
 import net.imagej.mesh.Mesh;
 
 import org.joml.Vector3f;
@@ -45,7 +46,6 @@ import org.scijava.plugin.Plugin;
 
 import sc.iview.SciView;
 
-import graphics.scenery.Material;
 import graphics.scenery.Node;
 import sc.iview.commands.demo.ResourceLoader;
 
@@ -92,18 +92,18 @@ public class MeshDemo implements Command {
 
         //msh.fitInto( 15.0f, true );
 
-        Material mat = new Material();
-        mat.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
-        mat.setDiffuse( new Vector3f( 0.8f, 0.5f, 0.4f ) );
-        mat.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-        //mat.setDoubleSided( true );
+        msh.ifMaterial( mat -> {
+            mat.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
+            mat.setDiffuse( new Vector3f( 0.8f, 0.5f, 0.4f ) );
+            mat.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
+            return null;
+        });
 
-        msh.setMaterial( mat );
 
-        msh.setNeedsUpdate( true );
-        msh.setDirty( true );
+        msh.ifGeometry( geom -> { geom.setDirty(true); return null; });
+        msh.ifSpatial( spatial -> { spatial.setNeedsUpdate(true); return null; });
 
-        sciView.getFloor().setPosition(new Vector3f(0, -25, 0));
+        sciView.getFloor().spatialOrNull().setPosition(new Vector3f(0, -25, 0));
 
         sciView.setActiveNode(msh);
         sciView.centerOnNode( sciView.getActiveNode() );
