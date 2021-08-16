@@ -6,7 +6,7 @@ branches:
   - "/.*-[0-9]+\\..*/"
 install: true
 git:
-  depth: false
+  depth: 3
 script:
 #- ".travis/build.sh"
 - "python3 .travis/pre_ci.py"
