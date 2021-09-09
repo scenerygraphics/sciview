@@ -6,16 +6,11 @@ import graphics.scenery.bionictracking.HedgehogAnalysis.Companion.toVector3f
 import org.joml.Vector3f
 import org.joml.Vector4f
 import org.joml.Matrix4f
-//import com.jogamp.opengl.math.Quaternion
 import org.joml.Quaternionf
 import graphics.scenery.utils.LazyLogger
 import graphics.scenery.utils.extensions.*
-import jdk.internal.cmm.SystemResourcePressureImpl
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.LinkedHashMap
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -26,7 +21,7 @@ import kotlin.math.sqrt
  * @author Ulrik Günther <hello@ulrik.is>
  */
 class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix4f, val dimension : Vector3f) {
-	val logger by LazyLogger()
+//	val logger by LazyLogger()
 
 	val timepoints = LinkedHashMap<Int, ArrayList<SpineMetadata>>()
 
