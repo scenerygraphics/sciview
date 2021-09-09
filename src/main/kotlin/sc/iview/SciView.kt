@@ -711,12 +711,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     {
         val v = Volume.fromPath(source, hub)
         v.name = "volume"
-        v.position = Vector3f(0.0f, 1.0f, 0.0f)
-        v.colormap = Colormap.get("jet")
-        v.scale = Vector3f(10.0f, 10.0f,30.0f)
-        v.transferFunction = TransferFunction.ramp(0.05f, 0.8f)
-        v.metadata["animating"] = true
-        v.converterSetups.firstOrNull()?.setDisplayRange(0.0, 1500.0)
         v.visible = false
         addNode(v)
     }

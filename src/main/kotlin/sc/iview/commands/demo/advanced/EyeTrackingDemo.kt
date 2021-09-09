@@ -72,7 +72,7 @@ class EyeTrackingDemo: Command{
 
     @Parameter
     private lateinit var log: LogService
-    
+
     val pupilTracker = PupilEyeTrackerNew(calibrationType = PupilEyeTrackerNew.CalibrationType.WorldSpace, port = System.getProperty("PupilPort", "50020").toInt())
     lateinit var hmd: OpenVRHMD
     val referenceTarget = Icosphere(0.004f, 2)
@@ -137,6 +137,13 @@ class EyeTrackingDemo: Command{
 
 
         volume = sciview.find("volume") as Volume
+        volume.position = Vector3f(0.0f, 1.0f, 0.0f)
+        volume.colormap = Colormap.get("jet")
+        volume.scale = Vector3f(10.0f, 10.0f,30.0f)
+        volume.transferFunction = TransferFunction.ramp(0.05f, 0.8f)
+        volume.metadata["animating"] = true
+        volume.converterSetups.firstOrNull()?.setDisplayRange(0.0, 1500.0)
+        volume.visible = false
 
         sciview.toggleVRRendering()
         hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
@@ -152,7 +159,6 @@ class EyeTrackingDemo: Command{
         val right = Box(Vector3f(1.0f, 1.0f, 0.001f))
         left.position = Vector3f(-1.0f, 1.5f, 0.0f)
         left.rotation = left.rotation.rotationZ(PI.toFloat())
-        //left.rotation = left.rotation.rotateByAngleZ(PI.toFloat())
         right.position = Vector3f(1.0f, 1.5f, 0.0f)
         eyeFrames.addChild(left)
         eyeFrames.addChild(right)
@@ -209,9 +215,9 @@ class EyeTrackingDemo: Command{
                 }
             }
         }
-         thread{
-             inputSetup()
-         }
+        thread{
+            inputSetup()
+        }
 
         thread {
             while(!sciview.isInitialized) { Thread.sleep(200) }
@@ -250,8 +256,6 @@ class EyeTrackingDemo: Command{
                             }
                         }
                     }
-
-
 
                     if(tracking && oldTimepoint == (volume.timepointCount-1) && newTimepoint == 0) {
                         tracking = false
@@ -350,9 +354,9 @@ class EyeTrackingDemo: Command{
         val playPause = ClickBehaviour { _, _ ->
             playing = !playing
             if(playing) {
-                cam.showMessage("Playing")
+                cam.showMessage("Playing",distance = 1.2f, size = 0.2f)
             } else {
-                cam.showMessage("Paused")
+                cam.showMessage("Paused",distance = 1.2f, size = 0.2f)
             }
         }
 
@@ -480,7 +484,7 @@ class EyeTrackingDemo: Command{
                     sciview.deleteNode(sciview.find("eyeFrames"))
 
                     log.info("Starting eye tracker calibration")
-                    cam.showMessage("Follow the white rabbit.", duration = 1500)
+                    cam.showMessage("Follow the white rabbit.", distance = 1.2f, size = 0.15f,duration = 1500)
                     pupilTracker.calibrate(cam, hmd,
                             generateReferenceData = true,
                             calibrationTarget = calibrationTarget)
@@ -500,13 +504,13 @@ class EyeTrackingDemo: Command{
                                 val direction = (pointWorld - headCenter).normalize()
 
                                 if (tracking) {
-                                    log.info("Starting spine from $headCenter to $pointWorld")
+//                                    log.info("Starting spine from $headCenter to $pointWorld")
                                     addSpine(headCenter, direction, volume, gaze.confidence, volume.viewerState.currentTimepoint)
                                 }
                             }
                         }
 
-                        else -> {gaze-> }
+//                        else -> {gaze-> }
                     }
 
                     log.info("Calibration routine done.")
@@ -529,20 +533,16 @@ class EyeTrackingDemo: Command{
         val p1 = center
         val temp = direction.mul(sphereDist + 2.0f * sphere.radius)
         val p2 = Vector3f(center).add(temp)
-//		val p2 = center + direction * (sphereDist + 2.0f * sphere.radius)
-//		System.out.println(p1);
-//		System.out.println(p2);
+
         val spine = Cylinder.betweenPoints(p1, p2, 1.0f, segments = 1)
-        spine.visible = false
+        spine.visible = true
 
         val intersection = volume.intersectAABB(p1, (p2 - p1).normalize())
 //		System.out.println(intersection);
         if(intersection is MaybeIntersects.Intersection) {
             // get local entry and exit coordinates, and convert to UV coords
-            val localEntry = (intersection.relativeEntry .add(Vector3f(1.0f)) ) .mul (1.0f / 2.0f)
-            val localExit = (intersection.relativeExit .add (Vector3f(1.0f)) ).mul  (1.0f / 2.0f)
-            System.out.println(localEntry);
-            System.out.println(localExit);
+            val localEntry = (intersection.relativeEntry) //.add(Vector3f(1.0f)) ) .mul (1.0f / 2.0f)
+            val localExit = (intersection.relativeExit) //.add (Vector3f(1.0f)) ).mul  (1.0f / 2.0f)
             val (samples, localDirection) = volume.sampleRay(localEntry, localExit) ?: null to null
 
             if (samples != null && localDirection != null) {
@@ -598,22 +598,20 @@ class EyeTrackingDemo: Command{
         }
 
         spines.forEach { metadata ->
-            hedgehogFileWriter.write("${metadata.timepoint};${metadata.origin};${metadata.direction};${metadata.localEntry};${metadata.localExit};${metadata.localDirection};${metadata.headPosition};${metadata.headOrientation};${metadata.position};${metadata.position};${metadata.confidence};${metadata.samples.joinToString(";")}\n")
+            hedgehogFileWriter.write("${metadata.timepoint};${metadata.origin};${metadata.direction};${metadata.localEntry};${metadata.localExit};${metadata.localDirection};${metadata.headPosition};${metadata.headOrientation};${metadata.position};${metadata.confidence};${metadata.samples.joinToString(";")}\n")
         }
         hedgehogFileWriter.close()
-
-        log.info("Written hedgehog to ${hedgehogFile.absolutePath}")
 
         val existingAnalysis = lastHedgehog.metadata["HedgehogAnalysis"] as? HedgehogAnalysis.Track
         val track = if(existingAnalysis is HedgehogAnalysis.Track) {
             existingAnalysis
         } else {
-            val h = HedgehogAnalysis(spines, Matrix4f(volume.world))
+            val h = HedgehogAnalysis(spines, Matrix4f(volume.world), Vector3f(volume.getDimensions()))
             h.run()
         }
 
         if(track == null) {
-//            log.warn("No track returned")
+//            logger.warn("No track returned")
             sciview.camera?.showMessage("No track returned", messageColor = Vector4f(1.0f, 0.0f, 0.0f,1.0f))
             return
         }
@@ -621,10 +619,10 @@ class EyeTrackingDemo: Command{
         lastHedgehog.metadata["HedgehogAnalysis"] = track
         lastHedgehog.metadata["Spines"] = spines
 
-        log.info("---\nTrack: ${track.points.joinToString("\n")}\n---")
+//        logger.info("---\nTrack: ${track.points.joinToString("\n")}\n---")
 
         val master = if(hedgehog == null) {
-            val m = Cylinder(0.005f, 1.0f, 10)
+            val m = Cylinder(3f, 1.0f, 10)
             m.material = ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag")
             m.material.diffuse = Random.random3DVectorFromRange(0.2f, 0.8f)
             m.material.roughness = 1.0f
@@ -638,7 +636,7 @@ class EyeTrackingDemo: Command{
         }
 
         val parentId = 0
-        val volumeDimension = volume.getDimensions()
+        val volumeDimensions = volume.getDimensions()
 
         trackFileWriter.newLine()
         trackFileWriter.newLine()
@@ -646,13 +644,13 @@ class EyeTrackingDemo: Command{
         track.points.windowed(2, 1).forEach { pair ->
             if(master != null) {
                 val element = Mesh()
-                element.orientBetweenPoints(pair[0].first, pair[1].first, rescale = true, reposition = true)
+                element.orientBetweenPoints(Vector3f(pair[0].first).mul(Vector3f(volumeDimensions)), Vector3f(pair[1].first).mul(Vector3f(volumeDimensions)), rescale = true, reposition = true)
                 element.parent = volume
                 element.instancedProperties["ModelMatrix"] = { element.world }
                 master.instances.add(element)
             }
 
-            val p = Vector3f(pair[0].first).mul(Vector3f(volumeDimension))//direct product
+            val p = Vector3f(pair[0].first).mul(Vector3f(volumeDimensions))//direct product
             val tp = pair[0].second.timepoint
             trackFileWriter.write("$tp\t${p.x()}\t${p.y()}\t${p.z()}\t${hedgehogId}\t$parentId\t0\t0\n")
         }
