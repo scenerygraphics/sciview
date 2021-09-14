@@ -180,6 +180,10 @@ tasks {
                 dependencyNode.appendNode("groupId", it.group)
                 dependencyNode.appendNode("artifactId", artifactId)
                 dependencyNode.appendNode("version", "\${$propertyName}")
+
+                if(artifactId.toRegex().find("-bom") != null) {
+                    dependencyNode.appendNode("type", "pom")
+                }
                 //dependencyNode.appendNode("scope", it.scope)
             }
 
