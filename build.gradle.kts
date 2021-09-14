@@ -181,7 +181,8 @@ tasks {
                 dependencyNode.appendNode("artifactId", artifactId)
                 dependencyNode.appendNode("version", "\${$propertyName}")
 
-                if(artifactId.toRegex().find("-bom") != null) {
+                println(artifactId)
+                if("\\-bom".toRegex().find(artifactId) != null) {
                     dependencyNode.appendNode("type", "pom")
                 }
                 //dependencyNode.appendNode("scope", it.scope)
