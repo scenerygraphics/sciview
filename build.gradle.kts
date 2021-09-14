@@ -90,7 +90,7 @@ dependencies {
 
     // Kotlin dependencies
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
 
     // Test scope
 
