@@ -181,9 +181,20 @@ tasks {
                 dependencyNode.appendNode("artifactId", artifactId)
                 dependencyNode.appendNode("version", "\${$propertyName}")
 
+                // Custom per artifact tweaks
                 println(artifactId)
                 if("\\-bom".toRegex().find(artifactId) != null) {
                     dependencyNode.appendNode("type", "pom")
+                }
+                // from https://github.com/scenerygraphics/sciview/pull/399#issuecomment-904732945
+                if(artifactId == "formats-gpl") {
+                    var exclusions = dependencyNode.appendNode("exclusions")
+                    var jacksonCore = exclusions.appendNode("exclusion")
+                    jacksonCore.appendNode("groupId", "com.fasterxml.jackson.core")
+                    jacksonCore.appendNode("artifactId", "jackson-core")
+                    var jacksonAnnotations = exclusions.appendNode("exclusion")
+                    jacksonAnnotations.appendNode("groupId", "com.fasterxml.jackson.core")
+                    jacksonAnnotations.appendNode("artifactId", "jackson-annotations")
                 }
                 //dependencyNode.appendNode("scope", it.scope)
             }
