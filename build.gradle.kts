@@ -89,8 +89,9 @@ dependencies {
     implementation(misc.joml)
 
     // Kotlin dependencies
-
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-common:1.5.10")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.5.10")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
 
     // Test scope
 
