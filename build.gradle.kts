@@ -1,3 +1,4 @@
+import groovy.util.Node
 import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import sciview.implementation
@@ -17,6 +18,9 @@ plugins {
     id("org.jetbrains.dokka") version dokkaVersion
     jacoco
     id("sciJava.platform") version "30.0.0+15"
+    `maven-publish`
+    `java-library`
+    signing
 }
 
 repositories {
@@ -33,7 +37,7 @@ dependencies {
     annotationProcessor(sciJava.common)
     kapt(sciJava.common)
 
-    val sceneryVersion = "e1e0b7e"
+    val sceneryVersion = "9877ce1"
     api("graphics.scenery:scenery:$sceneryVersion")
     // check if build is triggered on https://jitpack.io/#scenerygraphics/sciview `build` tab
     // if not, uncomment this only to trigger it
@@ -97,6 +101,8 @@ dependencies {
     implementation(n5.core)
     implementation(n5.hdf5)
     implementation(n5.imglib2)
+//    implementation("org.janelia.saalfeldlab:n5-aws-s3")
+//    implementation("org.janelia.saalfeldlab:n5-ij:2.0.1-SNAPSHOT")
     implementation(bigDataViewer.spimData)
 
     implementation(platform(kotlin("bom")))
@@ -105,6 +111,16 @@ dependencies {
 
     implementation(bigDataViewer.core)
     implementation(bigDataViewer.visTools)
+
+    // OME
+
+    // https://mvnrepository.com/artifact/ome/formats-bsd
+    implementation("ome:formats-bsd:6.6.1")
+    // https://mvnrepository.com/artifact/ome/formats-gpl
+    implementation("ome:formats-gpl:6.6.1")
+
+
+    
 }
 
 kapt {
@@ -114,6 +130,9 @@ kapt {
         arg("-Xopt-in", "kotlin.RequiresOptIn")
     }
 }
+
+
+
 
 tasks {
     withType<KotlinCompile>().all {
@@ -130,6 +149,56 @@ tasks {
     }
     jar {
         archiveVersion.set(rootProject.version.toString())
+    }
+
+    withType<GenerateMavenPom>().configureEach {
+        val matcher = Regex("""generatePomFileFor(\w+)Publication""").matchEntire(name)
+        val publicationName = matcher?.let { it.groupValues[1] }
+
+        pom.properties.empty()
+
+        pom.withXml {
+            // Add parent to the generated pom
+            var parent = asNode().appendNode("parent")
+            parent.appendNode("groupId", "org.scijava")
+            parent.appendNode("artifactId", "pom-scijava")
+            parent.appendNode("version", "30.0.0")
+            parent.appendNode("relativePath")
+
+            // Update the dependencies and properties
+            var dependenciesNode = asNode().appendNode("dependencies")
+            var propertiesNode = asNode().appendNode("properties")
+            propertiesNode.appendNode("inceptionYear", 2016)
+
+            configurations.implementation.allDependencies.forEach {
+                var artifactId = it.name
+
+                var propertyName = "$artifactId.version"
+                propertiesNode.appendNode(propertyName, it.version)
+
+                var dependencyNode = dependenciesNode.appendNode("dependency")
+                dependencyNode.appendNode("groupId", it.group)
+                dependencyNode.appendNode("artifactId", artifactId)
+                dependencyNode.appendNode("version", "\${$propertyName}")
+                //dependencyNode.appendNode("scope", it.scope)
+            }
+
+            var depStartIdx = "<dependencyManagement>".toRegex().find(asString())?.range?.start
+            var depEndIdx = "</dependencyManagement>".toRegex().find(asString())?.range?.last
+            if (depStartIdx != null) {
+                if (depEndIdx != null) {
+                    asString().replace(depStartIdx, depEndIdx+1, "")
+                }
+            }
+
+            depStartIdx = "<dependencies>".toRegex().find(asString())?.range?.start
+            depEndIdx = "</dependencies>".toRegex().find(asString())?.range?.last
+            if (depStartIdx != null) {
+                if (depEndIdx != null) {
+                    asString().replace(depStartIdx, depEndIdx+1, "")
+                }
+            }
+        }
     }
 
     dokkaHtml {
