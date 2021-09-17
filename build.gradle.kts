@@ -54,7 +54,8 @@ dependencies {
 
     // SciJava dependencies
 
-    implementation(sciJava.common)
+    // implementation(sciJava.common)
+    implementation("org.scijava:scijava-common:2.87.0")
     implementation(sciJava.uiBehaviour)
     implementation(sciJava.scriptEditor)
     implementation(sciJava.uiSwing)
