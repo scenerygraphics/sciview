@@ -17,7 +17,6 @@ plugins {
     sciview.sign
     id("org.jetbrains.dokka") version dokkaVersion
     jacoco
-    id("sciJava.platform") version "30.0.0+15"
     `maven-publish`
     `java-library`
     signing
@@ -31,11 +30,12 @@ repositories {
 }
 
 dependencies {
+  implementation(platform("org.scijava:pom-scijava:31.1.0"))
 
     // Graphics dependencies
 
-    annotationProcessor(sciJava.common)
-    kapt(sciJava.common)
+    annotationProcessor("org.scijava:scijava-common")
+    kapt("org.scijava:scijava-common")
 
     val sceneryVersion = "9877ce1"
     api("graphics.scenery:scenery:$sceneryVersion")
@@ -54,35 +54,30 @@ dependencies {
 
     // SciJava dependencies
 
-    implementation(sciJava.common)
-    implementation(sciJava.uiBehaviour)
-    implementation(sciJava.scriptEditor)
-    implementation(sciJava.uiSwing)
-    implementation(sciJava.uiAwt)
-    implementation(sciJava.search)
-    implementation(sciJava.scriptingJython)
+    implementation("org.scijava:scijava-common")
+    implementation("org.scijava:ui-behaviour")
+    implementation("org.scijava:script-editor")
+    implementation("org.scijava:scijava-ui-swing")
+    implementation("org.scijava:scijava-ui-awt")
+    implementation("org.scijava:scijava-search")
+    implementation("org.scijava:scripting-jython")
     implementation(migLayout.swing)
 
     // ImageJ dependencies
 
-    implementation(imagej.core)
-    //    sciJava("net.imagej") {
-    //        exclude("org.scijava", "scripting-renjin")
-    //        exclude("org.scijava", "scripting-jruby")
-    //    }
-    implementation(imagej.common)
-    implementation(imagej.mesh) { version { strictly("0.8.1") } } // FIXME
-    implementation(imagej.meshIo)
-    implementation(imagej.ops)
-    implementation(imagej.launcher)
-    implementation(imagej.uiSwing)
-    implementation(imagej.legacy)
-    implementation(scifio.core)
-    implementation(scifio.bfCompat)
+    implementation("net.imagej:imagej-common")
+    implementation("net.imagej:imagej-mesh:0.8.1")
+    implementation("net.imagej:imagej-mesh-io")
+    implementation("net.imagej:imagej-ops")
+    implementation("net.imagej:imagej-launcher")
+    implementation("net.imagej:imagej-ui-swing")
+    implementation("net.imagej:imagej-legacy")
+    implementation("io.scif:scifio")
+    implementation("io.scif:scifio-bf-compat")
 
     // ImgLib2 dependencies
-    implementation(imgLib2.core)
-    implementation(imgLib2.roi)
+    implementation("net.imglib2:imglib2")
+    implementation("net.imglib2:imglib2-roi")
 
     // Math dependencies
     implementation(commons.math3)
@@ -96,29 +91,26 @@ dependencies {
     // Test scope
 
     testImplementation(misc.junit4)
-    implementation(imagej.ij)
-    implementation(imgLib2.ij)
+    implementation("net.imagej:ij")
+    implementation("net.imglib2:imglib2-ij")
 
     implementation(n5.core)
     implementation(n5.hdf5)
     implementation(n5.imglib2)
 //    implementation("org.janelia.saalfeldlab:n5-aws-s3")
 //    implementation("org.janelia.saalfeldlab:n5-ij:2.0.1-SNAPSHOT")
-    implementation(bigDataViewer.spimData)
+    implementation("sc.fiji:spim_data")
 
     implementation(platform(kotlin("bom")))
     implementation(kotlin("stdlib-jdk8"))
     testImplementation(kotlin("test-junit"))
 
-    implementation(bigDataViewer.core)
-    implementation(bigDataViewer.visTools)
+    implementation("sc.fiji:bigdataviewer-core")
+    implementation("sc.fiji:bigdataviewer-vistools")
 
     // OME
-
-    // https://mvnrepository.com/artifact/ome/formats-bsd
-    implementation("ome:formats-bsd:6.6.1")
-    // https://mvnrepository.com/artifact/ome/formats-gpl
-    implementation("ome:formats-gpl:6.6.1")
+    implementation("ome:formats-bsd")
+    implementation("ome:formats-gpl")
 
 
     
