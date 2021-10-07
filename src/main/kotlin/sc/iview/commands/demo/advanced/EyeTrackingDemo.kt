@@ -108,6 +108,10 @@ class EyeTrackingDemo: Command{
 
     override fun run() {
 
+        volume = sciview.find("volume") as Volume
+        volume.visible = false
+        sciview.toggleVRRendering()
+        hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
         sessionId = "BionicTracking-generated-${SystemHelpers.formatDateTime()}"
         sessionDirectory = Files.createDirectory(Paths.get(System.getProperty("user.home"), "Desktop", sessionId))
 
@@ -135,19 +139,6 @@ class EyeTrackingDemo: Command{
         shell.position = Vector3f(0.0f, 0.0f, 0.0f)
         sciview.addChild(shell)
 
-
-        volume = sciview.find("volume") as Volume
-        volume.position = Vector3f(0.0f, 1.0f, 0.0f)
-        volume.colormap = Colormap.get("jet")
-        volume.scale = Vector3f(10.0f, 10.0f,30.0f)
-        volume.transferFunction = TransferFunction.ramp(0.05f, 0.8f)
-        volume.metadata["animating"] = true
-        volume.converterSetups.firstOrNull()?.setDisplayRange(0.0, 1500.0)
-        volume.visible = false
-
-        sciview.toggleVRRendering()
-        hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
-
         val bb = BoundingGrid()
         bb.node = volume
         bb.visible = false
@@ -167,7 +158,6 @@ class EyeTrackingDemo: Command{
 
         val pupilFrameLimit = 20
         var lastFrame = System.nanoTime()
-
 
         pupilTracker.subscribeFrames { eye, texture ->
             if(System.nanoTime() - lastFrame < pupilFrameLimit*10e5) {
@@ -218,7 +208,6 @@ class EyeTrackingDemo: Command{
         thread{
             inputSetup()
         }
-
         thread {
             while(!sciview.isInitialized) { Thread.sleep(200) }
 

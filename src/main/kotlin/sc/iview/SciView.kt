@@ -711,8 +711,14 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     {
         val v = Volume.fromPath(source, hub)
         v.name = "volume"
-        v.visible = false
-        addNode(v)
+        v.position = Vector3f(0.0f, 1.0f, 0.0f)
+        v.colormap = Colormap.get("jet")
+        v.scale = Vector3f(10.0f, 10.0f,30.0f)
+        v.transferFunction = TransferFunction.ramp(0.05f, 0.8f)
+        v.metadata["animating"] = true
+        v.converterSetups.firstOrNull()?.setDisplayRange(0.0, 1500.0)
+        v.visible = true
+        addChild(v)
     }
 
 
@@ -1512,20 +1518,21 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         }
         renderer!!.pushMode = false
         // we need to force reloading the renderer as the HMD might require device or instance extensions
-        if (renderer is VulkanRenderer && hmdAdded) {
-            replaceRenderer((renderer as VulkanRenderer).javaClass.simpleName, true, true)
-            (renderer as VulkanRenderer).toggleVR()
-            while (!(renderer as VulkanRenderer).initialized /* || !getRenderer().getFirstImageReady()*/) {
-                logger.debug("Waiting for renderer reinitialisation")
-                try {
-                    Thread.sleep(200)
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
-                }
-            }
-        } else {
-            renderer!!.toggleVR()
-        }
+//        if (renderer is VulkanRenderer && hmdAdded) {
+//            replaceRenderer((renderer as VulkanRenderer).javaClass.simpleName, true, true)
+//            (renderer as VulkanRenderer).toggleVR()
+//            while (!(renderer as VulkanRenderer).initialized /* || !getRenderer().getFirstImageReady()*/) {
+//                logger.debug("Waiting for renderer reinitialisation")
+//                try {
+//                    Thread.sleep(200)
+//                } catch (e: InterruptedException) {
+//                    e.printStackTrace()
+//                }
+//            }
+//        } else {
+//            renderer!!.toggleVR()
+//        }
+        renderer!!.toggleVR()
     }
 
     /**
