@@ -1,4 +1,3 @@
-import groovy.util.Node
 import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import sciview.implementation
@@ -37,7 +36,7 @@ dependencies {
     annotationProcessor(sciJava.common)
     kapt(sciJava.common)
 
-    val sceneryVersion = "9877ce1"
+    val sceneryVersion = "be5a289"
     api("graphics.scenery:scenery:$sceneryVersion")
     // check if build is triggered on https://jitpack.io/#scenerygraphics/sciview `build` tab
     // if not, uncomment this only to trigger it
@@ -121,7 +120,7 @@ dependencies {
     implementation("ome:formats-gpl:6.6.1")
 
 
-    
+
 }
 
 kapt {
@@ -131,9 +130,6 @@ kapt {
         arg("-Xopt-in", "kotlin.RequiresOptIn")
     }
 }
-
-
-
 
 tasks {
     withType<KotlinCompile>().all {
@@ -235,11 +231,8 @@ tasks {
 
     jacocoTestReport {
         reports {
-            xml.isEnabled = true
-            html.apply {
-                isEnabled = false
-                //destination = file("$buildDir/jacocoHtml")
-            }
+            xml.required.set(true)
+            html.required.set(true)
         }
         dependsOn(test) // tests are required to run before generating the report
     }
