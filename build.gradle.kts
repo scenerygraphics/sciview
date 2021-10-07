@@ -37,7 +37,7 @@ dependencies {
     annotationProcessor(sciJava.common)
     kapt(sciJava.common)
 
-    val sceneryVersion = "9877ce1"
+    val sceneryVersion = "f941dd5"
     api("graphics.scenery:scenery:$sceneryVersion")
     // check if build is triggered on https://jitpack.io/#scenerygraphics/sciview `build` tab
     // if not, uncomment this only to trigger it
@@ -121,7 +121,7 @@ dependencies {
     implementation("ome:formats-gpl:6.6.1")
 
 
-    
+
 }
 
 kapt {
@@ -131,9 +131,6 @@ kapt {
         arg("-Xopt-in", "kotlin.RequiresOptIn")
     }
 }
-
-
-
 
 tasks {
     withType<KotlinCompile>().all {
