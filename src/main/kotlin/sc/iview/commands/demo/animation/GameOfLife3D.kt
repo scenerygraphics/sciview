@@ -257,7 +257,7 @@ class GameOfLife3D : InteractiveCommand() {
 
                 transferFunction.addControlPoint(0.0f, 0.0f)
                 transferFunction.addControlPoint(0.4f, 0.3f)
-                scale = Vector3f(10.0f, 10.0f, 10.0f)
+                this.spatialOrNull()?.scale = Vector3f(10.0f, 10.0f, 10.0f)
                 name = "Game of Life 3D"
                 sciView.centerOnNode(this)
             }

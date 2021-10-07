@@ -76,7 +76,10 @@ public class AddCamera implements Command {
 		final Vector3f pos = new Vector3f(0, 0, 0);
 		final DetachedHeadCamera cam = new DetachedHeadCamera();
 		cam.perspectiveCamera( fov, sciView.getWindowWidth(), sciView.getWindowHeight(), Math.min(nearPlane, farPlane), Math.max(nearPlane, farPlane)  );
-		cam.setPosition( pos );
+		cam.ifSpatial(spatial -> {
+			spatial.setPosition( pos );
+			return null;
+		});
 
 		sciView.addNode( cam );
 	}

@@ -105,7 +105,10 @@ public class MeshDemo implements Command {
         msh.ifGeometry( geom -> { geom.setDirty(true); return null; });
         msh.ifSpatial( spatial -> { spatial.setNeedsUpdate(true); return null; });
 
-        sciView.getFloor().spatialOrNull().setPosition(new Vector3f(0, -25, 0));
+        sciView.getFloor().ifSpatial(spatial -> {
+            spatial.setPosition(new Vector3f(0, -25, 0));
+            return null;
+        });
 
         sciView.setActiveNode(msh);
         sciView.centerOnNode( sciView.getActiveNode() );

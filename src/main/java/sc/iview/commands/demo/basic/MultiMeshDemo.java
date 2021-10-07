@@ -99,7 +99,10 @@ public class MultiMeshDemo implements Command {
             Node msh = sciView.addMesh(m);
             msh.setName("Mesh_" + k);
 
-            msh.setPosition( new Vector3f( ( RNG.nextFloat() * shellR - shellR ), ( RNG.nextFloat() * shellR - shellR ), ( RNG.nextFloat() * shellR - shellR ) ) );
+            msh.ifSpatial(spatial -> {
+                spatial.setPosition( new Vector3f( ( RNG.nextFloat() * shellR - shellR ), ( RNG.nextFloat() * shellR - shellR ), ( RNG.nextFloat() * shellR - shellR ) ) );
+                return null;
+            });
 
             //msh.fitInto( 15.0f, true );
 
@@ -110,8 +113,14 @@ public class MultiMeshDemo implements Command {
                 return null;
             });
 
-            msh.setNeedsUpdate(true);
-            msh.setDirty(true);
+            msh.ifSpatial(spatial -> {
+                spatial.setNeedsUpdate(true);
+                return null;
+            });
+            msh.ifGeometry(geometry -> {
+                geometry.setDirty(true);
+                return null;
+            });
 
             meshes.add(msh);
         }

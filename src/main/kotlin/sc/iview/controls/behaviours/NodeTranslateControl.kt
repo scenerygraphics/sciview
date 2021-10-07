@@ -62,10 +62,10 @@ class NodeTranslateControl(protected val sciView: SciView) : DragBehaviour, Scro
         if (targetedNode == null || !targetedNode.lock.tryLock()) return
 
         cam.right.mul((x - lastX) * sciView.getFPSSpeedSlow() * sciView.getMouseSpeed(), dragPosUpdater )
-        targetedNode.position.add( dragPosUpdater )
+        targetedNode.spatialOrNull()?.position?.add( dragPosUpdater )
         cam.up.mul(   (lastY - y) * sciView.getFPSSpeedSlow() * sciView.getMouseSpeed(), dragPosUpdater )
-        targetedNode.position.add( dragPosUpdater )
-        targetedNode.needsUpdate = true
+        targetedNode.spatialOrNull()?.position?.add( dragPosUpdater )
+        targetedNode.spatialOrNull()?.needsUpdate = true
 
         targetedNode.lock.unlock()
 
@@ -82,8 +82,8 @@ class NodeTranslateControl(protected val sciView: SciView) : DragBehaviour, Scro
         if (targetedNode == null || !targetedNode.lock.tryLock()) return
 
         cam.forward.mul( wheelRotation.toFloat() * sciView.getFPSSpeedSlow() * sciView.getMouseSpeed(), scrollPosUpdater )
-        targetedNode.position.add( scrollPosUpdater );
-        targetedNode.needsUpdate = true
+        targetedNode.spatialOrNull()?.position?.add( scrollPosUpdater );
+        targetedNode.spatialOrNull()?.needsUpdate = true
 
         targetedNode.lock.unlock()
     }
