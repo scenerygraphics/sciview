@@ -66,6 +66,8 @@ import net.imagej.axis.DefaultLinearAxis
 import net.imagej.interval.CalibratedRealInterval
 import net.imagej.lut.LUTService
 import net.imagej.mesh.Mesh
+import net.imagej.mesh.io.ply.PLYMeshIO
+import net.imagej.mesh.io.stl.STLMeshIO
 import net.imagej.units.UnitService
 import net.imglib2.*
 import net.imglib2.display.ColorTable
@@ -711,15 +713,22 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @Suppress("UNCHECKED_CAST")
     @Throws(IOException::class)
     fun open(source: String) {
-        if (source.endsWith(".xml")) {
+        if (source.endsWith(".xml", ignoreCase = true)) {
             addNode(fromXML(source, hub, VolumeViewerOptions()))
             return
-        }
-        if (source.takeLast(4).equals(".pdb", true)) {
+        } else if (source.takeLast(4).equals(".pdb", true)) {
             val protein = Protein.fromFile(source)
             val ribbon = RibbonDiagram(protein)
             ribbon.position = Vector3f(0f, 0f, 0f)
             addNode(ribbon)
+            return
+        } else if (source.endsWith(".stl", ignoreCase = true)) {
+            val stlReader = STLMeshIO()
+            addMesh(stlReader.open(source))
+            return
+        } else if (source.endsWith(".ply", ignoreCase = true)) {
+            val plyReader = PLYMeshIO()
+            addMesh(plyReader.open(source))
             return
         }
         val data = io.open(source)
