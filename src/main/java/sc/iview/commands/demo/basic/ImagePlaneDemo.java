@@ -123,7 +123,10 @@ public class ImagePlaneDemo implements Command {
                 1.0f, 1.0f,
                 0.0f, 1.0f
         });
-        imgPlane.setTexcoords(tc);
+        imgPlane.ifGeometry(geometry -> {
+            geometry.setTexcoords(tc);
+            return null;
+        });
 
         imgPlane.ifMaterial( mat -> {
             mat.setSpecular(new Vector3f(1,1,1));

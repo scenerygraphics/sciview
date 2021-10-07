@@ -306,7 +306,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             (camera as DetachedHeadCamera).position = Vector3f(0.0f, 1.65f, 0.0f)
             scene.addChild(camera as DetachedHeadCamera)
         }
-        camera!!.position = Vector3f(0.0f, 1.65f, 5.0f)
+        camera!!.spatial().position = Vector3f(0.0f, 1.65f, 5.0f)
         camera!!.perspectiveCamera(50.0f, windowWidth, windowHeight, 0.1f, 1000.0f)
 
         // Setup lights
@@ -318,7 +318,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         lights = ArrayList()
         for (i in 0..3) { // TODO allow # initial lights to be customizable?
             val light = PointLight(150.0f)
-            light.position = tetrahedron[i]!!.mul(25.0f)
+            light.spatial().position = tetrahedron[i]!!.mul(25.0f)
             light.emissionColor = Vector3f(1.0f, 1.0f, 1.0f)
             light.intensity = 1.0f
             lights!!.add(light)
@@ -328,7 +328,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
         // Make a headlight for the camera
         headlight = PointLight(150.0f)
-        headlight!!.position = Vector3f(0f, 0f, -1f).mul(25.0f)
+        headlight!!.spatial().position = Vector3f(0f, 0f, -1f).mul(25.0f)
         headlight!!.emissionColor = Vector3f(1.0f, 1.0f, 1.0f)
         headlight!!.intensity = 0.5f
         headlight!!.name = "headlight"
@@ -703,7 +703,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             val x = (c.x() + r * cos(if (k == 0) 0.0 else Math.PI * 2 * (k.toFloat() / lights!!.size.toFloat()))).toFloat()
             val z = (c.y() + r * sin(if (k == 0) 0.0 else Math.PI * 2 * (k.toFloat() / lights!!.size.toFloat()))).toFloat()
             light.lightRadius = 2 * r
-            light.position = Vector3f(x, y, z)
+            light.spatial().position = Vector3f(x, y, z)
         }
     }
 
@@ -789,10 +789,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         val nBuffer: FloatBuffer = BufferUtils.allocateFloat(0)
         vBuffer.put(flatVerts)
         vBuffer.flip()
-        pointCloud.vertices = vBuffer
-        pointCloud.normals = nBuffer
-        pointCloud.indices = BufferUtils.allocateInt(0)
-        pointCloud.position = Vector3f(0f, 0f, 0f)
+        pointCloud.geometry().vertices = vBuffer
+        pointCloud.geometry().normals = nBuffer
+        pointCloud.geometry().indices = BufferUtils.allocateInt(0)
+        pointCloud.spatial().position = Vector3f(0f, 0f, 0f)
 
         pointCloud.setupPointCloud()
         return addNode(pointCloud, block = block)
@@ -806,7 +806,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @JvmOverloads
     fun addPointCloud(pointCloud: PointCloud, block: PointCloud.() -> Unit = {}): PointCloud {
         pointCloud.setupPointCloud()
-        pointCloud.position = Vector3f(0f, 0f, 0f)
+        pointCloud.spatial().position = Vector3f(0f, 0f, 0f)
         return addNode(pointCloud, block = block)
     }
 
@@ -1097,7 +1097,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param position position to move the camera to
      */
     fun moveCamera(position: FloatArray) {
-        camera?.position = Vector3f(position[0], position[1], position[2])
+        camera?.spatial()?.position = Vector3f(position[0], position[1], position[2])
     }
 
     /**
@@ -1105,7 +1105,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param position position to move the camera to
      */
     fun moveCamera(position: DoubleArray) {
-        camera?.position = Vector3f(position[0].toFloat(), position[1].toFloat(), position[2].toFloat())
+        camera?.spatial()?.position = Vector3f(position[0].toFloat(), position[1].toFloat(), position[2].toFloat())
     }
 
     /**
@@ -1255,8 +1255,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         n.metadata["sciviewColormap"] = colorTable
         if (n is Volume) {
             n.colormap = Colormap.fromColorTable(colorTable)
-            n.dirty = true
-            n.needsUpdate = true
+            n.geometryOrNull()?.dirty = true
+            n.spatial().needsUpdate = true
         }
     }
 
@@ -1376,7 +1376,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         v.name = name
         v.metadata["sources"] = sources
         v.metadata["VoxelDimensions"] = voxelDimensions
-        v.scale = Vector3f(1.0f, voxelDimensions[1]/voxelDimensions[0], voxelDimensions[2]/voxelDimensions[0]) * v.pixelToWorldRatio * 10.0f
+        v.spatial().scale = Vector3f(1.0f, voxelDimensions[1]/voxelDimensions[0], voxelDimensions[2]/voxelDimensions[0]) * v.pixelToWorldRatio * 10.0f
         val tf = v.transferFunction
         val rampMin = 0f
         val rampMax = 0.1f
@@ -1440,7 +1440,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         v.volumeManager.requestRepaint()
         //v.getCacheControls().clear();
         //v.setDirty( true );
-        v.needsUpdate = true
+        v.spatial().needsUpdate = true
         //v.setNeedsUpdateWorld( true );
         return v
     }
@@ -1535,11 +1535,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param w w coord of rotation quat
      */
     fun setRotation(n: Node, x: Float, y: Float, z: Float, w: Float) {
-        n.rotation = Quaternionf(x, y, z, w)
+        n.spatialOrNull()?.rotation = Quaternionf(x, y, z, w)
     }
 
     fun setScale(n: Node, x: Float, y: Float, z: Float) {
-        n.scale = Vector3f(x, y, z)
+        n.spatialOrNull()?.scale = Vector3f(x, y, z)
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -1553,7 +1553,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     fun setPosition(n: Node, x: Float, y: Float, z: Float) {
-        n.position = Vector3f(x, y, z)
+        n.spatialOrNull()?.position = Vector3f(x, y, z)
     }
 
     fun addWindowListener(wl: WindowListener?) {

@@ -1,6 +1,6 @@
 /*-
  * #%L
- * Scenery-backed 3D visualization package for ImageJ.
+ * sciview 3D visualization tool.
  * %%
  * Copyright (C) 2016 - 2021 SciView developers.
  * %%
@@ -142,7 +142,7 @@ class LoadCremiDatasetAndNeurons: Command {
 
         sciview.addVolume(nai.third, files.first().name) {
             origin = Origin.FrontBottomLeft
-            scale = Vector3f(0.08f, 0.08f, 5.0f)
+            this.spatialOrNull()?.scale = Vector3f(0.08f, 0.08f, 5.0f)
             transferFunction = TransferFunction.ramp(0.3f, 0.1f, 0.1f)
             // min 20, max 180, color map fire
 

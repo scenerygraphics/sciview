@@ -48,6 +48,8 @@ import sc.iview.SciView
 import sc.iview.commands.MenuWeights
 import java.util.*
 import java.util.function.BiConsumer
+import kotlin.math.abs
+import kotlin.math.sqrt
 
 /**
  * A demo of volume rendering + time
@@ -71,8 +73,8 @@ class VolumeTimeseriesDemo : Command {
         sciView.addVolume(dataset, floatArrayOf(1f, 1f, 1f, 1f)) {
             pixelToWorldRatio = 10f
             name = "Volume Render Demo"
-            dirty = true
-            needsUpdate = true
+            this.geometryOrNull()?.dirty = true
+            this.spatialOrNull()?.needsUpdate = true
 
             bdv.bdvHandle.viewerPanel.addTimePointListener { t ->
                 goToTimepoint(t.coerceIn(0, timepointCount-1))
@@ -103,8 +105,8 @@ class VolumeTimeseriesDemo : Command {
             val y = center - localizable.getDoublePosition(1)
             val z = center - localizable.getDoublePosition(2)
             val t = localizable.getDoublePosition(3)
-            val d = Math.sqrt(x * x + y * y + z * z) / interval.max(2).toDouble()
-            val offset = Math.abs(
+            val d = sqrt(x * x + y * y + z * z) / interval.max(2).toDouble()
+            val offset = abs(
                     noise.random3D(
                             (x + t * dt * dx) * f,
                             (y + t * dt * dy) * f,

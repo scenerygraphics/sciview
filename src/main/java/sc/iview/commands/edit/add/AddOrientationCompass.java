@@ -87,10 +87,13 @@ public class AddOrientationCompass implements Command {
         });
 
         Icosphere axisCap = new Icosphere(AXESBARRADIUS, 2);
-        axisCap.setPosition(new Vector3f(0, axisLength, 0));
-        axisCap.getMaterial().getDiffuse().set(color);
-        axisCap.getMaterial().setDepthTest(Material.DepthTest.Always);
-        axisCap.getMaterial().getBlending().setTransparent(true);
+        axisCap.ifSpatial(spatial -> {
+            spatial.setPosition(new Vector3f(0, axisLength, 0));
+            return null;
+        });
+        axisCap.material().getDiffuse().set(color);
+        axisCap.material().setDepthTest(Material.DepthTest.Always);
+        axisCap.material().getBlending().setTransparent(true);
 
         axisNode.addChild(axisCap);
         return axisNode;

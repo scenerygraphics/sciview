@@ -67,7 +67,7 @@ class ControlPoints {
         nodes = ArrayList()
         for (k in newPoints.indices) {
             val cp = Sphere(DEFAULT_RADIUS, DEFAULT_SEGMENTS)
-            cp.position = newPoints[k]
+            cp.spatialOrNull()?.position = newPoints[k]
             nodes.add(cp)
         }
     }
@@ -100,14 +100,14 @@ class ControlPoints {
             ambient = Utils.convertToVector3f(TARGET_COLOR)
             diffuse = Utils.convertToVector3f(TARGET_COLOR)
         }
-        (targetPoint as Sphere).position = cam.position.add(cam.forward.mul(controlPointDistance))
+        (targetPoint as Sphere).spatialOrNull()?.position = cam.spatialOrNull()?.position!!.add(cam.forward.mul(controlPointDistance))
         sciView.addNode(targetPoint, false)
         //sciView.getCamera().addChild(targetPoint);
         (targetPoint as Sphere).update.add {
 
             //targetPoint.getRotation().set(sciView.getCamera().getRotation().conjugate().rotateByAngleY((float) Math.PI));
             // Set rotation before setting position
-            (targetPoint as Sphere).position = cam.position.add(cam.forward.mul(controlPointDistance))
+            (targetPoint as Sphere).spatialOrNull()?.position = cam.spatialOrNull()?.position!!.add(cam.forward.mul(controlPointDistance))
         }
     }
 
@@ -119,7 +119,7 @@ class ControlPoints {
         return ScrollBehaviour { wheelRotation, _, _, _ ->
             val cam = sciView.camera!!
             controlPointDistance += wheelRotation.toFloat()
-            targetPoint.position = cam.position.add(cam.forward.mul(controlPointDistance))
+            targetPoint.spatialOrNull()?.position = cam.spatialOrNull()?.position!!.add(cam.forward.mul(controlPointDistance))
         }
     }
 
@@ -131,7 +131,7 @@ class ControlPoints {
         }
 
         //controlPoint.setPosition( sciView.getCamera().getTransformation().mult(targetPoint.getPosition().xyzw()) );
-        controlPoint.position = targetPoint.position
+        controlPoint.spatial().position = targetPoint.spatialOrNull()!!.position
         addPoint(controlPoint)
         sciView.addNode(controlPoint, false)
     }
