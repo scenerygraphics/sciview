@@ -1652,6 +1652,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         node.metadata["sciview-inspector-${ui.module.info.name}"] = ui
     }
 
+    fun getAvailableServices() {
+        println(scijavaContext!!.serviceIndex)
+    }
+
     companion object {
         //bounds for the controls
         const val FPSSPEED_MINBOUND_SLOW = 0.01f
