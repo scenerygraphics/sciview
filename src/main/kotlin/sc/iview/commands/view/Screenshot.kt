@@ -29,6 +29,7 @@
 package sc.iview.commands.view
 
 import net.imagej.ImgPlus
+import net.imglib2.img.Img
 import org.scijava.ItemIO
 import org.scijava.command.Command
 import org.scijava.plugin.Menu
@@ -44,20 +45,18 @@ import sc.iview.commands.MenuWeights.VIEW_SCREENSHOT
  *
  * @author Kyle Harrington
  */
-@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Screenshot", weight = VIEW_SCREENSHOT)])
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Screenshot to ImageJ", weight = VIEW_SCREENSHOT)])
 class Screenshot : Command {
     @Parameter
-    private lateinit var sciView: SciView
+    private lateinit var sciview: SciView
 
     @Parameter
     private lateinit var uiService: UIService
 
     @Parameter(type = ItemIO.OUTPUT)
-    private var img: ImgPlus<*>? = null
+    private var img: Img<*>? = null
 
     override fun run() {
-        val screenshot = sciView.aRGBScreenshot
-        img = ImgPlus(screenshot)
-        uiService.show(img)
+        img = sciview.aRGBScreenshot
     }
 }

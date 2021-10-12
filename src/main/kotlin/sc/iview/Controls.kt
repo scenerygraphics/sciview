@@ -29,12 +29,13 @@
 package sc.iview
 
 import graphics.scenery.*
+import graphics.scenery.primitives.Line
+import graphics.scenery.Node
 import graphics.scenery.controls.behaviours.FPSCameraControl
 import graphics.scenery.controls.behaviours.MovementCommand
 import graphics.scenery.controls.behaviours.SelectCommand
-import graphics.scenery.numerics.Random
+import graphics.scenery.primitives.TextBoard
 import graphics.scenery.utils.LazyLogger
-import graphics.scenery.utils.extensions.plus
 import org.joml.Quaternionf
 import org.joml.Vector2f
 import org.joml.Vector3f
@@ -460,7 +461,7 @@ open class Controls(val sciview: SciView) {
     private var secondNode = false
 
     fun setDistanceMeasurer() {
-        var lastNode = Node("lastNode")
+        var lastNode: Node? = null
         val distanceAction = { nearest: Scene.RaycastResult, x: Int, y: Int ->
             if (nearest.matches.isNotEmpty()) {
                 // copy reference on the last object picking result into "public domain"
@@ -483,8 +484,8 @@ open class Controls(val sciview: SciView) {
                             sciview.deleteNode(it)
                         }
                     }
-                    val position0 = lastNode.position
-                    val position1 = sciview.activeNode!!.position
+                    val position0 = lastNode!!.spatialOrNull()!!.position
+                    val position1 = sciview.activeNode!!.spatialOrNull()!!.position
                     val lastToPresent = Vector3f()
                     position1.sub(position0, lastToPresent)
                     line.addPoint(position0)
@@ -500,12 +501,12 @@ open class Controls(val sciview: SciView) {
                     board.backgroundColor = Vector4f(1f, 1f, 1f, 1.0f)
                     val boardPosition = Vector3f()
                     position0.add(position1, boardPosition)
-                    board.position = boardPosition.mul(0.5f)
+                    board.spatial().position = boardPosition.mul(0.5f)
                     if(distance < 5f) {
-                        board.scale = Vector3f(0.5f, 0.5f, 0.5f)
+                        board.spatial().scale = Vector3f(0.5f, 0.5f, 0.5f)
                     }
                     else {
-                        board.scale = Vector3f(distance/10f, distance/10f, distance/10f)
+                        board.spatial().scale = Vector3f(distance/10f, distance/10f, distance/10f)
                     }
                     sciview.addNode(board)
                 }

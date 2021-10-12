@@ -28,7 +28,6 @@
  */
 package sc.iview.commands.demo.basic;
 
-import graphics.scenery.Material;
 import graphics.scenery.Node;
 import net.imagej.mesh.Mesh;
 import org.joml.Vector3f;
@@ -89,12 +88,6 @@ public class MultiMeshDemo implements Command {
             return;
         }
 
-        Material mat = new Material();
-        mat.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
-        mat.setDiffuse( new Vector3f( 0.8f, 0.5f, 0.4f ) );
-        mat.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-        //mat.setDoubleSided( true );
-
         Random RNG = new Random();
 
         float shellR = 100;
@@ -106,14 +99,28 @@ public class MultiMeshDemo implements Command {
             Node msh = sciView.addMesh(m);
             msh.setName("Mesh_" + k);
 
-            msh.setPosition( new Vector3f( ( RNG.nextFloat() * shellR - shellR ), ( RNG.nextFloat() * shellR - shellR ), ( RNG.nextFloat() * shellR - shellR ) ) );
+            msh.ifSpatial(spatial -> {
+                spatial.setPosition( new Vector3f( ( RNG.nextFloat() * shellR - shellR ), ( RNG.nextFloat() * shellR - shellR ), ( RNG.nextFloat() * shellR - shellR ) ) );
+                return null;
+            });
 
             //msh.fitInto( 15.0f, true );
 
-            msh.setMaterial(mat);
+            msh.ifMaterial( mat -> {
+                mat.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
+                mat.setDiffuse( new Vector3f( 0.8f, 0.5f, 0.4f ) );
+                mat.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
+                return null;
+            });
 
-            msh.setNeedsUpdate(true);
-            msh.setDirty(true);
+            msh.ifSpatial(spatial -> {
+                spatial.setNeedsUpdate(true);
+                return null;
+            });
+            msh.ifGeometry(geometry -> {
+                geometry.setDirty(true);
+                return null;
+            });
 
             meshes.add(msh);
         }

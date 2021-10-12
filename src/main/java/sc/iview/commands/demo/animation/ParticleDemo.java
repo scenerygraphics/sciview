@@ -30,6 +30,7 @@ package sc.iview.commands.demo.animation;
 
 import graphics.scenery.*;
 import graphics.scenery.backends.ShaderType;
+import graphics.scenery.primitives.Cone;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -96,23 +97,21 @@ public class ParticleDemo implements Command {
         sList.add(ShaderType.FragmentShader);
         //Material mat = ShaderMaterial.fromClass(ParticleDemo.class, sList);
 
-        Material mat = ShaderMaterial.fromClass(ParticleDemo.class, sList);
+        master.setMaterial(ShaderMaterial.fromClass(ParticleDemo.class, sList));
+        master.ifMaterial( mat -> {
+            mat.setAmbient(new Vector3f(0.1f, 0f, 0f));
+            mat.setDiffuse(new Vector3f(0.8f, 0.7f, 0.7f));
+            mat.setDiffuse(new Vector3f(0.05f, 0f, 0f));
+            mat.setMetallic(0.01f);
+            mat.setRoughness(0.5f);
+            return null;
+        });
 
-        mat.setAmbient(new Vector3f(0.1f, 0f, 0f));
-        mat.setDiffuse(new Vector3f(0.8f, 0.7f, 0.7f));
-        mat.setDiffuse(new Vector3f(0.05f, 0f, 0f));
-        mat.setMetallic(0.01f);
-        mat.setRoughness(0.5f);
-        master.setMaterial(mat);
         master.setName("Agent_Master");
-        master.getInstancedProperties().put("ModelMatrix", master::getModel);
-        master.getInstancedProperties().put("Color", () -> new Vector4f(0.5f, 0.5f, 0.5f, 1.0f));
-        //master.getInstancedProperties().put("Material", master::getMaterial);
         sciView.addNode(master);
 
         for( int k = 0; k < numAgents; k++ ) {
-            Node n = new graphics.scenery.Mesh();
-            n.setName("agent_" + k);
+            InstancedNode n = new InstancedNode(master, "agent_" + k);
             n.getInstancedProperties().put("ModelMatrix", n::getWorld);
 
             //n.getInstancedProperties().put("Material", n::getMaterial);
@@ -131,7 +130,6 @@ public class ParticleDemo implements Command {
             n.setPosition(new Vector3f(x,y,z));
             faceNodeAlongVelocity(n, vel);
 
-            master.getInstances().add(n);
             //sciView.addNode(n);
             agents.add(n);
         }
@@ -151,9 +149,13 @@ public class ParticleDemo implements Command {
                     vel = (Vector3f) agent.getMetadata().get("velocity");
                 }
 
-                agent.setPosition(pos.add(new Vector3f(vel).mul(dt)));
-                agent.setNeedsUpdate(true);
-                agent.setNeedsUpdateWorld(true);
+                Vector3f finalVel = vel;
+                agent.ifSpatial(spatial -> {
+                    spatial.setPosition(pos.add(new Vector3f(finalVel).mul(dt)));
+                    spatial.setNeedsUpdate(true);
+                    spatial.setNeedsUpdateWorld(true);
+                    return null;
+                });
             }
         }));
 

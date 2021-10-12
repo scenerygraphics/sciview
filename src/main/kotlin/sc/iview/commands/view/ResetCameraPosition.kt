@@ -52,6 +52,6 @@ class ResetCameraPosition : Command {
     private lateinit var sciView: SciView
 
     override fun run() {
-        sciView.camera?.position = Vector3f(0.0f, 1.65f, 5f)
+        sciView.camera?.spatialOrNull()?.position = Vector3f(0.0f, 1.65f, 5f)
     }
 }

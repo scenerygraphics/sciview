@@ -64,12 +64,12 @@ class SaveCameraConfiguration : Command {
             val fw = FileWriter(saveFile)
             val bw = BufferedWriter(fw)
             if (!Files.getFileExtension(saveFile.absolutePath).equals("clj", ignoreCase = true)) throw IOException("File must be Clojure (extension = .clj)")
-            val pos = cam.position
-            val rot = cam.rotation
+            val pos = cam.spatialOrNull()?.position
+            val rot = cam.spatialOrNull()?.rotation
             var scriptContents = "; @SciView sciView\n\n"
-            scriptContents += """(.setPosition (.getCamera sciView) (cleargl.GLVector. (float-array [${pos.x()} ${pos.y()} ${pos.z()}])))
+            scriptContents += """(.setPosition (.getCamera sciView) (cleargl.GLVector. (float-array [${pos?.x()} ${pos?.y()} ${pos?.z()}])))
 """
-            scriptContents += """(.setRotation (.getCamera sciView) (com.jogamp.opengl.math.Quaternion. ${rot.x()} ${rot.y()} ${rot.z()} ${rot.w()}))
+            scriptContents += """(.setRotation (.getCamera sciView) (com.jogamp.opengl.math.Quaternion. ${rot?.x()} ${rot?.y()} ${rot?.z()} ${rot?.w()}))
 """
             bw.write(scriptContents)
             bw.close()

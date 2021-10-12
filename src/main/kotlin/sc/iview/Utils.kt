@@ -67,24 +67,23 @@ object Utils {
     @JvmStatic
     fun convertToARGB(screenshot: Img<UnsignedByteType>): Img<ARGBType> {
         val out: Img<ARGBType> = ArrayImgs.argbs(screenshot.dimension(0), screenshot.dimension(1))
-        val pos = LongArray(3)
-        val outCur = Views.iterable(out).cursor()
-        val sRA = screenshot.randomAccess()
+        val outCur = out.cursor()
+        val screenshotCursor = screenshot.cursor()
+
         while (outCur.hasNext()) {
+            screenshotCursor.fwd()
+            val a = screenshotCursor.get().get()
+            screenshotCursor.fwd()
+            val b = screenshotCursor.get().get()
+            screenshotCursor.fwd()
+            val g = screenshotCursor.get().get()
+            screenshotCursor.fwd()
+            val r = screenshotCursor.get().get()
+
             outCur.fwd()
-            outCur.localize(pos)
-            pos[2] = 0
-            sRA.setPosition(pos)
-            val r = sRA.get().get()
-            pos[2] = 1
-            sRA.setPosition(pos)
-            val g = sRA.get().get()
-            pos[2] = 2
-            sRA.setPosition(pos)
-            val b = sRA.get().get()
-            val a = 255 // FIXME
             outCur.get().set(ARGBType.rgba(r, g, b, a))
         }
+
         return out
     }
 
@@ -227,5 +226,13 @@ object Utils {
         } catch (e: IOException) {
             e.printStackTrace()
         }
+    }
+
+    class SciviewStandalone {
+    }
+    
+    @JvmStatic
+    fun createSciviewStandaloneObject() : SciviewStandalone {
+        return SciviewStandalone()        
     }
 }

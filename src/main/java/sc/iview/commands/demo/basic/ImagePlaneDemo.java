@@ -123,18 +123,21 @@ public class ImagePlaneDemo implements Command {
                 1.0f, 1.0f,
                 0.0f, 1.0f
         });
-        imgPlane.setTexcoords(tc);
+        imgPlane.ifGeometry(geometry -> {
+            geometry.setTexcoords(tc);
+            return null;
+        });
 
-        Material mat = new Material();
-        mat.setSpecular(new Vector3f(1,1,1));
-        mat.setDiffuse(new Vector3f(1,1,1));
-        mat.setAmbient(new Vector3f(1,1,1));
+        imgPlane.ifMaterial( mat -> {
+            mat.setSpecular(new Vector3f(1,1,1));
+            mat.setDiffuse(new Vector3f(1,1,1));
+            mat.setAmbient(new Vector3f(1,1,1));
 
-        Texture tex = new Texture(new Vector3i((int)img.dimension(0), (int)img.dimension(1), 1), 4, new UnsignedByteType(), bb);
-        mat.getTextures().put("diffuse",tex);
+            Texture tex = new Texture(new Vector3i((int)img.dimension(0), (int)img.dimension(1), 1), 4, new UnsignedByteType(), bb);
+            mat.getTextures().put("diffuse",tex);
 
-        imgPlane.setMaterial(mat);
-        imgPlane.setNeedsUpdate(true);
+            return null;
+        });
 
         sciView.addNode(imgPlane);
         sciView.centerOnNode(imgPlane);

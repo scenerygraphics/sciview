@@ -52,6 +52,6 @@ class ResetCameraRotation : Command {
     private lateinit var sciView: SciView
 
     override fun run() {
-        sciView.camera?.rotation = Quaternionf(0f, 0f, 0f, 1f)
+        sciView.camera?.spatialOrNull()?.rotation = Quaternionf(0f, 0f, 0f, 1f)
     }
 }
