@@ -60,6 +60,9 @@ import net.imglib2.img.Img
 import net.imglib2.view.Views
 import org.lwjgl.openvr.OpenVR
 import org.scijava.log.LogService
+import graphics.scenery.attribute.material.Material
+import graphics.scenery.primitives.Cylinder
+import graphics.scenery.primitives.TextBoard
 
 @Plugin(type = Command::class,
         menuRoot = "SciView",
@@ -84,6 +87,7 @@ class EyeTrackingDemo: Command{
     lateinit var sessionDirectory: Path
 
     val hedgehogs = Mesh()
+    val hedgehogsInstanced = InstancedNode(hedgehogs)
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
     var hedgehogVisibility = HedgehogVisibility.Hidden
 
@@ -115,28 +119,31 @@ class EyeTrackingDemo: Command{
         sessionId = "BionicTracking-generated-${SystemHelpers.formatDateTime()}"
         sessionDirectory = Files.createDirectory(Paths.get(System.getProperty("user.home"), "Desktop", sessionId))
 
-
         referenceTarget.visible = false
-        referenceTarget.material.roughness = 1.0f
-        referenceTarget.material.metallic = 0.0f
-        referenceTarget.material.diffuse = Vector3f(0.8f, 0.8f, 0.8f)
+        referenceTarget.ifMaterial{
+            roughness = 1.0f
+            metallic = 0.0f
+            diffuse = Vector3f(0.8f, 0.8f, 0.8f)
+        }
         sciview.camera!!.addChild(referenceTarget)
 
         calibrationTarget.visible = false
-        calibrationTarget.material.roughness = 1.0f
-        calibrationTarget.material.metallic = 0.0f
-        calibrationTarget.material.diffuse = Vector3f(1.0f, 1.0f, 1.0f)
-        calibrationTarget.runRecursive { it.material.diffuse = Vector3f(1.0f, 1.0f, 1.0f) }
+        calibrationTarget.material {
+            roughness = 1.0f
+            metallic = 0.0f
+            diffuse = Vector3f(1.0f, 1.0f, 1.0f)}
         sciview.camera!!.addChild(calibrationTarget)
 
         laser.visible = false
-        laser.material.diffuse = Vector3f(1.0f, 1.0f, 1.0f)
+        laser.ifMaterial{diffuse = Vector3f(1.0f, 1.0f, 1.0f)}
         sciview.addChild(laser)
 
         val shell = Box(Vector3f(20.0f, 20.0f, 20.0f), insideNormals = true)
-        shell.material.cullingMode = Material.CullingMode.Front
-        shell.material.diffuse = Vector3f(0.4f, 0.4f, 0.4f)
-        shell.position = Vector3f(0.0f, 0.0f, 0.0f)
+        shell.ifMaterial{
+            cullingMode = Material.CullingMode.Front
+            diffuse = Vector3f(0.4f, 0.4f, 0.4f) }
+
+        shell.spatial().position = Vector3f(0.0f, 0.0f, 0.0f)
         sciview.addChild(shell)
 
         val bb = BoundingGrid()
@@ -148,9 +155,9 @@ class EyeTrackingDemo: Command{
         val eyeFrames = Mesh("eyeFrames")
         val left = Box(Vector3f(1.0f, 1.0f, 0.001f))
         val right = Box(Vector3f(1.0f, 1.0f, 0.001f))
-        left.position = Vector3f(-1.0f, 1.5f, 0.0f)
-        left.rotation = left.rotation.rotationZ(PI.toFloat())
-        right.position = Vector3f(1.0f, 1.5f, 0.0f)
+        left.spatial().position = Vector3f(-1.0f, 1.5f, 0.0f)
+        left.spatial().rotation = left.rotation.rotationZ(PI.toFloat())
+        right.spatial().position = Vector3f(1.0f, 1.5f, 0.0f)
         eyeFrames.addChild(left)
         eyeFrames.addChild(right)
 
@@ -174,12 +181,12 @@ class EyeTrackingDemo: Command{
             val image = ImageIO.read(stream)
             val data = (image.raster.dataBuffer as DataBufferByte).data
 
-            node.material.textures["diffuse"] = Texture(
+            node.ifMaterial {textures["diffuse"] = Texture(
                     Vector3i(image.width, image.height, 1),
                     3,
                     UnsignedByteType(),
                     BufferUtils.allocateByteAndPut(data)
-            )
+            ) }
 
             lastFrame = System.nanoTime()
         }
@@ -235,13 +242,15 @@ class EyeTrackingDemo: Command{
                     if(hedgehogs.visible) {
                         if(hedgehogVisibility == HedgehogVisibility.PerTimePoint) {
                             hedgehogs.children.forEach { hedgehog ->
-                                hedgehog.instances.forEach {
+                                val hedgehogInstanced = InstancedNode(hedgehog)
+                                hedgehogInstanced.instances.forEach {
                                     it.visible = (it.metadata["spine"] as SpineMetadata).timepoint == volume.viewerState.currentTimepoint
                                 }
                             }
                         } else {
                             hedgehogs.children.forEach { hedgehog ->
-                                hedgehog.instances.forEach { it.visible = true }
+                                val hedgehogInstanced = InstancedNode(hedgehog)
+                                hedgehogInstanced.instances.forEach { it.visible = true }
                             }
                         }
                     }
@@ -249,7 +258,7 @@ class EyeTrackingDemo: Command{
                     if(tracking && oldTimepoint == (volume.timepointCount-1) && newTimepoint == 0) {
                         tracking = false
 
-                        referenceTarget.material.diffuse = Vector3f(0.5f, 0.5f, 0.5f)
+                        referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f)}
                         sciview.camera!!.showMessage("Tracking deactivated.")
                         dumpHedgehog()
                     }
@@ -266,9 +275,10 @@ class EyeTrackingDemo: Command{
         hedgehog.visible = false
 //        hedgehog.material = ShaderMaterial.fromClass(BionicTracking::class.java,
 //                listOf(ShaderType.VertexShader, ShaderType.FragmentShader))
-        hedgehog.instancedProperties["ModelMatrix"] = { hedgehog.world }
-        hedgehog.instancedProperties["Metadata"] = { Vector4f(0.0f, 0.0f, 0.0f, 0.0f) }
-        parent.addChild(hedgehog)
+        val hedgehogInstanced = InstancedNode(hedgehog)
+        hedgehogInstanced.instancedProperties["ModelMatrix"] = { hedgehog.spatial().world}
+        hedgehogInstanced.instancedProperties["Metadata"] = { Vector4f(0.0f, 0.0f, 0.0f, 0.0f) }
+        parent.addChild(hedgehogInstanced)
     }
 
 
@@ -440,9 +450,9 @@ class EyeTrackingDemo: Command{
 //						cam.children.find { it.name == "debugBoard" }?.visible = true
 
                         for (i in 0 until 20) {
-                            referenceTarget.material.diffuse = Vector3f(0.0f, 1.0f, 0.0f)
+                            referenceTarget.ifMaterial{diffuse = Vector3f(0.0f, 1.0f, 0.0f)}
                             Thread.sleep(100)
-                            referenceTarget.material.diffuse = Vector3f(0.8f, 0.8f, 0.8f)
+                            referenceTarget.ifMaterial { diffuse = Vector3f(0.8f, 0.8f, 0.8f)}
                             Thread.sleep(30)
                         }
 
@@ -451,12 +461,12 @@ class EyeTrackingDemo: Command{
 
                         val toggleTracking = ClickBehaviour { _, _ ->
                             if (tracking) {
-                                referenceTarget.material.diffuse = Vector3f(0.5f, 0.5f, 0.5f)
+                                referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
                                 cam.showMessage("Tracking deactivated.")
                                 dumpHedgehog()
                             } else {
                                 addHedgehog(hedgehogs)
-                                referenceTarget.material.diffuse = Vector3f(1.0f, 0.0f, 0.0f)
+                                referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
                                 cam.showMessage("Tracking active.")
                             }
                             tracking = !tracking
@@ -552,10 +562,13 @@ class EyeTrackingDemo: Command{
                 val count = samples.filterNotNull().count { it > 0.2f }
 
                 spine.metadata["spine"] = metadata
-                spine.instancedProperties["ModelMatrix"] = { spine.world }
-                spine.instancedProperties["Metadata"] = { Vector4f(confidence, timepoint.toFloat()/volume.timepointCount, count.toFloat(), 0.0f) }
+                val spineInstanced = InstancedNode(spine)
+                spineInstanced.instancedProperties["ModelMatrix"] = { spine.spatial().world }
+                spineInstanced.instancedProperties["Metadata"] = { Vector4f(confidence, timepoint.toFloat()/volume.timepointCount, count.toFloat(), 0.0f) }
 
-                hedgehogs.children.last().instances.add(spine)
+                val hedgehogInstanced  = InstancedNode(hedgehogs.children.last())
+                hedgehogInstanced.instances.add(spineInstanced.addInstance())
+
             }
         }
     }
@@ -582,7 +595,8 @@ class EyeTrackingDemo: Command{
             trackFileWriter.write("# TIME\tX\tYt\t\tZ\tTRACK_ID\tPARENT_TRACK_ID\tSPOT\tLABEL\n")
         }
 
-        val spines = lastHedgehog.instances.mapNotNull { spine ->
+        val lastHedgehogInstanced = InstancedNode(lastHedgehog)
+        val spines = lastHedgehogInstanced.instances.mapNotNull { spine ->
             spine.metadata["spine"] as? SpineMetadata
         }
 
@@ -612,14 +626,17 @@ class EyeTrackingDemo: Command{
 
         val master = if(hedgehog == null) {
             val m = Cylinder(3f, 1.0f, 10)
-            m.material = ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag")
-            m.material.diffuse = Random.random3DVectorFromRange(0.2f, 0.8f)
-            m.material.roughness = 1.0f
-            m.material.metallic = 0.0f
-            m.material.cullingMode = Material.CullingMode.None
-            m.instancedProperties["ModelMatrix"] = { m.world }
+            m.ifMaterial {
+                ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag")
+                diffuse = Random.random3DVectorFromRange(0.2f, 0.8f)
+                roughness = 1.0f
+                metallic = 0.0f
+                cullingMode = Material.CullingMode.None
+            }
             m.name = "Track-$hedgehogId"
-            m
+            val mInstanced = InstancedNode(m)
+            mInstanced.instancedProperties["ModelMatrix"] = { m.spatial().world }
+            mInstanced
         } else {
             null
         }
@@ -633,10 +650,11 @@ class EyeTrackingDemo: Command{
         track.points.windowed(2, 1).forEach { pair ->
             if(master != null) {
                 val element = Mesh()
-                element.orientBetweenPoints(Vector3f(pair[0].first).mul(Vector3f(volumeDimensions)), Vector3f(pair[1].first).mul(Vector3f(volumeDimensions)), rescale = true, reposition = true)
+                element.spatial().orientBetweenPoints(Vector3f(pair[0].first).mul(Vector3f(volumeDimensions)), Vector3f(pair[1].first).mul(Vector3f(volumeDimensions)), rescale = true, reposition = true)
                 element.parent = volume
-                element.instancedProperties["ModelMatrix"] = { element.world }
-                master.instances.add(element)
+                val elementInstanced = InstancedNode(element)
+                elementInstanced.instancedProperties["ModelMatrix"] = { element.spatial().world }
+                master.instances.add(elementInstanced.addInstance())
             }
 
             val p = Vector3f(pair[0].first).mul(Vector3f(volumeDimensions))//direct product
