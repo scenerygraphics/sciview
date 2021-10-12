@@ -118,9 +118,6 @@ dependencies {
     implementation("ome:formats-bsd:6.6.1")
     // https://mvnrepository.com/artifact/ome/formats-gpl
     implementation("ome:formats-gpl:6.6.1")
-
-
-
 }
 
 kapt {
@@ -167,7 +164,7 @@ tasks {
             var propertiesNode = asNode().appendNode("properties")
             propertiesNode.appendNode("inceptionYear", 2016)
 
-            configurations.implementation.allDependencies.forEach {
+            configurations.implementation.get().allDependencies.forEach {
                 var artifactId = it.name
 
                 var propertyName = "$artifactId.version"
