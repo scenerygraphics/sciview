@@ -34,7 +34,7 @@ dependencies {
     // Graphics dependencies
 
     annotationProcessor("org.scijava:scijava-common")
-    kapt("org.scijava:scijava-common")
+    kapt("org.scijava:scijava-common:2.87.0")// MANUAL version increment
 
     val sceneryVersion = "be5a289"
     api("graphics.scenery:scenery:$sceneryVersion")
