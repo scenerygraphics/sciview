@@ -159,7 +159,7 @@ tasks {
             var parent = asNode().appendNode("parent")
             parent.appendNode("groupId", "org.scijava")
             parent.appendNode("artifactId", "pom-scijava")
-            parent.appendNode("version", "30.0.0")
+            parent.appendNode("version", "31.1.0")
             parent.appendNode("relativePath")
 
             // Update the dependencies and properties
@@ -167,11 +167,21 @@ tasks {
             var propertiesNode = asNode().appendNode("properties")
             propertiesNode.appendNode("inceptionYear", 2016)
 
+            val versionedArtifacts = listOf("scenery",
+                "flatlaf",
+                "kotlin-stdlib-common",
+                "kotlin-stdlib",
+                "kotlinx-coroutines-core")
+
             configurations.implementation.allDependencies.forEach {
                 var artifactId = it.name
 
                 var propertyName = "$artifactId.version"
-                propertiesNode.appendNode(propertyName, it.version)
+
+                if( versionedArtifacts.contains(artifactId) ) {
+                    // add "<artifactid.version>[version]</artifactid.version>" to pom
+                    propertiesNode.appendNode(propertyName, it.version)
+                }
 
                 var dependencyNode = dependenciesNode.appendNode("dependency")
                 dependencyNode.appendNode("groupId", it.group)
