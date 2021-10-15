@@ -29,21 +29,29 @@ repositories {
 }
 
 dependencies {
-  implementation(platform("org.scijava:pom-scijava:31.1.0"))
+    implementation(platform("org.scijava:pom-scijava:31.1.0"))
 
     // Graphics dependencies
 
-    annotationProcessor("org.scijava:scijava-common")
+    annotationProcessor("org.scijava:scijava-common:2.87.0")
     kapt("org.scijava:scijava-common:2.87.0")// MANUAL version increment
 
-    val sceneryVersion = "be5a289"
+    val sceneryVersion = "83683c0"
     api("graphics.scenery:scenery:$sceneryVersion")
+    api("graphics.scenery:spirvcrossj:0.8.0-1.1.106.0", lwjglNatives)
     // check if build is triggered on https://jitpack.io/#scenerygraphics/sciview `build` tab
     // if not, uncomment this only to trigger it
 //    api("com.github.scenerygraphics:scenery:$scenery")
 
     // This seams to be still necessary
     implementation(platform("org.lwjgl:lwjgl-bom:3.2.3"))
+    listOf("", "-glfw", "-jemalloc", "-vulkan", "-opengl", "-openvr", "-xxhash", "-remotery").forEach {
+        if (it == "-vulkan")
+            api("org.lwjgl:lwjgl$it")
+        else
+            api("org.lwjgl:lwjgl$it", lwjglNatives)
+    }
+    //implementation(jackson.bundles.all)
 
     implementation(misc.cleargl)
     implementation(misc.coreMem)
@@ -163,7 +171,8 @@ tasks {
                 "flatlaf",
                 "kotlin-stdlib-common",
                 "kotlin-stdlib",
-                "kotlinx-coroutines-core")
+                "kotlinx-coroutines-core",
+                "spirvcrossj")
 
             configurations.implementation.allDependencies.forEach {
                 var artifactId = it.name
