@@ -36,7 +36,7 @@ dependencies {
     annotationProcessor("org.scijava:scijava-common:2.87.0")
     kapt("org.scijava:scijava-common:2.87.0")// MANUAL version increment
 
-    val sceneryVersion = "83683c0"
+    val sceneryVersion = "3882aa0"
     api("graphics.scenery:scenery:$sceneryVersion")
     api("graphics.scenery:spirvcrossj:0.8.0-1.1.106.0", lwjglNatives)
     // check if build is triggered on https://jitpack.io/#scenerygraphics/sciview `build` tab
