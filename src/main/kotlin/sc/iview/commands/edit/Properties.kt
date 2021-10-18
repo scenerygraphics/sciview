@@ -188,7 +188,7 @@ class Properties : InteractiveCommand() {
     @Parameter(label = "Volume slicing mode", callback = "updateNodeProperties", style = ChoiceWidget.LIST_BOX_STYLE+"group:Volume")
     private var slicingMode: String = Volume.SlicingMode.Slicing.name
 
-    @Parameter(label = "Sliced volumes", callback = "updateNodeProperties", style = "group:Text")
+    @Parameter(label = "Sliced volumes", callback = "updateNodeProperties", style = "group:Targets")
     private var slicedVolumes: VolumeSelectorWidget.VolumeSelection = VolumeSelectorWidget.VolumeSelection()
 
     private val renderingModeChoices = Arrays.asList(*Volume.RenderingMethod.values())
