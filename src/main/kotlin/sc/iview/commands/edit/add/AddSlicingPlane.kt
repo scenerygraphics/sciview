@@ -28,6 +28,7 @@
  */
 package sc.iview.commands.edit.add
 
+import graphics.scenery.Box
 import graphics.scenery.volumes.SlicingPlane
 import graphics.scenery.volumes.VolumeManager
 import org.joml.Vector3f
@@ -74,6 +75,10 @@ class AddSlicingPlane : Command {
             sciView.hub.get<VolumeManager>()?.nodes?.forEach { plane.addTargetVolume(it) }
         }
 
-        sciView.addNode(plane)
+        val handle = Box(Vector3f(1f,0.1f,1f))
+        handle.name = "Slicing Plane Handle"
+        handle.addChild(plane)
+
+        sciView.addNode(handle)
     }
 }
