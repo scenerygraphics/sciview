@@ -36,14 +36,16 @@ dependencies {
     // Graphics dependencies
 
     annotationProcessor("org.scijava:scijava-common:2.87.0")
-    kapt("org.scijava:scijava-common:2.87.0")// MANUAL version increment
+    kapt("org.scijava:scijava-common:2.87.0") { // MANUAL version increment
+        exclude("org.lwjgl")
+    }
 
     val sceneryVersion = "e2bfbef"
-    api("graphics.scenery:scenery:$sceneryVersion")
+    api("graphics.scenery:scenery:$sceneryVersion") { version { strictly(sceneryVersion) } }
     api("graphics.scenery:spirvcrossj:0.8.0-1.1.106.0", lwjglNatives)
     // check if build is triggered on https://jitpack.io/#scenerygraphics/sciview `build` tab
     // if not, uncomment this only to trigger it
-//    api("com.github.scenerygraphics:scenery:$scenery")
+    //    api("com.github.scenerygraphics:scenery:$scenery")
 
     // This seams to be still necessary
     implementation(platform("org.lwjgl:lwjgl-bom:3.2.3"))
@@ -56,16 +58,16 @@ dependencies {
             }
         }
     }
-//    listOf("", "-glfw", "-jemalloc", "-vulkan", "-opengl", "-openvr", "-xxhash", "-remotery").forEach { lwjglProject ->
-//        if (lwjglProject == "-vulkan")
-//                api("org.lwjgl:lwjgl$lwjglProject:3.2.3")
-//        else {
-//            lwjglNatives.forEach { native ->
-//                //api("org.lwjgl:lwjgl$lwjglProject:3.2.3-$native")
-//                api("org.lwjgl", "lwjgl$lwjglProject", "3.2.3", null, null, "$native.jar", null)
-//            }
-//        }
-//    }
+    //    listOf("", "-glfw", "-jemalloc", "-vulkan", "-opengl", "-openvr", "-xxhash", "-remotery").forEach { lwjglProject ->
+    //        if (lwjglProject == "-vulkan")
+    //                api("org.lwjgl:lwjgl$lwjglProject:3.2.3")
+    //        else {
+    //            lwjglNatives.forEach { native ->
+    //                //api("org.lwjgl:lwjgl$lwjglProject:3.2.3-$native")
+    //                api("org.lwjgl", "lwjgl$lwjglProject", "3.2.3", null, null, "$native.jar", null)
+    //            }
+    //        }
+    //    }
     //implementation(jackson.bundles.all)
 
     implementation("com.fasterxml.jackson.core:jackson-databind:1.12.5")
@@ -124,8 +126,8 @@ dependencies {
     implementation(n5.core)
     implementation(n5.hdf5)
     implementation(n5.imglib2)
-//    implementation("org.janelia.saalfeldlab:n5-aws-s3")
-//    implementation("org.janelia.saalfeldlab:n5-ij:2.0.1-SNAPSHOT")
+    //    implementation("org.janelia.saalfeldlab:n5-aws-s3")
+    //    implementation("org.janelia.saalfeldlab:n5-ij:2.0.1-SNAPSHOT")
     implementation("sc.fiji:spim_data")
 
     implementation(platform(kotlin("bom")))
@@ -140,16 +142,15 @@ dependencies {
     implementation("ome:formats-gpl")
 
 
-
 }
 
-kapt {
-    useBuildCache = false // safe
-    arguments {
-        arg("-Werror")
-        arg("-Xopt-in", "kotlin.RequiresOptIn")
-    }
-}
+//kapt {
+//    useBuildCache = false // safe
+//    arguments {
+//        arg("-Werror")
+//        arg("-Xopt-in", "kotlin.RequiresOptIn")
+//    }
+//}
 
 tasks {
     withType<KotlinCompile>().all {
@@ -197,33 +198,33 @@ tasks {
             propertiesNode.appendNode("inceptionYear", 2016)
 
             val versionedArtifacts = listOf("scenery",
-                "flatlaf",
-                "kotlin-stdlib-common",
-                "kotlin-stdlib",
-                "kotlinx-coroutines-core",
-                "spirvcrossj",
-                "pom-scijava",
-                "lwjgl-bom",
-                "jackson-module-kotlin",
-                "jackson-dataformat-yaml",
-                "jackson-dataformat-msgpack",
-                "jogl-all",
-                "kotlin-bom",
-                "lwjgl",
-                "lwjgl-glfw",
-                "lwjgl-jemalloc",
-                "lwjgl-vulkan",
-                "lwjgl-opengl",
-                "lwjgl-openvr",
-                "lwjgl-xxhash",
-                "lwjgl-remotery")
+                                            "flatlaf",
+                                            "kotlin-stdlib-common",
+                                            "kotlin-stdlib",
+                                            "kotlinx-coroutines-core",
+                                            "spirvcrossj",
+                                            "pom-scijava",
+                                            "lwjgl-bom",
+                                            "jackson-module-kotlin",
+                                            "jackson-dataformat-yaml",
+                                            "jackson-dataformat-msgpack",
+                                            "jogl-all",
+                                            "kotlin-bom",
+                                            "lwjgl",
+                                            "lwjgl-glfw",
+                                            "lwjgl-jemalloc",
+                                            "lwjgl-vulkan",
+                                            "lwjgl-opengl",
+                                            "lwjgl-openvr",
+                                            "lwjgl-xxhash",
+                                            "lwjgl-remotery")
 
             val toSkip = listOf("pom-scijava")
 
             configurations.implementation.allDependencies.forEach {
                 var artifactId = it.name
 
-                if( !toSkip.contains(artifactId) ) {
+                if (!toSkip.contains(artifactId)) {
 
                     var propertyName = "$artifactId.version"
 
@@ -260,7 +261,7 @@ tasks {
             var depEndIdx = "</dependencyManagement>".toRegex().find(asString())?.range?.last
             if (depStartIdx != null) {
                 if (depEndIdx != null) {
-                    asString().replace(depStartIdx, depEndIdx+1, "")
+                    asString().replace(depStartIdx, depEndIdx + 1, "")
                 }
             }
 
@@ -268,7 +269,7 @@ tasks {
             depEndIdx = "</dependencies>".toRegex().find(asString())?.range?.last
             if (depStartIdx != null) {
                 if (depEndIdx != null) {
-                    asString().replace(depStartIdx, depEndIdx+1, "")
+                    asString().replace(depStartIdx, depEndIdx + 1, "")
                 }
             }
         }
@@ -331,7 +332,7 @@ tasks {
         .filter { it.path.contains("demo") && (it.name.endsWith(".kt") || it.name.endsWith(".java")) }
         .map {
             val p = it.path
-            if(p.endsWith(".kt")) {
+            if (p.endsWith(".kt")) {
                 p.substringAfter("kotlin${File.separatorChar}").replace(File.separatorChar, '.').substringBefore(".kt")
             } else {
                 p.substringAfter("java${File.separatorChar}").replace(File.separatorChar, '.').substringBefore(".java")
@@ -366,11 +367,11 @@ tasks {
                 classpath = sourceSets.test.get().runtimeClasspath
 
                 println("Target is $target")
-//                if(target.endsWith(".kt")) {
-//                    main = target.substringAfter("kotlin${File.separatorChar}").replace(File.separatorChar, '.').substringBefore(".kt")
-//                } else {
-//                    main = target.substringAfter("java${File.separatorChar}").replace(File.separatorChar, '.').substringBefore(".java")
-//                }
+                //                if(target.endsWith(".kt")) {
+                //                    main = target.substringAfter("kotlin${File.separatorChar}").replace(File.separatorChar, '.').substringBefore(".kt")
+                //                } else {
+                //                    main = target.substringAfter("java${File.separatorChar}").replace(File.separatorChar, '.').substringBefore(".java")
+                //                }
 
                 main = "$target"
                 val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
@@ -384,7 +385,7 @@ tasks {
 
                 println("Will run target $target with classpath $classpath, main=$main")
                 println("JVM arguments passed to target: $allJvmArgs")
-          }
+            }
         }
     }
 }
