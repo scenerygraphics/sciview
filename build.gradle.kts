@@ -5,6 +5,8 @@ import sciview.joglNatives
 import java.net.URL
 import sciview.*
 
+//System.setProperty("scijava.platform.family.long", "linux")
+
 plugins {
     val ktVersion = "1.5.10"
     val dokkaVersion = "1.4.32"
@@ -24,11 +26,11 @@ plugins {
 repositories {
     mavenCentral()
     maven("https://maven.scijava.org/content/groups/public")
-    maven("https://raw.githubusercontent.com/kotlin-graphics/mary/master")
     maven("https://jitpack.io")
 }
 
 dependencies {
+
     implementation(platform("org.scijava:pom-scijava:31.1.0"))
 
     // Graphics dependencies
@@ -36,7 +38,7 @@ dependencies {
     annotationProcessor("org.scijava:scijava-common:2.87.0")
     kapt("org.scijava:scijava-common:2.87.0")// MANUAL version increment
 
-    val sceneryVersion = "3882aa0"
+    val sceneryVersion = "e2bfbef"
     api("graphics.scenery:scenery:$sceneryVersion")
     api("graphics.scenery:spirvcrossj:0.8.0-1.1.106.0", lwjglNatives)
     // check if build is triggered on https://jitpack.io/#scenerygraphics/sciview `build` tab
@@ -45,13 +47,31 @@ dependencies {
 
     // This seams to be still necessary
     implementation(platform("org.lwjgl:lwjgl-bom:3.2.3"))
-    listOf("", "-glfw", "-jemalloc", "-vulkan", "-opengl", "-openvr", "-xxhash", "-remotery").forEach {
-        if (it == "-vulkan")
-            api("org.lwjgl:lwjgl$it")
-        else
-            api("org.lwjgl:lwjgl$it", lwjglNatives)
+    listOf("", "-glfw", "-jemalloc", "-vulkan", "-opengl", "-openvr", "-xxhash", "-remotery").forEach { lwjglProject ->
+        api("org.lwjgl:lwjgl$lwjglProject:3.2.3")
+
+        if (lwjglProject != "-vulkan") {
+            lwjglNatives.forEach { native ->
+                runtimeOnly("org.lwjgl:lwjgl$lwjglProject:3.2.3:$native")
+            }
+        }
     }
+//    listOf("", "-glfw", "-jemalloc", "-vulkan", "-opengl", "-openvr", "-xxhash", "-remotery").forEach { lwjglProject ->
+//        if (lwjglProject == "-vulkan")
+//                api("org.lwjgl:lwjgl$lwjglProject:3.2.3")
+//        else {
+//            lwjglNatives.forEach { native ->
+//                //api("org.lwjgl:lwjgl$lwjglProject:3.2.3-$native")
+//                api("org.lwjgl", "lwjgl$lwjglProject", "3.2.3", null, null, "$native.jar", null)
+//            }
+//        }
+//    }
     //implementation(jackson.bundles.all)
+
+    implementation("com.fasterxml.jackson.core:jackson-databind:1.12.5")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:1.12.5")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:1.12.5")
+    implementation("org.msgpack:jackson-dataformat-msgpack:0.8.20")
 
     implementation(misc.cleargl)
     implementation(misc.coreMem)
@@ -162,6 +182,15 @@ tasks {
             parent.appendNode("version", "31.1.0")
             parent.appendNode("relativePath")
 
+            var repositories = asNode().appendNode("repositories")
+            var jitpackRepo = repositories.appendNode("repository")
+            jitpackRepo.appendNode("id", "jitpack.io")
+            jitpackRepo.appendNode("url", "https://jitpack.io")
+
+            var scijavaRepo = repositories.appendNode("repository")
+            scijavaRepo.appendNode("id", "scijava.public")
+            scijavaRepo.appendNode("url", "https://maven.scijava.org/content/groups/public")
+
             // Update the dependencies and properties
             var dependenciesNode = asNode().appendNode("dependencies")
             var propertiesNode = asNode().appendNode("properties")
@@ -172,39 +201,59 @@ tasks {
                 "kotlin-stdlib-common",
                 "kotlin-stdlib",
                 "kotlinx-coroutines-core",
-                "spirvcrossj")
+                "spirvcrossj",
+                "pom-scijava",
+                "lwjgl-bom",
+                "jackson-module-kotlin",
+                "jackson-dataformat-yaml",
+                "jackson-dataformat-msgpack",
+                "jogl-all",
+                "kotlin-bom",
+                "lwjgl",
+                "lwjgl-glfw",
+                "lwjgl-jemalloc",
+                "lwjgl-vulkan",
+                "lwjgl-opengl",
+                "lwjgl-openvr",
+                "lwjgl-xxhash",
+                "lwjgl-remotery")
+
+            val toSkip = listOf("pom-scijava")
 
             configurations.implementation.allDependencies.forEach {
                 var artifactId = it.name
 
-                var propertyName = "$artifactId.version"
+                if( !toSkip.contains(artifactId) ) {
 
-                if( versionedArtifacts.contains(artifactId) ) {
-                    // add "<artifactid.version>[version]</artifactid.version>" to pom
-                    propertiesNode.appendNode(propertyName, it.version)
-                }
+                    var propertyName = "$artifactId.version"
 
-                var dependencyNode = dependenciesNode.appendNode("dependency")
-                dependencyNode.appendNode("groupId", it.group)
-                dependencyNode.appendNode("artifactId", artifactId)
-                dependencyNode.appendNode("version", "\${$propertyName}")
+                    if (versionedArtifacts.contains(artifactId)) {
+                        // add "<artifactid.version>[version]</artifactid.version>" to pom
+                        propertiesNode.appendNode(propertyName, it.version)
+                    }
 
-                // Custom per artifact tweaks
-                println(artifactId)
-                if("\\-bom".toRegex().find(artifactId) != null) {
-                    dependencyNode.appendNode("type", "pom")
+                    var dependencyNode = dependenciesNode.appendNode("dependency")
+                    dependencyNode.appendNode("groupId", it.group)
+                    dependencyNode.appendNode("artifactId", artifactId)
+                    dependencyNode.appendNode("version", "\${$propertyName}")
+
+                    // Custom per artifact tweaks
+                    println(artifactId)
+                    if ("\\-bom".toRegex().find(artifactId) != null) {
+                        dependencyNode.appendNode("type", "pom")
+                    }
+                    // from https://github.com/scenerygraphics/sciview/pull/399#issuecomment-904732945
+                    if (artifactId == "formats-gpl") {
+                        var exclusions = dependencyNode.appendNode("exclusions")
+                        var jacksonCore = exclusions.appendNode("exclusion")
+                        jacksonCore.appendNode("groupId", "com.fasterxml.jackson.core")
+                        jacksonCore.appendNode("artifactId", "jackson-core")
+                        var jacksonAnnotations = exclusions.appendNode("exclusion")
+                        jacksonAnnotations.appendNode("groupId", "com.fasterxml.jackson.core")
+                        jacksonAnnotations.appendNode("artifactId", "jackson-annotations")
+                    }
+                    //dependencyNode.appendNode("scope", it.scope)
                 }
-                // from https://github.com/scenerygraphics/sciview/pull/399#issuecomment-904732945
-                if(artifactId == "formats-gpl") {
-                    var exclusions = dependencyNode.appendNode("exclusions")
-                    var jacksonCore = exclusions.appendNode("exclusion")
-                    jacksonCore.appendNode("groupId", "com.fasterxml.jackson.core")
-                    jacksonCore.appendNode("artifactId", "jackson-core")
-                    var jacksonAnnotations = exclusions.appendNode("exclusion")
-                    jacksonAnnotations.appendNode("groupId", "com.fasterxml.jackson.core")
-                    jacksonAnnotations.appendNode("artifactId", "jackson-annotations")
-                }
-                //dependencyNode.appendNode("scope", it.scope)
             }
 
             var depStartIdx = "<dependencyManagement>".toRegex().find(asString())?.range?.start
