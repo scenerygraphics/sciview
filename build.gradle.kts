@@ -197,6 +197,48 @@ tasks {
             var propertiesNode = asNode().appendNode("properties")
             propertiesNode.appendNode("inceptionYear", 2016)
 
+            // spirvcrossj natives
+            lwjglNatives.forEach {
+                var dependencyNode = dependenciesNode.appendNode("dependency")
+                dependencyNode.appendNode("groupId", "graphics.scenery")
+                dependencyNode.appendNode("artifactId", "spirvcrossj")
+                dependencyNode.appendNode("version", "\${spirvcrossj.version}")
+                dependencyNode.appendNode("classifier", "$it")
+                dependencyNode.appendNode("scope", "runtime")
+            }
+
+            // lwjgl natives
+            lwjglNatives.forEach { nativePlatform ->
+                listOf(
+                    "",
+                    "-glfw",
+                    "-jemalloc",
+                    "-opengl",
+                    "-openvr",
+                    "-xxhash",
+                    "-remotery"
+                ).forEach { lwjglProject ->
+                    var dependencyNode = dependenciesNode.appendNode("dependency")
+                    dependencyNode.appendNode("groupId", "org.lwjgl")
+                    dependencyNode.appendNode("artifactId", "lwjgl$lwjglProject")
+                    dependencyNode.appendNode("version", "\${lwjgl.version}")
+                    dependencyNode.appendNode("classifier", "$nativePlatform")
+                    dependencyNode.appendNode("scope", "runtime")
+                }
+            }
+
+            // jvrpn natives
+            lwjglNatives.forEach {
+                var dependencyNode = dependenciesNode.appendNode("dependency")
+                dependencyNode.appendNode("groupId", "graphics.scenery")
+                dependencyNode.appendNode("artifactId", "jvrpn")
+                dependencyNode.appendNode("version", "\${jvrpn.version}")
+                dependencyNode.appendNode("classifier", "$it")
+                dependencyNode.appendNode("scope", "runtime")
+            }
+            // add jvrpn property because it only has runtime native deps
+            propertiesNode.appendNode("jvrpn.version", "1.2.0")
+
             val versionedArtifacts = listOf("scenery",
                                             "flatlaf",
                                             "kotlin-stdlib-common",
