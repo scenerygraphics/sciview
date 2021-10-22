@@ -62,6 +62,7 @@ import graphics.scenery.volumes.Volume.Companion.fromXML
 import graphics.scenery.volumes.Volume.Companion.setupId
 import graphics.scenery.volumes.Volume.VolumeDataSource.RAISource
 import io.scif.SCIFIOService
+import io.scif.services.DatasetIOService
 import net.imagej.Dataset
 import net.imagej.ImageJService
 import net.imagej.axis.CalibratedAxis
@@ -1651,6 +1652,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         node.metadata["sciview-inspector-${ui.module.info.name}"] = ui
     }
 
+    fun getAvailableServices() {
+        println(scijavaContext!!.serviceIndex)
+    }
+
     companion object {
         //bounds for the controls
         const val FPSSPEED_MINBOUND_SLOW = 0.01f
@@ -1677,7 +1682,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         @Throws(Exception::class)
         fun create(): SciView {
             xinitThreads()
-            val context = Context(ImageJService::class.java, SciJavaService::class.java, SCIFIOService::class.java, ThreadService::class.java, ObjectService::class.java)
+            val context = Context(ImageJService::class.java, SciJavaService::class.java, SCIFIOService::class.java,
+                ThreadService::class.java, ObjectService::class.java, LogService::class.java, MenuService::class.java,
+                IOService::class.java, EventService::class.java, LUTService::class.java, UnitService::class.java,
+                DatasetIOService::class.java)
             val objectService = context.getService(ObjectService::class.java)
             objectService.addObject(Utils.SciviewStandalone())
             val sciViewService = context.service(SciViewService::class.java)
