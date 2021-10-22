@@ -40,7 +40,7 @@ dependencies {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "023ace5"
+    val sceneryVersion = "4d07a30"
     api("graphics.scenery:scenery:$sceneryVersion") { version { strictly(sceneryVersion) } }
     api("graphics.scenery:spirvcrossj:0.8.0-1.1.106.0", lwjglNatives)
     // check if build is triggered on https://jitpack.io/#scenerygraphics/sciview `build` tab
