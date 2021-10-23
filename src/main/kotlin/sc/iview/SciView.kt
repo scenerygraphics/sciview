@@ -122,6 +122,7 @@ import java.util.function.Consumer
 import java.util.function.Function
 import java.util.function.Predicate
 import java.util.stream.Collectors
+import kotlin.collections.HashMap
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -190,6 +191,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
     @Parameter
     private lateinit var unitService: UnitService
+
+    private lateinit var imageToVolumeMap: HashMap<Any, Volume>
 
     /**
      * Queue keeps track of the currently running animations
@@ -284,6 +287,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         renderer = newRenderer
     }
 
+
     /**
      * Reset the scene to initial conditions
      */
@@ -300,6 +304,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         for (n in toRemove) {
             deleteNode(n, false)
         }
+
+        imageToVolumeMap = HashMap<Any, Volume>()
 
         // Setup camera
         if (camera == null) {
@@ -388,6 +394,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         animations = LinkedList()
         mainWindow = SwingMainWindow(this)
         controls = Controls(this)
+
+        imageToVolumeMap = HashMap<Any, Volume>()
     }
 
     fun toggleSidebar(): Boolean {
@@ -1056,6 +1064,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     fun deleteNode(node: Node?, activePublish: Boolean = true) {
         if(node is Volume) {
             node.volumeManager.remove(node)
+            for( entry in imageToVolumeMap.entries ) {
+                if( entry.value == node )
+                    imageToVolumeMap.remove(entry.key)
+            }
         }
 
         for (child in node!!.children) {
@@ -1147,7 +1159,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         }
 
         logger.info("Adding with ${voxelDims.joinToString(",")}")
-        return addVolume(image, voxelDims, block)
+        val v = addVolume(image, voxelDims, block)
+        imageToVolumeMap[image] = v
+        return v
     }
 
     /**
@@ -1159,8 +1173,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @JvmOverloads
     @Suppress("UNCHECKED_CAST")
     fun addVolume(image: Dataset, voxelDimensions: FloatArray, block: Volume.() -> Unit = {}): Volume {
-        return addVolume(image.imgPlus as RandomAccessibleInterval<RealType<*>>, image.name ?: "Volume",
+        val v = addVolume(image.imgPlus as RandomAccessibleInterval<RealType<*>>, image.name ?: "Volume",
                 *voxelDimensions, block = block)
+        imageToVolumeMap[image] = v
+        return v
     }
 
     /**
@@ -1171,7 +1187,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     </T> */
     @JvmOverloads
     fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, name: String = "Volume", block: Volume.() -> Unit = {}): Volume {
-        return addVolume(image, name, 1f, 1f, 1f, block = block)
+        val v = addVolume(image, name, 1f, 1f, 1f, block = block)
+        imageToVolumeMap[image] = v
+        return v
     }
 
     /**
@@ -1181,7 +1199,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return a Node corresponding to the volume
     </T> */
     fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, voxelDimensions: FloatArray, block: Volume.() -> Unit): Volume {
-        return addVolume(image, "volume", *voxelDimensions, block = block)
+        val v = addVolume(image, "volume", *voxelDimensions, block = block)
+        imageToVolumeMap[image] = v
+        return v
     }
 
     /**
@@ -1194,7 +1214,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @Throws(Exception::class)
     fun <T : RealType<T>> addVolume(image: IterableInterval<T>): Volume {
         return if (image is RandomAccessibleInterval<*>) {
-            addVolume(image as RandomAccessibleInterval<RealType<*>>, "Volume")
+            val v = addVolume(image as RandomAccessibleInterval<RealType<*>>, "Volume")
+            imageToVolumeMap[image] = v
+            v
         } else {
             throw Exception("Unsupported Volume type:$image")
         }
@@ -1211,7 +1233,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @Throws(Exception::class)
     fun <T : RealType<T>> addVolume(image: IterableInterval<T>, name: String = "Volume"): Volume {
         return if (image is RandomAccessibleInterval<*>) {
-            addVolume(image as RandomAccessibleInterval<RealType<*>>, name, 1f, 1f, 1f)
+            val v = addVolume(image as RandomAccessibleInterval<RealType<*>>, name, 1f, 1f, 1f)
+            imageToVolumeMap[image] = v
+            v
         } else {
             throw Exception("Unsupported Volume type:$image")
         }
@@ -1278,7 +1302,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                                     block: Volume.() -> Unit = {}): Volume {
         val sources: MutableList<SourceAndConverter<T>> = ArrayList()
         sources.add(sac)
-        return addVolume(sources, numTimepoints, name, *voxelDimensions, block = block)
+
+        val v = addVolume(sources, numTimepoints, name, *voxelDimensions, block = block)
+        imageToVolumeMap[sources] = v
+        imageToVolumeMap[sac] = v
+        return v
     }
 
     /**
@@ -1323,6 +1351,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         }
         val v = addVolume(sources, numTimepoints, name, *voxelDimensions, block = block)
         v.metadata.set("RandomAccessibleInterval", image)
+        imageToVolumeMap[image] = v
         return v
     }
 
@@ -1387,6 +1416,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         tf.addControlPoint(1.0f, rampMax)
         val bg = BoundingGrid()
         bg.node = v
+
+        imageToVolumeMap[image] = v
         return addNode(v, block = block)
     }
 
@@ -1410,7 +1441,20 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         for (source in sources) {
             converterSetups.add(BigDataViewer.createConverterSetup(source, setupId++))
         }
-        return addVolume(sources, converterSetups, numTimepoints, name, *voxelDimensions, block = block)
+        val v = addVolume(sources, converterSetups, numTimepoints, name, *voxelDimensions, block = block)
+        imageToVolumeMap[sources] = v
+        return v
+    }
+
+    /**
+     * Get the Volume that corresponds to an image if one exists
+     * @param image an image of any type (e.g. IterableInterval, RAI, SourceAndConverter)
+     * @return a Volume corresponding to the input image
+    </T> */
+    fun getVolumeFromImage(image: Any): Volume? {
+        if( image in imageToVolumeMap )
+            return imageToVolumeMap[image]
+        return null
     }
 
     /**
