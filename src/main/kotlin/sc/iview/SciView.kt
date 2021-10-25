@@ -39,7 +39,6 @@ import bdv.viewer.Source
 import bdv.viewer.SourceAndConverter
 import graphics.scenery.*
 import graphics.scenery.Scene.RaycastResult
-import graphics.scenery.attribute.material.Material
 import graphics.scenery.backends.Renderer
 import graphics.scenery.backends.opengl.OpenGLRenderer
 import graphics.scenery.backends.vulkan.VulkanRenderer
@@ -78,7 +77,6 @@ import net.imglib2.*
 import net.imglib2.display.ColorTable
 import net.imglib2.img.Img
 import net.imglib2.img.array.ArrayImgs
-import net.imglib2.img.display.imagej.ImageJFunctions
 import net.imglib2.realtransform.AffineTransform3D
 import net.imglib2.type.numeric.ARGBType
 import net.imglib2.type.numeric.NumericType
@@ -122,6 +120,7 @@ import java.util.function.Consumer
 import java.util.function.Function
 import java.util.function.Predicate
 import java.util.stream.Collectors
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.math.cos
 import kotlin.math.sin
@@ -1064,9 +1063,14 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     fun deleteNode(node: Node?, activePublish: Boolean = true) {
         if(node is Volume) {
             node.volumeManager.remove(node)
+            val toRemove = ArrayList<Any>()
             for( entry in imageToVolumeMap.entries ) {
-                if( entry.value == node )
-                    imageToVolumeMap.remove(entry.key)
+                if( entry.value == node ) {
+                    toRemove.add(entry.key)
+                }
+            }
+            for(entry in toRemove) {
+                imageToVolumeMap.remove(entry)
             }
         }
 
