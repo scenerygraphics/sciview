@@ -247,6 +247,8 @@ tasks {
                                             "spirvcrossj",
                                             "pom-scijava",
                                             "lwjgl-bom",
+                                            "imagej-mesh",
+                                            "imagej-mesh-io",
                                             "jackson-module-kotlin",
                                             "jackson-dataformat-yaml",
                                             "jackson-dataformat-msgpack",
