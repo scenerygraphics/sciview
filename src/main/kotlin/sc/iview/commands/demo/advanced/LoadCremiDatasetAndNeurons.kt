@@ -64,6 +64,7 @@ import sc.iview.commands.MenuWeights
 import sc.iview.process.MeshConverter
 import java.io.FileFilter
 import java.io.IOException
+import java.lang.Object
 
 typealias NeuronsAndImage = Triple<HashMap<Long, Long>, RandomAccessibleInterval<UnsignedLongType>, RandomAccessibleInterval<UnsignedByteType>>
 
@@ -115,6 +116,8 @@ class LoadCremiDatasetAndNeurons: Command {
      *
      * @see Thread.run
      */
+
+
     override fun run() {
         val task = sciview.taskManager.newTask("Cremi", "Loading dataset")
         val filter = FileFilter { file ->
