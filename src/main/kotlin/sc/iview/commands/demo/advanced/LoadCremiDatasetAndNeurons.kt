@@ -48,6 +48,7 @@ import net.imglib2.type.numeric.ARGBType
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import net.imglib2.type.numeric.integer.UnsignedLongType
 import net.imglib2.view.Views
+import org.apache.commons.io.FileUtils.copyURLToFile
 import org.janelia.saalfeldlab.n5.hdf5.N5HDF5Reader
 import org.janelia.saalfeldlab.n5.imglib2.N5Utils
 import org.joml.Vector3f
@@ -64,16 +65,18 @@ import sc.iview.commands.MenuWeights
 import sc.iview.process.MeshConverter
 import java.io.FileFilter
 import java.io.IOException
-import java.lang.Object
+import java.net.URL
+import java.io.File
+
 
 typealias NeuronsAndImage = Triple<HashMap<Long, Long>, RandomAccessibleInterval<UnsignedLongType>, RandomAccessibleInterval<UnsignedByteType>>
 
 @Plugin(type = Command::class,
-        label = "Cremi Dataset rendering demo",
-        menuRoot = "SciView",
-        menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
-                Menu(label = "Advanced", weight = MenuWeights.DEMO_ADVANCED),
-                Menu(label = "Load Cremi dataset and neuron labels", weight = MenuWeights.DEMO_ADVANCED_CREMI)])
+    label = "Cremi Dataset rendering demo",
+    menuRoot = "SciView",
+    menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
+        Menu(label = "Advanced", weight = MenuWeights.DEMO_ADVANCED),
+        Menu(label = "Load Cremi dataset and neuron labels", weight = MenuWeights.DEMO_ADVANCED_CREMI)])
 class LoadCremiDatasetAndNeurons: Command {
     @Parameter
     private lateinit var ui: UIService
@@ -117,7 +120,6 @@ class LoadCremiDatasetAndNeurons: Command {
      * @see Thread.run
      */
 
-
     override fun run() {
         val task = sciview.taskManager.newTask("Cremi", "Loading dataset")
         val filter = FileFilter { file ->
@@ -125,9 +127,14 @@ class LoadCremiDatasetAndNeurons: Command {
 
             extension == "hdf5" || extension == "hdf"
         }
-        val files = ui.chooseFiles(null, emptyList(), filter, FileWidget.OPEN_STYLE)
 
-        val nai = readCremiHDF5(files.first().canonicalPath, 1.0)
+        // val files = ui.chooseFiles(null, emptyList(), filter, FileWidget.OPEN_STYLE)
+        val file = File(System.getProperty("user.home") + "/.sciview/examples/sample_A_20160501.hdf")
+        if(file.exists() == false) {
+            copyURLToFile(URL ("https://cremi.org/static/data/sample_A_20160501.hdf"), file)
+        }
+
+        val nai = readCremiHDF5(file.canonicalPath, 1.0)
 
         if(nai == null) {
             log.error("Could not get neuron IDs")
@@ -143,7 +150,7 @@ class LoadCremiDatasetAndNeurons: Command {
         val colormapVolume = lut.loadLUT(lut.findLUTs().get("Grays.lut"))
         val colormapNeurons = lut.loadLUT(lut.findLUTs().get("Fire.lut"))
 
-        sciview.addVolume(nai.third, files.first().name) {
+        sciview.addVolume(nai.third, file.name) {
             origin = Origin.FrontBottomLeft
             this.spatialOrNull()?.scale = Vector3f(0.08f, 0.08f, 5.0f)
             transferFunction = TransferFunction.ramp(0.3f, 0.1f, 0.1f)
@@ -209,11 +216,11 @@ class LoadCremiDatasetAndNeurons: Command {
         try {
             n5Reader = N5HDF5Reader(hdf5Reader, *intArrayOf(128, 128, 128))
             val neuronIds: RandomAccessibleInterval<UnsignedLongType> = N5Utils.open(n5Reader,
-                    "/volumes/labels/neuron_ids",
-                    UnsignedLongType())
+                "/volumes/labels/neuron_ids",
+                UnsignedLongType())
             val volume: RandomAccessibleInterval<UnsignedByteType> = N5Utils.open(n5Reader,
-                    "/volumes/raw",
-                    UnsignedByteType())
+                "/volumes/raw",
+                UnsignedByteType())
             val img = ArrayImgs.unsignedLongs(*neuronIds.dimensionsAsLongArray())
             val cursor = Views.iterable(neuronIds).localizingCursor()
             val dest = img.randomAccess();
