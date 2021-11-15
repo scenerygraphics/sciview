@@ -68,16 +68,15 @@ import graphics.scenery.primitives.TextBoard
         menuRoot = "SciView",
         menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
             Menu(label = "Advanced", weight = MenuWeights.DEMO_ADVANCED),
-            Menu(label = "Utilize Eye Tracking", weight = MenuWeights.DEMO_ADVANCED_EYETRACKING)])
-class EyeTrackingDemo: Command{
+            Menu(label = "Utilize VR Controller for Tracking", weight = MenuWeights.DEMO_ADVANCED_EYETRACKING)])
+class ControllerTrackingDemo: Command{
     @Parameter
     private lateinit var sciview: SciView
 
     @Parameter
     private lateinit var log: LogService
 
-    val pupilTracker = PupilEyeTrackerNew(calibrationType = PupilEyeTrackerNew.CalibrationType.WorldSpace, port = System.getProperty("PupilPort", "50020").toInt())
-    lateinit var hmd: OpenVRHMD
+     lateinit var hmd: OpenVRHMD
     val referenceTarget = Icosphere(0.004f, 2)
     val calibrationTarget = Icosphere(0.02f, 2)
     val laser = Cylinder(0.005f, 0.2f, 10)
@@ -153,44 +152,10 @@ class EyeTrackingDemo: Command{
 
         sciview.addChild(hedgehogs)
 
-        val eyeFrames = Mesh("eyeFrames")
-        val left = Box(Vector3f(1.0f, 1.0f, 0.001f))
-        val right = Box(Vector3f(1.0f, 1.0f, 0.001f))
-        left.spatial().position = Vector3f(-1.0f, 1.5f, 0.0f)
-        left.spatial().rotation = left.rotation.rotationZ(PI.toFloat())
-        right.spatial().position = Vector3f(1.0f, 1.5f, 0.0f)
-        eyeFrames.addChild(left)
-        eyeFrames.addChild(right)
-
-        sciview.addChild(eyeFrames)
-
         val pupilFrameLimit = 20
         var lastFrame = System.nanoTime()
 
-        pupilTracker.subscribeFrames { eye, texture ->
-            if(System.nanoTime() - lastFrame < pupilFrameLimit*10e5) {
-                return@subscribeFrames
-            }
 
-            val node = if(eye == 1) {
-                left
-            } else {
-                right
-            }
-
-            val stream = ByteArrayInputStream(texture)
-            val image = ImageIO.read(stream)
-            val data = (image.raster.dataBuffer as DataBufferByte).data
-
-            node.ifMaterial {textures["diffuse"] = Texture(
-                    Vector3i(image.width, image.height, 1),
-                    3,
-                    UnsignedByteType(),
-                    BufferUtils.allocateByteAndPut(data)
-            ) }
-
-            lastFrame = System.nanoTime()
-        }
 
         val debugBoard = TextBoard()
         debugBoard.name = "debugBoard"
@@ -400,9 +365,9 @@ class EyeTrackingDemo: Command{
         })
 
         val cellDivision = ClickBehaviour { _, _ ->
-            cam.showMessage("Adding cell division", duration = 1000)
-            dumpHedgehog()
-            addHedgehog()
+            cam.showMessage("Adding cell division", distance = 1.2f, size =  0.2f, duration = 1000)
+            //dumpHedgehog()
+            //addHedgehog()
         }
 
         hmd.addBehaviour("skip_to_next", nextTimepoint)
@@ -427,101 +392,55 @@ class EyeTrackingDemo: Command{
 
         hmd.allowRepeats += OpenVRHMD.OpenVRButton.Trigger to TrackerRole.LeftHand
 
-        setupCalibration()
+        setupControllerforTracking()
 
     }
 
-
-    private fun setupCalibration(keybindingCalibration: String = "N", keybindingTracking: String = "U") {
-        val startCalibration = ClickBehaviour { _, _ ->
+    private fun setupControllerforTracking( keybindingTracking: String = "U") {
             thread {
                 val cam = sciview.camera as? DetachedHeadCamera ?: return@thread
-                pupilTracker.gazeConfidenceThreshold = confidenceThreshold
-                if (!pupilTracker.isCalibrated) {
-                    pupilTracker.onCalibrationInProgress = {
-                        cam.showMessage("Crunching equations ...",distance = 1.2f, size = 0.2f, messageColor = Vector4f(1.0f, 0.8f, 0.0f, 1.0f), duration = 15000)
+                val toggleTracking = ClickBehaviour { _, _ ->
+                    if (tracking) {
+                        referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
+                        cam.showMessage("Tracking deactivated.",distance = 1.2f, size = 0.2f)
+                        dumpHedgehog()
+                    } else {
+                        addHedgehog()
+                        referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
+                        cam.showMessage("Tracking active.",distance = 1.2f, size = 0.2f)
                     }
-
-                    pupilTracker.onCalibrationFailed = {
-                        cam.showMessage("Calibration failed.",distance = 1.2f, size = 0.2f, messageColor = Vector4f(1.0f, 0.0f, 0.0f, 1.0f))
-                    }
-
-                    pupilTracker.onCalibrationSuccess = {
-                        cam.showMessage("Calibration succeeded!", distance = 1.2f, size = 0.2f,messageColor = Vector4f(0.0f, 1.0f, 0.0f, 1.0f))
-//						cam.children.find { it.name == "debugBoard" }?.visible = true
-
-                        for (i in 0 until 20) {
-                            referenceTarget.ifMaterial{diffuse = Vector3f(0.0f, 1.0f, 0.0f)}
-                            Thread.sleep(100)
-                            referenceTarget.ifMaterial { diffuse = Vector3f(0.8f, 0.8f, 0.8f)}
-                            Thread.sleep(30)
-                        }
-
-                        hmd.removeBehaviour("start_calibration")
-                        hmd.removeKeyBinding("start_calibration")
-
-                        val toggleTracking = ClickBehaviour { _, _ ->
-                            if (tracking) {
-                                referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
-                                cam.showMessage("Tracking deactivated.",distance = 1.2f, size = 0.2f)
-                                dumpHedgehog()
-                            } else {
-                                addHedgehog()
-                                referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
-                                cam.showMessage("Tracking active.",distance = 1.2f, size = 0.2f)
-                            }
-                            tracking = !tracking
-                        }
-                        hmd.addBehaviour("toggle_tracking", toggleTracking)
-                        hmd.addKeyBinding("toggle_tracking", keybindingTracking)
-
-                        volume.visible = true
-                        volume.runRecursive { it.visible = true }
-                        playing = true
-                    }
-
-                    pupilTracker.unsubscribeFrames()
-                    sciview.deleteNode(sciview.find("eyeFrames"))
-
-                    log.info("Starting eye tracker calibration")
-                    cam.showMessage("Follow the white rabbit.", distance = 1.2f, size = 0.15f,duration = 1500)
-                    pupilTracker.calibrate(cam, hmd,
-                            generateReferenceData = true,
-                            calibrationTarget = calibrationTarget)
-
-                    pupilTracker.onGazeReceived = when (pupilTracker.calibrationType) {
-                        //NEW
-                        PupilEyeTrackerNew.CalibrationType.WorldSpace -> { gaze ->
-                            if (gaze.confidence > confidenceThreshold) {
-                                val p = gaze.gazePoint()
-                                referenceTarget.visible = true
-                                // Pupil has mm units, so we divide by 1000 here to get to scenery units
-                                referenceTarget.position = p
-                                (cam.children.find { it.name == "debugBoard" } as? TextBoard)?.text = "${String.format("%.2f", p.x())}, ${String.format("%.2f", p.y())}, ${String.format("%.2f", p.z())}"
-
-                                val headCenter = cam.viewportToWorld(Vector2f(0.0f, 0.0f))
-                                val pointWorld = Matrix4f(cam.world).transform(p.xyzw()).xyz()
-                                val direction = (pointWorld - headCenter).normalize()
-
-                                if (tracking) {
-//                                    log.info("Starting spine from $headCenter to $pointWorld")
-                                    addSpine(headCenter, direction, volume, gaze.confidence, volume.viewerState.currentTimepoint)
-                                }
-                            }
-                        }
-
-//                        else -> {gaze-> }
-                    }
-
-                    log.info("Calibration routine done.")
+                    tracking = !tracking
                 }
+                hmd.addBehaviour("toggle_tracking", toggleTracking)
+                hmd.addKeyBinding("toggle_tracking", keybindingTracking)
 
-                // bind calibration start to menu key on controller
+                volume.visible = true
+                volume.runRecursive { it.visible = true }
+                playing = true
+                //val p = hmd.getPose(TrackedDeviceType.Controller).firstOrNull { it.name == "Controller-3" }?.position
 
-            }
-        }
-        hmd.addBehaviour("start_calibration", startCalibration)
-        hmd.addKeyBinding("start_calibration", keybindingCalibration)
+
+                while(true)
+                {
+                    val p = Vector3f(0f,0f,-1f)
+                    referenceTarget.position = p
+                    referenceTarget.visible = true
+                    val headCenter = cam.viewportToWorld(Vector2f(0.0f, 0.0f))
+                val pointWorld = Matrix4f(cam.world).transform(p.xyzw()).xyz()
+                val direction = (pointWorld - headCenter).normalize()
+//                    val direction = cam.headOrientation.transform(Vector3f(0.0f,0.0f,-1.0f))
+                    if (tracking) {
+//                                    log.info("Starting spine from $headCenter to $pointWorld")
+                        System.out.println("tracking!!!!!!!!!!")
+                        addSpine(headCenter, direction, volume,0.8f, volume.viewerState.currentTimepoint)
+                    }
+                }
+                //referenceTarget.visible = true
+                // Pupil has mm units, so we divide by 1000 here to get to scenery units
+
+
+            }       // bind calibration start to menu key on controller
+
     }
     fun addSpine(center: Vector3f, direction: Vector3f, volume: Volume, confidence: Float, timepoint: Int) {
         val cam = sciview.camera as? DetachedHeadCamera ?: return

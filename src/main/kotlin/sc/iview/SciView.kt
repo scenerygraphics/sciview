@@ -45,7 +45,9 @@ import graphics.scenery.backends.opengl.OpenGLRenderer
 import graphics.scenery.backends.vulkan.VulkanRenderer
 import graphics.scenery.controls.InputHandler
 import graphics.scenery.controls.OpenVRHMD
+import graphics.scenery.controls.TrackedStereoGlasses
 import graphics.scenery.controls.TrackerInput
+import graphics.scenery.numerics.Random
 import graphics.scenery.primitives.*
 import graphics.scenery.proteins.Protein
 import graphics.scenery.proteins.RibbonDiagram
@@ -106,6 +108,7 @@ import sc.iview.event.NodeActivatedEvent
 import sc.iview.event.NodeAddedEvent
 import sc.iview.event.NodeChangedEvent
 import sc.iview.event.NodeRemovedEvent
+import sc.iview.node.Line3D
 import sc.iview.process.MeshConverter
 import sc.iview.ui.CustomPropertyUI
 import sc.iview.ui.MainWindow
@@ -113,6 +116,7 @@ import sc.iview.ui.SwingMainWindow
 import sc.iview.ui.TaskManager
 import tpietzsch.example2.VolumeViewerOptions
 import java.awt.event.WindowListener
+import java.io.File
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
@@ -123,8 +127,12 @@ import java.util.function.Consumer
 import java.util.function.Function
 import java.util.function.Predicate
 import java.util.stream.Collectors
+import kotlin.collections.ArrayList
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.system.measureTimeMillis
+import org.joml.Vector4f
+import sc.iview.commands.demo.animation.ParticleDemo
 
 /**
  * Main SciView class.
@@ -714,14 +722,130 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     {
         val v = Volume.fromPath(source, hub)
         v.name = "volume"
-        v.position = Vector3f(0.0f, 1.0f, 0.0f)
+        v.spatial().position = Vector3f(0.0f, 1.0f, 0.0f)
         v.colormap = Colormap.get("jet")
-        v.scale = Vector3f(10.0f, 10.0f,30.0f)
+        v.spatial().scale = Vector3f(10.0f, 10.0f,30.0f)
         v.transferFunction = TransferFunction.ramp(0.05f, 0.8f)
         v.metadata["animating"] = true
         v.converterSetups.firstOrNull()?.setDisplayRange(0.0, 1500.0)
         v.visible = true
         addChild(v)
+    }
+
+    data class PointInTrack(
+            val t: Int,
+            val loc: Vector3f,
+            val cellId: Long,
+            val parentId: Long,
+            val nodeScore: Float,
+            val edgeScore: Float
+    )
+
+    data class Track(
+            val track: List<PointInTrack>,
+            val trackId: Int
+    )
+
+    @Throws(IOException::class)
+    fun openTrackFile(file: File)
+    {
+        val lines = file.readLines()
+        var track = ArrayList<PointInTrack>()
+        val tracks = ArrayList<Track>()
+        val separator = ","
+
+        var lastTrackId = -1
+        lines.drop(1).forEach { line ->
+            val tokens = line.split(separator)
+            val t = tokens[0].toInt()
+            val z = tokens[1].toFloat()  -2000f
+            val y = tokens[2].toFloat() -800f
+            val x = tokens[3].toFloat() -1300f
+            val cellId = tokens[4].toLong()
+            val parentId = tokens[5].toLong()
+            val trackId = tokens[6].toInt()
+            val nodeScore = tokens[7].toFloat()
+            val edgeScore = tokens[8].toFloat()/45.0f
+
+            val currentPointInTrack =  PointInTrack(
+                t,
+                Vector3f(x,y,z),
+                cellId,
+                parentId,
+                nodeScore,
+                edgeScore
+            )
+//            System.out.println(currentPointInTrack)
+            if(lastTrackId != trackId)
+            {
+//                Thread.sleep(2000)
+                lastTrackId = trackId
+//                System.out.println("trackId: "+trackId.toString())
+                val sortedTrack = track.sortedBy { it.t }
+                tracks.add(Track(sortedTrack, trackId))
+//                System.out.println(sortedTrack)
+
+                track.clear()
+            }
+
+            track.add(currentPointInTrack)
+
+        }
+        val timeCost = measureTimeMillis {
+            addTracks(tracks)
+        }
+        println("time: $timeCost")
+    }
+
+
+
+    fun addTracks(tracks: ArrayList<Track>)
+    {
+        val rng = Random(17)
+        for(track in tracks)
+        {
+            if(track.trackId > 10)
+            {
+//                continue
+            }
+//            Thread.sleep(2000)
+            System.out.println("add track: "+ track.trackId.toString() )
+//            System.out.println("track: " + track.track.toString())
+            val master = Cylinder(0.1f, 1.0f, 10)
+//            master.setMaterial (ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag"))
+            master.setMaterial(ShaderMaterial.fromClass(ParticleDemo::class.java))
+            master.ifMaterial{
+//                diffuse = Random.random3DVectorFromRange(0.0f, 1.0f)
+                ambient = Vector3f(0.1f, 0f, 0f)
+                diffuse = Vector3f(0.8f, 0.7f, 0.7f)
+                diffuse = Vector3f(0.05f, 0f, 0f)
+                metallic = 0.01f
+                roughness = 0.5f
+            }
+
+            val mInstanced = InstancedNode(master)
+            mInstanced.name = "TrackID-${track.trackId}"
+//            mInstanced.instancedProperties["ModelMatrix"] = { master.spatial().world }
+            mInstanced.instancedProperties["Color"] = { Vector4f(1.0f) }
+            addNode(mInstanced)
+
+
+
+            var cnt = 0
+            val a = rng.nextFloat()
+            val b = rng.nextFloat()
+            track.track.windowed(2,1).forEach { pair ->
+                cnt = cnt + 1
+                val element = mInstanced.addInstance()
+                element.name ="EdgeID-$cnt"
+                element.instancedProperties["Color"] =  {Vector4f( a,b,pair[0].edgeScore, 1.0f)}
+                element.spatial().orientBetweenPoints(Vector3f(pair[0].loc).mul(0.1f) , Vector3f(pair[1].loc).mul(0.1f) , rescale = true, reposition = true)
+                mInstanced.instances.add(element)
+
+            }
+
+        }
+
     }
 
 
@@ -1528,21 +1652,21 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         }
         renderer!!.pushMode = false
         // we need to force reloading the renderer as the HMD might require device or instance extensions
-//        if (renderer is VulkanRenderer && hmdAdded) {
-//            replaceRenderer((renderer as VulkanRenderer).javaClass.simpleName, true, true)
-//            (renderer as VulkanRenderer).toggleVR()
-//            while (!(renderer as VulkanRenderer).initialized /* || !getRenderer().getFirstImageReady()*/) {
-//                logger.debug("Waiting for renderer reinitialisation")
-//                try {
-//                    Thread.sleep(200)
-//                } catch (e: InterruptedException) {
-//                    e.printStackTrace()
-//                }
-//            }
-//        } else {
-//            renderer!!.toggleVR()
-//        }
-        renderer!!.toggleVR()
+        if (renderer is VulkanRenderer && hmdAdded) {
+            replaceRenderer((renderer as VulkanRenderer).javaClass.simpleName, true, true)
+            (renderer as VulkanRenderer).toggleVR()
+            while (!(renderer as VulkanRenderer).initialized /* || !getRenderer().getFirstImageReady()*/) {
+                logger.debug("Waiting for renderer reinitialisation")
+                try {
+                    Thread.sleep(200)
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
+                }
+            }
+        } else {
+            renderer!!.toggleVR()
+        }
+//        renderer!!.toggleVR()
     }
 
     /**
