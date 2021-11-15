@@ -54,9 +54,9 @@ import org.scijava.widget.NumberWidget
 import sc.iview.SciView
 import sc.iview.event.NodeChangedEvent
 import java.io.IOException
+import java.net.URL
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.stream.Collectors
 
 /**
  * A command for interactively editing a node's properties.
@@ -182,13 +182,15 @@ class Properties : InteractiveCommand() {
 
     @Parameter(label = "Transparent Background", callback = "updateNodeProperties", style = "group:Text")
     private var transparentBackground = false
-    private val renderingModeChoices = Arrays.asList(*Volume.RenderingMethod.values())
+    private val renderingModeChoices = Volume.RenderingMethod.values().toMutableList()
     var fieldsUpdating = true
     var sceneNodeChoices = ArrayList<String>()
     private var currentSceneNode: Node? = null
 
     @Parameter
     private lateinit var log: LogService
+
+    private var availableLUTs = LinkedHashMap<String, URL>()
 
     /**
      * Nothing happens here, as cancelling the dialog is not possible.
@@ -208,7 +210,7 @@ class Properties : InteractiveCommand() {
     protected fun initValues() {
         if (colormap == null) {
             try {
-                lutService.loadLUT(lutService.findLUTs()["Red.lut"])
+                lutService.loadLUT(availableLUTs["Red.lut"])
             } catch (ioe: IOException) {
                 System.err.println("IOException while loading Red.lut")
             }
@@ -309,6 +311,10 @@ class Properties : InteractiveCommand() {
     /** Updates command fields to match current scene node properties.  */
     @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
     fun updateCommandFields() {
+        if(availableLUTs.isEmpty()) {
+            availableLUTs.putAll(lutService.findLUTs().entries.sortedBy { it.key }.map { it.key to it.value })
+        }
+
         val node = currentSceneNode ?: return
 
         fieldsUpdating = true
@@ -346,22 +352,26 @@ class Properties : InteractiveCommand() {
         scaleZ = scale.z()
         if (node is Volume) {
             val renderingModeInput = info.getMutableInput("renderingMode", String::class.java)
-            val methods = Arrays.asList(*Volume.RenderingMethod.values()).stream().map { method: Volume.RenderingMethod -> method.toString() }.collect(Collectors.toList())
-            renderingModeInput.setChoices(methods)
-            renderingMode = renderingModeChoices[Arrays.asList(*Volume.RenderingMethod.values()).indexOf(node .renderingMethod)].toString()
+            val methods = Volume.RenderingMethod.values().map { method: Volume.RenderingMethod -> method.toString() }.toList()
+            renderingModeInput.choices = methods
+            renderingMode = renderingModeChoices[Volume.RenderingMethod.values().indexOf(node.renderingMethod)].toString()
             val lutNameItem = info.getMutableInput("colormapName", String::class.java)
-            lutNameItem.setChoices(lutService.findLUTs().keys.toMutableList())
+            lutNameItem.choices = availableLUTs.keys.toMutableList()
+            val cachedColormapName = node.metadata["sciview.colormap-name"] as? String
 
-            val timeMax = node.timepointCount - 1
+            if(cachedColormapName != null && availableLUTs[cachedColormapName] != null) {
+                colormapName = cachedColormapName
+            }
 
-            if(timeMax > 0) {
+            min = node.converterSetups[0].displayRangeMin.toInt()
+            max = node.converterSetups[0].displayRangeMax.toInt()
+
+            val maxTimepoint = node.timepointCount - 1
+            if(maxTimepoint > 0) {
                 timepoint = node.currentTimepoint
-                info.getMutableInput("timepoint", java.lang.Integer::class.java).minimumValue = java.lang.Integer.valueOf(0) as java.lang.Integer
-
-                info.getMutableInput("timepoint", java.lang.Integer::class.java).maximumValue = java.lang.Integer.valueOf(timeMax) as java.lang.Integer
-
-                min = node.converterSetups[0].displayRangeMin.toInt()
-                max = node.converterSetups[0].displayRangeMax.toInt()
+                val timepointInput = info.getMutableInput("timepoint", java.lang.Integer::class.java)
+                timepointInput.minimumValue = java.lang.Integer.valueOf(0) as java.lang.Integer
+                timepointInput.maximumValue = java.lang.Integer.valueOf(maxTimepoint) as java.lang.Integer
             } else {
                 maybeRemoveInput("timepoint", java.lang.Integer::class.java)
                 maybeRemoveInput("playPauseButton", Button::class.java)
@@ -438,14 +448,9 @@ class Properties : InteractiveCommand() {
         // update visibility
         node.visible = visible
 
-        // update rotation
-        node.rotation = Quaternionf().rotateXYZ(rotationPhi,  //
-                rotationTheta,  //
-                rotationPsi)
-
         // update colour
-        val cVector = Vector3f(colour!!.red / 255f,  //
-                colour!!.green / 255f,  //
+        val cVector = Vector3f(colour!!.red / 255f,
+                colour!!.green / 255f,
                 colour!!.blue / 255f)
         if (node is PointLight) {
             node.emissionColor = cVector
@@ -455,9 +460,11 @@ class Properties : InteractiveCommand() {
             }
         }
 
+        // update spatial properties
         node.ifSpatial {
             position = Vector3f(positionX, positionY, positionZ)
             scale = Vector3f(scaleX, scaleY, scaleZ)
+            rotation = Quaternionf().rotateXYZ(rotationPhi, rotationTheta, rotationPsi)
         }
         node.name = name
 
@@ -470,8 +477,9 @@ class Properties : InteractiveCommand() {
                 node.renderingMethod = Volume.RenderingMethod.values()[mode]
             }
             try {
-                val cm = lutService.loadLUT(lutService.findLUTs()[colormapName])
+                val cm = lutService.loadLUT(availableLUTs[colormapName])
                 node.colormap = fromColorTable(cm)
+                node.metadata["sciview.colormap-name"] = colormapName
                 log.info("Setting new colormap to $colormapName / $cm")
 
                 colormap = cm
