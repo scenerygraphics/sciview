@@ -68,27 +68,27 @@ import graphics.scenery.primitives.TextBoard
         menuRoot = "SciView",
         menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
             Menu(label = "Advanced", weight = MenuWeights.DEMO_ADVANCED),
-            Menu(label = "Utilize VR Controller for Tracking", weight = MenuWeights.DEMO_ADVANCED_EYETRACKING)])
-class ControllerTrackingDemo: Command{
+            Menu(label = "Test without VR and eyetracking", weight = MenuWeights.DEMO_ADVANCED_EYETRACKING)])
+class Test: Command{
     @Parameter
     private lateinit var sciview: SciView
 
     @Parameter
     private lateinit var log: LogService
 
-     lateinit var hmd: OpenVRHMD
+    lateinit var hmd: OpenVRHMD
     val referenceTarget = Icosphere(0.004f, 2)
     //val calibrationTarget = Icosphere(0.02f, 2)
-    //val TestTarget = Icosphere(0.04f, 2)
+    val TestTarget = Icosphere(0.1f, 2)
+
     val laser = Cylinder(0.005f, 0.2f, 10)
 
-    lateinit var TestTarget1:Icosphere
-    lateinit var TestTarget2:Icosphere
-    lateinit var TestTarget3:Icosphere
-    lateinit var TestTarget4:Icosphere
 
     lateinit var sessionId: String
     lateinit var sessionDirectory: Path
+    lateinit var point1:Icosphere
+    lateinit var point2:Icosphere
+
 
     val hedgehogs = Mesh()
 
@@ -106,7 +106,7 @@ class ControllerTrackingDemo: Command{
 
     @Volatile var tracking = false
     var playing = false
-    var direction = PlaybackDirection.Forward
+    var direction = PlaybackDirection.Backward
     var volumesPerSecond = 4
     var skipToNext = false
     var skipToPrevious = false
@@ -115,35 +115,12 @@ class ControllerTrackingDemo: Command{
     var volumeScaleFactor = 1.0f
 
     override fun run() {
-//        center position: (-1.217E-2  2.478E+0  3.981E+0)pointWord: ( 1.650E-1  2.277E+0  3.012E+0)
-//        sphere.origin: ( 1.500E+0 -3.000E-1 -3.050E-1)p2 position( 1.826E+0  3.938E-1 -6.069E+0)
-        TestTarget1= Icosphere(0.08f, 2)
-        TestTarget1.ifMaterial{ diffuse = Vector3f(0.5f, 0.3f, 0.8f)}
-        TestTarget1.spatial().position =  Vector3f(-0.1059f, 2.394f, 4.086f)//Vector3f(1.858f,1.7f,2.432f)//
-        TestTarget1.visible = true
-        sciview.addChild(TestTarget1)
-
-        TestTarget2= Icosphere(0.08f, 2)
-        TestTarget2.ifMaterial{ diffuse = Vector3f(0.5f, 0.3f, 0.8f)}
-        TestTarget2.spatial().position =  Vector3f(-0.0318f, 2.438f, 4.084f)//Vector3f(1.858f,1.7f,2.432f)//
-        TestTarget2.visible = true
-        sciview.addChild(TestTarget2)
-
-//        TestTarget3= Icosphere(0.08f, 2)
-//        TestTarget3.ifMaterial{ diffuse = Vector3f(0.5f, 0.3f, 0.8f)}
-//        TestTarget3.spatial().position =  Vector3f(1.5f, -0.3f, -0.3050f)//Vector3f(1.858f,1.7f,2.432f)//
-//        TestTarget3.visible = true
-//        sciview.addChild(TestTarget3)
-//
-        TestTarget4= Icosphere(0.8f, 2)
-        TestTarget4.ifMaterial{ diffuse = Vector3f(0.5f, 0.3f, 0.8f)}
-        TestTarget4.spatial().position =  Vector3f(1.826f, 0.3938f, -6.069f)//( 1.826E+0  3.938E-1 -6.069E+0)
-        TestTarget4.visible = true
-        sciview.addChild(TestTarget4)
+        sciview.addChild(TestTarget)
+        TestTarget.visible = false
 
 
-        sciview.toggleVRRendering()
-        hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
+//        sciview.toggleVRRendering()
+//        hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
         sessionId = "BionicTracking-generated-${SystemHelpers.formatDateTime()}"
         sessionDirectory = Files.createDirectory(Paths.get(System.getProperty("user.home"), "Desktop", sessionId))
 
@@ -155,17 +132,9 @@ class ControllerTrackingDemo: Command{
         }
         sciview.camera!!.addChild(referenceTarget)
 
-//        calibrationTarget.visible = false
-//        calibrationTarget.material {
-//            roughness = 1.0f
-//            metallic = 0.0f
-//            diffuse = Vector3f(1.0f, 1.0f, 1.0f)}
-//        sciview.camera!!.addChild(calibrationTarget)
-
         laser.visible = false
         laser.ifMaterial{diffuse = Vector3f(1.0f, 1.0f, 1.0f)}
         sciview.addChild(laser)
-
 
         val shell = Box(Vector3f(20.0f, 20.0f, 20.0f), insideNormals = true)
         shell.ifMaterial{
@@ -176,7 +145,21 @@ class ControllerTrackingDemo: Command{
         sciview.addChild(shell)
 
         volume = sciview.find("volume") as Volume
-        //volume.visible = false
+        volume.visible = false
+
+        point1 = Icosphere(0.1f, 2)
+        point1.spatial().position = Vector3f(1.858f,-0.365f,2.432f)
+        point1.ifMaterial{ diffuse = Vector3f(0.5f, 0.3f, 0.8f)}
+        sciview.addChild(point1)
+
+        point2 = Icosphere(0.1f, 2)
+        point2.spatial().position = Vector3f(1.858f, -0.365f, -10.39f)
+        point2.ifMaterial {diffuse = Vector3f(0.3f, 0.8f, 0.3f)}
+        sciview.addChild(point2)
+
+        val connector = Cylinder.betweenPoints(point1.position, point2.position)
+        connector.ifMaterial {diffuse = Vector3f(1.0f, 1.0f, 1.0f)}
+        sciview.addChild(connector)
 
         val bb = BoundingGrid()
         bb.node = volume
@@ -200,16 +183,7 @@ class ControllerTrackingDemo: Command{
         val lights = Light.createLightTetrahedron<PointLight>(Vector3f(0.0f, 0.0f, 0.0f), spread = 5.0f, radius = 15.0f, intensity = 5.0f)
         lights.forEach { sciview.addChild(it) }
 
-        thread {
-            log.info("Adding onDeviceConnect handlers")
-            hmd.events.onDeviceConnect.add { hmd, device, timestamp ->
-                log.info("onDeviceConnect called, cam=${sciview.camera}")
-                if(device.type == TrackedDeviceType.Controller) {
-                    log.info("Got device ${device.name} at $timestamp")
-                    device.model?.let { hmd.attachToNode(device, it, sciview.camera) }
-                }
-            }
-        }
+
         thread{
             inputSetup()
         }
@@ -283,205 +257,41 @@ class ControllerTrackingDemo: Command{
     fun inputSetup()
     {
         val cam = sciview.camera ?: throw IllegalStateException("Could not find camera")
-
-        sciview.sceneryInputHandler?.let { handler ->
-            hashMapOf(
-                    "move_forward_fast" to "K",
-                    "move_back_fast" to "J",
-                    "move_left_fast" to "H",
-                    "move_right_fast" to "L").forEach { (name, key) ->
-                handler.getBehaviour(name)?.let { b ->
-                    hmd.addBehaviour(name, b)
-                    hmd.addKeyBinding(name, key)
-                }
-            }
-        }
-
-        val toggleHedgehog = ClickBehaviour { _, _ ->
-            val current = HedgehogVisibility.values().indexOf(hedgehogVisibility)
-            hedgehogVisibility = HedgehogVisibility.values().get((current + 1) % 3)
-
-            when(hedgehogVisibility) {
-                HedgehogVisibility.Hidden -> {
-                    hedgehogs.visible = false
-                    hedgehogs.runRecursive { it.visible = false }
-                    cam.showMessage("Hedgehogs hidden",distance = 1.2f, size = 0.2f)
-                }
-
-                HedgehogVisibility.PerTimePoint -> {
-                    hedgehogs.visible = true
-                    cam.showMessage("Hedgehogs shown per timepoint",distance = 1.2f, size = 0.2f)
-                }
-
-                HedgehogVisibility.Visible -> {
-                    hedgehogs.visible = true
-                    cam.showMessage("Hedgehogs visible",distance = 1.2f, size = 0.2f)
-                }
-            }
-        }
-
-        val nextTimepoint = ClickBehaviour { _, _ ->
-            skipToNext = true
-        }
-
-        val prevTimepoint = ClickBehaviour { _, _ ->
-            skipToPrevious = true
-        }
-
-        val fasterOrScale = ClickBehaviour { _, _ ->
-            if(playing) {
-                volumesPerSecond = maxOf(minOf(volumesPerSecond+1, 20), 1)
-                cam.showMessage("Speed: $volumesPerSecond vol/s",distance = 1.2f, size = 0.2f)
-            } else {
-                volumeScaleFactor = minOf(volumeScaleFactor * 1.2f, 3.0f)
-                volume.scale =Vector3f(1.0f) .mul(volumeScaleFactor)
-            }
-        }
-
-        val slowerOrScale = ClickBehaviour { _, _ ->
-            if(playing) {
-                volumesPerSecond = maxOf(minOf(volumesPerSecond-1, 20), 1)
-                cam.showMessage("Speed: $volumesPerSecond vol/s",distance = 1.2f, size = 0.2f)
-            } else {
-                volumeScaleFactor = maxOf(volumeScaleFactor / 1.2f, 0.1f)
-                volume.scale = Vector3f(1.0f) .mul(volumeScaleFactor)
-            }
-        }
-
-        val playPause = ClickBehaviour { _, _ ->
-            playing = !playing
-            if(playing) {
-                cam.showMessage("Playing",distance = 1.2f, size = 0.2f)
-            } else {
-                cam.showMessage("Paused",distance = 1.2f, size = 0.2f)
-            }
-        }
-
-        val move = ControllerDrag(TrackerRole.LeftHand, hmd) { volume }
-
-        val deleteLastHedgehog = ConfirmableClickBehaviour(
-                armedAction = { timeout ->
-                    cam.showMessage("Deleting last track, press again to confirm.",distance = 1.2f, size = 0.2f,
-                            messageColor = Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
-                            backgroundColor = Vector4f(1.0f, 0.2f, 0.2f, 1.0f),
-                            duration = timeout.toInt())
-
-                },
-                confirmAction = {
-                    hedgehogs.children.removeAt(hedgehogs.children.size-1)
-                    volume.children.last { it.name.startsWith("Track-") }?.let { lastTrack ->
-                        volume.removeChild(lastTrack)
-                    }
-
-                    val hedgehogId = hedgehogIds.get()
-                    val hedgehogFile = sessionDirectory.resolve("Hedgehog_${hedgehogId}_${SystemHelpers.formatDateTime()}.csv").toFile()
-                    val hedgehogFileWriter = BufferedWriter(FileWriter(hedgehogFile, true))
-                    hedgehogFileWriter.newLine()
-                    hedgehogFileWriter.newLine()
-                    hedgehogFileWriter.write("# WARNING: TRACK $hedgehogId IS INVALID\n")
-                    hedgehogFileWriter.close()
-
-                    cam.showMessage("Last track deleted.",distance = 1.2f, size = 0.2f,
-                            messageColor = Vector4f(1.0f, 0.2f, 0.2f, 1.0f),
-                            backgroundColor = Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
-                            duration = 1000)
-                })
-
-        hmd.addBehaviour("playback_direction", ClickBehaviour { _, _ ->
-            direction = if(direction == PlaybackDirection.Forward) {
-                PlaybackDirection.Backward
-            } else {
-                PlaybackDirection.Forward
-            }
-            cam.showMessage("Playing: ${direction}", distance = 1.2f, size =  0.2f, duration = 1000)
-        })
-
-        val cellDivision = ClickBehaviour { _, _ ->
-            cam.showMessage("Adding cell division", distance = 1.2f, size =  0.2f, duration = 1000)
-            //dumpHedgehog()
-            //addHedgehog()
-        }
-
-        hmd.addBehaviour("skip_to_next", nextTimepoint)
-        hmd.addBehaviour("skip_to_prev", prevTimepoint)
-        hmd.addBehaviour("faster_or_scale", fasterOrScale)
-        hmd.addBehaviour("slower_or_scale", slowerOrScale)
-        hmd.addBehaviour("play_pause", playPause)
-        hmd.addBehaviour("toggle_hedgehog", toggleHedgehog)
-        hmd.addBehaviour("trigger_move", move)
-        hmd.addBehaviour("delete_hedgehog", deleteLastHedgehog)
-        hmd.addBehaviour("cell_division", cellDivision)
-
-        hmd.addKeyBinding("toggle_hedgehog", "X")
-        hmd.addKeyBinding("delete_hedgehog", "Y")
-        hmd.addKeyBinding("skip_to_next", "D")
-        hmd.addKeyBinding("skip_to_prev", "A")
-        hmd.addKeyBinding("faster_or_scale", "W")
-        hmd.addKeyBinding("slower_or_scale", "S")
-        hmd.addKeyBinding("play_pause", "M")
-        hmd.addKeyBinding("playback_direction", "N")
-        hmd.addKeyBinding("cell_division", "T")
-
-        hmd.allowRepeats += OpenVRHMD.OpenVRButton.Trigger to TrackerRole.LeftHand
-
         setupControllerforTracking()
 
     }
 
     private fun setupControllerforTracking( keybindingTracking: String = "U") {
-            thread {
-                val cam = sciview.camera as? DetachedHeadCamera ?: return@thread
-                val toggleTracking = ClickBehaviour { _, _ ->
-                    if (tracking) {
-                        referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
-                        cam.showMessage("Tracking deactivated.",distance = 1.2f, size = 0.2f)
-                        dumpHedgehog()
-                    } else {
-                        addHedgehog()
-                        referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
-                        cam.showMessage("Tracking active.",distance = 1.2f, size = 0.2f)
-                    }
-                    tracking = !tracking
-                }
-                hmd.addBehaviour("toggle_tracking", toggleTracking)
-                hmd.addKeyBinding("toggle_tracking", keybindingTracking)
+        thread {
+            val cam = sciview.camera as? DetachedHeadCamera ?: return@thread
+            volume.visible = true
+            volume.runRecursive { it.visible = true }
+            playing = true
+            tracking = true
+            //val p = hmd.getPose(TrackedDeviceType.Controller).firstOrNull { it.name == "Controller-3" }?.position
 
-                volume.visible = true
-                volume.runRecursive { it.visible = true }
-                playing = true
-                //val p = hmd.getPose(TrackedDeviceType.Controller).firstOrNull { it.name == "Controller-3" }?.position
+            while(true)
+            {
+                val p = Vector3f(0f,0f,-1f)
+                referenceTarget.position = p
+                referenceTarget.visible = true
+                val headCenter = point1.position//cam.viewportToWorld(Vector2f(0.0f, 0.0f))
+                val pointWorld = point2.position///Matrix4f(cam.world).transform(p.xyzw()).xyz()
 
+                val direction = (pointWorld - headCenter).normalize()
 
-                while(true)
-                {
-                    val p = Vector3f(0.1f,0f,-2.0f)
-                    referenceTarget.spatial().position = p
-                    referenceTarget.visible = true
-                    //val headCenter = cam.spatial().viewportToWorld(Vector2f(0.0f, 0.0f))
-                    val headCenter = Matrix4f(cam.spatial().world).transform(Vector3f(0.0f,0f,-1f).xyzw()).xyz()
-                    val pointWorld = Matrix4f(cam.spatial().world).transform(p.xyzw()).xyz()
-                    laser.spatial().orientBetweenPoints(headCenter,pointWorld)
-                    laser.visible = true
-
-
-//                    TestTarget.visible = true
-                    TestTarget1.ifSpatial {  position = headCenter}
-                    TestTarget2.ifSpatial {  position = pointWorld}
-
-//                    print("center position: " + headCenter.toString())
-//                    println("pointWord: " + pointWorld.toString())
-                    val direction = (pointWorld - headCenter).normalize()
-//                    val direction = cam.headOrientation.transform(Vector3f(0.0f,0.0f,-1.0f))
-                    if (tracking) {
+                if (tracking) {
 //                                    log.info("Starting spine from $headCenter to $pointWorld")
-                        //System.out.println("tracking!!!!!!!!!!")
-                        addSpine(headCenter, direction, volume,0.8f, volume.viewerState.currentTimepoint)
-                    }
+                    //System.out.println("tracking!!!!!!!!!!")
+//                    println("direction:"+ direction.toString())
+                    addSpine(headCenter, direction, volume,0.8f, volume.viewerState.currentTimepoint)
                 }
+            }
+            //referenceTarget.visible = true
+            // Pupil has mm units, so we divide by 1000 here to get to scenery units
 
 
-
-            }       // bind calibration start to menu key on controller
+        }       // bind calibration start to menu key on controller
 
     }
     fun addSpine(center: Vector3f, direction: Vector3f, volume: Volume, confidence: Float, timepoint: Int) {
@@ -489,29 +299,38 @@ class ControllerTrackingDemo: Command{
         val sphere = volume.boundingBox?.getBoundingSphere() ?: return
 
         val sphereDirection = sphere.origin.minus(center)
+
         val sphereDist = Math.sqrt(sphereDirection.x * sphereDirection.x + sphereDirection.y * sphereDirection.y + sphereDirection.z * sphereDirection.z) - sphere.radius
 
-        val p1 = center
+        val p1 =  center
         val temp = direction.mul(sphereDist + 2.0f * sphere.radius)
+
+
+
         val p2 = Vector3f(center).add(temp)
 
-//        print("sphere.origin: " + sphere.origin.toString())
-//        println("p2 position" + p2.toString())
 
-        val spine = (hedgehogs.children.last() as InstancedNode).addInstance()
-        spine.spatial().orientBetweenPoints(p1, p2, true, true)
-        spine.visible = true
+//        print("center position: " + p1.toString())
+//        print("p2 position" + p2.toString())
+
+        TestTarget.visible = true
+        TestTarget.ifSpatial { position = p2}
+
+
+//        val spine = (hedgehogs.children.last() as InstancedNode).addInstance()
+//        spine.spatial().orientBetweenPoints(p1, p2, true, true)
+//        spine.visible = true
 
         val intersection = volume.intersectAABB(p1, (p2 - p1).normalize())
-
+        System.out.println(intersection);
         if(intersection is MaybeIntersects.Intersection) {
-//            System.out.println(intersection);
             // get local entry and exit coordinates, and convert to UV coords
             val localEntry = (intersection.relativeEntry) //.add(Vector3f(1.0f)) ) .mul (1.0f / 2.0f)
             val localExit = (intersection.relativeExit) //.add (Vector3f(1.0f)) ).mul  (1.0f / 2.0f)
-            val (samples, localDirection) = volume.sampleRay(localEntry, localExit) ?: null to null
 //            System.out.println("localEntry:"+ localEntry.toString())
 //            System.out.println("localExit:" + localExit.toString())
+
+            val (samples, localDirection) = volume.sampleRay(localEntry, localExit) ?: null to null
 
             if (samples != null && localDirection != null) {
                 val metadata = SpineMetadata(
@@ -528,11 +347,15 @@ class ControllerTrackingDemo: Command{
                         confidence,
                         samples.map { it ?: 0.0f }
                 )
-                val count = samples.filterNotNull().count { it > 0.02f }
+                val count = samples.filterNotNull().count { it > 0.2f }
+                if(count >0 )
+                {
+                    println("count of samples: "+ count.toString())
+                }
 
-                spine.metadata["spine"] = metadata
-                spine.instancedProperties["ModelMatrix"] = { spine.spatial().world }
-                spine.instancedProperties["Metadata"] = { Vector4f(confidence, timepoint.toFloat()/volume.timepointCount, count.toFloat(), 0.0f) }
+//                spine.metadata["spine"] = metadata
+//                spine.instancedProperties["ModelMatrix"] = { spine.spatial().world }
+//                spine.instancedProperties["Metadata"] = { Vector4f(confidence, timepoint.toFloat()/volume.timepointCount, count.toFloat(), 0.0f) }
             }
         }
     }
