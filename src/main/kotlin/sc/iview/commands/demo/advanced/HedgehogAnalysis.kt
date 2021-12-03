@@ -114,6 +114,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		val startingThreshold = 0.02f
 		val localMaxThreshold = 0.01f
 		val zscoreThreshold = 2.0f
+		val removeTooFarThreshold = 5.0f
 
 		if(timepoints.isEmpty()) {
 			return null
@@ -166,8 +167,8 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		System.out.println("initial:"+initial)
 		var current = initial
 		var shortestPath = candidates.drop(1).mapIndexedNotNull { time, vs ->
-//            System.out.println(time)
-
+//            System.out.println("time: ${time}")
+//			println("vs: ${vs}")
 			val distances = vs
 					.filter { it.value > localMaxThreshold }
 					.map { vertex ->
@@ -176,11 +177,13 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 						vertex to distance
 					}
 					.sortedBy { it.second }
-//			logger.info("distances - ${distances}")
-//			logger.info("Minimum distance for t=$time d=${distances.firstOrNull()?.second} a=${distances.firstOrNull()?.first?.index} ")
-
+//			if(distances.firstOrNull()?.second != null && distances.firstOrNull()?.second!! > 0)
+//			{
+//				logger.info("Minimum distance for t=$time d=${distances.firstOrNull()?.second} a=${distances.firstOrNull()?.first?.index} ")
+//			}
+//
 			val closest = distances.firstOrNull()?.first
-			if(closest != null) {
+			if(closest != null && distances.firstOrNull()?.second!! >0) {
 				current.next = closest
 				closest.previous = current
 				current = closest
@@ -190,32 +193,36 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 			}
 		}.toMutableList()
 
-
-
-		var check = shortestPath
-
-
 		var avgPathLength = shortestPath.map { it.distance() }.average().toFloat()
 		var stdDevPathLength = shortestPath.map { it.distance() }.stddev().toFloat()
-		logger.info("Average path length=$avgPathLength, stddev=$stdDevPathLength")
+		//logger.info("Average path length=$avgPathLength, stddev=$stdDevPathLength")
 
 		fun zScore(value: Float, m: Float, sd: Float) = ((value - m)/sd)
 		val beforeCount = shortestPath.size
 		System.out.println("before short path:"+ shortestPath.size)
 
-		while (shortestPath.any { it.distance() >= 2.0f * avgPathLength }) {
-			shortestPath.filter { it.distance() >= 2.0f * avgPathLength }.forEach { it.drop() }
-			shortestPath = shortestPath.filter { it.distance() < 2.0f * avgPathLength }.toMutableList()
-			avgPathLength = shortestPath.map { it.distance() }.average().toFloat()
-			stdDevPathLength = shortestPath.map { it.distance() }.stddev().toFloat()
-		}
+		while (shortestPath.any { it.distance() >= removeTooFarThreshold * avgPathLength }) {
+			shortestPath = shortestPath.filter { it.distance() < removeTooFarThreshold * avgPathLength }.toMutableList()
+			shortestPath.windowed(3, 1, partialWindows = true).forEach {
+				it.getOrNull(0)?.next = it.getOrNull(1)
+				it.getOrNull(1)?.previous = it.getOrNull(0)
+				it.getOrNull(1)?.next = it.getOrNull(2)
+				it.getOrNull(2)?.previous = it.getOrNull(1)
+			}
 
-		shortestPath.windowed(3, 1, partialWindows = true).forEach {
-			it.getOrNull(0)?.next = it.getOrNull(1)
-			it.getOrNull(1)?.previous = it.getOrNull(0)
-			it.getOrNull(1)?.next = it.getOrNull(2)
-			it.getOrNull(2)?.previous = it.getOrNull(1)
+//			println("check which one is removed")
+//			shortestPath.forEach {
+//				if(it.distance() >= removeTooFarThreshold * avgPathLength)
+//				{
+//					println("current index= ${it.index}, distance = ${it.distance()}, next index = ${it.next?.index}"  )
+//				}
+//			}
 		}
+//
+		avgPathLength = shortestPath.map { it.distance() }.average().toFloat()
+		stdDevPathLength = shortestPath.map { it.distance() }.stddev().toFloat()
+
+
 		var remaining = shortestPath.count { zScore(it.distance(), avgPathLength, stdDevPathLength) > zscoreThreshold }
 //		logger.info("Iterating: ${shortestPath.size} vertices remaining, with $remaining failing z-score criterion")
 		while(remaining > 0) {
@@ -228,8 +235,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 
 			shortestPath = shortestPath.filterIndexed { index, _ -> index !in outliers }.toMutableList()
 
-//			logger.info("Average path length=$avgPathLength, stddev=$stdDevPathLength")
-
+			//logger.info("Average path length=$avgPathLength, stddev=$stdDevPathLength")
 
 			remaining = shortestPath.count { zScore(it.distance(), avgPathLength, stdDevPathLength) > zscoreThreshold }
 
@@ -239,9 +245,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 				it.getOrNull(1)?.next = it.getOrNull(2)
 				it.getOrNull(2)?.previous = it.getOrNull(1)
 			}
-//            avgPathLength = shortestPath.map { it.distance() }.average().toFloat()
-//            stdDevPathLength = shortestPath.map { it.distance() }.stddev().toFloat()
-			logger.info("Iterating: ${shortestPath.size} vertices remaining, with $remaining failing z-score criterion")
+			//logger.info("Iterating: ${shortestPath.size} vertices remaining, with $remaining failing z-score criterion")
 		}
 
 		val afterCount = shortestPath.size
@@ -400,7 +404,7 @@ fun main(args: Array<String>) {
 //        return
 //    }
 
-	val file = File("C:\\Users\\lanru\\Desktop\\BionicTracking-Pdu_H2BeGFP_CAAXmCherry_0123_20130312_192018.corrected-histone-2021-08-10 16.17.40\\Hedgehog_1_2021-08-10 16.21.35.csv")
+	val file = File("C:\\Users\\lanru\\Desktop\\BionicTracking-generated-2021-11-29 19.37.43\\Hedgehog_1_2021-11-29 19.38.32.csv")
 //    val analysis = HedgehogAnalysis.fromIncompleteCSV(file)
 	val analysis = HedgehogAnalysis.fromCSV(file)
 	val results = analysis.run()

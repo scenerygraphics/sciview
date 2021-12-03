@@ -68,7 +68,7 @@ import graphics.scenery.primitives.TextBoard
         menuRoot = "SciView",
         menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
             Menu(label = "Advanced", weight = MenuWeights.DEMO_ADVANCED),
-            Menu(label = "Utilize Eye Tracking", weight = MenuWeights.DEMO_ADVANCED_EYETRACKING)])
+            Menu(label = "Utilize Eye Tracker for Cell Tracking", weight = MenuWeights.DEMO_ADVANCED_EYETRACKING)])
 class EyeTrackingDemo: Command{
     @Parameter
     private lateinit var sciview: SciView

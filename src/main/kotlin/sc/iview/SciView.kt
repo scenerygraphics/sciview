@@ -722,9 +722,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     {
         val v = Volume.fromPath(source, hub)
         v.name = "volume"
-        v.spatial().position = Vector3f(0.0f, 5.0f, 0.0f)
+        v.spatial().position = Vector3f(-3.0f, 10.0f, 0.0f)
         v.colormap = Colormap.get("jet")
-        v.spatial().scale = Vector3f(10.0f, 10.0f,30.0f)
+        v.spatial().scale = Vector3f(15.0f, 15.0f,45.0f)
         v.transferFunction = TransferFunction.ramp(0.05f, 0.8f)
         v.metadata["animating"] = true
         v.converterSetups.firstOrNull()?.setDisplayRange(0.0, 1500.0)
@@ -775,29 +775,21 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                 nodeScore,
                 edgeScore
             )
-//            System.out.println(currentPointInTrack)
             if(lastTrackId != trackId)
             {
-//                Thread.sleep(2000)
                 lastTrackId = trackId
-//                System.out.println("trackId: "+trackId.toString())
                 val sortedTrack = track.sortedBy { it.t }
                 tracks.add(Track(sortedTrack, trackId))
-//                System.out.println(sortedTrack)
 
                 track.clear()
             }
-
             track.add(currentPointInTrack)
-
         }
         val timeCost = measureTimeMillis {
             addTracks(tracks)
         }
         println("time: $timeCost")
     }
-
-
 
     fun addTracks(tracks: ArrayList<Track>)
     {
@@ -806,18 +798,14 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         {
             if(track.trackId > 10)
             {
-//                continue
+                continue
             }
-//            Thread.sleep(2000)
             System.out.println("add track: "+ track.trackId.toString() )
-//            System.out.println("track: " + track.track.toString())
             val master = Cylinder(0.1f, 1.0f, 10)
 //            master.setMaterial (ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag"))
             master.setMaterial(ShaderMaterial.fromClass(ParticleDemo::class.java))
             master.ifMaterial{
-//                diffuse = Random.random3DVectorFromRange(0.0f, 1.0f)
                 ambient = Vector3f(0.1f, 0f, 0f)
-                diffuse = Vector3f(0.8f, 0.7f, 0.7f)
                 diffuse = Vector3f(0.05f, 0f, 0f)
                 metallic = 0.01f
                 roughness = 0.5f
@@ -825,11 +813,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
             val mInstanced = InstancedNode(master)
             mInstanced.name = "TrackID-${track.trackId}"
-//            mInstanced.instancedProperties["ModelMatrix"] = { master.spatial().world }
             mInstanced.instancedProperties["Color"] = { Vector4f(1.0f) }
             addNode(mInstanced)
-
-
 
             var cnt = 0
             val a = rng.nextFloat()
@@ -840,7 +825,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                 element.name ="EdgeID-$cnt"
                 element.instancedProperties["Color"] =  {Vector4f( a,b,pair[0].edgeScore, 1.0f)}
                 element.spatial().orientBetweenPoints(Vector3f(pair[0].loc).mul(0.1f) , Vector3f(pair[1].loc).mul(0.1f) , rescale = true, reposition = true)
-                mInstanced.instances.add(element)
+                //mInstanced.instances.add(element)
 
             }
 

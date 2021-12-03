@@ -63,12 +63,13 @@ import org.scijava.log.LogService
 import graphics.scenery.attribute.material.Material
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
+import sc.iview.commands.demo.animation.ParticleDemo
 
 @Plugin(type = Command::class,
         menuRoot = "SciView",
         menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
             Menu(label = "Advanced", weight = MenuWeights.DEMO_ADVANCED),
-            Menu(label = "Test without VR and eyetracking", weight = MenuWeights.DEMO_ADVANCED_EYETRACKING)])
+            Menu(label = "Test without VR and Eye Tracker", weight = MenuWeights.DEMO_ADVANCED_EYETRACKING)])
 class Test: Command{
     @Parameter
     private lateinit var sciview: SciView
@@ -157,9 +158,24 @@ class Test: Command{
         point2.ifMaterial {diffuse = Vector3f(0.3f, 0.8f, 0.3f)}
         sciview.addChild(point2)
 
-        val connector = Cylinder.betweenPoints(point1.position, point2.position)
-        connector.ifMaterial {diffuse = Vector3f(1.0f, 1.0f, 1.0f)}
-        sciview.addChild(connector)
+        var ccc= 0;
+        while(true)
+        {
+            ccc = ccc + 1
+            if(ccc == 1000)
+            {
+                break
+            }
+            var w = ccc*0.01f
+            point1.position = point1.position.add(Vector3f(w,w,w))
+            point2.position = point2.position.add(Vector3f(w,w,w))
+            val connector = Cylinder(0.1f, 1.0f, 16)
+            connector.spatial().orientBetweenPoints(point1.position, point2.position,true,true)
+//        val connector = Cylinder.betweenPoints(point1.position, point2.position)
+            connector.ifMaterial {diffuse = Vector3f(1.0f, 1.0f, 1.0f)}
+            sciview.addChild(connector)
+
+        }
 
         val bb = BoundingGrid()
         bb.node = volume
@@ -270,7 +286,7 @@ class Test: Command{
             tracking = true
             //val p = hmd.getPose(TrackedDeviceType.Controller).firstOrNull { it.name == "Controller-3" }?.position
 
-            while(true)
+            if(true)
             {
                 val p = Vector3f(0f,0f,-1f)
                 referenceTarget.position = p
@@ -285,6 +301,7 @@ class Test: Command{
                     //System.out.println("tracking!!!!!!!!!!")
 //                    println("direction:"+ direction.toString())
                     addSpine(headCenter, direction, volume,0.8f, volume.viewerState.currentTimepoint)
+                    showTrack()
                 }
             }
             //referenceTarget.visible = true
@@ -294,6 +311,49 @@ class Test: Command{
         }       // bind calibration start to menu key on controller
 
     }
+
+    private fun showTrack()
+    {
+        val file = File("C:\\Users\\lanru\\Desktop\\BionicTracking-generated-2021-11-30 14.09.43\\Hedgehog_1_2021-11-30 14.10.21.csv")
+        val analysis = HedgehogAnalysis.fromCSVWithMatrix(file,volume.world,Vector3f(volume.getDimensions()))
+        val track = analysis.run()
+
+        val master = Cylinder(0.1f, 1.0f, 10)
+            master.setMaterial (ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag"))
+
+        master.ifMaterial{
+            ambient = Vector3f(0.1f, 0f, 0f)
+            diffuse = Random.random3DVectorFromRange(0.2f, 0.8f)
+            metallic = 0.01f
+            roughness = 0.5f
+        }
+
+        val mInstanced = InstancedNode(master)
+        sciview.addNode(mInstanced)
+
+        val volumeDimensions = volume.getDimensions()
+
+        if(track == null)
+        {
+            return
+        }
+        track.points.windowed(2, 1).forEach { pair ->
+
+            val element = mInstanced.addInstance()
+            val p0 = Vector3f(pair[0].first).mul(Vector3f(volumeDimensions))//direct product
+            val p1 = Vector3f(pair[1].first).mul(Vector3f(volumeDimensions))
+            val p0w = Matrix4f(volume.spatial().world).transform(p0.xyzw()).xyz()
+            val p1w = Matrix4f(volume.spatial().world).transform(p1.xyzw()).xyz()
+            element.spatial().orientBetweenPoints(p0w,p1w, rescale = true, reposition = true)
+            mInstanced.instances.add(element)
+
+//            val pp = Icosphere(0.1f, 1)
+//            pp.spatial().position = p0w
+//            pp.material().diffuse = Vector3f(0.5f, 0.3f, 0.8f)
+//            sciview.addChild(pp)
+        }
+    }
+
     fun addSpine(center: Vector3f, direction: Vector3f, volume: Volume, confidence: Float, timepoint: Int) {
         val cam = sciview.camera as? DetachedHeadCamera ?: return
         val sphere = volume.boundingBox?.getBoundingSphere() ?: return
