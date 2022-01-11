@@ -115,9 +115,9 @@ public class ShowSegmentationDemo implements Command {
 
             // Make a random color and assign it
             Vector3f c = new Vector3f(rng.nextFloat(), rng.nextFloat(), rng.nextFloat());
-            isoSurfaceMesh.getMaterial().setDiffuse(c);
-            isoSurfaceMesh.getMaterial().setAmbient(c);
-            isoSurfaceMesh.getMaterial().setSpecular(c);
+            isoSurfaceMesh.material().setDiffuse(c);
+            isoSurfaceMesh.material().setAmbient(c);
+            isoSurfaceMesh.material().setSpecular(c);
 
             // Make the segmentation mesh a child of the parent
             v.addChild(isoSurfaceMesh);

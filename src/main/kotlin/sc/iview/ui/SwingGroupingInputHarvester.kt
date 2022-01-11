@@ -39,6 +39,7 @@ import org.scijava.plugin.Plugin
 import org.scijava.ui.swing.widget.SwingInputHarvester
 import org.scijava.ui.swing.widget.SwingInputPanel
 import org.scijava.widget.*
+import sc.iview.commands.edit.Properties
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import java.util.*
@@ -137,7 +138,12 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
 
             for (item in group.value) {
                 val model = addInput(panel, module, item)
-                if (model != null) models.add(model)
+                if (model != null) {
+                    log.info("Adding input ${item.name}/${item.label}")
+                    models.add(model)
+                } else {
+                    log.error("Model for ${item.name}/${item.label} is null!")
+                }
             }
         }
 
@@ -151,26 +157,37 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
     // -- Helper methods --
     @Throws(ModuleException::class)
     private fun <T, P, W> addInput(inputPanel: InputPanel<P, W>,
-                                   module: Module, item: ModuleItem<T>): WidgetModel? {
+                                   m: Module, item: ModuleItem<T>): WidgetModel? {
+        val module = if(m is Properties) {
+            m.getCustomModuleForModuleItem(item) ?: m
+        } else {
+            m
+        }
+
         val name = item.name
         if(item.label.contains("[") && item.label.contains("]")) {
             item.label = item.label.substringAfterLast("]")
         }
         val resolved = module.isInputResolved(name)
-        if (resolved) return null // skip resolved inputs
+        if (resolved && module == m) {
+            log.warn("Input ${item.name} is resolved, skipping")
+            return null
+        } // skip resolved inputs
         val type = item.type
         val model = widgetService.createModel(inputPanel, module, item, getObjects(type))
-        val widgetType: Class<W> = inputPanel.getWidgetComponentType()
+        val widgetType = inputPanel.widgetComponentType
         val widget = widgetService.create(model)
         if (widget == null) {
-            log.debug("No widget found for input: " + model.item.name)
+            log.warn("No widget found for input: " + model.item.name)
         }
         if (widget != null && widget.componentType == widgetType) {
-            @Suppress("UNCHECKED_CAST") val typedWidget = widget as InputWidget<*, W>
+            @Suppress("UNCHECKED_CAST")
+            val typedWidget = widget as InputWidget<*, W>
             inputPanel.addWidget(typedWidget)
             return model
         }
         if (item.isRequired) {
+            log.warn("${item.name} is required but doesn't exist")
             throw ModuleException("A " + type.simpleName +
                     " is required but none exist.")
         }

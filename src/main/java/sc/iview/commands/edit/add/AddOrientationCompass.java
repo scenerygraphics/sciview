@@ -29,6 +29,8 @@
 package sc.iview.commands.edit.add;
 
 import graphics.scenery.*;
+import graphics.scenery.attribute.material.Material;
+import graphics.scenery.primitives.Cylinder;
 import org.joml.Quaternionf;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -76,16 +78,22 @@ public class AddOrientationCompass implements Command {
     private Node makeAxis( float axisLength, float angleX, float angleY, float angleZ, Vector3f color ) {
         Cylinder axisNode = new Cylinder(AXESBARRADIUS, axisLength,4);
         axisNode.setName("compass axis: X");
-        axisNode.setRotation( new Quaternionf().rotateXYZ( angleX, angleY, angleZ ) );
-        axisNode.getMaterial().getDiffuse().set(color);
-        axisNode.getMaterial().setDepthTest(Material.DepthTest.Always);
-        axisNode.getMaterial().getBlending().setTransparent(true);
+        axisNode.spatial().setRotation( new Quaternionf().rotateXYZ( angleX, angleY, angleZ ) );
+        axisNode.ifMaterial( material -> {
+            material.getDiffuse().set(color);
+            material.setDepthTest(Material.DepthTest.Always);
+            material.getBlending().setTransparent(true);
+            return null;
+        });
 
         Icosphere axisCap = new Icosphere(AXESBARRADIUS, 2);
-        axisCap.setPosition(new Vector3f(0, axisLength, 0));
-        axisCap.getMaterial().getDiffuse().set(color);
-        axisCap.getMaterial().setDepthTest(Material.DepthTest.Always);
-        axisCap.getMaterial().getBlending().setTransparent(true);
+        axisCap.ifSpatial(spatial -> {
+            spatial.setPosition(new Vector3f(0, axisLength, 0));
+            return null;
+        });
+        axisCap.material().getDiffuse().set(color);
+        axisCap.material().setDepthTest(Material.DepthTest.Always);
+        axisCap.material().getBlending().setTransparent(true);
 
         axisNode.addChild(axisCap);
         return axisNode;
@@ -93,7 +101,7 @@ public class AddOrientationCompass implements Command {
 
     @Override
     public void run() {
-        final Node root = new Node("Scene orientation compass");
+        final Node root = new Mesh("Scene orientation compass");
 
         //NB: RGB colors ~ XYZ axes
         //x axis:

@@ -1,6 +1,6 @@
 /*-
  * #%L
- * Scenery-backed 3D visualization package for ImageJ.
+ * sciview 3D visualization tool.
  * %%
  * Copyright (C) 2016 - 2021 SciView developers.
  * %%
@@ -142,7 +142,7 @@ class LoadCremiDatasetAndNeurons: Command {
 
         sciview.addVolume(nai.third, files.first().name) {
             origin = Origin.FrontBottomLeft
-            scale = Vector3f(0.08f, 0.08f, 5.0f)
+            this.spatialOrNull()?.scale = Vector3f(0.08f, 0.08f, 5.0f)
             transferFunction = TransferFunction.ramp(0.3f, 0.1f, 0.1f)
             // min 20, max 180, color map fire
 
@@ -183,9 +183,13 @@ class LoadCremiDatasetAndNeurons: Command {
             // Convert the mesh into a scenery mesh for visualization
             val mesh = MeshConverter.toScenery(m, false, flipWindingOrder = true)
             sciview.addNode(mesh) {
-                scale = Vector3f(0.01f, 0.01f, 0.06f)
-                material.diffuse = colormapNeurons.lookupARGB(0.0, 255.0, kotlin.random.Random.nextDouble(0.0, 255.0)).toRGBColor().xyz()
-                material.roughness = 0.0f
+                spatial().scale = Vector3f(0.01f, 0.01f, 0.06f)
+                ifMaterial {
+                    diffuse =
+                        colormapNeurons.lookupARGB(0.0, 255.0, kotlin.random.Random.nextDouble(0.0, 255.0)).toRGBColor()
+                            .xyz()
+                    roughness = 0.0f
+                }
                 name = "Neuron $i"
             }
             val completion = 10.0f + ((i+1)/largestNeuronLabels.size.toFloat())*90.0f

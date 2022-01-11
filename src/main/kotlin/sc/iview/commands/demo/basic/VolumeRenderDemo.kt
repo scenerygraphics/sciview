@@ -28,7 +28,6 @@
  */
 package sc.iview.commands.demo.basic
 
-import graphics.scenery.volumes.Volume
 import io.scif.services.DatasetIOService
 import net.imagej.Dataset
 import net.imagej.ops.OpService
@@ -46,7 +45,6 @@ import sc.iview.SciView
 import sc.iview.commands.MenuWeights.DEMO
 import sc.iview.commands.MenuWeights.DEMO_BASIC
 import sc.iview.commands.MenuWeights.DEMO_BASIC_VOLUME
-
 import sc.iview.commands.demo.ResourceLoader
 import sc.iview.process.MeshConverter
 import java.io.IOException
@@ -92,8 +90,8 @@ class VolumeRenderDemo : Command {
         val v = sciView.addVolume(cube, floatArrayOf(1f, 1f, 1f)) {
             pixelToWorldRatio = 10f
             name = "Volume Render Demo"
-            dirty = true
-            needsUpdate = true
+            this.geometryOrNull()?.dirty = true
+            this.spatialOrNull()?.needsUpdate = true
         }
         if (iso) {
             val isoLevel = 1

@@ -29,6 +29,7 @@
 package sc.iview.ui
 
 import graphics.scenery.*
+import graphics.scenery.primitives.TextBoard
 import graphics.scenery.volumes.Volume
 import org.joml.Vector3f
 import java.awt.*

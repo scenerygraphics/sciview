@@ -65,6 +65,9 @@ public class ExportSTL implements Command {
     @Parameter(style = FileWidget.SAVE_STYLE)
     private File stlFile = new File( "" );
 
+    @Parameter
+    private boolean useMeshScale = false;
+
     @Override
     public void run() {
         if( sciView.getActiveNode() instanceof Mesh ) {
@@ -72,7 +75,7 @@ public class ExportSTL implements Command {
 
             if( mesh != null ) {
                 try {
-                    Utils.writeSCMesh( stlFile.getAbsolutePath(), mesh );
+                    Utils.writeSCMesh( stlFile.getAbsolutePath(), mesh, useMeshScale );
                 } catch( final Exception e ) {
                     logService.trace( e );
                 }

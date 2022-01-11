@@ -67,13 +67,13 @@ class AddVolume : Command {
     @Parameter(label = "Use voxel dimensions from image", callback = "setVoxelDimensions")
     private var inheritFromImage = true
 
-    @Parameter(label = "Voxel Size X")
+    @Parameter(label = "Voxel Size X", stepSize = "0.01f")
     private var voxelWidth = 1.0f
 
-    @Parameter(label = "Voxel Size Y")
+    @Parameter(label = "Voxel Size Y", stepSize = "0.01f")
     private var voxelHeight = 1.0f
 
-    @Parameter(label = "Voxel Size Z")
+    @Parameter(label = "Voxel Size Z", stepSize = "0.01f")
     private var voxelDepth = 1.0f
 
     override fun run() {

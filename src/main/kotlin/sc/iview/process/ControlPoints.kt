@@ -28,9 +28,9 @@
  */
 package sc.iview.process
 
-import graphics.scenery.Material
 import graphics.scenery.Node
 import graphics.scenery.Sphere
+import graphics.scenery.attribute.material.Material
 import org.joml.Vector3f
 import org.scijava.ui.behaviour.Behaviour
 import org.scijava.ui.behaviour.ClickBehaviour
@@ -67,7 +67,7 @@ class ControlPoints {
         nodes = ArrayList()
         for (k in newPoints.indices) {
             val cp = Sphere(DEFAULT_RADIUS, DEFAULT_SEGMENTS)
-            cp.position = newPoints[k]
+            cp.spatialOrNull()?.position = newPoints[k]
             nodes.add(cp)
         }
     }
@@ -96,18 +96,18 @@ class ControlPoints {
 
         // Create target point
         targetPoint = Sphere(DEFAULT_RADIUS, DEFAULT_SEGMENTS)
-        val mat = Material()
-        mat.ambient = Utils.convertToVector3f(TARGET_COLOR)
-        mat.diffuse = Utils.convertToVector3f(TARGET_COLOR)
-        (targetPoint as Sphere).material = mat
-        (targetPoint as Sphere).position = cam.position.add(cam.forward.mul(controlPointDistance))
+        (targetPoint as Sphere).ifMaterial {
+            ambient = Utils.convertToVector3f(TARGET_COLOR)
+            diffuse = Utils.convertToVector3f(TARGET_COLOR)
+        }
+        (targetPoint as Sphere).spatialOrNull()?.position = cam.spatialOrNull()?.position!!.add(cam.forward.mul(controlPointDistance))
         sciView.addNode(targetPoint, false)
         //sciView.getCamera().addChild(targetPoint);
         (targetPoint as Sphere).update.add {
 
             //targetPoint.getRotation().set(sciView.getCamera().getRotation().conjugate().rotateByAngleY((float) Math.PI));
             // Set rotation before setting position
-            (targetPoint as Sphere).position = cam.position.add(cam.forward.mul(controlPointDistance))
+            (targetPoint as Sphere).spatialOrNull()?.position = cam.spatialOrNull()?.position!!.add(cam.forward.mul(controlPointDistance))
         }
     }
 
@@ -119,19 +119,19 @@ class ControlPoints {
         return ScrollBehaviour { wheelRotation, _, _, _ ->
             val cam = sciView.camera!!
             controlPointDistance += wheelRotation.toFloat()
-            targetPoint.position = cam.position.add(cam.forward.mul(controlPointDistance))
+            targetPoint.spatialOrNull()?.position = cam.spatialOrNull()?.position!!.add(cam.forward.mul(controlPointDistance))
         }
     }
 
     private fun placeControlPoint(sciView: SciView) {
         val controlPoint = Sphere(DEFAULT_RADIUS, DEFAULT_SEGMENTS)
-        val mat = Material()
-        mat.ambient = Utils.convertToVector3f(DEFAULT_COLOR)
-        mat.diffuse = Utils.convertToVector3f(DEFAULT_COLOR)
-        controlPoint.material = mat
+        controlPoint.material {
+            ambient = Utils.convertToVector3f(DEFAULT_COLOR)
+            diffuse = Utils.convertToVector3f(DEFAULT_COLOR)
+        }
 
         //controlPoint.setPosition( sciView.getCamera().getTransformation().mult(targetPoint.getPosition().xyzw()) );
-        controlPoint.position = targetPoint.position
+        controlPoint.spatial().position = targetPoint.spatialOrNull()!!.position
         addPoint(controlPoint)
         sciView.addNode(controlPoint, false)
     }

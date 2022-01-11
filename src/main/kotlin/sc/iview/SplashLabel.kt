@@ -95,6 +95,8 @@ class SplashLabel : JPanel(), ItemListener {
             attributes.getValue("Implementation-Build")
         } catch (ioe: IOException) {
             ""
+        } catch (npe: NullPointerException) {
+            ""
         }
         return gitHash
     }

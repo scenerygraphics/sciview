@@ -64,12 +64,12 @@ class NodeRotateControl(protected val sciView: SciView) : DragBehaviour {
         val framePitch = sciView.getMouseSpeed() * (y - lastY) * 0.0174533f
 
         Quaternionf().rotateAxis(frameYaw, cam.up)
-                .mul(targetedNode.rotation, targetedNode.rotation)
+                .mul(targetedNode.spatialOrNull()?.rotation, targetedNode.spatialOrNull()?.rotation)
                 .normalize()
         Quaternionf().rotateAxis(framePitch, cam.right)
-                .mul(targetedNode.rotation, targetedNode.rotation)
+                .mul(targetedNode.spatialOrNull()?.rotation, targetedNode.spatialOrNull()?.rotation)
                 .normalize()
-        targetedNode.needsUpdate = true
+        targetedNode.spatialOrNull()?.needsUpdate = true
 
         targetedNode.lock.unlock()
 

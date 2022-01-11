@@ -110,12 +110,12 @@ object MeshConverter {
 
         // Create and populate the Scenery mesh.
         val scMesh = graphics.scenery.Mesh()
-        scMesh.vertices = verts
-        scMesh.normals = vNormals
-        scMesh.texcoords = texCoords
-        scMesh.indices = indices
+        scMesh.geometry().vertices = verts
+        scMesh.geometry().normals = vNormals
+        scMesh.geometry().texcoords = texCoords
+        scMesh.geometry().indices = indices
         scMesh.boundingBox = scMesh.generateBoundingBox()
-        scMesh.dirty = true
+        scMesh.geometry().dirty = true
         return scMesh
     }
 
@@ -138,10 +138,10 @@ object MeshConverter {
     @JvmStatic
     fun toImageJ(scMesh: graphics.scenery.Mesh): Mesh {
         // Extract buffers from Scenery mesh.
-        val verts = scMesh.vertices
-        val vNormals = scMesh.normals
-        val texCoords = scMesh.texcoords
-        val indices = scMesh.indices
+        val verts = scMesh.geometry().vertices
+        val vNormals = scMesh.geometry().normals
+        val texCoords = scMesh.geometry().texcoords
+        val indices = scMesh.geometry().indices
 
         // Compute the triangle normals.
         val tNormals =  //

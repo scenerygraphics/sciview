@@ -75,7 +75,10 @@ public class ConvexHull implements Command {
             net.imagej.mesh.Mesh smoothMesh = ( net.imagej.mesh.Mesh ) ops.geom().convexHull( ijMesh ).get( 0 );
 
             Node convexHull = sciView.addMesh(smoothMesh);
-            convexHull.setPosition(node.getPosition());
+            convexHull.ifSpatial(spatial -> {
+                spatial.setPosition(((Mesh) node).spatial().getPosition());
+                return null;
+            });
         }
     }
 

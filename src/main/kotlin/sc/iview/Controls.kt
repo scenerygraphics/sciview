@@ -29,12 +29,13 @@
 package sc.iview
 
 import graphics.scenery.*
+import graphics.scenery.primitives.Line
+import graphics.scenery.Node
 import graphics.scenery.controls.behaviours.FPSCameraControl
 import graphics.scenery.controls.behaviours.MovementCommand
 import graphics.scenery.controls.behaviours.SelectCommand
-import graphics.scenery.numerics.Random
+import graphics.scenery.primitives.TextBoard
 import graphics.scenery.utils.LazyLogger
-import graphics.scenery.utils.extensions.plus
 import org.joml.Quaternionf
 import org.joml.Vector2f
 import org.joml.Vector3f
@@ -294,10 +295,10 @@ open class Controls(val sciview: SciView) {
         var mcA: MovementCommand
         var mcS: MovementCommand
         var mcD: MovementCommand
-        mcW = MovementCommand("move_forward", "forward", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
-        mcS = MovementCommand("move_backward", "back", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
-        mcA = MovementCommand("move_left", "left", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
-        mcD = MovementCommand("move_right", "right", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
+        mcW = MovementCommand("forward", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
+        mcS = MovementCommand("back", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
+        mcA = MovementCommand("left", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
+        mcD = MovementCommand("right", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
         parameters.registerSlowStepMover(mcW)
         parameters.registerSlowStepMover(mcS)
         parameters.registerSlowStepMover(mcA)
@@ -309,10 +310,10 @@ open class Controls(val sciview: SciView) {
         // 'WASD' keys are registered already in scenery
 
         //override shift+'WASD' from Scenery
-        mcW = MovementCommand("move_forward_fast", "forward", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
-        mcS = MovementCommand("move_backward_fast", "back", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
-        mcA = MovementCommand("move_left_fast", "left", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
-        mcD = MovementCommand("move_right_fast", "right", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
+        mcW = MovementCommand("forward", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
+        mcS = MovementCommand("back", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
+        mcA = MovementCommand("left", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
+        mcD = MovementCommand("right", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
         parameters.registerFastStepMover(mcW)
         parameters.registerFastStepMover(mcS)
         parameters.registerFastStepMover(mcA)
@@ -324,10 +325,10 @@ open class Controls(val sciview: SciView) {
         // shift+'WASD' keys are registered already in scenery
 
         //define additionally shift+ctrl+'WASD'
-        mcW = MovementCommand("move_forward_veryfast", "forward", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
-        mcS = MovementCommand("move_back_veryfast", "back", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
-        mcA = MovementCommand("move_left_veryfast", "left", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
-        mcD = MovementCommand("move_right_veryfast", "right", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
+        mcW = MovementCommand("forward", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
+        mcS = MovementCommand("back", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
+        mcA = MovementCommand("left", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
+        mcD = MovementCommand("right", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
         parameters.registerVeryFastStepMover(mcW)
         parameters.registerVeryFastStepMover(mcS)
         parameters.registerVeryFastStepMover(mcA)
@@ -344,24 +345,24 @@ open class Controls(val sciview: SciView) {
         // Keyboard only move up/down (XC keys)
         //
         //[[ctrl]+shift]+'XC'
-        mcW = MovementCommand("move_up", "up", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
-        mcS = MovementCommand("move_down", "down", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
+        mcW = MovementCommand("up", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
+        mcS = MovementCommand("down", { sciview.currentScene.findObserver() }, parameters.fpsSpeedSlow)
         parameters.registerSlowStepMover(mcW)
         parameters.registerSlowStepMover(mcS)
         h.addBehaviour("move_up", mcW)
         h.addBehaviour("move_down", mcS)
         h.addKeyBinding("move_up", "C")
         h.addKeyBinding("move_down", "X")
-        mcW = MovementCommand("move_up_fast", "up", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
-        mcS = MovementCommand("move_down_fast", "down", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
+        mcW = MovementCommand("up", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
+        mcS = MovementCommand("down", { sciview.currentScene.findObserver() }, parameters.fpsSpeedFast)
         parameters.registerFastStepMover(mcW)
         parameters.registerFastStepMover(mcS)
         h.addBehaviour("move_up_fast", mcW)
         h.addBehaviour("move_down_fast", mcS)
         h.addKeyBinding("move_up_fast", "shift C")
         h.addKeyBinding("move_down_fast", "shift X")
-        mcW = MovementCommand("move_up_veryfast", "up", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
-        mcS = MovementCommand("move_down_veryfast", "down", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
+        mcW = MovementCommand("up", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
+        mcS = MovementCommand("down", { sciview.currentScene.findObserver() }, parameters.fpsSpeedVeryFast)
         parameters.registerVeryFastStepMover(mcW)
         parameters.registerVeryFastStepMover(mcS)
         h.addBehaviour("move_up_veryfast", mcW)
@@ -460,7 +461,7 @@ open class Controls(val sciview: SciView) {
     private var secondNode = false
 
     fun setDistanceMeasurer() {
-        var lastNode = Node("lastNode")
+        var lastNode: Node? = null
         val distanceAction = { nearest: Scene.RaycastResult, x: Int, y: Int ->
             if (nearest.matches.isNotEmpty()) {
                 // copy reference on the last object picking result into "public domain"
@@ -483,8 +484,8 @@ open class Controls(val sciview: SciView) {
                             sciview.deleteNode(it)
                         }
                     }
-                    val position0 = lastNode.position
-                    val position1 = sciview.activeNode!!.position
+                    val position0 = lastNode!!.spatialOrNull()!!.position
+                    val position1 = sciview.activeNode!!.spatialOrNull()!!.position
                     val lastToPresent = Vector3f()
                     position1.sub(position0, lastToPresent)
                     line.addPoint(position0)
@@ -500,12 +501,12 @@ open class Controls(val sciview: SciView) {
                     board.backgroundColor = Vector4f(1f, 1f, 1f, 1.0f)
                     val boardPosition = Vector3f()
                     position0.add(position1, boardPosition)
-                    board.position = boardPosition.mul(0.5f)
+                    board.spatial().position = boardPosition.mul(0.5f)
                     if(distance < 5f) {
-                        board.scale = Vector3f(0.5f, 0.5f, 0.5f)
+                        board.spatial().scale = Vector3f(0.5f, 0.5f, 0.5f)
                     }
                     else {
-                        board.scale = Vector3f(distance/10f, distance/10f, distance/10f)
+                        board.spatial().scale = Vector3f(distance/10f, distance/10f, distance/10f)
                     }
                     sciview.addNode(board)
                 }

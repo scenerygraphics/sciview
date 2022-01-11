@@ -98,18 +98,15 @@ public class SceneRiggingDemo implements Command {
         Node msh = sciView.addMesh( m );
         msh.setName( "Mesh Demo" );
 
-        //msh.fitInto( 15.0f, true );
+        msh.ifMaterial( mat -> {
+            mat.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
+            mat.setDiffuse( new Vector3f( 0.8f, 0.5f, 0.4f ) );
+            mat.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
+            return null;
+        });
 
-        Material mat = new Material();
-        mat.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
-        mat.setDiffuse( new Vector3f( 0.8f, 0.5f, 0.4f ) );
-        mat.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
-        //mat.setDoubleSided( true );
-
-        msh.setMaterial( mat );
-
-        msh.setNeedsUpdate( true );
-        msh.setDirty( true );
+        msh.ifSpatial( spatial -> { spatial.setNeedsUpdate(true); return null; });
+        msh.ifGeometry( geom -> { geom.setDirty(true); return null; });
 
         sciView.centerOnNode( sciView.getActiveNode() );
 
@@ -123,16 +120,16 @@ public class SceneRiggingDemo implements Command {
 
         sciView.getFloor().setVisible(false);
         screenshotCam = new DetachedHeadCamera();
-        screenshotCam.setPosition( new Vector3f( 0.0f, 5.0f, -5.0f ) );
+        screenshotCam.spatial().setPosition( new Vector3f( 0.0f, 5.0f, -5.0f ) );
         screenshotCam.perspectiveCamera( 50.0f, sciView.getWindowWidth(), sciView.getWindowHeight(), 0.1f, 1000.0f );
-        screenshotCam.getRotation().lookAlong( msh.getPosition().sub(screenshotCam.getPosition()), new Vector3f(0,1,0));
+        screenshotCam.spatial().getRotation().lookAlong( msh.spatialOrNull().getPosition().sub(screenshotCam.spatial().getPosition()), new Vector3f(0,1,0));
 
         sciView.addNode(screenshotCam);
 
         Box b = new Box(new Vector3f(1f, 1f, 1f));
-        b.getMaterial().setDiffuse(new Vector3f(1f, 0, 0));
-        b.getMaterial().setAmbient(new Vector3f(1f, 0, 0));
-        b.getMaterial().setSpecular(new Vector3f(1f, 0, 0));
+        b.material().setDiffuse(new Vector3f(1f, 0, 0));
+        b.material().setAmbient(new Vector3f(1f, 0, 0));
+        b.material().setSpecular(new Vector3f(1f, 0, 0));
         screenshotCam.addChild(b);
 
         sciView.setActiveNode(b);
@@ -158,8 +155,11 @@ public class SceneRiggingDemo implements Command {
         Camera prevCamera = sciView.getActiveObserver();
         sciView.setCamera(screenshotCam);
 
-        screenshotCam.setNeedsUpdate(true);
-        screenshotCam.setDirty(true);
+        screenshotCam.spatial().setNeedsUpdate(true);
+        screenshotCam.ifGeometry(geometry -> {
+            geometry.setDirty(true);
+            return null;
+        });
         Img<UnsignedByteType> screenshot = sciView.getScreenshot();
 
         try {

@@ -28,12 +28,12 @@
  */
 package sc.iview.commands.process;
 
-import graphics.scenery.HasGeometry;
 import graphics.scenery.Node;
+import graphics.scenery.attribute.geometry.HasGeometry;
+import graphics.scenery.volumes.Volume;
 import net.imagej.mesh.Mesh;
 import net.imagej.mesh.Meshes;
 import net.imagej.ops.OpService;
-import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator;
 import net.imglib2.IterableInterval;
 import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
@@ -45,6 +45,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
 import sc.iview.SciView;
+import sc.iview.process.MeshConverter;
 
 import static sc.iview.commands.MenuWeights.PROCESS;
 import static sc.iview.commands.MenuWeights.PROCESS_ISOSURFACE;
@@ -84,9 +85,23 @@ public class Isosurface<T extends RealType> implements Command {
 
         Mesh m = Meshes.marchingCubes(bitImg);
 
-        Node scMesh = sciView.addMesh(m);
-        ((HasGeometry)scMesh).recalculateNormals();
-        scMesh.setScale(new Vector3f(0.001f, 0.001f, 0.001f));
+        Volume v = sciView.getVolumeFromImage(image);
+
+        Node scMesh = MeshConverter.toScenery(m);
+        if( v != null ) {
+            v.addChild(scMesh);
+        } else {
+            sciView.addNode(scMesh);
+        }
+
+        scMesh.ifGeometry( geom -> {
+            geom.recalculateNormals();
+            return null;
+        });
+//        scMesh.ifSpatial( spatial -> {
+//            spatial.setScale(new Vector3f(0.001f, 0.001f, 0.001f));
+//            return null;
+//        });
     }
 
 }

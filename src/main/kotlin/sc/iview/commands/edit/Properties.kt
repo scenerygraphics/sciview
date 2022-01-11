@@ -29,6 +29,8 @@
 package sc.iview.commands.edit
 
 import graphics.scenery.*
+import graphics.scenery.attribute.material.HasMaterial
+import graphics.scenery.primitives.TextBoard
 import graphics.scenery.volumes.Colormap.Companion.fromColorTable
 import graphics.scenery.volumes.Volume
 import net.imagej.lut.LUTService
@@ -40,6 +42,8 @@ import org.scijava.command.Command
 import org.scijava.command.InteractiveCommand
 import org.scijava.event.EventService
 import org.scijava.log.LogService
+import org.scijava.module.Module
+import org.scijava.module.ModuleItem
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import org.scijava.ui.UIService
@@ -51,6 +55,7 @@ import sc.iview.SciView
 import sc.iview.event.NodeChangedEvent
 import java.io.IOException
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
 
 /**
@@ -309,10 +314,10 @@ class Properties : InteractiveCommand() {
         fieldsUpdating = true
 
         // update colour
-        val colourVector = if (node is PointLight) {
-            node.emissionColor
-        } else {
-            node.material.diffuse
+        val colourVector = when {
+            node is PointLight -> node.emissionColor
+            node is HasMaterial -> node.material().diffuse
+            else -> Vector3f(0.5f)
         }
 
         colour = ColorRGB((colourVector[0] * 255).toInt(),  //
@@ -323,19 +328,19 @@ class Properties : InteractiveCommand() {
         visible = node.visible
 
         // update position
-        val position = node.position
+        val position = node.spatialOrNull()?.position ?: Vector3f(0.0f)
         positionX = position[0]
         positionY = position[1]
         positionZ = position[2]
 
         // update rotation
-        val eulerAngles = node.rotation.getEulerAnglesXYZ(Vector3f())
+        val eulerAngles = node.spatialOrNull()?.rotation?.getEulerAnglesXYZ(Vector3f()) ?: Vector3f(0.0f)
         rotationPhi = eulerAngles.x()
         rotationTheta = eulerAngles.y()
         rotationPsi = eulerAngles.z()
 
         // update scale
-        val scale = node.scale
+        val scale = node.spatialOrNull()?.scale ?: Vector3f(1.0f)
         scaleX = scale.x()
         scaleY = scale.y()
         scaleZ = scale.z()
@@ -445,12 +450,15 @@ class Properties : InteractiveCommand() {
         if (node is PointLight) {
             node.emissionColor = cVector
         } else {
-            val material = node.material
-            material.diffuse = cVector
+            node.ifMaterial {
+                diffuse = cVector
+            }
         }
 
-        node.position = Vector3f(positionX, positionY, positionZ)
-        node.scale = Vector3f(scaleX, scaleY, scaleZ)
+        node.ifSpatial {
+            position = Vector3f(positionX, positionY, positionZ)
+            scale = Vector3f(scaleX, scaleY, scaleZ)
+        }
         node.name = name
 
         if (node is PointLight) {
@@ -520,10 +528,23 @@ class Properties : InteractiveCommand() {
         return "" + node.name + "[" + count + "]"
     }
 
+    fun addInput(input: ModuleItem<*>, module: Module) {
+        super.addInput(input)
+        inputModuleMaps[input] = module
+    }
+
+    fun getCustomModuleForModuleItem(moduleInfo: ModuleItem<*>): Module? {
+        val custom = inputModuleMaps[moduleInfo]
+        log.info("Custom module found: $custom")
+        return custom
+    }
+
     companion object {
         private const val PI_NEG = "-3.142"
         private const val PI_POS = "3.142"
         private var dummyColorTable: ColorTable? = null
+
+        private val inputModuleMaps = ConcurrentHashMap<ModuleItem<*>, Module>()
 
         init {
             dummyColorTable = object : ColorTable {

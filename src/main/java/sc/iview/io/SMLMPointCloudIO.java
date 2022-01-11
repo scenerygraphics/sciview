@@ -38,24 +38,26 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
+import graphics.scenery.primitives.PointCloud;
+
 /** {@link IOPlugin} adapter for Scenery SMLM reader.
  *
  * @author Kyle Harrington
  *
  * */
 @Plugin(type = IOPlugin.class, priority = 10)
-public class SMLMPointCloudIO extends AbstractIOPlugin<graphics.scenery.PointCloud> {
+public class SMLMPointCloudIO extends AbstractIOPlugin<PointCloud> {
 
     @Override
-    public graphics.scenery.PointCloud open( final String source ) {
-        final graphics.scenery.PointCloud pointCloud = new graphics.scenery.PointCloud();
+    public PointCloud open( final String source ) {
+        final PointCloud pointCloud = new PointCloud();
         pointCloud.readFromPALM( source );
         return pointCloud;
     }
 
     @Override
-    public Class<graphics.scenery.PointCloud> getDataType() {
-        return graphics.scenery.PointCloud.class;
+    public Class<PointCloud> getDataType() {
+        return PointCloud.class;
     }
 
     @Override

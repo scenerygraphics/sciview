@@ -39,10 +39,7 @@ import org.scijava.Context
 import org.scijava.command.CommandService
 import org.scijava.event.EventHandler
 import org.scijava.log.LogService
-import org.scijava.module.Module
-import org.scijava.module.ModuleException
-import org.scijava.module.ModuleItem
-import org.scijava.module.ModuleService
+import org.scijava.module.*
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.PluginService
 import org.scijava.service.Service
@@ -197,9 +194,9 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
         tree.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 super.mouseClicked(e)
-                if (e.clickCount == 2) {
+                if (e.clickCount == 2 && e.button == MouseEvent.BUTTON1) {
                     val n = tree.lastSelectedPathComponent as? SwingSceneryTreeNode ?: return
-                    val node = n.userObject as Node
+                    val node = n.userObject as? Node ?: return
                     sciView.setActiveCenteredNode(node)
                 } else if (e.button == MouseEvent.BUTTON3) {
                     val x = e.x
@@ -207,9 +204,14 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                     val tree = e.source as JTree
                     val path = tree.getPathForLocation(x, y) ?: return
                     tree.selectionPath = path
-                    val obj = path.lastPathComponent as SwingSceneryTreeNode
+                    val obj = path.lastPathComponent as? SwingSceneryTreeNode ?: return
                     val popup = JPopupMenu()
-                    val labelItem = JMenuItem(obj.node.name)
+
+                    val labelItem = if(obj.node == null) {
+                        return
+                    } else {
+                        JMenuItem(obj.node.name)
+                    }
                     labelItem.isEnabled = false
                     popup.add(labelItem)
                     if (obj.node is Camera) {
@@ -299,11 +301,18 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                 currentProperties = p
                 p.setSceneNode(sceneNode)
 
+                val additionalUIs = sceneNode.metadata
+                    .filter { it.key.startsWith("sciview-inspector-") }
+                    .filter { it.value as? CustomPropertyUI != null }
+
                 @Suppress("UNCHECKED_CAST")
-                val additionalUI = sceneNode.metadata["sciview-inspector"] as? List<ModuleItem<*>>
-                if (additionalUI != null) {
-                    for (moduleItem in additionalUI) {
-                        p.addInput(moduleItem)
+                additionalUIs.forEach { (name, value) ->
+                    val ui = value as CustomPropertyUI
+                    log.info("Additional UI requested by $name, module ${ui.module.info.name}")
+
+                    for (moduleItem in ui.getMutableInputs()) {
+                        log.info("${moduleItem.name}/${moduleItem.label} added, based on ${ui.module}")
+                        p.addInput(moduleItem, ui.module)
                     }
                 }
 
