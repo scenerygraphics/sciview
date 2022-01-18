@@ -176,7 +176,7 @@ class RemoteVisualizer: Command {
         plane.material()
         {
             textures["diffuse"] = Texture(Vector3i(width, height, 1), 4, contents = buffer, mipmap = true)
-
+// This is a temporary test command
         }
     }
 
