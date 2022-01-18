@@ -118,7 +118,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
 
 
-    // maybe temporary, for data streaming between sciview and external rendering
+    // Data streaming - maybe temporary
     implementation("org.bytedeco:ffmpeg-platform:4.1.3-1.5.1")
     implementation("org.zeromq:jeromq:0.5.2")
     implementation("org.msgpack:msgpack-core:0.8.18")
