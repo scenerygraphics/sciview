@@ -173,7 +173,11 @@ class RemoteVisualizer: Command {
             buffer.put(tex).flip()
         }
 //        logger.info("displaying image")
-        plane.material.textures["diffuse"] = Texture(Vector3i(width, height, 1), 4, contents = buffer, mipmap = true)
+        plane.material()
+        {
+            textures["diffuse"] = Texture(Vector3i(width, height, 1), 4, contents = buffer, mipmap = true)
+
+        }
     }
 
     private fun sendFeedback(camera: DetachedHeadCamera, publisher: ZMQ.Socket) {
