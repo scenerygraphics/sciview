@@ -117,14 +117,14 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.5.10")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
 
+
+    // maybe temporary, for data streaming between sciview and external rendering
+    implementation("org.bytedeco:ffmpeg-platform:4.1.3-1.5.1")
+    implementation("org.zeromq:jeromq:0.5.2")
+    implementation("org.msgpack:msgpack-core:0.8.18")
+    implementation("org.msgpack:jackson-dataformat-msgpack:0.8.20")
+
     // Test scope
-
-    implementation("org.bytedeco:ffmpeg-platform:4.4-1.5.6-SNAPSHOT")
-    implementation("org.zeromq:jeromq:0.4.3")
-
-    implementation("org.msgpack:msgpack-core:${sciJava.versions["msgpack-core"]}")
-    implementation("org.msgpack:jackson-dataformat-msgpack:${sciJava.versions["jackson-dataformat-msgpack"]}")
-
     testImplementation(misc.junit4)
     implementation("net.imagej:ij")
     implementation("net.imglib2:imglib2-ij")
