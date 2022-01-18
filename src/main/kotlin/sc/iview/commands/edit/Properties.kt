@@ -32,7 +32,9 @@ import graphics.scenery.*
 import graphics.scenery.attribute.material.HasMaterial
 import graphics.scenery.primitives.TextBoard
 import graphics.scenery.volumes.Colormap.Companion.fromColorTable
+import graphics.scenery.volumes.SlicingPlane
 import graphics.scenery.volumes.Volume
+import graphics.scenery.volumes.VolumeManager
 import net.imagej.lut.LUTService
 import net.imglib2.display.ColorTable
 import org.joml.Quaternionf
@@ -182,7 +184,15 @@ class Properties : InteractiveCommand() {
 
     @Parameter(label = "Transparent Background", callback = "updateNodeProperties", style = "group:Text")
     private var transparentBackground = false
+
+    @Parameter(label = "Volume slicing mode", callback = "updateNodeProperties", style = ChoiceWidget.LIST_BOX_STYLE+"group:Volume")
+    private var slicingMode: String = Volume.SlicingMode.Slicing.name
+
+    @Parameter(label = "Sliced volumes", callback = "updateNodeProperties", style = "group:Targets")
+    private var slicedVolumes: VolumeSelectorWidget.VolumeSelection = VolumeSelectorWidget.VolumeSelection()
+
     private val renderingModeChoices = Arrays.asList(*Volume.RenderingMethod.values())
+    private val slicingModeChoices = Arrays.asList(*Volume.SlicingMode.values())
     var fieldsUpdating = true
     var sceneNodeChoices = ArrayList<String>()
     private var currentSceneNode: Node? = null
@@ -345,10 +355,17 @@ class Properties : InteractiveCommand() {
         scaleY = scale.y()
         scaleZ = scale.z()
         if (node is Volume) {
+
             val renderingModeInput = info.getMutableInput("renderingMode", String::class.java)
             val methods = Arrays.asList(*Volume.RenderingMethod.values()).stream().map { method: Volume.RenderingMethod -> method.toString() }.collect(Collectors.toList())
             renderingModeInput.setChoices(methods)
             renderingMode = renderingModeChoices[Arrays.asList(*Volume.RenderingMethod.values()).indexOf(node .renderingMethod)].toString()
+
+            val slicingModeInput = info.getMutableInput("slicingMode", String::class.java)
+            val slicingMethods = Arrays.asList(*Volume.SlicingMode.values()).stream().map { mode: Volume.SlicingMode -> mode.toString() }.collect(Collectors.toList())
+            slicingModeInput.setChoices(slicingMethods)
+            slicingMode = slicingModeChoices[Arrays.asList(*Volume.SlicingMode.values()).indexOf(node .slicingMode)].toString()
+
             val lutNameItem = info.getMutableInput("colormapName", String::class.java)
             lutNameItem.setChoices(lutService.findLUTs().keys.toMutableList())
 
@@ -371,6 +388,7 @@ class Properties : InteractiveCommand() {
             maybeRemoveInput("colour", ColorRGB::class.java)
         } else {
             maybeRemoveInput("renderingMode", String::class.java)
+            maybeRemoveInput("slicingMode", String::class.java)
             maybeRemoveInput("min", java.lang.Integer::class.java)
             maybeRemoveInput("max", java.lang.Integer::class.java)
             maybeRemoveInput("timepoint", java.lang.Integer::class.java)
@@ -424,6 +442,16 @@ class Properties : InteractiveCommand() {
             maybeRemoveInput("transparentBackground", java.lang.Boolean::class.java)
             maybeRemoveInput("text", String::class.java)
         }
+        if (node is SlicingPlane){
+            sciView.hub.get<VolumeManager>()?.let {
+                slicedVolumes.availableVolumes = it.nodes
+            }
+            slicedVolumes.clear()
+            slicedVolumes.addAll(node.slicedVolumes)
+        } else {
+            maybeRemoveInput("slicedVolumes", VolumeSelectorWidget.VolumeSelection::class.java)
+        }
+
         name = node.name
         fieldsUpdating = false
     }
@@ -480,6 +508,10 @@ class Properties : InteractiveCommand() {
             }
             node.goToTimepoint(timepoint)
             node.converterSetups[0].setDisplayRange(min.toDouble(), max.toDouble())
+            val slicingModeIndex = slicingModeChoices.indexOf(Volume.SlicingMode.valueOf(slicingMode))
+            if (slicingModeIndex != -1) {
+                node.slicingMode = Volume.SlicingMode.values()[slicingModeIndex]
+            }
         }
         if (node is Camera) {
             val scene = node.getScene()
@@ -521,6 +553,16 @@ class Properties : InteractiveCommand() {
                     1f
             )
         }
+
+        if (node is SlicingPlane){
+            val old = node.slicedVolumes
+            val new = slicedVolumes
+            val removed = old.filter { !new.contains(it) }
+            val added = new.filter{!old.contains(it)}
+            removed.forEach { node.removeTargetVolume(it) }
+            added.forEach{node.addTargetVolume(it)}
+        }
+
         events.publish(NodeChangedEvent(node))
     }
 
@@ -538,6 +580,8 @@ class Properties : InteractiveCommand() {
         log.info("Custom module found: $custom")
         return custom
     }
+
+
 
     companion object {
         private const val PI_NEG = "-3.142"
