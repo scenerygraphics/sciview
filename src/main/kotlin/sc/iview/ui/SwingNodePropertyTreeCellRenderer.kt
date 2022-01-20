@@ -30,6 +30,7 @@ package sc.iview.ui
 
 import graphics.scenery.*
 import graphics.scenery.primitives.TextBoard
+import graphics.scenery.volumes.SlicingPlane
 import graphics.scenery.volumes.Volume
 import org.joml.Vector3f
 import java.awt.*
@@ -104,9 +105,10 @@ internal class SwingNodePropertyTreeCellRenderer : DefaultTreeCellRenderer() {
             // HSL to determine whether a light or dark font color is needed:
             val emissionColor = n.emissionColor
             val awtEmissionColor = Color(
-                    emissionColor.x(),
-                    emissionColor.y(),
-                    emissionColor.z())
+                emissionColor.x(),
+                emissionColor.y(),
+                emissionColor.z()
+            )
             val hslEmissionColor = convertRGBtoHSL(emissionColor)
             isOpaque = true
             overrideColor = true
@@ -115,6 +117,29 @@ internal class SwingNodePropertyTreeCellRenderer : DefaultTreeCellRenderer() {
             // if lightness is below 0.5, we use a light font,
             // if above, a dark font.
             if (hslEmissionColor.z() <= 0.5f) {
+                component.foreground = Color.LIGHT_GRAY
+            } else {
+                component.foreground = Color.BLACK
+            }
+        } else if (n?.children?.firstOrNull() is SlicingPlane) {
+            icon = meshIcon[iconIndex]
+            setOpenIcon(meshIcon[iconIndex])
+            setClosedIcon(meshIcon[iconIndex])
+
+            val emissionColor = n.materialOrNull()?.diffuse ?: Vector3f(0.5f)
+            val awtEmissionColor = Color(
+                emissionColor.x(),
+                emissionColor.y(),
+                emissionColor.z()
+            )
+            val hslEmissionColor = convertRGBtoHSL(emissionColor)
+            isOpaque = true
+            overrideColor = true
+            nodeBackground = awtEmissionColor
+
+            // if lightness is below 0.5, we use a light font,
+            // if above, a dark font.
+            if (hslEmissionColor.z() <= 0.4f) {
                 component.foreground = Color.LIGHT_GRAY
             } else {
                 component.foreground = Color.BLACK
