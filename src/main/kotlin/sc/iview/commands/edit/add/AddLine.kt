@@ -35,6 +35,7 @@ import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import org.scijava.util.ColorRGB
 import sc.iview.SciView
+import sc.iview.commands.MenuWeights
 import sc.iview.commands.MenuWeights.EDIT
 import sc.iview.commands.MenuWeights.EDIT_ADD
 import sc.iview.commands.MenuWeights.EDIT_ADD_LINE
@@ -47,7 +48,7 @@ import sc.iview.commands.MenuWeights.EDIT_ADD_LINE
 @Plugin(
     type = Command::class,
     menuRoot = "SciView",
-    menu = [Menu(label = "Edit", weight = EDIT), Menu(label = "Add", weight = EDIT_ADD), Menu(
+    menu = [Menu(label = "Add", weight = MenuWeights.ADD), Menu(
         label = "Line...",
         weight = EDIT_ADD_LINE
     )]

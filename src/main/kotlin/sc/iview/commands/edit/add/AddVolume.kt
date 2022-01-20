@@ -47,21 +47,19 @@ import sc.iview.commands.MenuWeights.EDIT_ADD
  *
  * @author Kyle Harrington
  */
-@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Edit", weight = MenuWeights.EDIT), Menu(label = "Add", weight = EDIT_ADD), Menu(label = "Volume", weight = MenuWeights.EDIT_ADD_VOLUME)])
+@Plugin(
+    type = Command::class,
+    menuRoot = "SciView",
+    menu = [Menu(label = "Add", weight = MenuWeights.ADD), Menu(label = "Volume from ImageJ ...", weight = MenuWeights.EDIT_ADD_VOLUME)]
+)
 class AddVolume : Command {
-    @Parameter
-    private lateinit var log: LogService
-
-    @Parameter
-    private lateinit var ops: OpService
-
     @Parameter
     private lateinit var sciView: SciView
 
     @Parameter
     private lateinit var unitService: UnitService
 
-    @Parameter
+    @Parameter(autoFill = false)
     private lateinit var image: Dataset
 
     @Parameter(label = "Use voxel dimensions from image", callback = "setVoxelDimensions")

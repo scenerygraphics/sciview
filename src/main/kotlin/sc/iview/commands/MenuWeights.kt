@@ -36,11 +36,12 @@ package sc.iview.commands
  */
 object MenuWeights {
     const val FILE = 0.0
-    const val EDIT = 1.0
-    const val PROCESS = 2.0
-    const val VIEW = 3.0
-    const val DEMO = 4.0
-    const val HELP = 4.0
+    const val ADD = 1.0
+    const val EDIT = 3.0
+    const val PROCESS = 4.0
+    const val VIEW = 5.0
+    const val DEMO = 6.0
+    const val HELP = 7.0
     const val FILE_OPEN = 0.0
     const val FILE_EXPORT = 1.0
     // File/Export

@@ -28,60 +28,70 @@
  */
 package sc.iview.commands.edit.add
 
-import org.joml.Vector3f
+import net.imagej.Dataset
+import net.imagej.ops.OpService
+import net.imglib2.Dimensions
+import net.imglib2.RandomAccessibleInterval
+import net.imglib2.img.Img
+import net.imglib2.roi.labeling.ImgLabeling
+import net.imglib2.roi.labeling.LabelRegions
+import net.imglib2.type.numeric.RealType
+import net.imglib2.type.numeric.integer.IntType
+import net.imglib2.util.Util
+import net.imglib2.view.Views
 import org.scijava.command.Command
-import org.scijava.display.DisplayService
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
-import org.scijava.util.ColorRGB
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights.ADD
-import sc.iview.commands.MenuWeights.EDIT
-import sc.iview.commands.MenuWeights.EDIT_ADD
-import sc.iview.commands.MenuWeights.EDIT_ADD_BOX
+import sc.iview.commands.MenuWeights.EDIT_ADD_LABELIMAGE
 
 /**
- * Command to add a box to the scene
+ * Adds a label image to the scene.
  *
- * @author Kyle Harrington
+ * @author Robert Haase, Scientific Computing Facility, MPI-CBG Dresden
  */
 @Plugin(
     type = Command::class,
     menuRoot = "SciView",
     menu = [Menu(label = "Add", weight = ADD), Menu(
-        label = "Box...",
-        weight = EDIT_ADD_BOX
+        label = "Label Image",
+        weight = EDIT_ADD_LABELIMAGE
     )]
 )
-class AddBox : Command {
+class AddLabelImage<T : RealType<T>?> : Command {
     @Parameter
-    private lateinit var displayService: DisplayService
+    private lateinit var ops: OpService
 
     @Parameter
     private lateinit var sciView: SciView
 
-    // FIXME
-    //    @Parameter
-    //    private String position = "0; 0; 0";
     @Parameter
-    private var size = 1.0f
-
-    @Parameter
-    private lateinit var color: ColorRGB
-
-    @Parameter
-    private var inside = false
-
+    private lateinit var currentImage: Dataset
     override fun run() {
-        //final Vector3 pos = ClearGLVector3.parse( position );
-        val pos = Vector3f(0f, 0f, 0f)
-        val vSize = Vector3f(size, size, size)
 
-        if( !this::color.isInitialized ) {
-            color = SciView.DEFAULT_COLOR
+        // interpret the current image as a label image and convert it to ImgLabeling
+        val labelMap = currentImage.imgPlus as Img<T>
+        val dims: Dimensions = labelMap
+        val t = IntType()
+        val img: RandomAccessibleInterval<IntType> = Util.getArrayOrCellImgFactory(dims, t).create(dims, t)
+        val labeling = ImgLabeling<Int, IntType>(img)
+        val labelCursor = Views.flatIterable(labeling).cursor()
+        for (input in Views.flatIterable(labelMap)) {
+            val element = labelCursor.next()
+            if (input!!.realFloat != 0f) {
+                element.add(input.realFloat.toInt())
+            }
         }
 
-        sciView.addBox(pos, vSize, color, inside)
+        // take the regions, process them to meshes and put it in the viewer
+        val labelRegions = LabelRegions(labeling)
+        val regionsArr: Array<Any> = labelRegions.existingLabels.toTypedArray()
+        for (i in labelRegions.existingLabels.indices) {
+            val lr = labelRegions.getLabelRegion(regionsArr[i] as Int)
+            val mesh = ops.geom().marchingCubes(lr)
+            sciView.addMesh(mesh)
+        }
     }
 }

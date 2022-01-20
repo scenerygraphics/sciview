@@ -44,7 +44,7 @@ import sc.iview.commands.MenuWeights
  *
  * @author Kyle Harrington
  */
-@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Edit", weight = MenuWeights.EDIT), Menu(label = "Add", weight = MenuWeights.EDIT_ADD), Menu(label = "Protein from PDB  ID ...", weight = MenuWeights.EDIT_ADD_BOX)])
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Add", weight = MenuWeights.ADD), Menu(label = "Protein from PDB  ID ...", weight = MenuWeights.EDIT_ADD_BOX)])
 class AddProtein : DynamicCommand() {
 
     @Parameter

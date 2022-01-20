@@ -26,35 +26,62 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add;
+package sc.iview.commands.edit.add
 
-import org.scijava.command.Command;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-
-import sc.iview.SciView;
-
-import static sc.iview.commands.MenuWeights.*;
+import graphics.scenery.DetachedHeadCamera
+import org.joml.Vector3f
+import org.scijava.command.Command
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.ADD
+import sc.iview.commands.MenuWeights.EDIT_ADD_CAMERA
+import kotlin.math.max
+import kotlin.math.min
 
 /**
- * Command to add a point light to the scene
+ * Command to add a camera to the scene
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Add", weight = EDIT_ADD), //
-                 @Menu(label = "Point Light", weight = EDIT_ADD_POINTLIGHT) })
-public class AddPointLight implements Command {
-
+@Plugin(
+    type = Command::class,
+    menuRoot = "SciView",
+    menu = [Menu(label = "Add", weight = ADD),Menu(
+        label = "Camera...",
+        weight = EDIT_ADD_CAMERA
+    )]
+)
+class AddCamera : Command {
     @Parameter
-    private SciView sciView;
+    private lateinit var sciView: SciView
 
-    @Override
-    public void run() {
-        sciView.addPointLight();
+    // FIXME
+    //	@Parameter
+    //	private String position = "0; 0; 0";
+    @Parameter(label = "Field of View")
+    private val fov = 50.0f
+
+    @Parameter(label = "Near plane")
+    private val nearPlane = 0.1f
+
+    @Parameter(label = "farPlane")
+    private val farPlane = 500.0f
+    override fun run() {
+        //final Vector3 pos = ClearGLVector3.parse( position );
+        val pos = Vector3f(0.0f)
+        val cam = DetachedHeadCamera()
+        cam.perspectiveCamera(
+            fov,
+            sciView!!.windowWidth,
+            sciView.windowHeight,
+            min(nearPlane, farPlane),
+            max(nearPlane, farPlane)
+        )
+        cam.ifSpatial {
+            position = pos
+        }
+        sciView.addNode(cam)
     }
-
 }
