@@ -49,6 +49,7 @@ import java.awt.event.*
 import java.util.*
 import javax.script.ScriptException
 import javax.swing.*
+import javax.swing.Timer
 
 /**
  * Class for Swing-based main window.
@@ -77,7 +78,7 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
     private var splashLabel: SplashLabel
 
     init {
-        FlatLightLaf.install()
+        FlatLightLaf.setup()
         try {
             UIManager.setLookAndFeel(FlatLightLaf())
         } catch (ex: Exception) {
@@ -227,6 +228,40 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
         sciview.hub.add(SceneryElement.Renderer, renderer)
         sciview.reset()
 
+        frame.addComponentListener(object: ComponentListener {
+            var waitingTimer: Timer? = null
+            var pushModeActive = false
+
+            override fun componentResized(e: ComponentEvent) {
+                if (waitingTimer == null) {
+                    pushModeActive = renderer.pushMode
+                    renderer.pushMode = false
+                    /* Start waiting for DELAY to elapse. */
+                    waitingTimer = Timer(300) {
+                        waitingTimer?.stop()
+                        waitingTimer = null
+                        renderer.pushMode = pushModeActive
+                        pushModeActive = false
+                    }
+                    waitingTimer!!.start()
+                } else {
+                    /* Event came too soon, swallow it by resetting the timer.. */
+                    waitingTimer!!.restart()
+                }
+            }
+
+            override fun componentMoved(e: ComponentEvent?) {
+            }
+
+            override fun componentShown(e: ComponentEvent?) {
+            }
+
+            override fun componentHidden(e: ComponentEvent?) {
+            }
+
+        })
+
+
         SwingUtilities.invokeLater {
             try {
                 while (!sciview.getSceneryRenderer()!!.firstImageReady) {
@@ -251,8 +286,14 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
                 }
             }
 
-            // Enable push rendering by default
-            renderer.pushMode = true
+            // Enable push rendering by default, after the first images have been renderer
+            Timer(100) {
+                if(renderer.firstImageReady) {
+                    renderer.pushMode = true
+                    (it.source as? Timer)?.stop()
+                }
+            }.start()
+
             sciview.camera!!.setPosition(1.65, 1)
             glassPane.isVisible = false
 
