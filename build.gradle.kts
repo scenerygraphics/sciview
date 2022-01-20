@@ -52,6 +52,8 @@ dependencies {
 
     implementation("com.formdev:flatlaf:1.6.5")
 
+    implementation("org.slf4j:slf4j-simple")
+
     // SciJava dependencies
 
     implementation("org.scijava:scijava-common")
