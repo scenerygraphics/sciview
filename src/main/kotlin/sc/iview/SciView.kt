@@ -168,6 +168,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     private lateinit var axes: Array<CalibratedAxis>
 
     @Parameter
+    @Transient
     private lateinit var log: LogService
 
     @Parameter

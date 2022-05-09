@@ -38,7 +38,7 @@ dependencies {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "cf297d4"
+    val sceneryVersion = "b95ad4a"
     api("graphics.scenery:scenery:$sceneryVersion") { version { strictly(sceneryVersion) } }
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.1")
