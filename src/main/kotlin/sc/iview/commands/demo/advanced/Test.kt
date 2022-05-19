@@ -1,69 +1,34 @@
 package sc.iview.commands.demo.advanced
 
-import bdv.util.BdvFunctions
 import graphics.scenery.*
-import graphics.scenery.backends.Renderer
-import graphics.scenery.backends.ShaderType
-import graphics.scenery.bionictracking.ConfirmableClickBehaviour
+import graphics.scenery.attribute.material.Material
 import graphics.scenery.bionictracking.HedgehogAnalysis
 import graphics.scenery.bionictracking.SpineMetadata
 import graphics.scenery.controls.OpenVRHMD
-import graphics.scenery.controls.TrackedDeviceType
-import graphics.scenery.controls.TrackerRole
-import graphics.scenery.controls.behaviours.ControllerDrag
-import graphics.scenery.controls.eyetracking.PupilEyeTracker
-import graphics.scenery.controls.eyetracking.PupilEyeTrackerNew
-import graphics.scenery.numerics.OpenSimplexNoise
 import graphics.scenery.numerics.Random
-import graphics.scenery.textures.Texture
+import graphics.scenery.primitives.Cylinder
+import graphics.scenery.primitives.TextBoard
 import graphics.scenery.utils.MaybeIntersects
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.minus
 import graphics.scenery.utils.extensions.xyz
 import graphics.scenery.utils.extensions.xyzw
-import graphics.scenery.volumes.Colormap
-import graphics.scenery.volumes.TransferFunction
 import graphics.scenery.volumes.Volume
-import net.imglib2.FinalInterval
-import net.imglib2.Localizable
-import net.imglib2.RandomAccessibleInterval
-import net.imglib2.img.array.ArrayImgs
-import net.imglib2.position.FunctionRandomAccessible
-import net.imglib2.type.numeric.integer.UnsignedByteType
 import org.joml.*
-import org.scijava.Context
 import org.scijava.command.Command
 import org.scijava.command.CommandService
+import org.scijava.log.LogService
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
-import org.scijava.ui.UIService
-import org.scijava.ui.behaviour.ClickBehaviour
-import org.scijava.widget.FileWidget
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
-import java.awt.image.DataBufferByte
-import java.io.BufferedWriter
-import java.io.ByteArrayInputStream
 import java.io.File
-import java.io.FileWriter
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.HashMap
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.function.BiConsumer
-import javax.imageio.ImageIO
 import kotlin.concurrent.thread
-import kotlin.math.PI
-import net.imglib2.img.Img
-import net.imglib2.view.Views
-import org.lwjgl.openvr.OpenVR
-import org.scijava.log.LogService
-import graphics.scenery.attribute.material.Material
-import graphics.scenery.primitives.Cylinder
-import graphics.scenery.primitives.TextBoard
-import sc.iview.commands.demo.animation.ParticleDemo
 
 @Plugin(type = Command::class,
         menuRoot = "SciView",
@@ -108,7 +73,8 @@ class Test: Command{
     @Volatile var tracking = false
     var playing = false
     var direction = PlaybackDirection.Backward
-    var volumesPerSecond = 4
+    @Parameter(label = "Volumes per second")
+    var volumesPerSecond = 1
     var skipToNext = false
     var skipToPrevious = false
 //	var currentVolume = 0
@@ -141,41 +107,41 @@ class Test: Command{
         shell.ifMaterial{
             cullingMode = Material.CullingMode.Front
             diffuse = Vector3f(0.4f, 0.4f, 0.4f) }
-
+        shell.name = "shell"
         shell.spatial().position = Vector3f(0.0f, 0.0f, 0.0f)
         sciview.addChild(shell)
 
         volume = sciview.find("volume") as Volume
         volume.visible = false
 
-        point1 = Icosphere(0.1f, 2)
-        point1.spatial().position = Vector3f(1.858f,-0.365f,2.432f)
-        point1.ifMaterial{ diffuse = Vector3f(0.5f, 0.3f, 0.8f)}
-        sciview.addChild(point1)
-
-        point2 = Icosphere(0.1f, 2)
-        point2.spatial().position = Vector3f(1.858f, -0.365f, -10.39f)
-        point2.ifMaterial {diffuse = Vector3f(0.3f, 0.8f, 0.3f)}
-        sciview.addChild(point2)
-
-        var ccc= 0;
-        while(true)
-        {
-            ccc = ccc + 1
-            if(ccc == 1000)
-            {
-                break
-            }
-            var w = ccc*0.01f
-            point1.position = point1.position.add(Vector3f(w,w,w))
-            point2.position = point2.position.add(Vector3f(w,w,w))
-            val connector = Cylinder(0.1f, 1.0f, 16)
-            connector.spatial().orientBetweenPoints(point1.position, point2.position,true,true)
-//        val connector = Cylinder.betweenPoints(point1.position, point2.position)
-            connector.ifMaterial {diffuse = Vector3f(1.0f, 1.0f, 1.0f)}
-            sciview.addChild(connector)
-
-        }
+//        point1 = Icosphere(0.1f, 2)
+//        point1.spatial().position = Vector3f(1.858f,-0.365f,2.432f)
+//        point1.ifMaterial{ diffuse = Vector3f(0.5f, 0.3f, 0.8f)}
+//        sciview.addChild(point1)
+//
+//        point2 = Icosphere(0.1f, 2)
+//        point2.spatial().position = Vector3f(1.858f, -0.365f, -10.39f)
+//        point2.ifMaterial {diffuse = Vector3f(0.3f, 0.8f, 0.3f)}
+//        sciview.addChild(point2)
+//
+//        var ccc= 0;
+//        while(true)
+//        {
+//            ccc = ccc + 1
+//            if(ccc == 1000)
+//            {
+//                break
+//            }
+//            var w = ccc*0.01f
+//            point1.position = point1.position.add(Vector3f(w,w,w))
+//            point2.position = point2.position.add(Vector3f(w,w,w))
+//            val connector = Cylinder(0.1f, 1.0f, 16)
+//            connector.spatial().orientBetweenPoints(point1.position, point2.position,true,true)
+////        val connector = Cylinder.betweenPoints(point1.position, point2.position)
+//            connector.ifMaterial {diffuse = Vector3f(1.0f, 1.0f, 1.0f)}
+//            sciview.addChild(connector)
+//
+//        }
 
         val bb = BoundingGrid()
         bb.node = volume
@@ -225,7 +191,7 @@ class Test: Command{
                         }
                     }
                     val newTimepoint = volume.viewerState.currentTimepoint
-
+                    //println("timepoint: "+ newTimepoint);
 
                     if(hedgehogs.visible) {
                         if(hedgehogVisibility == HedgehogVisibility.PerTimePoint) {
@@ -248,7 +214,7 @@ class Test: Command{
 
                         referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f)}
                         sciview.camera!!.showMessage("Tracking deactivated.",distance = 1.2f, size = 0.2f)
-                        dumpHedgehog()
+                        //dumpHedgehog()
                     }
                 }
 
@@ -288,19 +254,19 @@ class Test: Command{
 
             if(true)
             {
-                val p = Vector3f(0f,0f,-1f)
-                referenceTarget.position = p
-                referenceTarget.visible = true
-                val headCenter = point1.position//cam.viewportToWorld(Vector2f(0.0f, 0.0f))
-                val pointWorld = point2.position///Matrix4f(cam.world).transform(p.xyzw()).xyz()
-
-                val direction = (pointWorld - headCenter).normalize()
+//                val p = Vector3f(0f,0f,-1f)
+//                referenceTarget.position = p
+//                referenceTarget.visible = true
+//                val headCenter = point1.position//cam.viewportToWorld(Vector2f(0.0f, 0.0f))
+//                val pointWorld = point2.position///Matrix4f(cam.world).transform(p.xyzw()).xyz()
+//
+//                val direction = (pointWorld - headCenter).normalize()
 
                 if (tracking) {
 //                                    log.info("Starting spine from $headCenter to $pointWorld")
                     //System.out.println("tracking!!!!!!!!!!")
 //                    println("direction:"+ direction.toString())
-                    addSpine(headCenter, direction, volume,0.8f, volume.viewerState.currentTimepoint)
+                    //addSpine(headCenter, direction, volume,0.8f, volume.viewerState.currentTimepoint)
                     showTrack()
                 }
             }
@@ -314,13 +280,27 @@ class Test: Command{
 
     private fun showTrack()
     {
-        val file = File("C:\\Users\\lanru\\Desktop\\BionicTracking-generated-2021-11-30 14.09.43\\Hedgehog_1_2021-11-30 14.10.21.csv")
-        val analysis = HedgehogAnalysis.fromCSVWithMatrix(file,volume.world,Vector3f(volume.getDimensions()))
+        val file = File("C:\\Users\\lanru\\Desktop\\BionicTracking-generated-2022-03-10 10.19.49\\Hedgehog_2_2022-03-10 10.21.10.csv")
+        var volumeDimensions = volume.getDimensions()
+        var selfdefineworlfmatrix = volume.spatial().world
+       // volumeDimensions = Vector3f(700.0f,660.0f,113.0f)
+        selfdefineworlfmatrix = Matrix4f(
+            0.015f, 0f, 0f, 0f,
+            0f, -0.015f, 0f, 0f,
+            0f, 0f, 0.045f, 0f,
+            -5f, 8f, -2f, 1f
+        )
+        val analysis = HedgehogAnalysis.fromCSVWithMatrix(file,selfdefineworlfmatrix,Vector3f(volumeDimensions))
+        print("volume.getDimensions(): "+ volume.getDimensions())
+        print("volume.spatial().world: "+ volume.spatial().world)
+        print("selfdefineworlfmatrix: "+ selfdefineworlfmatrix)
+
         val track = analysis.run()
 
+        print("flag1")
         val master = Cylinder(0.1f, 1.0f, 10)
             master.setMaterial (ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag"))
-
+        print("flag2")
         master.ifMaterial{
             ambient = Vector3f(0.1f, 0f, 0f)
             diffuse = Random.random3DVectorFromRange(0.2f, 0.8f)
@@ -331,12 +311,13 @@ class Test: Command{
         val mInstanced = InstancedNode(master)
         sciview.addNode(mInstanced)
 
-        val volumeDimensions = volume.getDimensions()
 
+        print("flag3")
         if(track == null)
         {
             return
         }
+        print("flag4")
         track.points.windowed(2, 1).forEach { pair ->
 
             val element = mInstanced.addInstance()
@@ -345,12 +326,13 @@ class Test: Command{
             val p0w = Matrix4f(volume.spatial().world).transform(p0.xyzw()).xyz()
             val p1w = Matrix4f(volume.spatial().world).transform(p1.xyzw()).xyz()
             element.spatial().orientBetweenPoints(p0w,p1w, rescale = true, reposition = true)
-            mInstanced.instances.add(element)
 
-//            val pp = Icosphere(0.1f, 1)
-//            pp.spatial().position = p0w
-//            pp.material().diffuse = Vector3f(0.5f, 0.3f, 0.8f)
-//            sciview.addChild(pp)
+            val tp = pair[0].second.timepoint
+            val pp = Icosphere(0.01f, 1)
+            pp.name = "trackpoint_${tp}_${p0w.x}_${p0w.y}_${p0w.z}"
+            pp.spatial().position = p0w
+            pp.material().diffuse = Vector3f(0.5f, 0.3f, 0.8f)
+            sciview.addNode(pp)
         }
     }
 
@@ -426,89 +408,89 @@ class Test: Command{
      * If [hedgehog] is null, the last created hedgehog will be used, otherwise the given one.
      * If [hedgehog] is not null, the cell track will not be added to the scene.
      */
-    fun dumpHedgehog() {
-        var lastHedgehog =  hedgehogs.children.last() as InstancedNode
-        val hedgehogId = hedgehogIds.incrementAndGet()
-
-        val hedgehogFile = sessionDirectory.resolve("Hedgehog_${hedgehogId}_${SystemHelpers.formatDateTime()}.csv").toFile()
-        val hedgehogFileWriter = hedgehogFile.bufferedWriter()
-        hedgehogFileWriter.write("Timepoint,Origin,Direction,LocalEntry,LocalExit,LocalDirection,HeadPosition,HeadOrientation,Position,Confidence,Samples\n")
-
-        val trackFile = sessionDirectory.resolve("Tracks.tsv").toFile()
-        val trackFileWriter = BufferedWriter(FileWriter(trackFile, true))
-        if(!trackFile.exists()) {
-            trackFile.createNewFile()
-            trackFileWriter.write("# BionicTracking cell track listing for ${sessionDirectory.fileName}\n")
-            trackFileWriter.write("# TIME\tX\tYt\t\tZ\tTRACK_ID\tPARENT_TRACK_ID\tSPOT\tLABEL\n")
-        }
-
-
-        val spines = lastHedgehog.instances.mapNotNull { spine ->
-            spine.metadata["spine"] as? SpineMetadata
-        }
-
-        spines.forEach { metadata ->
-            hedgehogFileWriter.write("${metadata.timepoint};${metadata.origin};${metadata.direction};${metadata.localEntry};${metadata.localExit};${metadata.localDirection};${metadata.headPosition};${metadata.headOrientation};${metadata.position};${metadata.confidence};${metadata.samples.joinToString(";")}\n")
-        }
-        hedgehogFileWriter.close()
-
-        val existingAnalysis = lastHedgehog.metadata["HedgehogAnalysis"] as? HedgehogAnalysis.Track
-        val track = if(existingAnalysis is HedgehogAnalysis.Track) {
-            existingAnalysis
-        } else {
-            val h = HedgehogAnalysis(spines, Matrix4f(volume.world), Vector3f(volume.getDimensions()))
-            h.run()
-        }
-
-        if(track == null) {
-//            logger.warn("No track returned")
-            sciview.camera?.showMessage("No track returned", distance = 1.2f, size = 0.2f,messageColor = Vector4f(1.0f, 0.0f, 0.0f,1.0f))
-            return
-        }
-
-        lastHedgehog.metadata["HedgehogAnalysis"] = track
-        lastHedgehog.metadata["Spines"] = spines
-
-//        logger.info("---\nTrack: ${track.points.joinToString("\n")}\n---")
-
-        val master = if(lastHedgehog == null) {
-            val m = Cylinder(3f, 1.0f, 10)
-            m.ifMaterial {
-                ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag")
-                diffuse = Random.random3DVectorFromRange(0.2f, 0.8f)
-                roughness = 1.0f
-                metallic = 0.0f
-                cullingMode = Material.CullingMode.None
-            }
-            m.name = "Track-$hedgehogId"
-            val mInstanced = InstancedNode(m)
-            mInstanced
-        } else {
-            null
-        }
-
-        val parentId = 0
-        val volumeDimensions = volume.getDimensions()
-
-        trackFileWriter.newLine()
-        trackFileWriter.newLine()
-        trackFileWriter.write("# START OF TRACK $hedgehogId, child of $parentId\n")
-        track.points.windowed(2, 1).forEach { pair ->
-            if(master != null) {
-                val element = master.addInstance()
-                element.spatial().orientBetweenPoints(Vector3f(pair[0].first).mul(Vector3f(volumeDimensions)), Vector3f(pair[1].first).mul(Vector3f(volumeDimensions)), rescale = true, reposition = true)
-                element.parent = volume
-                master.instances.add(element)
-            }
-            val p = Vector3f(pair[0].first).mul(Vector3f(volumeDimensions))//direct product
-            val tp = pair[0].second.timepoint
-            trackFileWriter.write("$tp\t${p.x()}\t${p.y()}\t${p.z()}\t${hedgehogId}\t$parentId\t0\t0\n")
-        }
-
-        master?.let { volume.addChild(it) }
-
-        trackFileWriter.close()
-    }
+//    fun dumpHedgehog() {
+//        var lastHedgehog =  hedgehogs.children.last() as InstancedNode
+//        val hedgehogId = hedgehogIds.incrementAndGet()
+//
+//        val hedgehogFile = sessionDirectory.resolve("Hedgehog_${hedgehogId}_${SystemHelpers.formatDateTime()}.csv").toFile()
+//        val hedgehogFileWriter = hedgehogFile.bufferedWriter()
+//        hedgehogFileWriter.write("Timepoint,Origin,Direction,LocalEntry,LocalExit,LocalDirection,HeadPosition,HeadOrientation,Position,Confidence,Samples\n")
+//
+//        val trackFile = sessionDirectory.resolve("Tracks.tsv").toFile()
+//        val trackFileWriter = BufferedWriter(FileWriter(trackFile, true))
+//        if(!trackFile.exists()) {
+//            trackFile.createNewFile()
+//            trackFileWriter.write("# BionicTracking cell track listing for ${sessionDirectory.fileName}\n")
+//            trackFileWriter.write("# TIME\tX\tYt\t\tZ\tTRACK_ID\tPARENT_TRACK_ID\tSPOT\tLABEL\n")
+//        }
+//
+//
+//        val spines = lastHedgehog.instances.mapNotNull { spine ->
+//            spine.metadata["spine"] as? SpineMetadata
+//        }
+//
+//        spines.forEach { metadata ->
+//            hedgehogFileWriter.write("${metadata.timepoint};${metadata.origin};${metadata.direction};${metadata.localEntry};${metadata.localExit};${metadata.localDirection};${metadata.headPosition};${metadata.headOrientation};${metadata.position};${metadata.confidence};${metadata.samples.joinToString(";")}\n")
+//        }
+//        hedgehogFileWriter.close()
+//
+//        val existingAnalysis = lastHedgehog.metadata["HedgehogAnalysis"] as? HedgehogAnalysis.Track
+//        val track = if(existingAnalysis is HedgehogAnalysis.Track) {
+//            existingAnalysis
+//        } else {
+//            val h = HedgehogAnalysis(spines, Matrix4f(volume.world), Vector3f(volume.getDimensions()))
+//            h.run()
+//        }
+//
+//        if(track == null) {
+////            logger.warn("No track returned")
+//            sciview.camera?.showMessage("No track returned", distance = 1.2f, size = 0.2f,messageColor = Vector4f(1.0f, 0.0f, 0.0f,1.0f))
+//            return
+//        }
+//
+//        lastHedgehog.metadata["HedgehogAnalysis"] = track
+//        lastHedgehog.metadata["Spines"] = spines
+//
+////        logger.info("---\nTrack: ${track.points.joinToString("\n")}\n---")
+//
+//        val master = if(lastHedgehog == null) {
+//            val m = Cylinder(3f, 1.0f, 10)
+//            m.ifMaterial {
+//                ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag")
+//                diffuse = Random.random3DVectorFromRange(0.2f, 0.8f)
+//                roughness = 1.0f
+//                metallic = 0.0f
+//                cullingMode = Material.CullingMode.None
+//            }
+//            m.name = "Track-$hedgehogId"
+//            val mInstanced = InstancedNode(m)
+//            mInstanced
+//        } else {
+//            null
+//        }
+//
+//        val parentId = 0
+//        val volumeDimensions = volume.getDimensions()
+//
+//        trackFileWriter.newLine()
+//        trackFileWriter.newLine()
+//        trackFileWriter.write("# START OF TRACK $hedgehogId, child of $parentId\n")
+//        track.points.windowed(2, 1).forEach { pair ->
+//            if(master != null) {
+//                val element = master.addInstance()
+//                element.spatial().orientBetweenPoints(Vector3f(pair[0].first).mul(Vector3f(volumeDimensions)), Vector3f(pair[1].first).mul(Vector3f(volumeDimensions)), rescale = true, reposition = true)
+//                element.parent = volume
+//                master.instances.add(element)
+//            }
+//            val p = Vector3f(pair[0].first).mul(Vector3f(volumeDimensions))//direct product
+//            val tp = pair[0].second.timepoint
+//            trackFileWriter.write("$tp\t${p.x()}\t${p.y()}\t${p.z()}\t${hedgehogId}\t$parentId\t0\t0\n")
+//        }
+//
+//        master?.let { volume.addChild(it) }
+//
+//        trackFileWriter.close()
+//    }
 
     companion object {
 

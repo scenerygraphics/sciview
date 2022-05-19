@@ -136,7 +136,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		val candidates = timepoints.map { tp ->
 			val vs = tp.value.mapIndexedNotNull { i, spine ->
 				val maxIndices = localMaxima(spine.samples.filterNotNull())
-				logger.info("Local maxima at ${tp.key}/$i are: ${maxIndices.joinToString(",")}")
+				//logger.info("Local maxima at ${tp.key}/$i are: ${maxIndices.joinToString(",")}")
 
 				if(maxIndices.isNotEmpty()) {
 
@@ -144,7 +144,12 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 					map { index ->
 //                        logger.info(index.toString())
 						val position = Vector3f(spine.localEntry).add((Vector3f(spine.localDirection).mul(index.first.toFloat())))
+//						println("i: " + i)
+//						println("position: " + position)
+//						println("dimension: "+ dimension)
+//						println("localToWorld: "+ localToWorld)
 						val worldPosition = localToWorld.transform((Vector3f(position).mul(dimension)).xyzw()).xyz()
+//						println("world position: "+ worldPosition)
 						SpineGraphVertex(tp.key,
 								position,
 								worldPosition,
@@ -165,6 +170,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		// get the initial vertex, this one is assumed to always be in front, and have a local max
 		val initial = candidates.first().filter{it.value>startingThreshold}.first()
 		System.out.println("initial:"+initial)
+		System.out.println("candidates number: "+ candidates.size)
 		var current = initial
 		var shortestPath = candidates.drop(1).mapIndexedNotNull { time, vs ->
 //            System.out.println("time: ${time}")
@@ -174,9 +180,13 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 					.map { vertex ->
 						val t = current.worldPosition - vertex.worldPosition
 						val distance = t.length()
+//						println("current worldposition:"+ current.worldPosition)
+//						println("vertex.worldposition"+vertex.worldPosition)
 						vertex to distance
 					}
 					.sortedBy { it.second }
+			//println("distances.size: "+distances.size)
+			//println("distances.firstOrNull()?.second: "+ distances.firstOrNull()?.second)
 //			if(distances.firstOrNull()?.second != null && distances.firstOrNull()?.second!! > 0)
 //			{
 //				logger.info("Minimum distance for t=$time d=${distances.firstOrNull()?.second} a=${distances.firstOrNull()?.first?.index} ")
@@ -193,13 +203,16 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 			}
 		}.toMutableList()
 
-		var avgPathLength = shortestPath.map { it.distance() }.average().toFloat()
-		var stdDevPathLength = shortestPath.map { it.distance() }.stddev().toFloat()
-		//logger.info("Average path length=$avgPathLength, stddev=$stdDevPathLength")
 
-		fun zScore(value: Float, m: Float, sd: Float) = ((value - m)/sd)
 		val beforeCount = shortestPath.size
 		System.out.println("before short path:"+ shortestPath.size)
+
+		var avgPathLength = shortestPath.map { it.distance() }.average().toFloat()
+		var stdDevPathLength = shortestPath.map { it.distance() }.stddev().toFloat()
+		logger.info("Average path length=$avgPathLength, stddev=$stdDevPathLength")
+
+		fun zScore(value: Float, m: Float, sd: Float) = ((value - m)/sd)
+
 
 		while (shortestPath.any { it.distance() >= removeTooFarThreshold * avgPathLength }) {
 			shortestPath = shortestPath.filter { it.distance() < removeTooFarThreshold * avgPathLength }.toMutableList()
@@ -224,7 +237,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 
 
 		var remaining = shortestPath.count { zScore(it.distance(), avgPathLength, stdDevPathLength) > zscoreThreshold }
-//		logger.info("Iterating: ${shortestPath.size} vertices remaining, with $remaining failing z-score criterion")
+		logger.info("Iterating: ${shortestPath.size} vertices remaining, with $remaining failing z-score criterion")
 		while(remaining > 0) {
 			val outliers = shortestPath
 					.filter { zScore(it.distance(), avgPathLength, stdDevPathLength) > zscoreThreshold }

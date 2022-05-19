@@ -113,7 +113,7 @@
 		<scijava.jvm.test.version>${scijava.jvm.version}</scijava.jvm.test.version>
 		<scijava.jvm.build.version>[1.8.0-101,)</scijava.jvm.build.version>
 
-		<scenery.version>5de0b1e</scenery.version>
+		<scenery.version>84dfb997fc</scenery.version>
 <!--		<scijava-common.version>2.84.0</scijava-common.version>-->
 		<ui-behaviour.version>2.0.3</ui-behaviour.version>
 		<imagej-mesh.version>0.8.1</imagej-mesh.version>
@@ -354,7 +354,7 @@
 	</dependencies>
 
 	<build>
-		<testSourceDirectory>src/test/tests</testSourceDirectory>
+		<testSourceDirectory>src/test</testSourceDirectory>
 		<plugins>
 			<plugin>
                 <groupId>org.apache.maven.plugins</groupId>

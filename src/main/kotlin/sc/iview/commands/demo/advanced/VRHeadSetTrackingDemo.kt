@@ -95,7 +95,7 @@ class VRHeadSetTrackingDemo: Command{
     @Volatile var tracking = false
     var playing = false
     var direction = PlaybackDirection.Forward
-    var volumesPerSecond = 4
+    var volumesPerSecond = 1
     var skipToNext = false
     var skipToPrevious = false
 //	var currentVolume = 0
@@ -398,7 +398,7 @@ class VRHeadSetTrackingDemo: Command{
 
                 volume.visible = true
                 volume.runRecursive { it.visible = true }
-                playing = true
+                playing = false
 
 
                 while(true)
@@ -434,9 +434,17 @@ class VRHeadSetTrackingDemo: Command{
         spine.spatial().orientBetweenPoints(p1, p2,true,true)
         spine.visible = false
 
-        val intersection = volume.intersectAABB(p1, (p2 - p1).normalize())
+        val intersection = volume.spatial().intersectAABB(p1, (p2 - p1).normalize())
+            println("try to find intersection");
+        val bbmin = volume.getMaximumBoundingBox().min.xyzw()
+        val bbmax = volume.getMaximumBoundingBox().max.xyzw()
 
+        val min = volume.spatial().world.transform(bbmin)
+        val max = volume.spatial().world.transform(bbmax)
+        println(min)
+        println(max)
         if(intersection is MaybeIntersects.Intersection) {
+            println("got a intersection")
             // get local entry and exit coordinates, and convert to UV coords
             val localEntry = (intersection.relativeEntry) //.add(Vector3f(1.0f)) ) .mul (1.0f / 2.0f)
             val localExit = (intersection.relativeExit) //.add (Vector3f(1.0f)) ).mul  (1.0f / 2.0f)

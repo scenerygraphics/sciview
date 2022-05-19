@@ -39,15 +39,12 @@ import bdv.viewer.Source
 import bdv.viewer.SourceAndConverter
 import graphics.scenery.*
 import graphics.scenery.Scene.RaycastResult
-import graphics.scenery.attribute.material.Material
 import graphics.scenery.backends.Renderer
 import graphics.scenery.backends.opengl.OpenGLRenderer
 import graphics.scenery.backends.vulkan.VulkanRenderer
 import graphics.scenery.controls.InputHandler
 import graphics.scenery.controls.OpenVRHMD
-import graphics.scenery.controls.TrackedStereoGlasses
 import graphics.scenery.controls.TrackerInput
-import graphics.scenery.numerics.Random
 import graphics.scenery.primitives.*
 import graphics.scenery.proteins.Protein
 import graphics.scenery.proteins.RibbonDiagram
@@ -80,7 +77,6 @@ import net.imglib2.*
 import net.imglib2.display.ColorTable
 import net.imglib2.img.Img
 import net.imglib2.img.array.ArrayImgs
-import net.imglib2.img.display.imagej.ImageJFunctions
 import net.imglib2.realtransform.AffineTransform3D
 import net.imglib2.type.numeric.ARGBType
 import net.imglib2.type.numeric.NumericType
@@ -89,6 +85,7 @@ import net.imglib2.type.numeric.integer.UnsignedByteType
 import net.imglib2.view.Views
 import org.joml.Quaternionf
 import org.joml.Vector3f
+import org.joml.Vector4f
 import org.scijava.Context
 import org.scijava.`object`.ObjectService
 import org.scijava.display.Display
@@ -104,11 +101,11 @@ import org.scijava.thread.ThreadService
 import org.scijava.util.ColorRGB
 import org.scijava.util.Colors
 import org.scijava.util.VersionUtils
+import sc.iview.commands.demo.animation.ParticleDemo
 import sc.iview.event.NodeActivatedEvent
 import sc.iview.event.NodeAddedEvent
 import sc.iview.event.NodeChangedEvent
 import sc.iview.event.NodeRemovedEvent
-import sc.iview.node.Line3D
 import sc.iview.process.MeshConverter
 import sc.iview.ui.CustomPropertyUI
 import sc.iview.ui.MainWindow
@@ -127,12 +124,9 @@ import java.util.function.Consumer
 import java.util.function.Function
 import java.util.function.Predicate
 import java.util.stream.Collectors
-import kotlin.collections.ArrayList
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.system.measureTimeMillis
-import org.joml.Vector4f
-import sc.iview.commands.demo.animation.ParticleDemo
 
 /**
  * Main SciView class.
@@ -729,7 +723,15 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         v.metadata["animating"] = true
         v.converterSetups.firstOrNull()?.setDisplayRange(0.0, 1500.0)
         v.visible = true
+
+        v.spatial().wantsComposeModel = true
+        v.spatial().updateWorld(true)
+        System.out.println("v.model: " + v.model)
         addChild(v)
+        System.out.println("v.getDimensions: "+ v.getDimensions())
+
+        System.out.println(" v.pixelToWorldRatio: "+  v.pixelToWorldRatio)
+        System.out.println("v.world.matrix: " + v.spatial().world)
     }
 
     data class PointInTrack(
@@ -1465,7 +1467,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     </T> */
     @JvmOverloads
     @Suppress("UNCHECKED_CAST")
-    fun <T : NumericType<T>> addVolume(sources: List<SourceAndConverter<T>>,
+    fun <T : RealType<T>> addVolume(sources: List<SourceAndConverter<T>>,
                                        converterSetups: ArrayList<ConverterSetup>,
                                        numTimepoints: Int,
                                        name: String = "Volume",

@@ -60,6 +60,7 @@ import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
 import org.scijava.ui.behaviour.DragBehaviour
 import sc.iview.commands.demo.animation.ParticleDemo
+import kotlin.properties.Delegates
 
 @Plugin(type = Command::class,
         menuRoot = "SciView",
@@ -98,14 +99,17 @@ class VRControllerTrackingDemo: Command{
     @Volatile var tracking = false
     var playing = false
     var direction = PlaybackDirection.Forward
-    var volumesPerSecond = 4
+    var volumesPerSecond = 1
     var skipToNext = false
     var skipToPrevious = false
 //	var currentVolume = 0
 
     var volumeScaleFactor = 1.0f
+    var rightControllerReady = false
 
     override fun run() {
+
+
 
         sciview.toggleVRRendering()
         hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
@@ -177,16 +181,17 @@ class VRControllerTrackingDemo: Command{
                 log.info("onDeviceConnect called, cam=${sciview.camera}")
                 if(device.type == TrackedDeviceType.Controller) {
                     log.info("Got device ${device.name} at $timestamp")
-//                    if(device.role == TrackerRole.RightHand) {
-//                        rightController = device
-//                        log.info("rightController is found, its location is in ${rightController.position}")
-//                    }
+                    if(device.role == TrackerRole.RightHand) {
+                        rightController = device
+                        rightControllerReady = true
+                        log.info("rightController is found and ready")
+                    }
 //                    rightController = hmd.getTrackedDevices(TrackedDeviceType.Controller).get("Controller-1")!!
                     device.model?.let { hmd.attachToNode(device, it, sciview.camera) }
                 }
             }
         }
-         thread{
+        thread{
             inputSetup()
         }
         thread {
@@ -431,31 +436,30 @@ class VRControllerTrackingDemo: Command{
 
             volume.visible = true
             volume.runRecursive { it.visible = true }
-            playing = true
+            playing = false
 
             println("test")
 
             while(true)
             {
-                if(!hmd.getTrackedDevices(TrackedDeviceType.Controller).containsKey("Controller-2"))
+                if(!rightControllerReady)
                 {
-                    println("null")
+                    //println("null")
                     continue
                 }
                 else
                 {
-                    rightController = hmd.getTrackedDevices(TrackedDeviceType.Controller).get("Controller-2")!!
-
+                    // rightController = hmd.getTrackedDevices(TrackedDeviceType.Controller).get("Controller-2")!!
                     if (rightController.model?.spatialOrNull() == null) {
-                        println("spatial null")
+                       // println("spatial null")
                     }
                     else
                     {
                         val headCenter = Matrix4f(rightController.model?.spatialOrNull()?.world).transform(Vector3f(0.0f,0f,-0.1f).xyzw()).xyz()
                         val pointWorld = Matrix4f(rightController.model?.spatialOrNull()?.world).transform(Vector3f(0.0f,0f,-2f).xyzw()).xyz()
 
-//                        println(headCenter.toString())
-//                        println(pointWorld.toString())
+                        println(headCenter.toString())
+                        println(pointWorld.toString())
                         testTarget1.visible = true
                         testTarget1.ifSpatial { position =  headCenter}
 

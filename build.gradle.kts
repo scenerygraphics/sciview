@@ -36,7 +36,8 @@ dependencies {
     annotationProcessor(sciJava.common)
     kapt(sciJava.common)
 
-    val sceneryVersion = "84dfb997fc"
+    val sceneryVersion = "71149792ec"
+    //val sceneryVersion = "84dfb997fc"
     api("graphics.scenery:scenery:$sceneryVersion")
     // check if build is triggered on https://jitpack.io/#scenerygraphics/sciview `build` tab
     // if not, uncomment this only to trigger it
