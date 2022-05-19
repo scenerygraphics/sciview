@@ -26,61 +26,59 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.file;
+package sc.iview.commands.edit.add
 
-import java.io.File;
-
-import org.scijava.command.Command;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import org.scijava.widget.FileWidget;
-
-import sc.iview.SciView;
-
-import graphics.scenery.Mesh;
-import sc.iview.Utils;
-
-import static sc.iview.commands.MenuWeights.*;
+import graphics.scenery.Box
+import graphics.scenery.volumes.SlicingPlane
+import graphics.scenery.volumes.VolumeManager
+import org.joml.Vector3f
+import org.scijava.command.Command
+import org.scijava.display.DisplayService
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import org.scijava.util.ColorRGB
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.EDIT
+import sc.iview.commands.MenuWeights.EDIT_ADD
+import sc.iview.commands.MenuWeights.EDIT_ADD_BOX
+import sc.iview.commands.MenuWeights.EDIT_ADD_SLICING_PLANE
 
 /**
- * Command to export a STL of the currently active Node
+ * Command to add a box to the scene
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "File", weight = FILE), //
-                 @Menu(label = "Export", weight = FILE_EXPORT), //
-                 @Menu(label = "STL...", weight = FILE_EXPORT_STL) })
-public class ExportSTL implements Command {
+@Plugin(
+    type = Command::class,
+    menuRoot = "SciView",
+    menu = [Menu(label = "Edit", weight = EDIT), Menu(label = "Add", weight = EDIT_ADD), Menu(
+        label = "Slicing Plane...",
+        weight = EDIT_ADD_SLICING_PLANE
+    )]
+)
+class AddSlicingPlane : Command {
+    @Parameter
+    private lateinit var displayService: DisplayService
 
     @Parameter
-    private LogService logService;
+    private lateinit var sciView: SciView
 
     @Parameter
-    private SciView sciView;
+    private var targetAllVolumes = true
 
-    @Parameter(style = FileWidget.SAVE_STYLE)
-    private File stlFile = new File( "" );
+    override fun run() {
 
-    @Parameter
-    private boolean useMeshScale = false;
+        val plane = SlicingPlane()
 
-    @Override
-    public void run() {
-        if( sciView.getActiveNode() instanceof Mesh ) {
-            Mesh mesh = ( Mesh ) sciView.getActiveNode();
-
-            if( mesh != null ) {
-                try {
-                    Utils.writeSCMesh( stlFile.getAbsolutePath(), mesh, useMeshScale );
-                } catch( final Exception e ) {
-                    logService.trace( e );
-                }
-            }
+        if (targetAllVolumes){
+            sciView.hub.get<VolumeManager>()?.nodes?.forEach { plane.addTargetVolume(it) }
         }
-    }
 
+        val handle = Box(Vector3f(1f,0.1f,1f))
+        handle.name = "Slicing Plane Handle"
+        handle.addChild(plane)
+
+        sciView.addNode(handle)
+    }
 }

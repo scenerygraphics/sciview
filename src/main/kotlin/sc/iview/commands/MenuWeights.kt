@@ -61,6 +61,7 @@ object MenuWeights {
     const val EDIT_ADD_VOLUME = 5.0
     const val EDIT_ADD_CAMERA = 6.0
     const val EDIT_ADD_COMPASS = 7.0
+    const val EDIT_ADD_SLICING_PLANE = 8.0
     // Edit/Settings
     const val EDIT_SETTINGS_BINDINGS = 0.0
     const val EDIT_SETTINGS_CONTROLS = 1.0
