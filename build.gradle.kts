@@ -6,8 +6,8 @@ import java.net.URL
 import sciview.*
 
 plugins {
-    val ktVersion = "1.6.10"
-    val dokkaVersion = "1.6.0"
+    val ktVersion = "1.7.10"
+    val dokkaVersion = "1.6.21"
 
     java
     kotlin("jvm") version ktVersion
@@ -28,29 +28,29 @@ repositories {
 }
 
 dependencies {
-    val ktVersion = "1.6.10"
+    val ktVersion = "1.7.10"
     implementation(platform("org.scijava:pom-scijava:31.1.0"))
 
     // Graphics dependencies
 
-    annotationProcessor("org.scijava:scijava-common:2.87.1")
-    kapt("org.scijava:scijava-common:2.87.1") { // MANUAL version increment
+    annotationProcessor("org.scijava:scijava-common:2.88.1")
+    kapt("org.scijava:scijava-common:2.88.1") { // MANUAL version increment
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "cf297d4"
-    api("graphics.scenery:scenery:$sceneryVersion") { version { strictly(sceneryVersion) } }
+    val sceneryVersion = "6d748a54"
+    api("graphics.scenery:scenery:$sceneryVersion") {
+        version { strictly(sceneryVersion) }
+        exclude("org.biojava.thirdparty", "forester")
+        exclude("null", "unspecified")
+    }
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.1")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.1")
-    implementation("org.msgpack:jackson-dataformat-msgpack:0.9.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.3")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.3")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.3")
+    implementation("org.msgpack:jackson-dataformat-msgpack:0.9.1")
 
-    implementation(misc.cleargl)
-    implementation(misc.coreMem)
-    implementation(jogamp.jogl, joglNatives)
-
-    implementation("com.formdev:flatlaf:1.6.5")
+    implementation("com.formdev:flatlaf:2.3")
 
     // SciJava dependencies
 
@@ -61,7 +61,7 @@ dependencies {
     implementation("org.scijava:scijava-ui-awt")
     implementation("org.scijava:scijava-search")
     implementation("org.scijava:scripting-jython")
-    implementation(migLayout.swing)
+//    implementation(migLayout.swing)
 
     // ImageJ dependencies
 
@@ -80,23 +80,25 @@ dependencies {
     implementation("net.imglib2:imglib2-roi")
 
     // Math dependencies
-    implementation(commons.math3)
-    implementation(misc.joml)
+//    implementation(commons.math3)
+//    implementation(misc.joml)
 
     // Kotlin dependencies
     implementation("org.jetbrains.kotlin:kotlin-stdlib-common:$ktVersion")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:$ktVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
 
     // Test scope
 
-    testImplementation(misc.junit4)
+//    testImplementation(misc.junit4)
     implementation("net.imagej:ij")
     implementation("net.imglib2:imglib2-ij")
 
-    implementation(n5.core)
-    implementation(n5.hdf5)
-    implementation(n5.imglib2)
+//    implementation(n5.core)
+//    implementation(n5.hdf5)
+//    implementation(n5.imglib2)
+    implementation("org.janelia.saalfeldlab:n5")
+    implementation("org.janelia.saalfeldlab:n5-hdf5")
     implementation("sc.fiji:spim_data")
 
     implementation(platform(kotlin("bom")))
@@ -109,8 +111,6 @@ dependencies {
     // OME
     implementation("ome:formats-bsd")
     implementation("ome:formats-gpl")
-
-
 }
 
 //kapt {
@@ -129,7 +129,7 @@ tasks {
             jvmTarget = project.properties["jvmTarget"]?.toString() ?: default
             freeCompilerArgs += listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
         }
-        sourceCompatibility = project.properties["sourceCompatibility"]?.toString() ?: default
+//        sourceCompatibility = project.properties["sourceCompatibility"]?.toString() ?: default
     }
     test {
         finalizedBy(jacocoTestReport) // report is always generated after tests run
