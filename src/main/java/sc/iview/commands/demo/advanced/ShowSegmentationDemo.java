@@ -95,7 +95,7 @@ public class ShowSegmentationDemo implements Command {
 
         RandomAccessibleInterval<UnsignedByteType> inputImage = generateDemo(100, 100, 100, numSegments);
 
-        Volume v = (Volume) sciView.addVolume( inputImage, new float[] { 1, 1, 1 } );
+        Volume v = (Volume) sciView.addVolume( inputImage, "Input Image", new float[] { 1, 1, 1 } );
         v.setPixelToWorldRatio(10f);
         v.setName( "Segmentation Viz Demo" );
         v.setNeedsUpdate(true);
