@@ -38,13 +38,18 @@ dependencies {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "71149792ec"
-    //val sceneryVersion = "84dfb997fc"
+
+    val sceneryVersion = "4055b8eb32"
+    //val sceneryVersion = "ce77dda497"
+
     api("graphics.scenery:scenery:$sceneryVersion")
     // check if build is triggered on https://jitpack.io/#scenerygraphics/sciview `build` tab
     // if not, uncomment this only to trigger it
-//    api("com.github.scenerygraphics:scenery:$scenery")
+//    api("com.github.scenerygraphics:scenery:$sceneryVersion")
 
+    api("org.apache.logging.log4j:log4j-api:2.18.0")
+    api("org.apache.logging.log4j:log4j-core:2.18.0")
+    api("org.apache.logging.log4j:log4j-1.2-api:2.18.0")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
@@ -208,6 +213,8 @@ tasks {
                 dependencyNode.appendNode("classifier", classifier)
                 dependencyNode.appendNode("scope", "runtime")
             }
+            // add lwjgl version explicitly
+            propertiesNode.appendNode("lwjgl.version", "3.3.1")
             // add jvrpn property because it only has runtime native deps
             propertiesNode.appendNode("jvrpn.version", "1.2.0")
 

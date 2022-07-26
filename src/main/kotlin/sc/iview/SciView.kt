@@ -810,7 +810,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         {
             if(track.trackId > 10)
             {
-                continue
+               // continue
             }
             System.out.println("add track: "+ track.trackId.toString() )
             val master = Cylinder(0.1f, 1.0f, 10)

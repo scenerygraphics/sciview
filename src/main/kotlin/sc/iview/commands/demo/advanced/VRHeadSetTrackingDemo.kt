@@ -435,16 +435,16 @@ class VRHeadSetTrackingDemo: Command{
         spine.visible = false
 
         val intersection = volume.spatial().intersectAABB(p1, (p2 - p1).normalize())
-            println("try to find intersection");
+            //println("try to find intersection");
         val bbmin = volume.getMaximumBoundingBox().min.xyzw()
         val bbmax = volume.getMaximumBoundingBox().max.xyzw()
 
         val min = volume.spatial().world.transform(bbmin)
         val max = volume.spatial().world.transform(bbmax)
-        println(min)
-        println(max)
+       // println(min)
+       // println(max)
         if(intersection is MaybeIntersects.Intersection) {
-            println("got a intersection")
+           // println("got a intersection")
             // get local entry and exit coordinates, and convert to UV coords
             val localEntry = (intersection.relativeEntry) //.add(Vector3f(1.0f)) ) .mul (1.0f / 2.0f)
             val localExit = (intersection.relativeExit) //.add (Vector3f(1.0f)) ).mul  (1.0f / 2.0f)
@@ -554,13 +554,16 @@ class VRHeadSetTrackingDemo: Command{
                 val p1w = Matrix4f(volume.spatial().world).transform(p1.xyzw()).xyz()
                 element.spatial().orientBetweenPoints(p0w,p1w, rescale = true, reposition = true)
                 //mInstanced.instances.add(element)
+                val tp = pair[0].second.timepoint
                 val pp = Icosphere(0.01f, 1)
+                println("trackpoint_${tp}_${p0w.x}_${p0w.y}_${p0w.z}")
+                pp.name = "trackpoint_${tp}_${p0w.x}_${p0w.y}_${p0w.z}"
                 pp.spatial().position = p0w
                 pp.material().diffuse = Vector3f(0.5f, 0.3f, 0.8f)
-                sciview.addChild(pp)
+                sciview.addNode(pp)
 
             val p = Vector3f(pair[0].first).mul(Vector3f(volumeDimensions))//direct product
-            val tp = pair[0].second.timepoint
+
             trackFileWriter.write("$tp\t${p.x()}\t${p.y()}\t${p.z()}\t${hedgehogId}\t$parentId\t0\t0\n")
         }
         trackFileWriter.close()

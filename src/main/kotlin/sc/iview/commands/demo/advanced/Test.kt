@@ -248,7 +248,7 @@ class Test: Command{
             val cam = sciview.camera as? DetachedHeadCamera ?: return@thread
             volume.visible = true
             volume.runRecursive { it.visible = true }
-            playing = true
+            playing = false
             tracking = true
             //val p = hmd.getPose(TrackedDeviceType.Controller).firstOrNull { it.name == "Controller-3" }?.position
 
@@ -280,16 +280,16 @@ class Test: Command{
 
     private fun showTrack()
     {
-        val file = File("C:\\Users\\lanru\\Desktop\\BionicTracking-generated-2022-03-10 10.19.49\\Hedgehog_2_2022-03-10 10.21.10.csv")
+        val file = File("C:\\Users\\lanru\\Desktop\\BionicTracking-generated-2022-05-25 16.04.52\\Hedgehog_1_2022-05-25 16.06.03.csv")
         var volumeDimensions = volume.getDimensions()
         var selfdefineworlfmatrix = volume.spatial().world
        // volumeDimensions = Vector3f(700.0f,660.0f,113.0f)
-        selfdefineworlfmatrix = Matrix4f(
-            0.015f, 0f, 0f, 0f,
-            0f, -0.015f, 0f, 0f,
-            0f, 0f, 0.045f, 0f,
-            -5f, 8f, -2f, 1f
-        )
+//        selfdefineworlfmatrix = Matrix4f(
+//            0.015f, 0f, 0f, 0f,
+//            0f, -0.015f, 0f, 0f,
+//            0f, 0f, 0.045f, 0f,
+//            -5f, 8f, -2f, 1f
+//        )
         val analysis = HedgehogAnalysis.fromCSVWithMatrix(file,selfdefineworlfmatrix,Vector3f(volumeDimensions))
         print("volume.getDimensions(): "+ volume.getDimensions())
         print("volume.spatial().world: "+ volume.spatial().world)

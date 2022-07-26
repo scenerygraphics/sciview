@@ -60,13 +60,12 @@ import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
 import org.scijava.ui.behaviour.DragBehaviour
 import sc.iview.commands.demo.animation.ParticleDemo
-import kotlin.properties.Delegates
 
 @Plugin(type = Command::class,
-        menuRoot = "SciView",
-        menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
-            Menu(label = "Advanced", weight = MenuWeights.DEMO_ADVANCED),
-            Menu(label = "Utilize VR Controller for Cell Tracking", weight = MenuWeights.DEMO_ADVANCED_EYETRACKING)])
+    menuRoot = "SciView",
+    menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
+        Menu(label = "Advanced", weight = MenuWeights.DEMO_ADVANCED),
+        Menu(label = "Utilize VR Controller for Cell Tracking", weight = MenuWeights.DEMO_ADVANCED_EYETRACKING)])
 class VRControllerTrackingDemo: Command{
     @Parameter
     private lateinit var sciview: SciView
@@ -99,17 +98,14 @@ class VRControllerTrackingDemo: Command{
     @Volatile var tracking = false
     var playing = false
     var direction = PlaybackDirection.Forward
-    var volumesPerSecond = 1
+    var volumesPerSecond = 4
     var skipToNext = false
     var skipToPrevious = false
 //	var currentVolume = 0
 
     var volumeScaleFactor = 1.0f
-    var rightControllerReady = false
 
     override fun run() {
-
-
 
         sciview.toggleVRRendering()
         hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
@@ -181,11 +177,10 @@ class VRControllerTrackingDemo: Command{
                 log.info("onDeviceConnect called, cam=${sciview.camera}")
                 if(device.type == TrackedDeviceType.Controller) {
                     log.info("Got device ${device.name} at $timestamp")
-                    if(device.role == TrackerRole.RightHand) {
-                        rightController = device
-                        rightControllerReady = true
-                        log.info("rightController is found and ready")
-                    }
+//                    if(device.role == TrackerRole.RightHand) {
+//                        rightController = device
+//                        log.info("rightController is found, its location is in ${rightController.position}")
+//                    }
 //                    rightController = hmd.getTrackedDevices(TrackedDeviceType.Controller).get("Controller-1")!!
                     device.model?.let { hmd.attachToNode(device, it, sciview.camera) }
                 }
@@ -264,10 +259,10 @@ class VRControllerTrackingDemo: Command{
 
         sciview.sceneryInputHandler?.let { handler ->
             hashMapOf(
-                    "move_forward_fast" to "K",
-                    "move_back_fast" to "J",
-                    "move_left_fast" to "H",
-                    "move_right_fast" to "L").forEach { (name, key) ->
+                "move_forward_fast" to "K",
+                "move_back_fast" to "J",
+                "move_left_fast" to "H",
+                "move_right_fast" to "L").forEach { (name, key) ->
                 handler.getBehaviour(name)?.let { b ->
                     hmd.addBehaviour(name, b)
                     hmd.addKeyBinding(name, key)
@@ -343,32 +338,32 @@ class VRControllerTrackingDemo: Command{
         val move = ControllerDrag(TrackerRole.LeftHand, hmd) { volume }
 
         val deleteLastHedgehog = ConfirmableClickBehaviour(
-                armedAction = { timeout ->
-                    cam.showMessage("Deleting last track, press again to confirm.",distance = 1.2f, size = 0.2f,
-                            messageColor = Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
-                            backgroundColor = Vector4f(1.0f, 0.2f, 0.2f, 1.0f),
-                            duration = timeout.toInt())
+            armedAction = { timeout ->
+                cam.showMessage("Deleting last track, press again to confirm.",distance = 1.2f, size = 0.2f,
+                    messageColor = Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
+                    backgroundColor = Vector4f(1.0f, 0.2f, 0.2f, 1.0f),
+                    duration = timeout.toInt())
 
-                },
-                confirmAction = {
-                    hedgehogsList =  hedgehogsList.dropLast(1) as MutableList
+            },
+            confirmAction = {
+                hedgehogsList =  hedgehogsList.dropLast(1) as MutableList
 //                    sciview.children.last { it.name.startsWith("Track-") }?.let { lastTrack ->
 //                        sciview.removeChild(lastTrack)
 //                    }
 
-                    val hedgehogId = hedgehogIds.get()
-                    val hedgehogFile = sessionDirectory.resolve("Hedgehog_${hedgehogId}_${SystemHelpers.formatDateTime()}.csv").toFile()
-                    val hedgehogFileWriter = BufferedWriter(FileWriter(hedgehogFile, true))
-                    hedgehogFileWriter.newLine()
-                    hedgehogFileWriter.newLine()
-                    hedgehogFileWriter.write("# WARNING: TRACK $hedgehogId IS INVALID\n")
-                    hedgehogFileWriter.close()
+                val hedgehogId = hedgehogIds.get()
+                val hedgehogFile = sessionDirectory.resolve("Hedgehog_${hedgehogId}_${SystemHelpers.formatDateTime()}.csv").toFile()
+                val hedgehogFileWriter = BufferedWriter(FileWriter(hedgehogFile, true))
+                hedgehogFileWriter.newLine()
+                hedgehogFileWriter.newLine()
+                hedgehogFileWriter.write("# WARNING: TRACK $hedgehogId IS INVALID\n")
+                hedgehogFileWriter.close()
 
-                    cam.showMessage("Last track deleted.",distance = 1.2f, size = 0.2f,
-                            messageColor = Vector4f(1.0f, 0.2f, 0.2f, 1.0f),
-                            backgroundColor = Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
-                            duration = 1000)
-                })
+                cam.showMessage("Last track deleted.",distance = 1.2f, size = 0.2f,
+                    messageColor = Vector4f(1.0f, 0.2f, 0.2f, 1.0f),
+                    backgroundColor = Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
+                    duration = 1000)
+            })
 
         hmd.addBehaviour("playback_direction", ClickBehaviour { _, _ ->
             direction = if(direction == PlaybackDirection.Forward) {
@@ -436,30 +431,31 @@ class VRControllerTrackingDemo: Command{
 
             volume.visible = true
             volume.runRecursive { it.visible = true }
-            playing = false
+            playing = true
 
             println("test")
 
             while(true)
             {
-                if(!rightControllerReady)
+                if(!hmd.getTrackedDevices(TrackedDeviceType.Controller).containsKey("Controller-2"))
                 {
                     //println("null")
                     continue
                 }
                 else
                 {
-                    // rightController = hmd.getTrackedDevices(TrackedDeviceType.Controller).get("Controller-2")!!
+                    rightController = hmd.getTrackedDevices(TrackedDeviceType.Controller).get("Controller-2")!!
+
                     if (rightController.model?.spatialOrNull() == null) {
-                       // println("spatial null")
+                        //println("spatial null")
                     }
                     else
                     {
                         val headCenter = Matrix4f(rightController.model?.spatialOrNull()?.world).transform(Vector3f(0.0f,0f,-0.1f).xyzw()).xyz()
                         val pointWorld = Matrix4f(rightController.model?.spatialOrNull()?.world).transform(Vector3f(0.0f,0f,-2f).xyzw()).xyz()
 
-                        println(headCenter.toString())
-                        println(pointWorld.toString())
+//                        println(headCenter.toString())
+//                        println(pointWorld.toString())
                         testTarget1.visible = true
                         testTarget1.ifSpatial { position =  headCenter}
 
@@ -512,18 +508,18 @@ class VRControllerTrackingDemo: Command{
 
             if (samples != null && localDirection != null) {
                 val metadata = SpineMetadata(
-                        timepoint,
-                        center,
-                        direction,
-                        intersection.distance,
-                        localEntry,
-                        localExit,
-                        localDirection,
-                        cam.headPosition,
-                        cam.headOrientation,
-                        cam.position,
-                        confidence,
-                        samples.map { it ?: 0.0f }
+                    timepoint,
+                    center,
+                    direction,
+                    intersection.distance,
+                    localEntry,
+                    localExit,
+                    localDirection,
+                    cam.headPosition,
+                    cam.headOrientation,
+                    cam.position,
+                    confidence,
+                    samples.map { it ?: 0.0f }
                 )
                 val count = samples.filterNotNull().count { it > 0.02f }
                 //println("cnt: " +  count.toString())
