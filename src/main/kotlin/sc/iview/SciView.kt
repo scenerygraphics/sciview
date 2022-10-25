@@ -1187,7 +1187,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     /**
-     * Adss a SourceAndConverter to the scene.
+     * Adds a SourceAndConverter to the scene.
      *
      * @param sac The SourceAndConverter to add
      * @param name Name of the dataset
@@ -1210,6 +1210,14 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         return v
     }
 
+    /**
+     * Adds a [Dataset]-backed [Volume] to the scene.
+     *
+     * @param image The [Dataset] to add.
+     * @param voxelDimensions An array containing the relative voxel dimensions of the dataset.
+     * @param block A lambda with additional code to execute upon adding the volume.
+     * @return The volume node corresponding to the [Dataset]-backed volume that has just been added.
+     */
     fun addVolume(
         image: Dataset,
         voxelDimensions: FloatArray? = null,
