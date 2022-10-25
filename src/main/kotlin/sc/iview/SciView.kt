@@ -742,34 +742,35 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             return
         }
         val data = io.open(source)
-        if (data is Mesh)
-            addMesh(data)
-        else if (data is graphics.scenery.Mesh)
-            addMesh(data)
-        else if (data is PointCloud)
-            addPointCloud(data)
-        else if (data is Dataset)
-            addVolume(data)
-        else if (data is RandomAccessibleInterval<*>)
-            addVolume(data as RandomAccessibleInterval<RealType<*>>, source)
-        else if (data is List<*>) {
-            val list = data
-            require(!list.isEmpty()) { "Data source '$source' appears empty." }
-            val element = list[0]
-            if (element is RealLocalizable) {
-                // NB: For now, we assume all elements will be RealLocalizable.
-                // Highly likely to be the case, barring antagonistic importers.
-                val points = list as List<RealLocalizable>
-                addPointCloud(points, source)
-            } else {
-                val type = if (element == null) "<null>" else element.javaClass.name
-                throw IllegalArgumentException("Data source '" + source +  //
-                        "' contains elements of unknown type '" + type + "'")
+        when (data) {
+            is Mesh -> addMesh(data)
+            is PointCloud -> addPointCloud(data)
+            is graphics.scenery.Mesh -> addMesh(data)
+            is Dataset -> addVolume(data, floatArrayOf(1.0f, 1.0f, 1.0f))
+//            is RandomAccessibleInterval<*> -> {
+//                val t = data.randomAccess().get()
+//                addVolume(data, source, floatArrayOf(1.0f, 1.0f, 1.0f))
+//            }
+            is List<*> -> {
+                val list = data
+                require(!list.isEmpty()) { "Data source '$source' appears empty." }
+                val element = list[0]
+                if (element is RealLocalizable) {
+                    // NB: For now, we assume all elements will be RealLocalizable.
+                    // Highly likely to be the case, barring antagonistic importers.
+                    val points = list as List<RealLocalizable>
+                    addPointCloud(points, source)
+                } else {
+                    val type = if (element == null) "<null>" else element.javaClass.name
+                    throw IllegalArgumentException("Data source '" + source +  //
+                            "' contains elements of unknown type '" + type + "'")
+                }
             }
-        } else {
-            val type = if (data == null) "<null>" else data.javaClass.name
-            throw IllegalArgumentException("Data source '" + source +  //
-                    "' contains data of unknown type '" + type + "'")
+            else -> {
+                val type = if (data == null) "<null>" else data.javaClass.name
+                throw IllegalArgumentException("Data source '" + source +  //
+                        "' contains data of unknown type '" + type + "'")
+            }
         }
     }
 
@@ -1142,110 +1143,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     /**
-     * Add a Dataset to the scene as a volume. Voxel resolution and name are extracted from the Dataset itself
-     * @param image image to add as a volume
-     * @return a Node corresponding to the Volume
-     */
-    @JvmOverloads
-    fun addVolume(image: Dataset, block: Volume.() -> Unit = {}): Volume {
-        val voxelDims = FloatArray(image.numDimensions())
-
-        for (d in voxelDims.indices) {
-            val inValue = image.axis(d).averageScale(0.0, 1.0)
-            if (image.axis(d).unit() == null) {
-                voxelDims[d] = inValue.toFloat()
-            } else {
-                val imageAxisUnit = image.axis(d).unit().replace("µ", "u")
-                val sciviewAxisUnit = axis(d)!!.unit().replace("µ", "u")
-
-                voxelDims[d] = unitService.value(inValue, imageAxisUnit, sciviewAxisUnit).toFloat()
-            }
-        }
-
-        logger.info("Adding with ${voxelDims.joinToString(",")}")
-        val v = addVolume(image, voxelDims, block)
-        imageToVolumeMap[image] = v
-        return v
-    }
-
-    /**
-     * Add a Dataset as a Volume with the specified voxel dimensions
-     * @param image image to add as a volume
-     * @param voxelDimensions dimensions of voxels in volume
-     * @return a Node corresponding to the Volume
-     */
-    @JvmOverloads
-    @Suppress("UNCHECKED_CAST")
-    fun addVolume(image: Dataset, voxelDimensions: FloatArray, block: Volume.() -> Unit = {}): Volume {
-        val v = addVolume(image.imgPlus as RandomAccessibleInterval<RealType<*>>, image.name ?: "Volume",
-                *voxelDimensions, block = block)
-        imageToVolumeMap[image] = v
-        return v
-    }
-
-    /**
-     * Add a RandomAccessibleInterval to the image
-     * @param image image to add as a volume
-     * @param <T> pixel type of image
-     * @return a Node corresponding to the volume
-    </T> */
-    @JvmOverloads
-    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, name: String = "Volume", block: Volume.() -> Unit = {}): Volume {
-        val v = addVolume(image, name, 1f, 1f, 1f, block = block)
-        imageToVolumeMap[image] = v
-        return v
-    }
-
-    /**
-     * Add a RandomAccessibleInterval to the image
-     * @param image image to add as a volume
-     * @param <T> pixel type of image
-     * @return a Node corresponding to the volume
-    </T> */
-    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, voxelDimensions: FloatArray, block: Volume.() -> Unit): Volume {
-        val v = addVolume(image, "volume", *voxelDimensions, block = block)
-        imageToVolumeMap[image] = v
-        return v
-    }
-
-    /**
-     * Add an IterableInterval as a Volume
-     * @param image
-     * @param <T>
-     * @return a Node corresponding to the Volume
-    </T> */
-    @Suppress("UNCHECKED_CAST")
-    @Throws(Exception::class)
-    fun <T : RealType<T>> addVolume(image: IterableInterval<T>): Volume {
-        return if (image is RandomAccessibleInterval<*>) {
-            val v = addVolume(image as RandomAccessibleInterval<RealType<*>>, "Volume")
-            imageToVolumeMap[image] = v
-            v
-        } else {
-            throw Exception("Unsupported Volume type:$image")
-        }
-    }
-
-    /**
-     * Add an IterableInterval as a Volume
-     * @param image image to add as a volume
-     * @param name name of image
-     * @param <T> pixel type of image
-     * @return a Node corresponding to the Volume
-    </T> */
-    @Suppress("UNCHECKED_CAST")
-    @Throws(Exception::class)
-    fun <T : RealType<T>> addVolume(image: IterableInterval<T>, name: String = "Volume"): Volume {
-        return if (image is RandomAccessibleInterval<*>) {
-            val v = addVolume(image as RandomAccessibleInterval<RealType<*>>, name, 1f, 1f, 1f)
-            imageToVolumeMap[image] = v
-            v
-        } else {
-            throw Exception("Unsupported Volume type:$image")
-        }
-    }
-
-    /**
      * Set the colormap using an ImageJ LUT name
      * @param n node to apply colormap to
      * @param lutName name of LUT according to imagej LUTService
@@ -1290,7 +1187,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     /**
-     * Adss a SourceAndConverter to the scene.
+     * Adds a SourceAndConverter to the scene.
      *
      * @param sac The SourceAndConverter to add
      * @param name Name of the dataset
@@ -1302,15 +1199,47 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     fun <T : RealType<T>> addVolume(sac: SourceAndConverter<T>,
                                     numTimepoints: Int,
                                     name: String = "Volume",
-                                    vararg voxelDimensions: Float,
+                                    voxelDimensions: FloatArray,
                                     block: Volume.() -> Unit = {}): Volume {
         val sources: MutableList<SourceAndConverter<T>> = ArrayList()
         sources.add(sac)
 
-        val v = addVolume(sources, numTimepoints, name, *voxelDimensions, block = block)
+        val v = addVolume(sources, numTimepoints, name, voxelDimensions, block = block)
         imageToVolumeMap[sources] = v
         imageToVolumeMap[sac] = v
         return v
+    }
+
+    /**
+     * Adds a [Dataset]-backed [Volume] to the scene.
+     *
+     * @param image The [Dataset] to add.
+     * @param voxelDimensions An array containing the relative voxel dimensions of the dataset.
+     * @param block A lambda with additional code to execute upon adding the volume.
+     * @return The volume node corresponding to the [Dataset]-backed volume that has just been added.
+     */
+    fun addVolume(
+        image: Dataset,
+        voxelDimensions: FloatArray? = null,
+        block: Volume.() -> Unit = {}
+    ): Volume {
+        return if(voxelDimensions == null) {
+            val voxelDims = FloatArray(image.numDimensions())
+            for (d in voxelDims.indices) {
+                val inValue = image.axis(d).averageScale(0.0, 1.0)
+                if (image.axis(d).unit() == null) {
+                    voxelDims[d] = inValue.toFloat()
+                } else {
+                    val imageAxisUnit = image.axis(d).unit().replace("µ", "u")
+                    val sciviewAxisUnit = axis(d)!!.unit().replace("µ", "u")
+
+                    voxelDims[d] = unitService.value(inValue, imageAxisUnit, sciviewAxisUnit).toFloat()
+                }
+            }
+            addVolume(image.imgPlus, image.name, voxelDims, block)
+        } else {
+            addVolume(image.imgPlus, image.name, voxelDimensions, block)
+        }
     }
 
     /**
@@ -1323,8 +1252,12 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return a Node corresponding to the Volume
     </T> */
     @JvmOverloads
-    fun <T : RealType<T>> addVolume(image: RandomAccessibleInterval<T>, name: String = "Volume",
-                                    vararg voxelDimensions: Float, block: Volume.() -> Unit = {}): Volume {
+    fun <T : RealType<T>> addVolume(
+        image: RandomAccessibleInterval<T>,
+        name: String = "Volume",
+        voxelDimensions: FloatArray = floatArrayOf(1.0f, 1.0f, 1.0f),
+        block: Volume.() -> Unit = {}
+    ): Volume {
         //log.debug( "Add Volume " + name + " image: " + image );
         val dimensions = LongArray(image.numDimensions())
         image.dimensions(dimensions)
@@ -1353,8 +1286,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             converterSetups.add(BigDataViewer.createConverterSetup(source, setupId.getAndIncrement()))
             sources.add(source)
         }
-        val v = addVolume(sources, numTimepoints, name, *voxelDimensions, block = block)
-        v.metadata.set("RandomAccessibleInterval", image)
+
+        val v = addVolume(sources, numTimepoints, name, voxelDimensions, block = block)
+        v.metadata["RandomAccessibleInterval"] = image
         imageToVolumeMap[image] = v
         return v
     }
@@ -1438,7 +1372,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     fun <T : RealType<T>> addVolume(sources: List<SourceAndConverter<T>>,
                                     numTimepoints: Int,
                                     name: String = "Volume",
-                                    vararg voxelDimensions: Float,
+                                    voxelDimensions: FloatArray,
                                     block: Volume.() -> Unit = {}): Volume {
         var setupId = 0
         val converterSetups = ArrayList<ConverterSetup>()

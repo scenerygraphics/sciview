@@ -205,7 +205,7 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
             override fun windowClosing(e: WindowEvent) {
                 logger.debug("Closing SciView window.")
                 close()
-                sciview.scijavaContext.service(SciViewService::class.java).close(sciview)
+                sciview.scijavaContext?.service(SciViewService::class.java)?.close(sciview)
                 sciview.isClosed = true
             }
         })

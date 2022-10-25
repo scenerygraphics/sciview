@@ -78,13 +78,9 @@ class AddVolume : Command {
 
     override fun run() {
         if (inheritFromImage) {
-            sciView.addVolume(image) {
-                name = image.name ?: "Volume"
-            }
+            sciView.addVolume(image)
         } else {
-            sciView.addVolume(image, floatArrayOf(voxelWidth, voxelHeight, voxelDepth)) {
-                name = image.name ?: "Volume"
-            }
+            sciView.addVolume(image, floatArrayOf(voxelWidth, voxelHeight, voxelDepth))
         }
     }
 
