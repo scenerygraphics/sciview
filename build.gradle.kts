@@ -1,12 +1,10 @@
 import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import sciview.implementation
-import sciview.joglNatives
 import java.net.URL
 import sciview.*
 
 plugins {
-    val ktVersion = "1.7.10"
+    val ktVersion = "1.7.20"
     val dokkaVersion = "1.6.21"
 
     java
@@ -28,29 +26,29 @@ repositories {
 }
 
 dependencies {
-    val ktVersion = "1.7.10"
+    val ktVersion = "1.7.20"
     implementation(platform("org.scijava:pom-scijava:31.1.0"))
 
     // Graphics dependencies
 
-    annotationProcessor("org.scijava:scijava-common:2.88.1")
-    kapt("org.scijava:scijava-common:2.88.1") { // MANUAL version increment
+    annotationProcessor("org.scijava:scijava-common:2.90.0")
+    kapt("org.scijava:scijava-common:2.90.0") { // MANUAL version increment
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "6d748a54"
+    val sceneryVersion = "0a32128"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
         exclude("null", "unspecified")
     }
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.3")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.3")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.3")
-    implementation("org.msgpack:jackson-dataformat-msgpack:0.9.1")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4.2")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.4")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.4")
+    implementation("org.msgpack:jackson-dataformat-msgpack:0.9.3")
 
-    implementation("com.formdev:flatlaf:2.3")
+    implementation("com.formdev:flatlaf:2.6")
 
     // SciJava dependencies
 
@@ -86,7 +84,7 @@ dependencies {
     // Kotlin dependencies
     implementation("org.jetbrains.kotlin:kotlin-stdlib-common:$ktVersion")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:$ktVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
     // Test scope
 
