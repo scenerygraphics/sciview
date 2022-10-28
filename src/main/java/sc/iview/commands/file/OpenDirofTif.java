@@ -66,11 +66,17 @@ public class OpenDirofTif implements Command {
     @Parameter(style = "directory")
     private File file;
 
+    @Parameter
+    private int onlyFirst = 0;
+
     @Override
     public void run() {
         try {
-            sciView.openDirTiff(file.toPath());
-
+            if(onlyFirst > 0) {
+                sciView.openDirTiff(file.toPath(), onlyFirst);
+            } else {
+                sciView.openDirTiff(file.toPath(), null);
+            }
         }
         catch (final IOException | IllegalArgumentException exc) {
             log.error( exc );

@@ -9,6 +9,8 @@ import org.joml.Matrix4f
 import org.joml.Quaternionf
 import graphics.scenery.utils.LazyLogger
 import graphics.scenery.utils.extensions.*
+import org.scijava.log.LogService
+import org.scijava.plugin.Parameter
 import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.math.abs
@@ -20,9 +22,10 @@ import kotlin.math.sqrt
  *
  * @author Ulrik Günther <hello@ulrik.is>
  */
-class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix4f, val dimension : Vector3f) {
-//	val logger by LazyLogger()
+class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix4f) {
 
+	private val logger by LazyLogger()
+	
 	val timepoints = LinkedHashMap<Int, ArrayList<SpineMetadata>>()
 
 	var avgConfidence = 0.0f
@@ -111,15 +114,19 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 	}
 
 	fun run(): Track? {
-		val startingThreshold = 0.02f
-		val localMaxThreshold = 0.01f
+		logger.info("run track analysis")
+		val startingThreshold = 0.002f
+		val localMaxThreshold = 0.001f
 		val zscoreThreshold = 2.0f
 		val removeTooFarThreshold = 5.0f
 
 		if(timepoints.isEmpty()) {
+			logger.info("timepoints is empty")
 			return null
 		}
 
+
+		//step1: find the startingPoint by using startingthreshold
 		val startingPoint = timepoints.entries.firstOrNull { entry ->
 			entry.value.any { metadata -> metadata.samples.filterNotNull().any { it > startingThreshold } }
 		} ?: return null
@@ -133,23 +140,25 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 
 		logger.info("${timepoints.size} timepoints left")
 
+
+		//step2: find the maxIndices along the spine
 		val candidates = timepoints.map { tp ->
 			val vs = tp.value.mapIndexedNotNull { i, spine ->
 				val maxIndices = localMaxima(spine.samples.filterNotNull())
-				//logger.info("Local maxima at ${tp.key}/$i are: ${maxIndices.joinToString(",")}")
+//				logger.info("Local maxima at ${tp.key}/$i are: ${maxIndices.joinToString(",")}")
 
 				if(maxIndices.isNotEmpty()) {
-
+//                  filter the maxIndices which are too far away
 					maxIndices.filter { it.first <1200}.
 					map { index ->
 //                        logger.info(index.toString())
 						val position = Vector3f(spine.localEntry).add((Vector3f(spine.localDirection).mul(index.first.toFloat())))
-//						println("i: " + i)
-//						println("position: " + position)
-//						println("dimension: "+ dimension)
-//						println("localToWorld: "+ localToWorld)
-						val worldPosition = localToWorld.transform((Vector3f(position).mul(dimension)).xyzw()).xyz()
-//						println("world position: "+ worldPosition)
+//						logger.info("i: " + i)
+//						logger.info("position: " + position)
+//						logger.info("dimension: "+ dimension)
+//						logger.info("localToWorld: "+ localToWorld)
+						val worldPosition = localToWorld.transform((Vector3f(position)).xyzw()).xyz()
+//						logger.info("world position: "+ worldPosition)
 						SpineGraphVertex(tp.key,
 								position,
 								worldPosition,
@@ -166,27 +175,27 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		}.flatten()
 
 
-
+		//step3: connect localMaximal points between 2 candidate spines according to the shortest path principle
 		// get the initial vertex, this one is assumed to always be in front, and have a local max
 		val initial = candidates.first().filter{it.value>startingThreshold}.first()
-		System.out.println("initial:"+initial)
-		System.out.println("candidates number: "+ candidates.size)
+		logger.info("initial:"+initial)
+		logger.info("candidates number: "+ candidates.size)
 		var current = initial
 		var shortestPath = candidates.drop(1).mapIndexedNotNull { time, vs ->
-//            System.out.println("time: ${time}")
-//			println("vs: ${vs}")
+//            System.out.logger.info("time: ${time}")
+//			logger.info("vs: ${vs}")
 			val distances = vs
 					.filter { it.value > localMaxThreshold }
 					.map { vertex ->
 						val t = current.worldPosition - vertex.worldPosition
 						val distance = t.length()
-//						println("current worldposition:"+ current.worldPosition)
-//						println("vertex.worldposition"+vertex.worldPosition)
+//						logger.info("current worldposition:"+ current.worldPosition)
+//						logger.info("vertex.worldposition"+vertex.worldPosition)
 						vertex to distance
 					}
 					.sortedBy { it.second }
-			//println("distances.size: "+distances.size)
-			//println("distances.firstOrNull()?.second: "+ distances.firstOrNull()?.second)
+			//logger.info("distances.size: "+distances.size)
+			//logger.info("distances.firstOrNull()?.second: "+ distances.firstOrNull()?.second)
 //			if(distances.firstOrNull()?.second != null && distances.firstOrNull()?.second!! > 0)
 //			{
 //				logger.info("Minimum distance for t=$time d=${distances.firstOrNull()?.second} a=${distances.firstOrNull()?.first?.index} ")
@@ -205,7 +214,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 
 
 		val beforeCount = shortestPath.size
-		System.out.println("before short path:"+ shortestPath.size)
+//		System.out.logger.info("before short path:"+ shortestPath.size)
 
 		var avgPathLength = shortestPath.map { it.distance() }.average().toFloat()
 		var stdDevPathLength = shortestPath.map { it.distance() }.stddev().toFloat()
@@ -213,7 +222,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 
 		fun zScore(value: Float, m: Float, sd: Float) = ((value - m)/sd)
 
-
+		//step4: if some path is longer than multiple average length, it should be removed
 		while (shortestPath.any { it.distance() >= removeTooFarThreshold * avgPathLength }) {
 			shortestPath = shortestPath.filter { it.distance() < removeTooFarThreshold * avgPathLength }.toMutableList()
 			shortestPath.windowed(3, 1, partialWindows = true).forEach {
@@ -223,11 +232,11 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 				it.getOrNull(2)?.previous = it.getOrNull(1)
 			}
 
-//			println("check which one is removed")
+//			logger.info("check which one is removed")
 //			shortestPath.forEach {
 //				if(it.distance() >= removeTooFarThreshold * avgPathLength)
 //				{
-//					println("current index= ${it.index}, distance = ${it.distance()}, next index = ${it.next?.index}"  )
+//					logger.info("current index= ${it.index}, distance = ${it.distance()}, next index = ${it.next?.index}"  )
 //				}
 //			}
 		}
@@ -235,7 +244,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		avgPathLength = shortestPath.map { it.distance() }.average().toFloat()
 		stdDevPathLength = shortestPath.map { it.distance() }.stddev().toFloat()
 
-
+		//step5: remove some edges according to zscoreThreshold
 		var remaining = shortestPath.count { zScore(it.distance(), avgPathLength, stdDevPathLength) > zscoreThreshold }
 		logger.info("Iterating: ${shortestPath.size} vertices remaining, with $remaining failing z-score criterion")
 		while(remaining > 0) {
@@ -258,7 +267,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 				it.getOrNull(1)?.next = it.getOrNull(2)
 				it.getOrNull(2)?.previous = it.getOrNull(1)
 			}
-			//logger.info("Iterating: ${shortestPath.size} vertices remaining, with $remaining failing z-score criterion")
+			logger.info("Iterating: ${shortestPath.size} vertices remaining, with $remaining failing z-score criterion")
 		}
 
 		val afterCount = shortestPath.size
@@ -275,11 +284,12 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 
 		logger.info("Returning ${singlePoints.size} points")
 
+
 		return Track(singlePoints.map { it.position to it}, avgConfidence)
 	}
 
 	companion object {
-		private val logger by LazyLogger()
+		private val logger by LazyLogger(System.getProperty("scenery.LogLevel", "info"))
 
 		fun fromIncompleteCSV(csv: File, separator: String = ","): HedgehogAnalysis {
 			logger.info("Loading spines from incomplete CSV at ${csv.absolutePath}")
@@ -310,11 +320,11 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 				spines.add(currentSpine)
 			}
 
-			return HedgehogAnalysis(spines, Matrix4f(), Vector3f())
+			return HedgehogAnalysis(spines, Matrix4f())
 		}
 
 		private fun String.toVector3f(): Vector3f {
-//			System.out.println(this)
+//			System.out.logger.info(this)
 			val array = this.replace("(", "").replace(")", "").trim().split(" ").filterNot { it == ""}
 
 			if (array[0] == "+Inf" || array[0] == "-Inf")
@@ -324,16 +334,16 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		}
 
 		private fun String.toQuaternionf(): Quaternionf {
-//			System.out.println(this)
+//			System.out.logger.info(this)
 			val array = this.replace("(", "").replace(")", "").trim().split(" ").filterNot { it == ""}
 			return Quaternionf(array[0].toFloat(), array[1].toFloat(), array[2].toFloat(), array[3].toFloat())
 		}
-		fun fromCSVWithMatrix(csv: File, matrix4f: Matrix4f, dimension: Vector3f, separator: String = ";"): HedgehogAnalysis {
-			logger.info("Loading spines from complete CSV at ${csv.absolutePath}")
+		fun fromCSVWithMatrix(csv: File, matrix4f: Matrix4f,separator: String = ";"): HedgehogAnalysis {
+			logger.info("Loading spines from complete CSV with Matrix at ${csv.absolutePath}")
 
 			val lines = csv.readLines()
 			val spines = ArrayList<SpineMetadata>(lines.size)
-
+			logger.info("lines number: " + lines.size)
 			lines.drop(1).forEach { line ->
 				val tokens = line.split(separator)
 				val timepoint = tokens[0].toInt()
@@ -365,7 +375,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 				spines.add(currentSpine)
 			}
 
-			return HedgehogAnalysis(spines, matrix4f,dimension)
+			return HedgehogAnalysis(spines, matrix4f)
 		}
 
 		fun fromCSV(csv: File, separator: String = ";"): HedgehogAnalysis {
@@ -405,7 +415,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 				spines.add(currentSpine)
 			}
 
-			return HedgehogAnalysis(spines, Matrix4f(),Vector3f())
+			return HedgehogAnalysis(spines, Matrix4f())
 		}
 	}
 }

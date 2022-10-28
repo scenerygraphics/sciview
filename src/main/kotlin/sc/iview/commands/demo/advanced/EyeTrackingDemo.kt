@@ -606,7 +606,7 @@ class EyeTrackingDemo: Command{
         val track = if(existingAnalysis is HedgehogAnalysis.Track) {
             existingAnalysis
         } else {
-            val h = HedgehogAnalysis(spines, Matrix4f(volume.world), Vector3f(volume.getDimensions()))
+            val h = HedgehogAnalysis(spines, Matrix4f(volume.world))
             h.run()
         }
 

@@ -47,9 +47,12 @@ dependencies {
     // if not, uncomment this only to trigger it
 //    api("com.github.scenerygraphics:scenery:$sceneryVersion")
 
-    api("org.apache.logging.log4j:log4j-api:2.18.0")
-    api("org.apache.logging.log4j:log4j-core:2.18.0")
-    api("org.apache.logging.log4j:log4j-1.2-api:2.18.0")
+    api("org.apache.logging.log4j:log4j-api:2.19.0")
+    api("org.apache.logging.log4j:log4j-core:2.19.0")
+    api("org.apache.logging.log4j:log4j-1.2-api:2.19.0")
+
+    api("org.slf4j:slf4j-api:1.7.36")
+    api("org.slf4j:slf4j-simple:1.7.36")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")

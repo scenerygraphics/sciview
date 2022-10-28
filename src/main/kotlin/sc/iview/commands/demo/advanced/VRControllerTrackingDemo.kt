@@ -454,8 +454,8 @@ class VRControllerTrackingDemo: Command{
                         val headCenter = Matrix4f(rightController.model?.spatialOrNull()?.world).transform(Vector3f(0.0f,0f,-0.1f).xyzw()).xyz()
                         val pointWorld = Matrix4f(rightController.model?.spatialOrNull()?.world).transform(Vector3f(0.0f,0f,-2f).xyzw()).xyz()
 
-//                        println(headCenter.toString())
-//                        println(pointWorld.toString())
+                        println(headCenter.toString())
+                        println(pointWorld.toString())
                         testTarget1.visible = true
                         testTarget1.ifSpatial { position =  headCenter}
 
@@ -568,7 +568,7 @@ class VRControllerTrackingDemo: Command{
         val track = if(existingAnalysis is HedgehogAnalysis.Track) {
             existingAnalysis
         } else {
-            val h = HedgehogAnalysis(spines, Matrix4f(volume.world), Vector3f(volume.getDimensions()))
+            val h = HedgehogAnalysis(spines, Matrix4f(volume.spatial().world))
             h.run()
         }
 

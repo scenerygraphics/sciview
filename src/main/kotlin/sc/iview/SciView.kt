@@ -722,9 +722,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     @Throws(IOException::class)
-    fun openDirTiff(source: Path)
+    fun openDirTiff(source: Path, onlyFirst: Int? = null)
     {
-        val v = Volume.fromPath(source, hub)
+        val v = Volume.fromPath(source, hub, onlyFirst)
         v.name = "volume"
         v.spatial().position = Vector3f(-3.0f, 10.0f, 0.0f)
         v.colormap = Colormap.get("jet")
@@ -736,12 +736,12 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
         v.spatial().wantsComposeModel = true
         v.spatial().updateWorld(true)
-        System.out.println("v.model: " + v.model)
+//        System.out.println("v.model: " + v.model)
         addChild(v)
-        System.out.println("v.getDimensions: "+ v.getDimensions())
-
-        System.out.println(" v.pixelToWorldRatio: "+  v.pixelToWorldRatio)
-        System.out.println("v.world.matrix: " + v.spatial().world)
+//        System.out.println("v.getDimensions: "+ v.getDimensions())
+//
+//        System.out.println(" v.pixelToWorldRatio: "+  v.pixelToWorldRatio)
+//        System.out.println("v.world.matrix: " + v.spatial().world)
     }
 
     data class PointInTrack(
@@ -810,7 +810,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         {
             if(track.trackId > 10)
             {
-               // continue
+                continue
             }
             System.out.println("add track: "+ track.trackId.toString() )
             val master = Cylinder(0.1f, 1.0f, 10)
@@ -840,7 +840,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                 //mInstanced.instances.add(element)
 
             }
-
         }
 
     }
