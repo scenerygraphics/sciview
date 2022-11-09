@@ -18,11 +18,11 @@ gradle.rootProject {
     description = "Scenery-backed 3D visualization package for ImageJ."
 }
 
-//val useLocalScenery: String? by extra
-//if (System.getProperty("CI").toBoolean() != true
-//    && System.getenv("CI").toBoolean() != true
-//    && useLocalScenery?.toBoolean() == true)
-//    if(File("../scenery/build.gradle.kts").exists()) {
-//        logger.warn("Including local scenery project instead of version declared in build, set -PuseLocalScenery=false to use declared version instead.")
+val useLocalScenery: String? by extra
+if (System.getProperty("CI").toBoolean() != true
+    && System.getenv("CI").toBoolean() != true
+    && useLocalScenery?.toBoolean() == true)
+    if(File("../scenery/build.gradle.kts").exists()) {
+        logger.warn("Including local scenery project instead of version declared in build, set -PuseLocalScenery=false to use declared version instead.")
         includeBuild("../scenery")
-//    }
+    }
