@@ -39,8 +39,7 @@ dependencies {
     }
 
 
-    val sceneryVersion = "4055b8eb32"
-    //val sceneryVersion = "ce77dda497"
+    val sceneryVersion = "ccadcc7"
 
     api("graphics.scenery:scenery:$sceneryVersion")
     // check if build is triggered on https://jitpack.io/#scenerygraphics/sciview `build` tab

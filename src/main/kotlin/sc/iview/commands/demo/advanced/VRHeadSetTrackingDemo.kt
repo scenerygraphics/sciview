@@ -40,6 +40,7 @@ import sc.iview.commands.file.OpenDirofTif
 import sc.iview.event.NodeAddedEvent
 import sc.iview.event.NodeChangedEvent
 import sc.iview.event.NodeRemovedEvent
+import sc.iview.event.NodeTaggedEvent
 import kotlin.concurrent.fixedRateTimer
 
 @Plugin(type = Command::class,
@@ -361,20 +362,23 @@ class VRHeadSetTrackingDemo: Command{
 
 
         //VRGrab.createAndSet(scene = Scene(), hmd, listOf(OpenVRHMD.OpenVRButton.Trigger), listOf(TrackerRole.LeftHand))
-       //left trigger button can validate a track
+       //left trigger button can validate or delete a track
         VRSelect.createAndSet(sciview.currentScene,
             hmd,
             listOf(OpenVRHMD.OpenVRButton.Trigger),
             listOf(TrackerRole.LeftHand),
             { n ->
-                //delete the selected node from volume
                 println("the spot ${n.name} is selected")
-                volume.runRecursive{it.removeChild(n)}
-                eventService.publish(NodeRemovedEvent(n))
-                // this is just some action to show a successful selection.
+
+                //delete the selected node from volume
+//                volume.runRecursive{it.removeChild(n)}
+//                eventService.publish(NodeRemovedEvent(n))
+                //validate the selected node from volume
+                eventService.publish(NodeTaggedEvent(n))
 
             },
             true)
+
 
         VRTouch.createAndSet(sciview.currentScene,hmd, listOf(TrackerRole.LeftHand,TrackerRole.RightHand),true)
 
