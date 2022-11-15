@@ -77,9 +77,19 @@ dependencies {
     implementation("net.imglib2:imglib2")
     implementation("net.imglib2:imglib2-roi")
 
+    implementation("org.janelia.saalfeldlab:n5")
+    implementation("org.janelia.saalfeldlab:n5-imglib2")
+
+    implementation("org.apache.logging.log4j:log4j-api:2.19.0")
+    implementation("org.apache.logging.log4j:log4j-1.2-api:2.19.0")
+    implementation("org.apache.logging.log4j:log4j-core:2.19.0")
+
     // Math dependencies
 //    implementation(commons.math3)
 //    implementation(misc.joml)
+
+    implementation("net.java.dev.jna:jna:5.12.0")
+    implementation("net.java.dev.jna:jna-platform:5.12.0")
 
     // Kotlin dependencies
     implementation("org.jetbrains.kotlin:kotlin-stdlib-common:$ktVersion")
