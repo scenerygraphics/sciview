@@ -123,7 +123,7 @@ class SplashLabel : JPanel(), ItemListener {
 
         splashImage = try {
             ImageIO.read(this.javaClass.getResourceAsStream("sciview-logo.png"))
-        } catch (e: IOException) {
+        } catch (e: IOException ) {
             logger.warn("Could not read splash image 'sciview-logo.png'")
             BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB)
         }

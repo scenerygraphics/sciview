@@ -173,6 +173,8 @@ tasks {
             val dependenciesNode = asNode().appendNode("dependencies")
             val propertiesNode = asNode().appendNode("properties")
             propertiesNode.appendNode("inceptionYear", 2016)
+            propertiesNode.appendNode("lwjgl.version", "3.3.1")
+            propertiesNode.appendNode("jna-platform.version", "5.12.0")
 
             // lwjgl natives
             lwjglNatives.forEach { nativePlatform ->

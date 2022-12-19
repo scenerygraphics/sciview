@@ -1,9 +1,6 @@
 package sc.iview.commands.demo.advanced
 
 import graphics.scenery.*
-import graphics.scenery.bionictracking.ConfirmableClickBehaviour
-import graphics.scenery.bionictracking.HedgehogAnalysis
-import graphics.scenery.bionictracking.SpineMetadata
 import graphics.scenery.controls.OpenVRHMD
 import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.TrackerRole
@@ -39,9 +36,7 @@ import org.scijava.event.EventService
 import sc.iview.commands.file.OpenDirofTif
 import sc.iview.event.NodeAddedEvent
 import sc.iview.event.NodeChangedEvent
-import sc.iview.event.NodeRemovedEvent
 import sc.iview.event.NodeTaggedEvent
-import kotlin.concurrent.fixedRateTimer
 
 @Plugin(type = Command::class,
         menuRoot = "SciView",
@@ -216,7 +211,7 @@ class VRHeadSetTrackingDemo: Command{
     {
         val cam = sciview.camera ?: throw IllegalStateException("Could not find camera")
 
-        //LeftController.up.down.left.right
+        //set up move action for moving forward, back, left and right
         sciview.sceneryInputHandler?.let { handler ->
             hashMapOf(
                     "move_forward" to OpenVRHMD.keyBinding(TrackerRole.RightHand,OpenVRHMD.OpenVRButton.Up),
@@ -231,6 +226,7 @@ class VRHeadSetTrackingDemo: Command{
             }
         }
 
+        //hedgehog has three modes of visibility, 1. hide hedgehog, 2, show hedgehog for per timepoint, 3. show full hedgehog
         val toggleHedgehog = ClickBehaviour { _, _ ->
             val current = HedgehogVisibility.values().indexOf(hedgehogVisibility)
             hedgehogVisibility = HedgehogVisibility.values().get((current + 1) % 3)
@@ -259,6 +255,7 @@ class VRHeadSetTrackingDemo: Command{
             }
         }
 
+        //adjust the direction of playing volume
         val nextTimepoint = ClickBehaviour { _, _ ->
             skipToNext = true
         }
@@ -267,6 +264,7 @@ class VRHeadSetTrackingDemo: Command{
             skipToPrevious = true
         }
 
+        //Speeding up the playing of volume or enlarge the scale of volume depending on whether the volume is in playing
         val fasterOrScale = ClickBehaviour { _, _ ->
             if(playing) {
                 volumesPerSecond = maxOf(minOf(volumesPerSecond+1, 20), 1)
@@ -274,11 +272,10 @@ class VRHeadSetTrackingDemo: Command{
             } else {
                 volumeScaleFactor = minOf(volumeScaleFactor * 1.1f, 1.2f)
                 volume.spatial().scale *= Vector3f(volumeScaleFactor)
-//                println("volumeScaleFactor is " + volumeScaleFactor)
-//                println("scale is :" + volume.spatial().scale)
             }
         }
 
+        //slower the playing of volume or reduce the scale of volume depending on whether the volume is in play
         val slowerOrScale = ClickBehaviour { _, _ ->
             if(playing) {
                 volumesPerSecond = maxOf(minOf(volumesPerSecond-1, 20), 1)
@@ -286,11 +283,10 @@ class VRHeadSetTrackingDemo: Command{
             } else {
                 volumeScaleFactor = maxOf(volumeScaleFactor / 1.1f, 0.9f)
                 volume.spatial().scale *= Vector3f(volumeScaleFactor)
-//                println("volumeScaleFactor is " + volumeScaleFactor)
-//                println("scale is :" + volume.spatial().scale)
             }
         }
 
+        //click the button to play or pause the volume
         val playPause = ClickBehaviour { _, _ ->
             playing = !playing
             if(playing) {
@@ -300,6 +296,7 @@ class VRHeadSetTrackingDemo: Command{
             }
         }
 
+        //delete the last hedgehog
         val deleteLastHedgehog = ConfirmableClickBehaviour(
                 armedAction = { timeout ->
                     cam.showMessage("Deleting last track, press again to confirm.",distance = 1.2f, size = 0.2f,
@@ -362,7 +359,7 @@ class VRHeadSetTrackingDemo: Command{
 
 
         //VRGrab.createAndSet(scene = Scene(), hmd, listOf(OpenVRHMD.OpenVRButton.Trigger), listOf(TrackerRole.LeftHand))
-       //left trigger button can validate or delete a track
+       //left trigger button can validate or delete a track, the function should be arranged to two different button in the future
         VRSelect.createAndSet(sciview.currentScene,
             hmd,
             listOf(OpenVRHMD.OpenVRButton.Trigger),
@@ -370,10 +367,16 @@ class VRHeadSetTrackingDemo: Command{
             { n ->
                 println("the spot ${n.name} is selected")
 
-                //delete the selected node from volume
+                /**
+                 * delete the selected node from volume
+                 **/
 //                volume.runRecursive{it.removeChild(n)}
 //                eventService.publish(NodeRemovedEvent(n))
-                //validate the selected node from volume
+
+
+                /*
+                    validate the selected node from volume, the tag event is designed specially for tag of Elephant
+                 */
                 eventService.publish(NodeTaggedEvent(n))
 
             },
@@ -414,6 +417,7 @@ class VRHeadSetTrackingDemo: Command{
 
                 volume.visible = true
                 volume.runRecursive { it.visible = true }
+
 //                playing = false
 
                 while(true)
@@ -455,11 +459,8 @@ class VRHeadSetTrackingDemo: Command{
             //println("try to find intersection");
 
         if(intersection is MaybeIntersects.Intersection) {
-           // println("got a intersection")
             // get local entry and exit coordinates, and convert to UV coords
             val dim = volume.getDimensions()
-            val localEntry = (intersection.relativeEntry) //.add(Vector3f(1.0f)) ) .mul (1.0f / 2.0f)
-            val localExit = (intersection.relativeExit) //.add (Vector3f(1.0f)) ).mul  (1.0f / 2.0f)
 
             val entryUV = Vector3f(intersection.relativeEntry).div(Vector3f(dim))
             val exitUV = Vector3f(intersection.relativeExit).div(Vector3f(dim))
@@ -482,12 +483,8 @@ class VRHeadSetTrackingDemo: Command{
                         confidence,
                         samples.map { it ?: 0.0f }
                 )
-                val count = samples.filterNotNull().count { it > 0.002f }
-//                println("cnt: " +  count.toString())
-//                println(samples)
                 spine.metadata["spine"] = metadata
                 spine.instancedProperties["ModelMatrix"] = { spine.spatial().world }
-//                spine.instancedProperties["Metadata"] = { Vector4f(confidence, timepoint.toFloat()/volume.timepointCount, count.toFloat(), 0.0f) }
             }
         }
     }
@@ -535,6 +532,7 @@ class VRHeadSetTrackingDemo: Command{
             h.run()
         }
 
+        //check whether track is null, if it is null, then let the camera show "No track returned", otherwise do analysis
         if(track == null) {
 //            logger.warn("No track returned")
             sciview.camera?.showMessage("No track returned", distance = 1.2f, size = 0.2f,messageColor = Vector4f(1.0f, 0.0f, 0.0f,1.0f))
@@ -575,6 +573,7 @@ class VRHeadSetTrackingDemo: Command{
             pp.metadata["Type"] = "node"
             pp.spatial().position = p0
 
+            //give attributes to these nodes to make them grable, touchable and selectable, for more detailed usage check VRControllerExample in scenery
             pp.addAttribute(Grabable::class.java, Grabable())
             pp.addAttribute(Selectable::class.java, Selectable(onSelect = {selectionStorage = pp}))
             pp.addAttribute(Touchable::class.java, Touchable(onTouch = { device ->
@@ -601,7 +600,7 @@ class VRHeadSetTrackingDemo: Command{
     }
 
     companion object {
-
+        //run function from here, it will automatically choose the volume for rendering, please give the correct location of volume
         @Throws(Exception::class)
         @JvmStatic
         fun main(args: Array<String>) {

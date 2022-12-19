@@ -1,4 +1,4 @@
-package graphics.scenery.bionictracking
+package sc.iview.commands.demo.advanced
 
 import org.scijava.ui.behaviour.ClickBehaviour
 import kotlin.concurrent.thread

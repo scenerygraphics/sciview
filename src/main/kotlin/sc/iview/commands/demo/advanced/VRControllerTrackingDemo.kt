@@ -1,65 +1,36 @@
 package sc.iview.commands.demo.advanced
 
-import bdv.util.BdvFunctions
 import graphics.scenery.*
-import graphics.scenery.backends.Renderer
-import graphics.scenery.backends.ShaderType
-import graphics.scenery.bionictracking.ConfirmableClickBehaviour
-import graphics.scenery.bionictracking.HedgehogAnalysis
-import graphics.scenery.bionictracking.SpineMetadata
 import graphics.scenery.controls.behaviours.ControllerDrag
 import graphics.scenery.numerics.Random
-import graphics.scenery.textures.Texture
 import graphics.scenery.utils.MaybeIntersects
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.minus
 import graphics.scenery.utils.extensions.xyz
 import graphics.scenery.utils.extensions.xyzw
-import graphics.scenery.volumes.Colormap
-import graphics.scenery.volumes.TransferFunction
 import graphics.scenery.volumes.Volume
-import net.imglib2.FinalInterval
-import net.imglib2.Localizable
-import net.imglib2.RandomAccessibleInterval
-import net.imglib2.img.array.ArrayImgs
-import net.imglib2.position.FunctionRandomAccessible
-import net.imglib2.type.numeric.integer.UnsignedByteType
 import org.joml.*
-import org.scijava.Context
 import org.scijava.command.Command
 import org.scijava.command.CommandService
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
-import org.scijava.ui.UIService
 import org.scijava.ui.behaviour.ClickBehaviour
-import org.scijava.widget.FileWidget
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
-import java.awt.image.DataBufferByte
 import java.io.BufferedWriter
-import java.io.ByteArrayInputStream
-import java.io.File
 import java.io.FileWriter
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.HashMap
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.function.BiConsumer
-import javax.imageio.ImageIO
 import kotlin.concurrent.thread
-import kotlin.math.PI
-import net.imglib2.img.Img
-import net.imglib2.view.Views
-import org.lwjgl.openvr.OpenVR
 import org.scijava.log.LogService
 import graphics.scenery.attribute.material.Material
 import graphics.scenery.controls.*
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
-import org.scijava.ui.behaviour.DragBehaviour
-import sc.iview.commands.demo.animation.ParticleDemo
 
 @Plugin(type = Command::class,
     menuRoot = "SciView",
@@ -407,7 +378,7 @@ class VRControllerTrackingDemo: Command{
     }
 
     private fun setupControllerforTracking( keybindingTracking: String = "U") {
-        println("setupControllerforTracking")
+
         thread {
             val cam = sciview.camera as? DetachedHeadCamera ?: return@thread
 
@@ -433,13 +404,14 @@ class VRControllerTrackingDemo: Command{
             volume.runRecursive { it.visible = true }
             playing = true
 
-            println("test")
 
             while(true)
             {
+                /**
+                 * the following code is added to detect right controller
+                 */
                 if(!hmd.getTrackedDevices(TrackedDeviceType.Controller).containsKey("Controller-2"))
                 {
-                    //println("null")
                     continue
                 }
                 else
@@ -573,15 +545,12 @@ class VRControllerTrackingDemo: Command{
         }
 
         if(track == null) {
-//            logger.warn("No track returned")
             sciview.camera?.showMessage("No track returned", distance = 1.2f, size = 0.2f,messageColor = Vector4f(1.0f, 0.0f, 0.0f,1.0f))
             return
         }
 
         lastHedgehog.metadata["HedgehogAnalysis"] = track
         lastHedgehog.metadata["Spines"] = spines
-
-//        logger.info("---\nTrack: ${track.points.joinToString("\n")}\n---")
 
         val master = Cylinder(0.1f, 1.0f, 10)
         master.setMaterial (ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag"))
@@ -609,7 +578,6 @@ class VRControllerTrackingDemo: Command{
             val p0w = Matrix4f(volume.spatial().world).transform(p0.xyzw()).xyz()
             val p1w = Matrix4f(volume.spatial().world).transform(p1.xyzw()).xyz()
             element.spatial().orientBetweenPoints(p0w,p1w, rescale = true, reposition = true)
-            //mInstanced.instances.add(element)
             val pp = Icosphere(0.01f, 1)
             pp.spatial().position = p0w
             pp.material().diffuse = Vector3f(0.5f, 0.3f, 0.8f)

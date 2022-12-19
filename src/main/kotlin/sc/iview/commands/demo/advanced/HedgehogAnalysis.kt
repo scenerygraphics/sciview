@@ -1,20 +1,12 @@
-package graphics.scenery.bionictracking
+package sc.iview.commands.demo.advanced
 
-import graphics.scenery.Icosphere
-import graphics.scenery.Scene
-import graphics.scenery.bionictracking.HedgehogAnalysis.Companion.toVector3f
 import org.joml.Vector3f
-import org.joml.Vector4f
 import org.joml.Matrix4f
 import org.joml.Quaternionf
 import graphics.scenery.utils.LazyLogger
 import graphics.scenery.utils.extensions.*
-import org.scijava.log.LogService
-import org.scijava.plugin.Parameter
 import org.slf4j.LoggerFactory
 import java.io.File
-import kotlin.math.abs
-import kotlin.math.pow
 import kotlin.math.sqrt
 
 /**
@@ -34,8 +26,8 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		private set
 
 	data class Track(
-			val points: List<Pair<Vector3f, SpineGraphVertex>>,
-			val confidence: Float
+		val points: List<Pair<Vector3f, SpineGraphVertex>>,
+		val confidence: Float
 	)
 
 	init {
@@ -102,7 +94,6 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 	}
 
 	fun Iterable<Float>.stddev() = sqrt((this.map { (it - this.average()) * (it - this.average()) }.sum() / this.count()))
-//	fun Iterable<Float>.avg() = (this.map { it}.sum() / this.count())
 
 	fun Vector3f.toQuaternionf(forward: Vector3f = Vector3f(0.0f, 0.0f, -1.0f)): Quaternionf {
 		val cross = forward.cross(this)
@@ -114,14 +105,13 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 	}
 
 	fun run(): Track? {
-		logger.info("run track analysis")
+
 		val startingThreshold = 0.002f
 		val localMaxThreshold = 0.001f
 		val zscoreThreshold = 2.0f
 		val removeTooFarThreshold = 5.0f
 
 		if(timepoints.isEmpty()) {
-			logger.info("timepoints is empty")
 			return null
 		}
 
@@ -132,8 +122,6 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		} ?: return null
 
 		logger.info("Starting point is ${startingPoint.key}/${timepoints.size} (threshold=$startingThreshold)")
-
-//        val remainingTimepoints = timepoints.entries.drop(timepoints.entries.indexOf(startingPoint))
 
 		timepoints.filter { it.key > startingPoint.key }
 				.forEach { timepoints.remove(it.key) }
@@ -148,17 +136,12 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 //				logger.info("Local maxima at ${tp.key}/$i are: ${maxIndices.joinToString(",")}")
 
 				if(maxIndices.isNotEmpty()) {
-//                  filter the maxIndices which are too far away
-					maxIndices.filter { it.first <1200}.
+					maxIndices.
+//                  filter the maxIndices which are too far away, which can be removed
+					filter { it.first <1200}.
 					map { index ->
-//                        logger.info(index.toString())
 						val position = Vector3f(spine.localEntry).add((Vector3f(spine.localDirection).mul(index.first.toFloat())))
-//						logger.info("i: " + i)
-//						logger.info("position: " + position)
-//						logger.info("dimension: "+ dimension)
-//						logger.info("localToWorld: "+ localToWorld)
 						val worldPosition = localToWorld.transform((Vector3f(position)).xyzw()).xyz()
-//						logger.info("world position: "+ worldPosition)
 						SpineGraphVertex(tp.key,
 								position,
 								worldPosition,
@@ -178,29 +161,17 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		//step3: connect localMaximal points between 2 candidate spines according to the shortest path principle
 		// get the initial vertex, this one is assumed to always be in front, and have a local max
 		val initial = candidates.first().filter{it.value>startingThreshold}.first()
-		logger.info("initial:"+initial)
-		logger.info("candidates number: "+ candidates.size)
 		var current = initial
 		var shortestPath = candidates.drop(1).mapIndexedNotNull { time, vs ->
-//            System.out.logger.info("time: ${time}")
-//			logger.info("vs: ${vs}")
 			val distances = vs
 					.filter { it.value > localMaxThreshold }
 					.map { vertex ->
 						val t = current.worldPosition - vertex.worldPosition
 						val distance = t.length()
-//						logger.info("current worldposition:"+ current.worldPosition)
-//						logger.info("vertex.worldposition"+vertex.worldPosition)
 						vertex to distance
 					}
 					.sortedBy { it.second }
-			//logger.info("distances.size: "+distances.size)
-			//logger.info("distances.firstOrNull()?.second: "+ distances.firstOrNull()?.second)
-//			if(distances.firstOrNull()?.second != null && distances.firstOrNull()?.second!! > 0)
-//			{
-//				logger.info("Minimum distance for t=$time d=${distances.firstOrNull()?.second} a=${distances.firstOrNull()?.first?.index} ")
-//			}
-//
+
 			val closest = distances.firstOrNull()?.first
 			if(closest != null && distances.firstOrNull()?.second!! >0) {
 				current.next = closest
@@ -214,8 +185,6 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 
 
 		val beforeCount = shortestPath.size
-//		System.out.logger.info("before short path:"+ shortestPath.size)
-
 		var avgPathLength = shortestPath.map { it.distance() }.average().toFloat()
 		var stdDevPathLength = shortestPath.map { it.distance() }.stddev().toFloat()
 		logger.info("Average path length=$avgPathLength, stddev=$stdDevPathLength")
@@ -232,15 +201,8 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 				it.getOrNull(2)?.previous = it.getOrNull(1)
 			}
 
-//			logger.info("check which one is removed")
-//			shortestPath.forEach {
-//				if(it.distance() >= removeTooFarThreshold * avgPathLength)
-//				{
-//					logger.info("current index= ${it.index}, distance = ${it.distance()}, next index = ${it.next?.index}"  )
-//				}
-//			}
 		}
-//
+
 		avgPathLength = shortestPath.map { it.distance() }.average().toFloat()
 		stdDevPathLength = shortestPath.map { it.distance() }.stddev().toFloat()
 
@@ -256,9 +218,6 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 					}.flatten()
 
 			shortestPath = shortestPath.filterIndexed { index, _ -> index !in outliers }.toMutableList()
-
-			//logger.info("Average path length=$avgPathLength, stddev=$stdDevPathLength")
-
 			remaining = shortestPath.count { zScore(it.distance(), avgPathLength, stdDevPathLength) > zscoreThreshold }
 
 			shortestPath.windowed(3, 1, partialWindows = true).forEach {
@@ -272,8 +231,6 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 
 		val afterCount = shortestPath.size
 		logger.info("Pruned ${beforeCount - afterCount} vertices due to path length")
-//		logger.info("Final distances: ${shortestPath.joinToString { "d = ${it.distance()}" }}")
-//		logger.info(shortestPath.toString())
 		val singlePoints = shortestPath
 				.groupBy { it.timepoint }
 				.mapNotNull { vs -> vs.value.maxByOrNull{ it.metadata.confidence } }
@@ -324,7 +281,6 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		}
 
 		private fun String.toVector3f(): Vector3f {
-//			System.out.logger.info(this)
 			val array = this.replace("(", "").replace(")", "").trim().split(" ").filterNot { it == ""}
 
 			if (array[0] == "+Inf" || array[0] == "-Inf")
@@ -334,7 +290,6 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		}
 
 		private fun String.toQuaternionf(): Quaternionf {
-//			System.out.logger.info(this)
 			val array = this.replace("(", "").replace(")", "").trim().split(" ").filterNot { it == ""}
 			return Quaternionf(array[0].toFloat(), array[1].toFloat(), array[2].toFloat(), array[3].toFloat())
 		}
@@ -422,13 +377,8 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 
 fun main(args: Array<String>) {
 	val logger = LoggerFactory.getLogger("HedgehogAnalysisMain")
-//    if(args.isEmpty()) {
-//        logger.error("Sorry, but a file name is needed.")
-//        return
-//    }
 
 	val file = File("C:\\Users\\lanru\\Desktop\\BionicTracking-generated-2021-11-29 19.37.43\\Hedgehog_1_2021-11-29 19.38.32.csv")
-//    val analysis = HedgehogAnalysis.fromIncompleteCSV(file)
 	val analysis = HedgehogAnalysis.fromCSV(file)
 	val results = analysis.run()
 	logger.info("Results: \n$results")

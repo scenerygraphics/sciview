@@ -1,8 +1,5 @@
-package graphics.scenery.bionictracking
+package sc.iview.commands.demo.advanced
 
-//import cleargl.GLMatrix
-//import cleargl.GLVector
-import com.jogamp.opengl.math.Quaternion
 import org.joml.Quaternionf
 import org.joml.Vector3f
 

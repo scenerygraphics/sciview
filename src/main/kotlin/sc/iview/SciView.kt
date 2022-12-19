@@ -365,6 +365,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Initialization of SWING and scenery. Also triggers an initial population of lights/camera in the scene
      */
     override fun init() {
+        println("hello world!")
         val logLevel = System.getProperty("scenery.LogLevel", "info")
         log.level = LogLevel.value(logLevel)
         LogbackUtils.setLogLevel(null, logLevel)

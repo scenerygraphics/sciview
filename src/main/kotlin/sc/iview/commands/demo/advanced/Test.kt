@@ -2,13 +2,10 @@ package sc.iview.commands.demo.advanced
 
 import graphics.scenery.*
 import graphics.scenery.attribute.material.Material
-import graphics.scenery.bionictracking.HedgehogAnalysis
-import graphics.scenery.bionictracking.SpineMetadata
 import graphics.scenery.controls.OpenVRHMD
 import graphics.scenery.numerics.Random
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
-import graphics.scenery.utils.LazyLogger
 import graphics.scenery.utils.MaybeIntersects
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.minus
@@ -18,7 +15,6 @@ import graphics.scenery.volumes.Volume
 import org.joml.*
 import org.scijava.command.Command
 import org.scijava.command.CommandService
-import org.scijava.log.LogService
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
