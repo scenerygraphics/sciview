@@ -204,6 +204,9 @@ tasks {
             // add jvrpn property because it only has runtime native deps
             propertiesNode.appendNode("jvrpn.version", "1.2.0")
 
+            // add correct lwjgl version
+            propertiesNode.appendNode("lwjgl.version", "3.3.1")
+
             val versionedArtifacts = listOf("scenery",
                                             "flatlaf",
                                             "kotlin-stdlib-common",
