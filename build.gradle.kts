@@ -47,6 +47,12 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.4")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.4")
     implementation("org.msgpack:jackson-dataformat-msgpack:0.9.3")
+    implementation("net.java.dev.jna:jna-platform:5.11.0")
+    implementation("net.clearvolume:cleargl")
+    implementation("org.janelia.saalfeldlab:n5")
+    implementation("org.janelia.saalfeldlab:n5-imglib2")
+    implementation("org.apache.logging.log4j:log4j-api:2.20.0")
+    implementation("org.apache.logging.log4j:log4j-1.2-api:2.20.0")
 
     implementation("com.formdev:flatlaf:2.6")
 
