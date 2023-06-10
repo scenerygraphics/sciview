@@ -4,8 +4,8 @@ import java.net.URL
 import sciview.*
 
 plugins {
-    val ktVersion = "1.7.20"
-    val dokkaVersion = "1.6.21"
+    val ktVersion = "1.8.20"
+    val dokkaVersion = "1.8.20"
 
     java
     kotlin("jvm") version ktVersion
@@ -26,7 +26,7 @@ repositories {
 }
 
 dependencies {
-    val ktVersion = "1.7.20"
+    val ktVersion = "1.8.20"
     implementation(platform("org.scijava:pom-scijava:31.1.0"))
 
     // Graphics dependencies
@@ -225,6 +225,7 @@ tasks {
                                             "jackson-dataformat-yaml",
                                             "jackson-dataformat-msgpack",
                                             "jogl-all",
+                                            "jna-platform",
                                             "kotlin-bom",
                                             "lwjgl",
                                             "lwjgl-glfw",
@@ -239,7 +240,7 @@ tasks {
 
             val toSkip = listOf("pom-scijava")
 
-            configurations.implementation.allDependencies.forEach {
+            configurations.implementation.get().allDependencies.forEach {
                 val artifactId = it.name
 
                 if (!toSkip.contains(artifactId)) {
@@ -319,7 +320,7 @@ tasks {
     register("runMain", JavaExec::class.java) {
         classpath = sourceSets.main.get().runtimeClasspath
 
-        main = "sc.iview.Main"
+        mainClass.set("sc.iview.Main")
 
         val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
 
@@ -334,7 +335,7 @@ tasks {
     register("runImageJMain", JavaExec::class.java) {
         classpath = sourceSets.main.get().runtimeClasspath
 
-        main = "sc.iview.ImageJMain"
+        mainClass.set("sc.iview.ImageJMain")
 
         val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
 
@@ -364,7 +365,7 @@ tasks {
             println("Registering $exampleName of $exampleType")
             register<JavaExec>(name = className.substringAfterLast(".")) {
                 classpath = sourceSets.test.get().runtimeClasspath
-                main = className
+                mainClass.set(className)
                 group = "demos.$exampleType"
 
                 val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
@@ -391,7 +392,7 @@ tasks {
                 //                    main = target.substringAfter("java${File.separatorChar}").replace(File.separatorChar, '.').substringBefore(".java")
                 //                }
 
-                main = "$target"
+                mainClass.set("$target")
                 val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
 
                 val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
@@ -401,7 +402,7 @@ tasks {
                     allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
                 }
 
-                println("Will run target $target with classpath $classpath, main=$main")
+                println("Will run target $target with classpath $classpath, main=${mainClass.get()}")
                 println("JVM arguments passed to target: $allJvmArgs")
             }
         }
