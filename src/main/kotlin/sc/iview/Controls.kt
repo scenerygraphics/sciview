@@ -35,7 +35,7 @@ import graphics.scenery.controls.behaviours.FPSCameraControl
 import graphics.scenery.controls.behaviours.MovementCommand
 import graphics.scenery.controls.behaviours.SelectCommand
 import graphics.scenery.primitives.TextBoard
-import graphics.scenery.utils.LazyLogger
+import graphics.scenery.utils.lazyLogger
 import org.joml.Quaternionf
 import org.joml.Vector2f
 import org.joml.Vector3f
@@ -59,7 +59,7 @@ import kotlin.math.acos
  * @author Ulrik Guenther
  */
 open class Controls(val sciview: SciView) {
-    private val logger by LazyLogger()
+    private val logger by lazyLogger()
 
     companion object {
         const val STASH_BEHAVIOUR_KEY = "behaviour:"

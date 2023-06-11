@@ -21,6 +21,7 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven("https://oss.sonatype.org/content/repositories/graphicsscenery-1219")
     maven("https://maven.scijava.org/content/groups/public")
     maven("https://jitpack.io")
 }
@@ -36,7 +37,7 @@ dependencies {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "0a32128"
+    val sceneryVersion = "0.8.0"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")

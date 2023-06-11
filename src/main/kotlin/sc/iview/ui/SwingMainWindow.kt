@@ -35,7 +35,7 @@ import com.intellij.ui.tabs.impl.JBEditorTabs
 import graphics.scenery.Node
 import graphics.scenery.SceneryElement
 import graphics.scenery.backends.Renderer
-import graphics.scenery.utils.LazyLogger
+import graphics.scenery.utils.lazyLogger
 import graphics.scenery.utils.SceneryJPanel
 import org.joml.Vector2f
 import org.scijava.menu.MenuService
@@ -57,7 +57,7 @@ import javax.swing.*
  * @author Ulrik Guenther
  */
 class SwingMainWindow(val sciview: SciView) : MainWindow {
-    private val logger by LazyLogger()
+    private val logger by lazyLogger()
     private var sidebarHidden = false
     private var previousSidebarPosition = 0
 

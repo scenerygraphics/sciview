@@ -28,7 +28,7 @@
  */
 package sc.iview.ui
 
-import graphics.scenery.utils.LazyLogger
+import graphics.scenery.utils.lazyLogger
 import java.awt.Color
 import java.awt.Graphics
 import java.awt.Graphics2D
@@ -38,7 +38,7 @@ import kotlin.math.roundToInt
 
 class ProgressPie: JComponent() {
     class Slice(var value: Double, var color: Color)
-    private val logger by LazyLogger()
+    private val logger by lazyLogger()
 
     private var slices = arrayOf(
             Slice(0.0, Color.WHITE), Slice(100.0, Color.LIGHT_GRAY)
