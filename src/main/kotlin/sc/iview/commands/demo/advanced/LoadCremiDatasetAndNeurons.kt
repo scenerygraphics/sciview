@@ -131,9 +131,12 @@ class LoadCremiDatasetAndNeurons: Command {
         // val files = ui.chooseFiles(null, emptyList(), filter, FileWidget.OPEN_STYLE)
         val file = File(System.getProperty("user.home") + "/.sciview/examples/sample_A_20160501.hdf")
         if(file.exists() == false) {
+            task.status = "Downloading dataset"
+            log.info("Downloading dataset")
             copyURLToFile(URL ("https://cremi.org/static/data/sample_A_20160501.hdf"), file)
         }
 
+        task.status = "Reading dataset"
         val nai = readCremiHDF5(file.canonicalPath, 1.0)
 
         if(nai == null) {
