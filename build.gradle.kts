@@ -21,7 +21,6 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven("https://oss.sonatype.org/content/repositories/graphicsscenery-1219")
     maven("https://maven.scijava.org/content/groups/public")
     maven("https://jitpack.io")
 }
