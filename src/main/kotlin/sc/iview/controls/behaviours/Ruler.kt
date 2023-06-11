@@ -31,7 +31,7 @@ package sc.iview.controls.behaviours
 import graphics.scenery.Mesh
 import graphics.scenery.primitives.Line
 import graphics.scenery.primitives.TextBoard
-import graphics.scenery.utils.LazyLogger
+import graphics.scenery.utils.lazyLogger
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.Vector4f
@@ -50,7 +50,7 @@ class Ruler(protected val sciView: SciView): DragBehaviour {
     //position on the mouse click; start of the line
     private val origin = Vector3f()
     private val finalLength = Vector3f()
-    private val logger by LazyLogger()
+    private val logger by lazyLogger()
     private val cam = sciView.camera
 
     /** Setup the line and delete the old one */

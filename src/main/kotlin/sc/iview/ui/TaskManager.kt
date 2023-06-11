@@ -28,7 +28,7 @@
  */
 package sc.iview.ui
 
-import graphics.scenery.utils.LazyLogger
+import graphics.scenery.utils.lazyLogger
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.swing.JLabel
@@ -37,7 +37,7 @@ class TaskManager(var update: ((Task?) -> Any)? = null) {
     val currentTasks = CopyOnWriteArrayList<Task>()
     val pie = ProgressPie()
     val label = JLabel()
-    val logger by LazyLogger()
+    val logger by lazyLogger()
 
     init {
 
