@@ -22,7 +22,6 @@ plugins {
 repositories {
     mavenCentral()
     maven("https://maven.scijava.org/content/groups/public")
-    maven("https://jitpack.io")
 }
 
 dependencies {
@@ -157,9 +156,6 @@ tasks {
             parent.appendNode("relativePath")
 
             val repositories = asNode().appendNode("repositories")
-            val jitpackRepo = repositories.appendNode("repository")
-            jitpackRepo.appendNode("id", "jitpack.io")
-            jitpackRepo.appendNode("url", "https://jitpack.io")
 
             val scijavaRepo = repositories.appendNode("repository")
             scijavaRepo.appendNode("id", "scijava.public")
