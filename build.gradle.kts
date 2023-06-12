@@ -19,6 +19,11 @@ plugins {
     signing
 }
 
+java {
+  sourceCompatibility = JavaVersion.VERSION_11
+  targetCompatibility = JavaVersion.VERSION_11
+}
+
 repositories {
     mavenCentral()
     maven("https://maven.scijava.org/content/groups/public")
@@ -127,7 +132,7 @@ dependencies {
 tasks {
     withType<KotlinCompile>().all {
         val version = System.getProperty("java.version").substringBefore('.').toInt()
-        val default = if (version == 1) "1.8" else "$version"
+        val default = if (version == 1) "11" else "$version"
         kotlinOptions {
             jvmTarget = project.properties["jvmTarget"]?.toString() ?: default
             freeCompilerArgs += listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
