@@ -245,10 +245,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
     constructor(applicationName: String?, windowWidth: Int, windowHeight: Int) : super(applicationName!!, windowWidth, windowHeight, false)
 
-    fun publicGetInputHandler(): InputHandler {
-        return inputHandler!!
-    }
-
     /**
      * Toggle video recording with scenery's video recording mechanism
      * Note: this video recording may skip frames because it is asynchronous
@@ -439,8 +435,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     /*
      * Get the InputHandler that is managing mouse, input, VR controls, etc.
      */
-    val sceneryInputHandler: InputHandler
-        get() = inputHandler!!
+    val sceneryInputHandler: InputHandler?
+        get() = inputHandler
 
     /*
      * Return a bounding box around a subgraph of the scenegraph
