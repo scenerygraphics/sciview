@@ -62,7 +62,7 @@ class AddLine : Command {
     //    @Parameter(label = "Second endpoint")
     //    private String stop = "1; 1; 1";
     @Parameter(required = false)
-    private lateinit var color: ColorRGB
+    private var color: ColorRGB = SciView.DEFAULT_COLOR
 
     @Parameter(label = "Edge width", min = "0")
     private var edgeWidth = 1.0
@@ -70,9 +70,6 @@ class AddLine : Command {
     override fun run() {
         //Vector3[] endpoints = { JOMLVector3.parse( start ), JOMLVector3.parse( stop ) };
         val endpoints = arrayOf(Vector3f(0f, 0f, 0f), Vector3f(1f, 1f, 1f))
-        if( !this::color.isInitialized ) {
-            color = SciView.DEFAULT_COLOR
-        }
 
         sciView.addLine(endpoints, color, edgeWidth)
     }

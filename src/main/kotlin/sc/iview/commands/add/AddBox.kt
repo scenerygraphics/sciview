@@ -66,7 +66,7 @@ class AddBox : Command {
     private var size = 1.0f
 
     @Parameter(required = false)
-    private lateinit var color: ColorRGB
+    private var color: ColorRGB = SciView.DEFAULT_COLOR
 
     @Parameter
     private var inside = false
@@ -75,10 +75,6 @@ class AddBox : Command {
         //final Vector3 pos = ClearGLVector3.parse( position );
         val pos = Vector3f(0f, 0f, 0f)
         val vSize = Vector3f(size, size, size)
-
-        if( !this::color.isInitialized ) {
-            color = SciView.DEFAULT_COLOR
-        }
 
         sciView.addBox(pos, vSize, color, inside)
     }
