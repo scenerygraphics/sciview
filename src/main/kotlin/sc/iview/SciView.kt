@@ -844,6 +844,20 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     /**
+     * Make a node known to the services.
+     * Used for nodes that are not created/added by a SciView controlled process e.g. [BoundingGrid].
+     *
+     * @param n node to add to publish
+     */
+    fun <N: Node> publishNode(n: N): N {
+        n.let {
+            objectService.addObject(n)
+            eventService.publish(NodeAddedEvent(n))
+        }
+        return n
+    }
+
+    /**
      * Add a scenery Mesh to the scene
      * @param scMesh scenery mesh to add to scene
      * @return a Node corresponding to the mesh
@@ -1057,7 +1071,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param activePublish whether the deletion should be published
      */
     @JvmOverloads
-    fun deleteNode(node: Node?, activePublish: Boolean = true) {
+fun deleteNode(node: Node?, activePublish: Boolean = true) {
         if(node is Volume) {
             node.volumeManager.remove(node)
             val toRemove = ArrayList<Any>()
