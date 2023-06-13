@@ -30,6 +30,7 @@ package sc.iview.commands.edit
 
 import graphics.scenery.*
 import graphics.scenery.attribute.material.HasMaterial
+import graphics.scenery.primitives.Line
 import graphics.scenery.primitives.TextBoard
 import graphics.scenery.volumes.Colormap.Companion.fromColorTable
 import graphics.scenery.volumes.SlicingPlane
@@ -71,6 +72,12 @@ import java.util.concurrent.ConcurrentHashMap
  *  * Todo: As soon as object selection in Scenery itself works, the node
  * pulldown may be removed entirely.
  *
+ * To add new properties you need to do a few things:
+ * 1. Create a @Parameter for the variable and ensure the style has an appropriate group
+ * Note: I believe the group relates to the class name, but I'm confused about where that happens.
+ * 2. Add code to get the value from the node to updateCommandFields
+ * 3. Add code to set the value of the node to updateNodeProperties
+ *
  *
  * @author Robert Haase, Scientific Computing Facility, MPI-CBG Dresden
  * @author Curtis Rueden
@@ -91,6 +98,8 @@ class Properties : InteractiveCommand() {
     @Parameter
     private lateinit var events: EventService
 
+    /* Basic properties */
+
     @Parameter(required = false, style = ChoiceWidget.LIST_BOX_STYLE, callback = "refreshSceneNodeInDialog")
     private val sceneNode: String? = null
 
@@ -100,11 +109,24 @@ class Properties : InteractiveCommand() {
     @Parameter(label = "Color", required = false, callback = "updateNodeProperties", style = "group:Basic")
     private var colour: ColorRGB? = null
 
+    @Parameter(label = "Name", callback = "updateNodeProperties", style = "group:Basic")
+    private var name: String = ""
+
+    @Parameter(label = "Position X", style = NumberWidget.SPINNER_STYLE+ ",group:Basic", stepSize = "0.1", callback = "updateNodeProperties")
+    private var positionX = 0f
+
+    @Parameter(label = "Position Y", style = NumberWidget.SPINNER_STYLE+ ",group:Basic", stepSize = "0.1", callback = "updateNodeProperties")
+    private var positionY = 0f
+
+    @Parameter(label = "Position Z", style = NumberWidget.SPINNER_STYLE+ ",group:Basic", stepSize = "0.1", callback = "updateNodeProperties")
+    private var positionZ = 0f
+
+    /* Camera properties */
+
     @Parameter(label = "Active", required = false, callback = "updateNodeProperties", style = "group:Camera")
     private var active = false
 
-    @Parameter(label = "Name", callback = "updateNodeProperties", style = "group:Basic")
-    private var name: String = ""
+    /* Volume properties */
 
     @Parameter(label = "Timepoint", callback = "updateNodeProperties", style = NumberWidget.SLIDER_STYLE+",group:Volume")
     private var timepoint = 0
@@ -128,17 +150,21 @@ class Properties : InteractiveCommand() {
     @Parameter(label = " ", style = "group:Volume")
     private var colormap = dummyColorTable
 
+    @Parameter(label = "Mode", style = ChoiceWidget.LIST_BOX_STYLE+"group:Volume", callback = "updateNodeProperties")
+    private var renderingMode: String = Volume.RenderingMethod.AlphaBlending.name
+
+    @Parameter(label = "AO steps", style = NumberWidget.SPINNER_STYLE+"group:Volume", callback = "updateNodeProperties")
+    private val occlusionSteps = 0
+
+    @Parameter(label = "Volume slicing mode", callback = "updateNodeProperties", style = ChoiceWidget.LIST_BOX_STYLE+"group:Volume")
+    private var slicingMode: String = Volume.SlicingMode.Slicing.name
+
+    /* Light properties */
+
     @Parameter(label = "Intensity", style = NumberWidget.SPINNER_STYLE+ ",group:Lighting", stepSize = "0.1", callback = "updateNodeProperties")
     private var intensity = 0f
 
-    @Parameter(label = "Position X", style = NumberWidget.SPINNER_STYLE+ ",group:Basic", stepSize = "0.1", callback = "updateNodeProperties")
-    private var positionX = 0f
-
-    @Parameter(label = "Position Y", style = NumberWidget.SPINNER_STYLE+ ",group:Basic", stepSize = "0.1", callback = "updateNodeProperties")
-    private var positionY = 0f
-
-    @Parameter(label = "Position Z", style = NumberWidget.SPINNER_STYLE+ ",group:Basic", stepSize = "0.1", callback = "updateNodeProperties")
-    private var positionZ = 0f
+    /* Rotation and Scaling properties */
 
     @Parameter(label = "[Rotation & Scaling]Scale X", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling", stepSize = "0.1", callback = "updateNodeProperties")
     private var scaleX = 1f
@@ -157,13 +183,6 @@ class Properties : InteractiveCommand() {
 
     @Parameter(label = "[Rotation & Scaling]Rotation Psi", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling", min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
     private var rotationPsi = 0f
-
-    /* Volume properties */
-    @Parameter(label = "Mode", style = ChoiceWidget.LIST_BOX_STYLE+"group:Volume", callback = "updateNodeProperties")
-    private var renderingMode: String = Volume.RenderingMethod.AlphaBlending.name
-
-    @Parameter(label = "AO steps", style = NumberWidget.SPINNER_STYLE+"group:Volume", callback = "updateNodeProperties")
-    private val occlusionSteps = 0
 
     /* Bounding Grid properties */
     @Parameter(label = "Grid Color", callback = "updateNodeProperties", style = "group:Grid")
@@ -185,11 +204,15 @@ class Properties : InteractiveCommand() {
     @Parameter(label = "Transparent Background", callback = "updateNodeProperties", style = "group:Text")
     private var transparentBackground = false
 
-    @Parameter(label = "Volume slicing mode", callback = "updateNodeProperties", style = ChoiceWidget.LIST_BOX_STYLE+"group:Volume")
-    private var slicingMode: String = Volume.SlicingMode.Slicing.name
+    /* Targets properties */
 
     @Parameter(label = "Sliced volumes", callback = "updateNodeProperties", style = "group:Targets")
     private var slicedVolumes: VolumeSelectorWidget.VolumeSelection = VolumeSelectorWidget.VolumeSelection()
+
+    /* Line properties */
+
+    @Parameter(label = "Edge width", callback = "updateNodeProperties", style = "group:Line")
+    private var edgeWidth = 0
 
     private val renderingModeChoices = Volume.RenderingMethod.values().toMutableList()
     private val slicingModeChoices = Volume.SlicingMode.values().toMutableList()
@@ -468,6 +491,10 @@ class Properties : InteractiveCommand() {
             maybeRemoveInput("slicedVolumes", VolumeSelectorWidget.VolumeSelection::class.java)
         }
 
+        if (node is Line){
+            edgeWidth = node.edgeWidth.toInt()
+        }
+
         name = node.name
         fieldsUpdating = false
     }
@@ -575,6 +602,10 @@ class Properties : InteractiveCommand() {
             val added = new.filter{!old.contains(it)}
             removed.forEach { node.removeTargetVolume(it) }
             added.forEach{node.addTargetVolume(it)}
+        }
+
+        if (node is Line) {
+            node.edgeWidth = edgeWidth.toFloat()
         }
 
         events.publish(NodeChangedEvent(node))
