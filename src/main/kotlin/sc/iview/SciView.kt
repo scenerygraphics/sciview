@@ -1888,7 +1888,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             val objectService = context.service(ObjectService::class.java)
             objectService.addObject(Utils.SciviewStandalone())
             val sciViewService = context.service(SciViewService::class.java)
-            return sciViewService.orCreateActiveSciView
+            return sciViewService.getOrCreateActiveSciView()
         }
 
         /**

@@ -28,6 +28,7 @@
  */
 package sc.iview;
 
+import kotlin.jvm.JvmName;
 import net.imagej.ImageJService;
 
 /**
@@ -39,6 +40,7 @@ public interface SciViewService extends ImageJService {
 
     SciView getActiveSciView();
 
+    @JvmName(name = "getOrCreateActiveSciView")
     SciView getOrCreateActiveSciView() throws Exception;
 
     SciView getSciView(String name);

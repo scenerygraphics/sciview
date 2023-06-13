@@ -57,7 +57,7 @@ class LaunchViewer : Command {
         val display = displayService.getActiveDisplay(SciViewDisplay::class.java)
         try {
             if (display == null) {
-                sciView = sciViewService.orCreateActiveSciView
+                sciView = sciViewService.getOrCreateActiveSciView()
             } else sciViewService.createSciView()
         } catch (e: Exception) {
             e.printStackTrace()
