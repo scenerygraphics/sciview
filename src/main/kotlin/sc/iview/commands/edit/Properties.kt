@@ -112,13 +112,13 @@ class Properties : InteractiveCommand() {
     @Parameter(label = "Name", callback = "updateNodeProperties", style = "group:Basic")
     private var name: String = ""
 
-    @Parameter(label = "Position X", style = NumberWidget.SPINNER_STYLE+ ",group:Basic", stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "Position X", style = NumberWidget.SPINNER_STYLE+ ",group:Basic" + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
     private var positionX = 0f
 
-    @Parameter(label = "Position Y", style = NumberWidget.SPINNER_STYLE+ ",group:Basic", stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "Position Y", style = NumberWidget.SPINNER_STYLE+ ",group:Basic" + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
     private var positionY = 0f
 
-    @Parameter(label = "Position Z", style = NumberWidget.SPINNER_STYLE+ ",group:Basic", stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "Position Z", style = NumberWidget.SPINNER_STYLE+ ",group:Basic" + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
     private var positionZ = 0f
 
     /* Camera properties */
@@ -166,22 +166,22 @@ class Properties : InteractiveCommand() {
 
     /* Rotation and Scaling properties */
 
-    @Parameter(label = "[Rotation & Scaling]Scale X", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling", stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "[Rotation & Scaling]Scale X", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling" + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
     private var scaleX = 1f
 
-    @Parameter(label = "[Rotation & Scaling]Scale Y", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling", stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "[Rotation & Scaling]Scale Y", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling" + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
     private var scaleY = 1f
 
-    @Parameter(label = "[Rotation & Scaling]Scale Z", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling", stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "[Rotation & Scaling]Scale Z", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling" + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
     private var scaleZ = 1f
 
-    @Parameter(label = "[Rotation & Scaling]Rotation Phi", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling", min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
+    @Parameter(label = "[Rotation & Scaling]Rotation Phi", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling" + ",format:0.000", min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
     private var rotationPhi = 0f
 
-    @Parameter(label = "[Rotation & Scaling]Rotation Theta", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling", min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
+    @Parameter(label = "[Rotation & Scaling]Rotation Theta", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling" + ",format:0.000", min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
     private var rotationTheta = 0f
 
-    @Parameter(label = "[Rotation & Scaling]Rotation Psi", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling", min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
+    @Parameter(label = "[Rotation & Scaling]Rotation Psi", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling" + ",format:0.000", min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
     private var rotationPsi = 0f
 
     /* Bounding Grid properties */
