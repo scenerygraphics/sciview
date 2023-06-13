@@ -85,8 +85,8 @@ publishing {
                     url.set("https://github.com/scenerygraphics/sciview/issues")
                 }
                 ciManagement {
-                    system.set("Travis")
-                    url.set("https://travis-ci.org/scenerygraphics/sciview/")
+                    system.set("GitHub Actions")
+                    url.set("https://github.com/scenerygraphics/sciview/actions")
                 }
                 distributionManagement {
                     // https://stackoverflow.com/a/21760035/1047713
