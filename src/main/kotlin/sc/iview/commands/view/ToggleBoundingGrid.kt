@@ -29,7 +29,6 @@
 package sc.iview.commands.view
 
 import graphics.scenery.BoundingGrid
-import graphics.scenery.Mesh
 import graphics.scenery.Node
 import org.scijava.command.Command
 import org.scijava.log.LogService
@@ -48,26 +47,20 @@ import sc.iview.commands.MenuWeights.VIEW_TOGGLE_BOUNDING_GRID
 @Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Toggle Bounding Grid", weight = VIEW_TOGGLE_BOUNDING_GRID)])
 class ToggleBoundingGrid : Command {
     @Parameter
-    private lateinit var logService: LogService
-
-    @Parameter
     private lateinit var sciView: SciView
 
     @Parameter
     private lateinit var node: Node
 
     override fun run() {
-        if (node is Mesh) {
-            if (node.metadata.containsKey("BoundingGrid")) {
-                val bg = node.metadata["BoundingGrid"] as BoundingGrid?
-                bg!!.node = null
-                node.metadata.remove("BoundingGrid")
-                bg.getScene()!!.removeChild(bg)
-            } else {
-                val bg = BoundingGrid()
-                bg.node = node
-                node.metadata["BoundingGrid"] = bg
-            }
+        val bg = node.children.findLast { it is BoundingGrid } as? BoundingGrid
+        if (bg != null) {
+            bg.node = null
+            sciView.deleteNode(bg)
+        } else {
+            val newBg = BoundingGrid()
+            newBg.node = node
+            sciView.publishNode(newBg)
         }
     }
 }
