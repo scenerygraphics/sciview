@@ -32,6 +32,7 @@ import graphics.scenery.*;
 import ij.gui.GenericDialog;
 import ij.gui.NonBlockingGenericDialog;
 import net.imagej.mesh.Mesh;
+import net.imagej.mesh.io.stl.STLMeshIO;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
@@ -88,7 +89,8 @@ public class SceneRiggingDemo implements Command {
         final Mesh m;
         try {
             File meshFile = ResourceLoader.createFile( getClass(), "/WieseRobert_simplified_Cip1.stl" );
-            m = (Mesh) io.open( meshFile.getAbsolutePath() );
+            STLMeshIO stlReader = new STLMeshIO();
+            m = stlReader.open(meshFile.getAbsolutePath());
         }
         catch (IOException exc) {
             log.error( exc );
