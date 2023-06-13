@@ -68,7 +68,7 @@ open class Controls(val sciview: SciView) {
     }
 
     private val inputHandler
-        get() = sciview.sceneryInputHandler
+        get() = sciview.sceneryInputHandler!!
 
     /**
      * Speeds for input controls

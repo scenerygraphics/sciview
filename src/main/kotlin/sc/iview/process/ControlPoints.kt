@@ -85,14 +85,15 @@ class ControlPoints {
         val cam= sciView.camera ?: return
         // This is where the command should change the current inputs setup
         sciView.stashControls()
-        sciView.sceneryInputHandler.addBehaviour("place_control_point",
+        val inputHandler = sciView.sceneryInputHandler!!
+        inputHandler.addBehaviour("place_control_point",
                 placeControlPointBehaviour(sciView))
-        sciView.sceneryInputHandler.addKeyBinding("place_control_point", "double-click button1")
+        inputHandler.addKeyBinding("place_control_point", "double-click button1")
 
         // Setup the scrolling behavior to adjust the control point distance
-        sciView.sceneryInputHandler.addBehaviour("change_control_point_distance",
+        inputHandler.addBehaviour("change_control_point_distance",
                 distanceControlPointBehaviour(sciView))
-        sciView.sceneryInputHandler.addKeyBinding("change_control_point_distance", "scroll")
+        inputHandler.addKeyBinding("change_control_point_distance", "scroll")
 
         // Create target point
         targetPoint = Sphere(DEFAULT_RADIUS, DEFAULT_SEGMENTS)

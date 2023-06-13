@@ -61,19 +61,22 @@ class CameraTranslateControl(protected val sciView: SciView, var dragSpeed: Floa
         lastX = x
         lastY = y
 
+
+
         //set up (the current) shortcuts to the FPS movement routines
-        move_left_slow = sciView.sceneryInputHandler.getBehaviour("move_left") as ClickBehaviour
-        move_left_fast = sciView.sceneryInputHandler.getBehaviour("move_left_fast") as ClickBehaviour
-        move_left_veryfast = sciView.sceneryInputHandler.getBehaviour("move_left_veryfast") as ClickBehaviour
-        move_right_slow = sciView.sceneryInputHandler.getBehaviour("move_right") as ClickBehaviour
-        move_right_fast = sciView.sceneryInputHandler.getBehaviour("move_right_fast") as ClickBehaviour
-        move_right_veryfast = sciView.sceneryInputHandler.getBehaviour("move_right_veryfast") as ClickBehaviour
-        move_forward_slow = sciView.sceneryInputHandler.getBehaviour("move_forward") as ClickBehaviour
-        move_forward_fast = sciView.sceneryInputHandler.getBehaviour("move_forward_fast") as ClickBehaviour
-        move_forward_veryfast = sciView.sceneryInputHandler.getBehaviour("move_forward_veryfast") as ClickBehaviour
-        move_backward_slow = sciView.sceneryInputHandler.getBehaviour("move_back") as ClickBehaviour
-        move_backward_fast = sciView.sceneryInputHandler.getBehaviour("move_back_fast") as ClickBehaviour
-        move_backward_veryfast = sciView.sceneryInputHandler.getBehaviour("move_back_veryfast") as ClickBehaviour
+        val inputHandler = sciView.sceneryInputHandler!!
+        move_left_slow = inputHandler.getBehaviour("move_left") as ClickBehaviour
+        move_left_fast = inputHandler.getBehaviour("move_left_fast") as ClickBehaviour
+        move_left_veryfast = inputHandler.getBehaviour("move_left_veryfast") as ClickBehaviour
+        move_right_slow = inputHandler.getBehaviour("move_right") as ClickBehaviour
+        move_right_fast = inputHandler.getBehaviour("move_right_fast") as ClickBehaviour
+        move_right_veryfast = inputHandler.getBehaviour("move_right_veryfast") as ClickBehaviour
+        move_forward_slow = inputHandler.getBehaviour("move_forward") as ClickBehaviour
+        move_forward_fast = inputHandler.getBehaviour("move_forward_fast") as ClickBehaviour
+        move_forward_veryfast = inputHandler.getBehaviour("move_forward_veryfast") as ClickBehaviour
+        move_backward_slow = inputHandler.getBehaviour("move_back") as ClickBehaviour
+        move_backward_fast = inputHandler.getBehaviour("move_back_fast") as ClickBehaviour
+        move_backward_veryfast = inputHandler.getBehaviour("move_back_veryfast") as ClickBehaviour
 
         //make sure all moves are always defined
         replaceNullBehavioursWith(noMovement)

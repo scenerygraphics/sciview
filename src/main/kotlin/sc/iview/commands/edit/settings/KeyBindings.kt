@@ -47,6 +47,6 @@ class KeyBindings : Command {
     private lateinit var sciView: SciView
 
     override fun run() {
-        sciView.publicGetInputHandler().openKeybindingsGuiEditor("SciView's Key bindings editor", ".sciview.keybindings.yaml", "all")
+        sciView.sceneryInputHandler?.openKeybindingsGuiEditor("SciView's Key bindings editor", ".sciview.keybindings.yaml", "all")
     }
 }
