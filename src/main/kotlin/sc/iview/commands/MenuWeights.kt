@@ -52,6 +52,7 @@ object MenuWeights {
     const val EDIT_SETTINGS = 2.0
     const val EDIT_TOGGLE_FLOOR = 50.0
     const val EDIT_DELETE_OBJECT = 100.0
+    const val EDIT_RESET_SCENE = 200.0
     // Edit/Add
     const val EDIT_ADD_BOX = 0.0
     const val EDIT_ADD_SPHERE = 1.0
