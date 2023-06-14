@@ -899,6 +899,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     /**
      * Add a scenery Mesh to the scene
      * @param scMesh scenery mesh to add to scene
+     * @param name the name of the mesh
      * @return a Node corresponding to the mesh
      */
     fun addMesh(scMesh: graphics.scenery.Mesh, name: String ="Mesh"): graphics.scenery.Mesh {
@@ -912,6 +913,12 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         objectService.addObject(scMesh)
         return addNode(scMesh)
     }
+
+    /**
+     * Add a scenery Mesh to the scene
+     * @param scMesh scenery mesh to add to scene
+     * @return a Node corresponding to the mesh
+     */
     fun addMesh(scMesh: graphics.scenery.Mesh): graphics.scenery.Mesh {
         return addMesh(scMesh, "Mesh")
     }
@@ -920,12 +927,19 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     /**
      * Add an ImageJ mesh to the scene
      * @param mesh net.imagej.mesh to add to scene
+     * @param name the name of the mesh
      * @return a Node corresponding to the mesh
      */
     fun addMesh(mesh: Mesh, name: String="Mesh"): graphics.scenery.Mesh {
         val scMesh = MeshConverter.toScenery(mesh)
         return addMesh(scMesh, name=name)
     }
+
+    /**
+     * Add an ImageJ mesh to the scene
+     * @param mesh net.imagej.mesh to add to scene
+     * @return a Node corresponding to the mesh
+     */
     fun addMesh(mesh: Mesh): graphics.scenery.Mesh {
         return addMesh(mesh, "Mesh")
     }
