@@ -30,7 +30,6 @@ package sc.iview.commands.demo.advanced;
 
 import graphics.scenery.volumes.Volume;
 import io.scif.services.DatasetIOService;
-import kotlin.Unit;
 import net.imagej.mesh.Mesh;
 import net.imagej.mesh.Meshes;
 import net.imagej.ops.OpService;
