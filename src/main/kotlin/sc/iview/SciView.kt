@@ -150,10 +150,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * The primary camera/observer in the scene
      */
     var camera: Camera? = null
-    set(value) {
-        field = value
-        setActiveObserver(field)
-    }
+        set(value) {
+            field = value
+            setActiveObserver(field)
+        }
 
     lateinit var controls: Controls
     val targetArcball: AnimatedCenteringBeforeArcBallControl
@@ -432,6 +432,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     fun centerOnScene() {
         centerOnNode(scene)
     }
+
     /*
      * Get the InputHandler that is managing mouse, input, VR controls, etc.
      */
@@ -564,7 +565,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     fun showContextNodeChooser(x: Int, y: Int) {
-        mainWindow.showContextNodeChooser(x,y)
+        mainWindow.showContextNodeChooser(x, y)
     }
 
     /*
@@ -762,6 +763,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                             "' contains elements of unknown type '" + type + "'")
                 }
             }
+
             else -> {
                 val type = if (data == null) "<null>" else data.javaClass.name
                 throw IllegalArgumentException("Data source '" + source +  //
@@ -779,7 +781,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @JvmOverloads
     fun addPointCloud(points: Collection<RealLocalizable>,
                       name: String? = "PointCloud",
-                      pointSize : Float = 1.0f,
+                      pointSize: Float = 1.0f,
                       block: PointCloud.() -> Unit = {}): PointCloud {
         val flatVerts = FloatArray(points.size * 3)
         var k = 0
@@ -822,7 +824,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return a Node corresponding to the Node
      */
     @JvmOverloads
-    fun <N: Node?> addNode(n: N, activePublish: Boolean = true, block: N.() -> Unit = {}): N {
+    fun <N : Node?> addNode(n: N, activePublish: Boolean = true, block: N.() -> Unit = {}): N {
         n?.let {
             it.block()
             scene.addChild(it)
@@ -849,7 +851,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      *
      * @param n node to add to publish
      */
-    fun <N: Node> publishNode(n: N): N {
+    fun <N : Node> publishNode(n: N): N {
         n.let {
             objectService.addObject(n)
             eventService.publish(NodeAddedEvent(n))
@@ -1012,7 +1014,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     val screenshot: Img<UnsignedByteType>
         get() {
-            val screenshot = getSceneryRenderer()?.requestScreenshot() ?: throw IllegalStateException("No renderer present, cannot create screenshot")
+            val screenshot = getSceneryRenderer()?.requestScreenshot()
+                    ?: throw IllegalStateException("No renderer present, cannot create screenshot")
             return ArrayImgs.unsignedBytes(screenshot.data!!, screenshot.width.toLong(), screenshot.height.toLong(), 4L)
         }
 
@@ -1049,7 +1052,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return all nodes that match the predicate
      */
     fun getSceneNodes(filter: Predicate<in Node>): Array<Node> {
-        return scene.children.filter{ filter.test(it) }.toTypedArray()
+        return scene.children.filter { filter.test(it) }.toTypedArray()
     }
 
     /**
@@ -1071,16 +1074,16 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param activePublish whether the deletion should be published
      */
     @JvmOverloads
-fun deleteNode(node: Node?, activePublish: Boolean = true) {
-        if(node is Volume) {
+    fun deleteNode(node: Node?, activePublish: Boolean = true) {
+        if (node is Volume) {
             node.volumeManager.remove(node)
             val toRemove = ArrayList<Any>()
-            for( entry in imageToVolumeMap.entries ) {
-                if( entry.value == node ) {
+            for (entry in imageToVolumeMap.entries) {
+                if (entry.value == node) {
                     toRemove.add(entry.key)
                 }
             }
-            for(entry in toRemove) {
+            for (entry in toRemove) {
                 imageToVolumeMap.remove(entry)
             }
         }
@@ -1094,7 +1097,7 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
             setActiveNode(null)
         }
         //maintain consistency
-        if( activePublish ) {
+        if (activePublish) {
             eventService.publish(NodeRemovedEvent(node))
         }
     }
@@ -1105,12 +1108,12 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
     fun dispose() {
         val objs: List<Node> = objectService.getObjects(Node::class.java)
         for (obj in objs) {
-            objectService.removeObject(obj)
+            deleteNode(obj, activePublish = false)
         }
         scijavaContext!!.service(SciViewService::class.java).close(this)
         close()
         // if scijavaContext was not created by ImageJ, then system exit
-        if( objectService.getObjects(Utils.SciviewStandalone::class.java).size > 0 ) {
+        if (objectService.getObjects(Utils.SciviewStandalone::class.java).size > 0) {
             log.info("Was running as sciview standalone, shutting down JVM")
             System.exit(0)
         }
@@ -1229,11 +1232,11 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
      * @return The volume node corresponding to the [Dataset]-backed volume that has just been added.
      */
     fun addVolume(
-        image: Dataset,
-        voxelDimensions: FloatArray? = null,
-        block: Volume.() -> Unit = {}
+            image: Dataset,
+            voxelDimensions: FloatArray? = null,
+            block: Volume.() -> Unit = {}
     ): Volume {
-        return if(voxelDimensions == null) {
+        return if (voxelDimensions == null) {
             val voxelDims = FloatArray(image.numDimensions())
             for (d in voxelDims.indices) {
                 val inValue = image.axis(d).averageScale(0.0, 1.0)
@@ -1263,10 +1266,10 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
     </T> */
     @JvmOverloads
     fun <T : RealType<T>> addVolume(
-        image: RandomAccessibleInterval<T>,
-        name: String = "Volume",
-        voxelDimensions: FloatArray = floatArrayOf(1.0f, 1.0f, 1.0f),
-        block: Volume.() -> Unit = {}
+            image: RandomAccessibleInterval<T>,
+            name: String = "Volume",
+            voxelDimensions: FloatArray = floatArrayOf(1.0f, 1.0f, 1.0f),
+            block: Volume.() -> Unit = {}
     ): Volume {
         //log.debug( "Add Volume " + name + " image: " + image );
         val dimensions = LongArray(image.numDimensions())
@@ -1354,7 +1357,7 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
         v.name = name
         v.metadata["sources"] = sources
         v.metadata["VoxelDimensions"] = voxelDimensions
-        v.spatial().scale = Vector3f(1.0f, voxelDimensions[1]/voxelDimensions[0], voxelDimensions[2]/voxelDimensions[0]) * v.pixelToWorldRatio * 10.0f
+        v.spatial().scale = Vector3f(1.0f, voxelDimensions[1] / voxelDimensions[0], voxelDimensions[2] / voxelDimensions[0]) * v.pixelToWorldRatio * 10.0f
         val tf = v.transferFunction
         val rampMin = 0f
         val rampMax = 0.1f
@@ -1400,7 +1403,7 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
      * @return a Volume corresponding to the input image
     </T> */
     fun getVolumeFromImage(image: Any): Volume? {
-        if( image in imageToVolumeMap )
+        if (image in imageToVolumeMap)
             return imageToVolumeMap[image]
         return null
     }
@@ -1675,9 +1678,9 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
         fun create(): SciView {
             xinitThreads()
             val context = Context(ImageJService::class.java, SciJavaService::class.java, SCIFIOService::class.java,
-                ThreadService::class.java, ObjectService::class.java, LogService::class.java, MenuService::class.java,
-                IOService::class.java, EventService::class.java, LUTService::class.java, UnitService::class.java,
-                DatasetIOService::class.java)
+                    ThreadService::class.java, ObjectService::class.java, LogService::class.java, MenuService::class.java,
+                    IOService::class.java, EventService::class.java, LUTService::class.java, UnitService::class.java,
+                    DatasetIOService::class.java)
             val objectService = context.getService(ObjectService::class.java)
             objectService.addObject(Utils.SciviewStandalone())
             val sciViewService = context.service(SciViewService::class.java)
