@@ -52,7 +52,10 @@ class ToggleBoundingGrid : Command {
     @Parameter
     private lateinit var node: Node
 
-    override fun run() {
+    @Parameter(label = "Apply to children")
+    private var applyToChildren: Boolean = true
+
+    fun toggleBoundingGrid(node: Node) {
         val bg = node.children.findLast { it is BoundingGrid } as? BoundingGrid
         if (bg != null) {
             bg.node = null
@@ -61,6 +64,14 @@ class ToggleBoundingGrid : Command {
             val newBg = BoundingGrid()
             newBg.node = node
             sciView.publishNode(newBg)
+        }
+    }
+
+    override fun run() {
+        if (applyToChildren) {
+            node.runRecursive({ node -> toggleBoundingGrid(node)})
+        } else {
+            toggleBoundingGrid(node)
         }
     }
 }

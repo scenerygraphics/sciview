@@ -61,6 +61,9 @@ class SetLUT : DynamicCommand() {
     @Parameter(label = "Node")
     private lateinit var node: Node
 
+    @Parameter(label = "Apply to children")
+    private var applyToChildren: Boolean = true
+
     @Parameter(label = "Selected LUT", choices = [], callback = "lutNameChanged")
     private lateinit var lutName: String
 
@@ -87,6 +90,12 @@ class SetLUT : DynamicCommand() {
     }
 
     override fun run() {
-        sciView.setColormap(node, colorTable)
+        val func = { aNode: Node -> sciView.setColormap(aNode, colorTable) }
+
+        if (applyToChildren) {
+            node.runRecursive(func)
+        } else {
+            func(node)
+        }
     }
 }
