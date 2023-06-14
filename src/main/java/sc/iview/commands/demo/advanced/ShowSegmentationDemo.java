@@ -30,6 +30,7 @@ package sc.iview.commands.demo.advanced;
 
 import graphics.scenery.volumes.Volume;
 import io.scif.services.DatasetIOService;
+import kotlin.Unit;
 import net.imagej.mesh.Mesh;
 import net.imagej.mesh.Meshes;
 import net.imagej.ops.OpService;
@@ -121,6 +122,8 @@ public class ShowSegmentationDemo implements Command {
 
             // Make the segmentation mesh a child of the parent
             v.addChild(isoSurfaceMesh);
+            // We need to publish our node to sciview to update the UI
+            sciView.publishNode(isoSurfaceMesh);
         }
 
         sciView.centerOnNode(v);

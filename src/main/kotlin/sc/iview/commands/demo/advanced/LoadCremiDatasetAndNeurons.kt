@@ -197,6 +197,7 @@ class LoadCremiDatasetAndNeurons : Command {
             // Convert the mesh into a scenery mesh for visualization
             val mesh = MeshConverter.toScenery(m, false, flipWindingOrder = true)
             v.addChild(mesh)
+            sciview.publishNode(mesh)
             mesh.ifMaterial {
                 diffuse =
                         colormapNeurons.lookupARGB(0.0, 255.0, kotlin.random.Random.nextDouble(0.0, 255.0)).toRGBColor()
