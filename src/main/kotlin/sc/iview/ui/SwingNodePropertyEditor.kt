@@ -72,6 +72,7 @@ import javax.swing.JSplitPane
 import javax.swing.JTextArea
 import javax.swing.JTree
 import javax.swing.WindowConstants
+import javax.swing.border.EmptyBorder
 import javax.swing.event.TreeSelectionEvent
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
@@ -373,9 +374,9 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                         Help.getBasicUsageText(handler)
                         + "</html>")
             )
-
+            usageLabel.border = EmptyBorder(2, 5, 0, 5);
             usageLabel.preferredSize = Dimension(300, 100)
-            props.add(usageLabel)
+            props.add(usageLabel,"wrap")
         } else {
             props.add(c)
             props.size = c.size
