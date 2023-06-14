@@ -120,6 +120,8 @@ public class AddOrientationCompass implements Command {
         axisNode.setName("compass axis: Z");
         root.addChild( axisNode );
 
+        root.setName("Compass");
+
         sciView.addNode( root );
 
         sciView.getCamera().addChild(root);

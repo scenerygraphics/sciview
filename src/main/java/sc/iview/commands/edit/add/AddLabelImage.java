@@ -103,7 +103,7 @@ public class AddLabelImage<T extends RealType<T>> implements Command {
             LabelRegion<Integer> lr = labelRegions.getLabelRegion( ( Integer ) regionsArr[i] );
 
             Mesh mesh = ops.geom().marchingCubes( lr );
-            sciView.addMesh( mesh );
+            sciView.addMesh( mesh, currentImage.getName() );
         }
     }
 
