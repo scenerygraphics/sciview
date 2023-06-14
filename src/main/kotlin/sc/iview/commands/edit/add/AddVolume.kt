@@ -77,11 +77,10 @@ class AddVolume : Command {
     private var voxelDepth = 1.0f
 
     override fun run() {
-        if (inheritFromImage) {
-            sciView.addVolume(image, name=image.name)
-        } else {
-            sciView.addVolume(image, name=image.name, voxelDimensions=floatArrayOf(voxelWidth, voxelHeight, voxelDepth))
-        }
+        if (inheritFromImage)
+            setVoxelDimension()
+
+        sciView.addVolume(image, name=image.name, voxelDimensions=floatArrayOf(voxelWidth, voxelHeight, voxelDepth))
     }
 
     private fun setVoxelDimension() {
