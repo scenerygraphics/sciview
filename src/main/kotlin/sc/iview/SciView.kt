@@ -114,6 +114,8 @@ import java.awt.event.WindowListener
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.Future
 import java.util.function.Consumer
@@ -250,7 +252,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Note: this video recording may skip frames because it is asynchronous
      */
     fun toggleRecordVideo() {
-        if (renderer is OpenGLRenderer) (renderer as OpenGLRenderer).recordMovie() else (renderer as VulkanRenderer).recordMovie()
+        toggleRecordVideo("sciview_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss")), false)
     }
 
     /**
@@ -261,7 +263,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param overwrite should the file be replaced, otherwise a unique incrementing counter will be appended
      */
     fun toggleRecordVideo(filename: String?, overwrite: Boolean) {
-        if (renderer is OpenGLRenderer) (renderer as OpenGLRenderer).recordMovie(filename!!, overwrite) else (renderer as VulkanRenderer).recordMovie(filename!!, overwrite)
+        if (renderer is VulkanRenderer)
+            (renderer as VulkanRenderer).recordMovie(filename!!, overwrite)
+        else
+            log.info("This renderer does not support video recording.")
     }
 
     /**
@@ -594,7 +599,24 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             diffuse = Utils.convertToVector3f(color)
             specular = Vector3f(1.0f, 1.0f, 1.0f)
         }
+        box.name = generateUniqueName("Box")
         return addNode(box, block = block)
+    }
+
+    /**
+     * Return a Unique name (in terms of the scene) given a [candidateName].
+     * @param candidateName a candidate name
+     * @return a unique name based on [candidateName]
+     */
+    fun generateUniqueName(candidateName: String): String {
+        var uniqueName = candidateName
+        var counter = 1
+        val names = allSceneNodes.map { el -> el.name }
+        while (names.contains(uniqueName)) {
+            uniqueName = "$candidateName $counter"
+            counter++
+        }
+        return uniqueName
     }
 
     /**
@@ -610,7 +632,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             diffuse = Utils.convertToVector3f(color)
             specular = Vector3f(1.0f, 1.0f, 1.0f)
         }
-
+        sphere.name = generateUniqueName("Sphere")
         return addNode(sphere, block = block)
     }
 
@@ -622,9 +644,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param num_segments number of segments to represent the cylinder
      * @return  the Node corresponding to the cylinder
      */
+    @JvmOverloads
     fun addCylinder(position: Vector3f, radius: Float, height: Float, num_segments: Int, block: Cylinder.() -> Unit = {}): Cylinder {
         val cyl = Cylinder(radius, height, num_segments)
         cyl.spatial().position = position
+        cyl.name = generateUniqueName("Cylinder")
         return addNode(cyl, block = block)
     }
 
@@ -636,9 +660,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param num_segments number of segments used to represent cone
      * @return  the Node corresponding to the cone
      */
+    @JvmOverloads
     fun addCone(position: Vector3f, radius: Float, height: Float, num_segments: Int, block: Cone.() -> Unit = {}): Cone {
         val cone = Cone(radius, height, num_segments, Vector3f(0.0f, 0.0f, 1.0f))
         cone.spatial().position = position
+        cone.name = generateUniqueName("Cone")
         return addNode(cone, block = block)
     }
 
@@ -674,6 +700,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             specular = Vector3f(1.0f, 1.0f, 1.0f)
         }
         line.spatial().position = points[0]
+        line.name = generateUniqueName("Line")
         return addNode(line, block = block)
     }
 
@@ -691,6 +718,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         }
         light.spatial().position = Vector3f(0.0f, 0.0f, 0.0f)
         lights!!.add(light)
+        light.name = generateUniqueName("Point Light")
         return addNode(light, block = block)
     }
 
@@ -719,29 +747,35 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @Suppress("UNCHECKED_CAST")
     @Throws(IOException::class)
     fun open(source: String) {
+        var name = source.split("/").last()
+
         if (source.endsWith(".xml", ignoreCase = true)) {
-            addNode(fromXML(source, hub, VolumeViewerOptions()))
+            val openedNode = fromXML(source, hub, VolumeViewerOptions())
+            openedNode.name = generateUniqueName(name)
+            addNode(openedNode)
             return
         } else if (source.takeLast(4).equals(".pdb", true)) {
             val protein = Protein.fromFile(source)
             val ribbon = RibbonDiagram(protein)
             ribbon.spatial().position = Vector3f(0f, 0f, 0f)
+            ribbon.name = generateUniqueName(name)
             addNode(ribbon)
             return
         } else if (source.endsWith(".stl", ignoreCase = true)) {
             val stlReader = STLMeshIO()
-            addMesh(stlReader.open(source))
+            addMesh(stlReader.open(source), name=name)
             return
         } else if (source.endsWith(".ply", ignoreCase = true)) {
             val plyReader = PLYMeshIO()
-            addMesh(plyReader.open(source))
+            addMesh(plyReader.open(source), name=name)
             return
         }
+
         val data = io.open(source)
         when (data) {
-            is Mesh -> addMesh(data)
-            is PointCloud -> addPointCloud(data)
-            is graphics.scenery.Mesh -> addMesh(data)
+            is Mesh -> addMesh(data, name=name)
+            is PointCloud -> addPointCloud(data, name)
+            is graphics.scenery.Mesh -> addMesh(data, name=name)
             is Dataset -> addVolume(data, floatArrayOf(1.0f, 1.0f, 1.0f))
 //            is RandomAccessibleInterval<*> -> {
 //                val t = data.randomAccess().get()
@@ -755,7 +789,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                     // NB: For now, we assume all elements will be RealLocalizable.
                     // Highly likely to be the case, barring antagonistic importers.
                     val points = list as List<RealLocalizable>
-                    addPointCloud(points, source)
+                    addPointCloud(points, name)
                 } else {
                     val type = if (element == null) "<null>" else element.javaClass.name
                     throw IllegalArgumentException("Data source '" + source +  //
@@ -809,9 +843,12 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return a Node corresponding to the PointCloud
      */
     @JvmOverloads
-    fun addPointCloud(pointCloud: PointCloud, block: PointCloud.() -> Unit = {}): PointCloud {
+    fun addPointCloud(pointCloud: PointCloud,
+                      name: String = "Point Cloud",
+                      block: PointCloud.() -> Unit = {}): PointCloud {
         pointCloud.setupPointCloud()
         pointCloud.spatial().position = Vector3f(0f, 0f, 0f)
+        pointCloud.name = generateUniqueName(name)
         return addNode(pointCloud, block = block)
     }
 
@@ -822,10 +859,12 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return a Node corresponding to the Node
      */
     @JvmOverloads
-    fun <N: Node?> addNode(n: N, activePublish: Boolean = true, block: N.() -> Unit = {}): N {
+    fun <N: Node?> addNode(n: N, activePublish: Boolean = true, block: N.() -> Unit = {}, parent: Node = scene): N {
         n?.let {
             it.block()
-            scene.addChild(it)
+            // Ensure name is unique
+            n.name = generateUniqueName(n.name)
+            parent.addChild(it)
             objectService.addObject(n)
             if (blockOnNewNodes) {
                 Utils.blockWhile({ this.find(n.name) == null }, 20)
@@ -860,17 +899,40 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     /**
      * Add a scenery Mesh to the scene
      * @param scMesh scenery mesh to add to scene
+     * @param name the name of the mesh
      * @return a Node corresponding to the mesh
      */
-    fun addMesh(scMesh: graphics.scenery.Mesh): graphics.scenery.Mesh {
+    fun addMesh(scMesh: graphics.scenery.Mesh, name: String ="Mesh"): graphics.scenery.Mesh {
         scMesh.ifMaterial {
             ambient = Vector3f(1.0f, 0.0f, 0.0f)
             diffuse = Vector3f(0.0f, 1.0f, 0.0f)
             specular = Vector3f(1.0f, 1.0f, 1.0f)
         }
         scMesh.spatial().position = Vector3f(0.0f, 0.0f, 0.0f)
+        scMesh.name = generateUniqueName(name)
         objectService.addObject(scMesh)
         return addNode(scMesh)
+    }
+
+    /**
+     * Add a scenery Mesh to the scene
+     * @param scMesh scenery mesh to add to scene
+     * @return a Node corresponding to the mesh
+     */
+    fun addMesh(scMesh: graphics.scenery.Mesh): graphics.scenery.Mesh {
+        return addMesh(scMesh, "Mesh")
+    }
+
+
+    /**
+     * Add an ImageJ mesh to the scene
+     * @param mesh net.imagej.mesh to add to scene
+     * @param name the name of the mesh
+     * @return a Node corresponding to the mesh
+     */
+    fun addMesh(mesh: Mesh, name: String="Mesh"): graphics.scenery.Mesh {
+        val scMesh = MeshConverter.toScenery(mesh)
+        return addMesh(scMesh, name=name)
     }
 
     /**
@@ -879,8 +941,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return a Node corresponding to the mesh
      */
     fun addMesh(mesh: Mesh): graphics.scenery.Mesh {
-        val scMesh = MeshConverter.toScenery(mesh)
-        return addMesh(scMesh)
+        return addMesh(mesh, "Mesh")
     }
 
     /**
@@ -1229,7 +1290,25 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
      * @return The volume node corresponding to the [Dataset]-backed volume that has just been added.
      */
     fun addVolume(
+            image: Dataset,
+            voxelDimensions: FloatArray? = null,
+            block: Volume.() -> Unit = {}
+    ): Volume {
+        return addVolume(image, "Volume", voxelDimensions, block)
+    }
+
+    /**
+     * Adds a [Dataset]-backed [Volume] to the scene.
+     *
+     * @param image The [Dataset] to add.
+     * @param name The name of the [Volume].
+     * @param voxelDimensions An array containing the relative voxel dimensions of the dataset.
+     * @param block A lambda with additional code to execute upon adding the volume.
+     * @return The volume node corresponding to the [Dataset]-backed volume that has just been added.
+     */
+    fun addVolume(
         image: Dataset,
+        name: String = "Volume",
         voxelDimensions: FloatArray? = null,
         block: Volume.() -> Unit = {}
     ): Volume {
