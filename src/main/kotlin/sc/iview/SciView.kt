@@ -114,6 +114,8 @@ import java.awt.event.WindowListener
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.Future
 import java.util.function.Consumer
@@ -250,7 +252,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Note: this video recording may skip frames because it is asynchronous
      */
     fun toggleRecordVideo() {
-        if (renderer is OpenGLRenderer) (renderer as OpenGLRenderer).recordMovie() else (renderer as VulkanRenderer).recordMovie()
+        toggleRecordVideo("sciview_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss")), false)
     }
 
     /**
@@ -261,10 +263,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param overwrite should the file be replaced, otherwise a unique incrementing counter will be appended
      */
     fun toggleRecordVideo(filename: String?, overwrite: Boolean) {
-        if (renderer is OpenGLRenderer)
-                (renderer as OpenGLRenderer).recordMovie(filename!!, overwrite)
+        if (renderer is VulkanRenderer)
+            (renderer as VulkanRenderer).recordMovie(filename!!, overwrite)
         else
-                (renderer as VulkanRenderer).recordMovie(filename!!, overwrite)
+            log.info("This renderer does not support video recording.")
     }
 
     /**
