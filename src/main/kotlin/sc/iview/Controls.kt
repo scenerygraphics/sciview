@@ -49,7 +49,6 @@ import sc.iview.controls.behaviours.Ruler
 import java.io.File
 import java.util.*
 import java.util.function.Supplier
-import kotlin.concurrent.thread
 import kotlin.math.acos
 
 /**
@@ -277,7 +276,11 @@ open class Controls(val sciview: SciView) {
         )
         
         parameters.registerFpsCameraControl(fpsControl)
-        h.addBehaviour("view: freely look around", fpsControl!!)
+        val selectCommand = h.getBehaviour("node: choose one from the view panel") as? ClickBehaviour
+        val wrappedFpsControl = selectCommand?.let {
+            ClickAndDragWrapper(it, fpsControl!!)
+        } ?: fpsControl!!
+        h.addBehaviour("view: freely look around", wrappedFpsControl)
         h.addKeyBinding("view: freely look around", "button1")
 
         //slow and fast camera motion
