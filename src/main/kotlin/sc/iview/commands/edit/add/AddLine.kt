@@ -62,7 +62,7 @@ class AddLine : Command {
     //
     //    @Parameter(label = "Second endpoint")
     //    private String stop = "1; 1; 1";
-    @Parameter
+    @Parameter(required = false)
     private lateinit var color: ColorRGB
 
     @Parameter(label = "Edge width", min = "0")
