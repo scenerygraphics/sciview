@@ -150,9 +150,13 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
 
         val container = JPanel(CardLayout())
 
+        var propsPane = JScrollPane(inspectorProperties)
+        var treePane = JScrollPane(inspectorTree)
+        propsPane.verticalScrollBar.unitIncrement = 16
+        treePane.verticalScrollBar.unitIncrement = 16
         inspector = JSplitPane(JSplitPane.VERTICAL_SPLIT,  //
-                JScrollPane(inspectorTree),
-                JScrollPane(inspectorProperties))
+                treePane,
+                propsPane)
         inspector.dividerLocation = sciview.windowHeight / 3
         inspector.isContinuousLayout = true
         inspector.border = BorderFactory.createEmptyBorder()
