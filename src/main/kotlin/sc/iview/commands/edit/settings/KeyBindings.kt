@@ -34,6 +34,7 @@ import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
+import java.io.File
 
 /**
  * A command for interactively editing input controls.
@@ -47,6 +48,6 @@ class KeyBindings : Command {
     private lateinit var sciView: SciView
 
     override fun run() {
-        sciView.sceneryInputHandler?.openKeybindingsGuiEditor("SciView's Key bindings editor", ".sciview.keybindings.yaml", "all")
+        sciView.sceneryInputHandler?.openKeybindingsGuiEditor("SciView's Key bindings editor", File(sciView.getProjectDirectories().configDir, ".keybindings.yaml").path, "all")
     }
 }
