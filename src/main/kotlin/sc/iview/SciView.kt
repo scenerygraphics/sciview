@@ -1408,7 +1408,8 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
                                        numTimepoints: Int,
                                        name: String = "Volume",
                                        vararg voxelDimensions: Float,
-                                       block: Volume.() -> Unit = {}): Volume {
+                                       block: Volume.() -> Unit = {},
+                                       colormapName: String = "Fire.lut"): Volume {
         var timepoints = numTimepoints
         var cacheControl: CacheControl? = null
 
@@ -1451,6 +1452,10 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
         tf.addControlPoint(1.0f, rampMax)
         val bg = BoundingGrid()
         bg.node = v
+
+        // Set default colormap
+        v.metadata["sciview.colormapName"] = colormapName
+        v.colormap = Colormap.fromColorTable(getLUT(colormapName))
 
         imageToVolumeMap[image] = v
         return addNode(v, block = block)
@@ -1740,7 +1745,7 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
      * @param lutName a String represening an ImageJ style LUT name, like Fire.lut
      * @return a [ColorTable] corresponding to the LUT or null if LUT not available
      */
-    fun getLUT(lutName: String = "Fire.lut"): ColorTable? {
+    fun getLUT(lutName: String = "Fire.lut"): ColorTable {
         try {
             refreshLUTs()
             var lutResult = availableLUTs[lutName]
@@ -1748,7 +1753,7 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
         } catch (e: IOException) {
             log.error("LUT $lutName not available")
             e.printStackTrace()
-            return null
+            throw e
         }
     }
 

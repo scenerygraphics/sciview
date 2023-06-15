@@ -385,10 +385,21 @@ class Properties : InteractiveCommand() {
 
             val lutNameItem = info.getMutableInput("colormapName", String::class.java)
             lutNameItem.choices = sciView.getAvailableLUTs()
-            val cachedColormapName = node.metadata["sciview.colormap-name"] as? String
+            val cachedColormapName = node.metadata["sciview.colormapName"] as? String
 
             if(cachedColormapName != null && sciView.getLUT(cachedColormapName) != null) {
                 colormapName = cachedColormapName
+            }
+
+            try {
+                val cm = sciView.getLUT(colormapName)
+                // Ensure the node matches
+                node.colormap = fromColorTable(cm)
+                node.metadata["sciview.colormapName"] = colormapName
+
+                colormap = cm
+            } catch (ioe: IOException) {
+                log.error("Could not load LUT $colormapName")
             }
 
             min = node.converterSetups[0].displayRangeMin.toInt()
@@ -527,7 +538,7 @@ class Properties : InteractiveCommand() {
             try {
                 val cm = sciView.getLUT(colormapName)
                 node.colormap = fromColorTable(cm!!)
-                node.metadata["sciview.colormap-name"] = colormapName
+                node.metadata["sciview.colormapName"] = colormapName
                 log.info("Setting new colormap to $colormapName / $cm")
 
                 colormap = cm
