@@ -112,6 +112,7 @@ dependencies {
     implementation(platform(kotlin("bom")))
     implementation(kotlin("stdlib-jdk8"))
     testImplementation(kotlin("test-junit"))
+    testImplementation("org.slf4j:slf4j-simple:1.7.36")
 
     implementation("sc.fiji:bigdataviewer-core")
     implementation("sc.fiji:bigdataviewer-vistools")
