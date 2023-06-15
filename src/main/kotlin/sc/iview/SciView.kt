@@ -622,9 +622,14 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param num_segments number of segments to represent the cylinder
      * @return  the Node corresponding to the cylinder
      */
-    fun addCylinder(position: Vector3f, radius: Float, height: Float, num_segments: Int, block: Cylinder.() -> Unit = {}): Cylinder {
+    fun addCylinder(position: Vector3f, radius: Float, height: Float, color: ColorRGB = DEFAULT_COLOR, num_segments: Int, block: Cylinder.() -> Unit = {}): Cylinder {
         val cyl = Cylinder(radius, height, num_segments)
         cyl.spatial().position = position
+        cyl.material {
+            ambient = Vector3f(1.0f, 0.0f, 0.0f)
+            diffuse = Utils.convertToVector3f(color)
+            specular = Vector3f(1.0f, 1.0f, 1.0f)
+        }
         return addNode(cyl, block = block)
     }
 
@@ -636,9 +641,14 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param num_segments number of segments used to represent cone
      * @return  the Node corresponding to the cone
      */
-    fun addCone(position: Vector3f, radius: Float, height: Float, num_segments: Int, block: Cone.() -> Unit = {}): Cone {
+    fun addCone(position: Vector3f, radius: Float, height: Float, color: ColorRGB = DEFAULT_COLOR, num_segments: Int, block: Cone.() -> Unit = {}): Cone {
         val cone = Cone(radius, height, num_segments, Vector3f(0.0f, 0.0f, 1.0f))
         cone.spatial().position = position
+        cone.material {
+            ambient = Vector3f(1.0f, 0.0f, 0.0f)
+            diffuse = Utils.convertToVector3f(color)
+            specular = Vector3f(1.0f, 1.0f, 1.0f)
+        }
         return addNode(cone, block = block)
     }
 

@@ -75,6 +75,6 @@ class AddCone : Command {
         //final Vector3 pos = ClearGLVector3.parse( position );
         val pos = Vector3f(0f, 0f, 0f)
 
-        sciView.addCone(pos,radius,height,20)
+        sciView.addCone(pos,radius,height,color,20)
     }
 }

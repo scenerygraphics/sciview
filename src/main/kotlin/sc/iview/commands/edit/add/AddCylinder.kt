@@ -35,6 +35,7 @@ import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import org.scijava.util.ColorRGB
 import sc.iview.SciView
+import sc.iview.Utils
 import sc.iview.commands.MenuWeights.EDIT
 import sc.iview.commands.MenuWeights.EDIT_ADD
 import sc.iview.commands.MenuWeights.EDIT_ADD_CYLINDER
@@ -74,6 +75,6 @@ class AddCylinder : Command {
         //final Vector3 pos = ClearGLVector3.parse( position );
         val pos = Vector3f(0f, 0f, 0f)
 
-        sciView.addCylinder(pos,radius,height,20)
+        sciView.addCylinder(pos,radius,height,color,20)
     }
 }
