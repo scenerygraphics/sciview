@@ -92,8 +92,6 @@ class SetLUT : DynamicCommand() {
             colorTable = sciView.getLUT(persistLutName)!!
         } catch (e: IOException) {
             e.printStackTrace()
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
     }
 
@@ -102,17 +100,5 @@ class SetLUT : DynamicCommand() {
         sciView.setColormap(node, colorTable)
         // Trigger an update to the UI for the colormap
         sciView.publishNode(node)
-    }
-
-    companion object {
-        @Throws(Exception::class)
-        @JvmStatic
-        fun main(args: Array<String>) {
-            val sv = SciView.create()
-            val command = sv.scijavaContext!!.getService(CommandService::class.java)
-            val argmap = HashMap<String, Any>()
-            argmap["iso"] = true
-            command.run(VolumeRenderDemo::class.java, true, argmap)
-        }
     }
 }
