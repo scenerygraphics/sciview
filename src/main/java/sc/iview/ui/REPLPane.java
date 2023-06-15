@@ -89,7 +89,7 @@ public class REPLPane implements UIComponent<JComponent> {
     //prompt = new REPLEditor(repl, vars, output);
     prompt = new REPLEditor(repl, null, output);
     context.inject(prompt);
-    prompt.setREPLLanguage("Python (Jython)");
+    prompt.setREPLLanguage("Python");
     final JScrollPane promptScroll = new JScrollPane(prompt);
 
     final JPanel bottomPane = new JPanel();
