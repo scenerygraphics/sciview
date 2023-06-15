@@ -120,8 +120,7 @@ import java.util.function.Consumer
 import java.util.function.Function
 import java.util.function.Predicate
 import java.util.stream.Collectors
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
+import javax.swing.JOptionPane
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -1071,7 +1070,18 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     /**
      * Delete the current active node
      */
-    fun deleteActiveNode() {
+    fun deleteActiveNode(askUser: Boolean = false) {
+        if(askUser && activeNode != null){
+            val options = arrayOf("Cancel", "Delete ${activeNode!!.name}")
+            val x = JOptionPane.showOptionDialog(
+                null, "Please confirm delete of ${activeNode!!.name}? ",
+                "Delete confirm",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[1]
+            )
+            if (x == 0){
+                return
+            }
+        }
         deleteNode(activeNode)
     }
 
