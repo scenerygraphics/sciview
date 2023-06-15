@@ -26,47 +26,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add;
-
-import org.joml.Vector3f;
-import org.scijava.command.Command;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import org.scijava.util.ColorRGB;
-
-import sc.iview.SciView;
-
-import static sc.iview.commands.MenuWeights.*;
+package sc.iview
 
 /**
- * Command to add a sphere in the scene
+ * Entry point for testing SciView functionality.
  *
  * @author Kyle Harrington
- *
+ * @author Ulrik Guenther
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Add", weight = EDIT_ADD), //
-                 @Menu(label = "Sphere...", weight = EDIT_ADD_SPHERE) })
-public class AddSphere implements Command {
-
-    @Parameter
-    private SciView sciView;
-
-//    @Parameter
-//    private String position = "0; 0; 0";
-
-    @Parameter
-    private float radius = 1.0f;
-
-    @Parameter(required = false)
-    private ColorRGB color = SciView.DEFAULT_COLOR;
-
-    @Override
-    public void run() {
-        //final Vector3 pos = ClearGLVector3.parse( position );
-        final Vector3f pos = new Vector3f(0, 0, 0);
-        sciView.addSphere( pos, radius, color );
+object ImageJMainTest {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        ImageJMain.main(args)
     }
 }

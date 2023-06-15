@@ -6,13 +6,13 @@
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -26,47 +26,31 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add;
+package sc.iview.commands.edit
 
-import org.joml.Vector3f;
-import org.scijava.command.Command;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import org.scijava.util.ColorRGB;
-
-import sc.iview.SciView;
-
-import static sc.iview.commands.MenuWeights.*;
+import org.scijava.command.Command
+import org.scijava.log.LogService
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.EDIT
+import sc.iview.commands.MenuWeights.EDIT_RESET_SCENE
 
 /**
- * Command to add a sphere in the scene
+ * Command to reset the scene to default
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Add", weight = EDIT_ADD), //
-                 @Menu(label = "Sphere...", weight = EDIT_ADD_SPHERE) })
-public class AddSphere implements Command {
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Edit", weight = EDIT), Menu(label = "Reset Scene", weight = EDIT_RESET_SCENE)])
+class ResetScene : Command {
+    @Parameter
+    private lateinit var logService: LogService
 
     @Parameter
-    private SciView sciView;
+    private lateinit var sciView: SciView
 
-//    @Parameter
-//    private String position = "0; 0; 0";
-
-    @Parameter
-    private float radius = 1.0f;
-
-    @Parameter(required = false)
-    private ColorRGB color = SciView.DEFAULT_COLOR;
-
-    @Override
-    public void run() {
-        //final Vector3 pos = ClearGLVector3.parse( position );
-        final Vector3f pos = new Vector3f(0, 0, 0);
-        sciView.addSphere( pos, radius, color );
+    override fun run() {
+        sciView.reset()
     }
 }

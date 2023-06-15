@@ -80,6 +80,7 @@ public class AddCamera implements Command {
 			spatial.setPosition( pos );
 			return null;
 		});
+		cam.setName("Camera");
 
 		sciView.addNode( cam );
 	}
