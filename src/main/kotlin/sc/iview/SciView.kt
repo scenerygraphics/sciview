@@ -900,6 +900,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         n.let {
             objectService.addObject(n)
             eventService.publish(NodeAddedEvent(n))
+            (mainWindow as SwingMainWindow).nodePropertyEditor.updateProperties(n, rebuild = true)
         }
         return n
     }

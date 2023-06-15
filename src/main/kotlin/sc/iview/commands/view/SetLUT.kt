@@ -98,7 +98,10 @@ class SetLUT : DynamicCommand() {
     }
 
     override fun run() {
+        node.metadata["sciview.colormapName"] = lutName
         sciView.setColormap(node, colorTable)
+        // Trigger an update to the UI for the colormap
+        sciView.publishNode(node)
     }
 
     companion object {

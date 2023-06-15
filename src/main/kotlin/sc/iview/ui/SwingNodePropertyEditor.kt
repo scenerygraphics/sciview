@@ -281,7 +281,7 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
     private val updateLock = ReentrantLock()
 
     /** Generates a properties panel for the given node.  */
-    fun updateProperties(sceneNode: Node?) {
+    fun updateProperties(sceneNode: Node?, rebuild: Boolean = false) {
         if (sceneNode == null) {
             try {
                 if (updateLock.tryLock() || updateLock.tryLock(200, TimeUnit.MILLISECONDS)) {
@@ -295,7 +295,7 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
         }
         try {
             if (updateLock.tryLock() || updateLock.tryLock(200, TimeUnit.MILLISECONDS)) {
-                if (currentNode === sceneNode && currentProperties != null) {
+                if (!rebuild && currentNode === sceneNode && currentProperties != null) {
                     currentProperties!!.updateCommandFields()
                     inputPanel.refresh()
                     updateLock.unlock()
@@ -347,6 +347,7 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                     textArea.text = "<html><pre>$stackTrace</pre>"
                     updatePropertiesPanel(textArea)
                 }
+
                 updateLock.unlock()
             }
         } catch (e: InterruptedException) {
@@ -418,9 +419,7 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
         if (newPath != null) {
             tree.selectionPath = newPath
             tree.scrollPathToVisible(newPath)
-            if (node !== sciView.activeNode) {
-                updateProperties(node)
-            }
+            updateProperties(node)
         }
     }
 
