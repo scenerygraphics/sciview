@@ -87,6 +87,9 @@ dependencies {
     implementation("net.imglib2:imglib2")
     implementation("net.imglib2:imglib2-roi")
 
+    // XDG support
+    implementation("dev.dirs:directories:26")
+
     // Math dependencies
 //    implementation(commons.math3)
 //    implementation(misc.joml)
