@@ -29,9 +29,6 @@
 package sc.iview.ui
 
 import com.formdev.flatlaf.FlatLightLaf
-import com.intellij.ui.tabs.JBTabsPosition
-import com.intellij.ui.tabs.TabInfo
-import com.intellij.ui.tabs.impl.JBEditorTabs
 import graphics.scenery.Node
 import graphics.scenery.SceneryElement
 import graphics.scenery.backends.Renderer
@@ -49,6 +46,7 @@ import java.awt.event.*
 import java.util.*
 import javax.script.ScriptException
 import javax.swing.*
+import kotlin.math.roundToInt
 
 /**
  * Class for Swing-based main window.
@@ -58,7 +56,6 @@ import javax.swing.*
  */
 class SwingMainWindow(val sciview: SciView) : MainWindow {
     private val logger by lazyLogger()
-    private var sidebarHidden = false
     private var previousSidebarPosition = 0
 
     var sceneryJPanel: SceneryJPanel
@@ -73,11 +70,14 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
         protected set
     var frame: JFrame
         protected set
+    var sidebarOpen = false
+        protected set
 
     private var splashLabel: SplashLabel
+    private var defaultSidebarAction: (() -> Any)? = null
 
     init {
-        FlatLightLaf.install()
+        FlatLightLaf.setup()
         try {
             UIManager.setLookAndFeel(FlatLightLaf())
         } catch (ex: Exception) {
@@ -95,7 +95,7 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
             y = 10
         }
 
-        frame = JFrame("SciView")
+        frame = JFrame("sciview")
         frame.layout = BorderLayout(0, 0)
         frame.setSize(sciview.windowWidth, sciview.windowHeight)
         frame.setLocation(x, y)
@@ -147,9 +147,8 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
         val inspectorTree = nodePropertyEditor.tree
         inspectorTree.toggleClickCount = 0 // This disables expanding menus on double click
         val inspectorProperties = nodePropertyEditor.props
-        val tp = JBEditorTabs(null)
-        tp.tabsPosition = JBTabsPosition.right
-        tp.isSideComponentVertical = true
+
+        val container = JPanel(CardLayout())
 
         inspector = JSplitPane(JSplitPane.VERTICAL_SPLIT,  //
                 JScrollPane(inspectorTree),
@@ -158,11 +157,8 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
         inspector.isContinuousLayout = true
         inspector.border = BorderFactory.createEmptyBorder()
         inspector.dividerSize = 1
-
-        val inspectorIcon = Utils.getScaledImageIcon(SciView::class.java.getResource("toolbox.png"), 16, 16)
-        val tiInspector = TabInfo(inspector, inspectorIcon)
-        tiInspector.text = ""
-        tp.addTab(tiInspector)
+        inspector.name = "Inspector"
+        container.add(inspector, "Inspector")
 
         // We need to get the surface scale here before initialising scenery's renderer, as
         // the information is needed already at initialisation time.
@@ -171,35 +167,58 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
         sciview.getScenerySettings().set("Renderer.SurfaceScale", surfaceScale)
         interpreterPane = REPLPane(sciview.scijavaContext)
         interpreterPane.component.border = BorderFactory.createEmptyBorder()
-        val interpreterIcon = Utils.getScaledImageIcon(SciView::class.java.getResource("terminal.png"), 16, 16)
-        val tiREPL = TabInfo(interpreterPane.component, interpreterIcon)
-        tiREPL.text = ""
-        tp.addTab(tiREPL)
-        tp.addTabMouseListener(object : MouseListener {
-            override fun mouseClicked(e: MouseEvent) {
-                if (e.clickCount == 2) {
-                    toggleSidebar()
-                }
-            }
-
-            override fun mousePressed(e: MouseEvent) {}
-            override fun mouseReleased(e: MouseEvent) {}
-            override fun mouseEntered(e: MouseEvent) {}
-            override fun mouseExited(e: MouseEvent) {}
-        })
+        interpreterPane.component.name = "REPL"
+        container.add(interpreterPane.component, "REPL")
         initializeInterpreter()
-        mainSplitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT,  //
-                sceneryJPanel,
-                tp.component
+        mainSplitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+                                   sceneryJPanel,
+                                   container
         )
-        mainSplitPane.dividerLocation = frame.size.width - 36
+        mainSplitPane.dividerLocation = frame.width
         mainSplitPane.border = BorderFactory.createEmptyBorder()
         mainSplitPane.dividerSize = 1
         mainSplitPane.resizeWeight = 0.5
-        sidebarHidden = true
+        mainSplitPane.rightComponent = null
+
+        val toolbar = JToolBar()
+        toolbar.orientation = SwingConstants.VERTICAL
+
+        val inspectorIcon = Utils.getScaledImageIcon(SciView::class.java.getResource("toolbox.png"), 16, 16)
+        val inspectorButton = JToggleButton()
+        inspectorButton.toolTipText = "Inspector"
+
+        val inspectorAction = object: AbstractAction("Inspector", inspectorIcon) {
+            override fun actionPerformed(e: ActionEvent) {
+                container.toggleSidebarComponent(inspector, toolbar, inspectorButton, e)
+            }
+        }
+
+        defaultSidebarAction = { container.toggleSidebarComponent(inspector, toolbar, inspectorButton, null) }
+
+        inspectorButton.action = inspectorAction
+        inspectorButton.icon = inspectorIcon
+        inspectorButton.hideActionText = true
+
+        val replIcon = Utils.getScaledImageIcon(SciView::class.java.getResource("terminal.png"), 16, 16)
+        val replButton = JToggleButton()
+        replButton.toolTipText = "Script Interpreter"
+
+        val replAction = object: AbstractAction("REPL", replIcon) {
+            override fun actionPerformed(e: ActionEvent) {
+                container.toggleSidebarComponent(interpreterPane.component, toolbar, replButton, e)
+            }
+        }
+
+        replButton.action = replAction
+        replButton.icon = replIcon
+        replButton.hideActionText = true
+
+        toolbar.add(inspectorButton)
+        toolbar.add(replButton)
 
         //frame.add(mainSplitPane, BorderLayout.CENTER);
         frame.add(mainSplitPane, BorderLayout.CENTER)
+        frame.add(toolbar, BorderLayout.EAST)
         frame.defaultCloseOperation = JFrame.DO_NOTHING_ON_CLOSE
         frame.addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
@@ -260,23 +279,56 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
         }
     }
 
+    fun JPanel.toggleSidebarComponent(component: Component, toolbar: JToolBar, button: JToggleButton, event: ActionEvent?) {
+        logger.debug("Button: ${button.text} (${button.isSelected}), event origin: ${(event?.source as? JToggleButton)?.text}")
+        if(previousSidebarPosition == 0) {
+            // default sidebar open position is 2/3 of the window width
+            previousSidebarPosition = (frame.width * 0.666f).roundToInt()
+        }
+
+        if(!sidebarOpen) {
+            logger.debug("Sidebar closed, opening ${component.name}")
+            mainSplitPane.dividerLocation = previousSidebarPosition
+            mainSplitPane.rightComponent = this
+            val cl = this.layout as CardLayout
+            cl.show(this, component.name)
+            sidebarOpen = true
+
+            return
+        }
+
+        if(event == null) {
+            mainSplitPane.dividerLocation = frame.width
+            mainSplitPane.rightComponent = null
+            toolbar.components.filterIsInstance<JToggleButton>().forEach { (it as? JToggleButton)?.isSelected = false }
+            sidebarOpen = false
+            return
+        }
+
+        if(sidebarOpen && button.isSelected && event.source == button){
+            logger.debug("Sidebar open on other, opening ${button.text}")
+            toolbar.components.filter { it is JToggleButton && it != button }.forEach { (it as? JToggleButton)?.isSelected = false }
+            val cl = this.layout as CardLayout
+            cl.show(this, component.name)
+            sidebarOpen = true
+        }
+
+        if(sidebarOpen && !button.isSelected && event.source == button){
+            logger.debug("Sidebar open, closing")
+            mainSplitPane.dividerLocation = frame.width
+            mainSplitPane.rightComponent = null
+            this.components.forEach { it.isVisible = false }
+            sidebarOpen = false
+        }
+    }
+
+
     /**
      * Toggling the sidebar for inspector, REPL, etc, returns the new state, where true means visible.
      */
     override fun toggleSidebar(): Boolean {
-        if (!sidebarHidden) {
-            previousSidebarPosition = mainSplitPane.dividerLocation
-            // TODO: remove hard-coded tab width
-            mainSplitPane.dividerLocation = frame.size.width - 36
-            sidebarHidden = true
-        } else {
-            if (previousSidebarPosition == 0) {
-                previousSidebarPosition = sciview.windowWidth / 3 * 2
-            }
-            mainSplitPane.dividerLocation = previousSidebarPosition
-            sidebarHidden = false
-        }
-        return sidebarHidden
+        defaultSidebarAction?.invoke()
+        return sidebarOpen
     }
 
     /**

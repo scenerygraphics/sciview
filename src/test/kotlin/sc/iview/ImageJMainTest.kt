@@ -26,41 +26,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit;
-
-import static sc.iview.commands.MenuWeights.EDIT;
-import static sc.iview.commands.MenuWeights.EDIT_DELETE_OBJECT;
-
-import org.scijava.command.Command;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-
-import sc.iview.SciView;
+package sc.iview
 
 /**
- * Command to delete the currently active Node from the scene
+ * Entry point for testing SciView functionality.
  *
  * @author Kyle Harrington
- *
+ * @author Ulrik Guenther
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Delete Object", weight = EDIT_DELETE_OBJECT) })
-public class DeleteObject implements Command {
-
-    @Parameter
-    private SciView sciView;
-
-// TODO it would be good if this could continue to use active node but also use an @Parameter by using a callback or sth
-//    @Parameter
-//    private Node node;
-
-    @Override
-    public void run() {
-        if( sciView.getActiveNode() != null ) {
-            sciView.deleteActiveNode(false);
-        }
+object ImageJMainTest {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        ImageJMain.main(args)
     }
-
 }

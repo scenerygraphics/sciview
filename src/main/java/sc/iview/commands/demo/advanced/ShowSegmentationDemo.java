@@ -28,6 +28,7 @@
  */
 package sc.iview.commands.demo.advanced;
 
+import graphics.scenery.attribute.material.Material;
 import graphics.scenery.volumes.Volume;
 import io.scif.services.DatasetIOService;
 import net.imagej.mesh.Mesh;
@@ -95,10 +96,9 @@ public class ShowSegmentationDemo implements Command {
 
         RandomAccessibleInterval<UnsignedByteType> inputImage = generateDemo(100, 100, 100, numSegments);
 
-        Volume v = (Volume) sciView.addVolume( inputImage, "Input Image", new float[] { 1, 1, 1 } );
-        v.setPixelToWorldRatio(10f);
+        Volume v = sciView.addVolume( inputImage, "Input Image", new float[] { 1, 1, 1 } );
+        v.setPixelToWorldRatio(1f);
         v.setName( "Segmentation Viz Demo" );
-        v.setNeedsUpdate(true);
 
         ImgLabeling<Integer, IntType> labeling = ops.labeling().cca(inputImage, ConnectedComponents.StructuringElement.FOUR_CONNECTED);
         LabelRegions<Integer> regions = new LabelRegions<>(labeling);
@@ -118,6 +118,7 @@ public class ShowSegmentationDemo implements Command {
             isoSurfaceMesh.material().setDiffuse(c);
             isoSurfaceMesh.material().setAmbient(c);
             isoSurfaceMesh.material().setSpecular(c);
+            isoSurfaceMesh.material().setCullingMode(Material.CullingMode.Front);
 
             // Make the segmentation mesh a child of the parent
             v.addChild(isoSurfaceMesh);

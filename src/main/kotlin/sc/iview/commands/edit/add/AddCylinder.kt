@@ -26,41 +26,55 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit;
+package sc.iview.commands.edit.add
 
-import static sc.iview.commands.MenuWeights.EDIT;
-import static sc.iview.commands.MenuWeights.EDIT_DELETE_OBJECT;
-
-import org.scijava.command.Command;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-
-import sc.iview.SciView;
+import org.joml.Vector3f
+import org.scijava.command.Command
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import org.scijava.util.ColorRGB
+import sc.iview.SciView
+import sc.iview.Utils
+import sc.iview.commands.MenuWeights.EDIT
+import sc.iview.commands.MenuWeights.EDIT_ADD
+import sc.iview.commands.MenuWeights.EDIT_ADD_CYLINDER
 
 /**
- * Command to delete the currently active Node from the scene
+ * Command to add a box to the scene
  *
- * @author Kyle Harrington
- *
+ * @author Jan Tiemann
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Delete Object", weight = EDIT_DELETE_OBJECT) })
-public class DeleteObject implements Command {
+@Plugin(
+    type = Command::class,
+    menuRoot = "SciView",
+    menu = [Menu(label = "Edit", weight = EDIT), Menu(label = "Add", weight = EDIT_ADD), Menu(
+        label = "Cylinder...",
+        weight = EDIT_ADD_CYLINDER
+    )]
+)
+class AddCylinder : Command {
 
     @Parameter
-    private SciView sciView;
+    private lateinit var sciView: SciView
 
-// TODO it would be good if this could continue to use active node but also use an @Parameter by using a callback or sth
-//    @Parameter
-//    private Node node;
+    // FIXME
+    //    @Parameter
+    //    private String position = "0; 0; 0";
 
-    @Override
-    public void run() {
-        if( sciView.getActiveNode() != null ) {
-            sciView.deleteActiveNode(false);
-        }
+    @Parameter
+    private var height = 1.0f
+
+    @Parameter
+    private var radius = 1.0f
+
+    @Parameter
+    private var color: ColorRGB = SciView.DEFAULT_COLOR;
+
+    override fun run() {
+        //final Vector3 pos = ClearGLVector3.parse( position );
+        val pos = Vector3f(0f, 0f, 0f)
+
+        sciView.addCylinder(pos,radius,height,color,20)
     }
-
 }

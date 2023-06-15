@@ -126,6 +126,7 @@ import java.util.stream.Collectors
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap
+import javax.swing.JOptionPane
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -652,10 +653,14 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param num_segments number of segments to represent the cylinder
      * @return  the Node corresponding to the cylinder
      */
-    @JvmOverloads
-    fun addCylinder(position: Vector3f, radius: Float, height: Float, num_segments: Int, block: Cylinder.() -> Unit = {}): Cylinder {
+    fun addCylinder(position: Vector3f, radius: Float, height: Float, color: ColorRGB = DEFAULT_COLOR, num_segments: Int, block: Cylinder.() -> Unit = {}): Cylinder {
         val cyl = Cylinder(radius, height, num_segments)
         cyl.spatial().position = position
+        cyl.material {
+            ambient = Vector3f(1.0f, 0.0f, 0.0f)
+            diffuse = Utils.convertToVector3f(color)
+            specular = Vector3f(1.0f, 1.0f, 1.0f)
+        }
         cyl.name = generateUniqueName("Cylinder")
         return addNode(cyl, block = block)
     }
@@ -668,10 +673,14 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param num_segments number of segments used to represent cone
      * @return  the Node corresponding to the cone
      */
-    @JvmOverloads
-    fun addCone(position: Vector3f, radius: Float, height: Float, num_segments: Int, block: Cone.() -> Unit = {}): Cone {
+    fun addCone(position: Vector3f, radius: Float, height: Float, color: ColorRGB = DEFAULT_COLOR, num_segments: Int, block: Cone.() -> Unit = {}): Cone {
         val cone = Cone(radius, height, num_segments, Vector3f(0.0f, 0.0f, 1.0f))
         cone.spatial().position = position
+        cone.material {
+            ambient = Vector3f(1.0f, 0.0f, 0.0f)
+            diffuse = Utils.convertToVector3f(color)
+            specular = Vector3f(1.0f, 1.0f, 1.0f)
+        }
         cone.name = generateUniqueName("Cone")
         return addNode(cone, block = block)
     }
@@ -1131,7 +1140,18 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     /**
      * Delete the current active node
      */
-    fun deleteActiveNode() {
+    fun deleteActiveNode(askUser: Boolean = false) {
+        if(askUser && activeNode != null){
+            val options = arrayOf("Cancel", "Delete ${activeNode!!.name}")
+            val x = JOptionPane.showOptionDialog(
+                null, "Please confirm delete of ${activeNode!!.name}? ",
+                "Delete confirm",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[1]
+            )
+            if (x == 0){
+                return
+            }
+        }
         deleteNode(activeNode)
     }
 
