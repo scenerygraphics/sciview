@@ -6,13 +6,13 @@
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -26,27 +26,31 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.settings
+package sc.iview.commands.edit
 
 import org.scijava.command.Command
+import org.scijava.log.LogService
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import sc.iview.SciView
-import sc.iview.commands.MenuWeights
+import sc.iview.commands.MenuWeights.EDIT
+import sc.iview.commands.MenuWeights.EDIT_RESET_SCENE
 
 /**
- * A command for interactively editing input controls.
- * @author Vladimir Ulman
- * @author Ulrik Guenther
+ * Command to reset the scene to default
+ *
+ * @author Kyle Harrington
  */
-@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Edit", weight = MenuWeights.EDIT), Menu(label = "Settings", weight = MenuWeights.EDIT_SETTINGS), Menu(label = "Key Bindings", weight = MenuWeights.EDIT_SETTINGS_BINDINGS)])
-class KeyBindings : Command {
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Edit", weight = EDIT), Menu(label = "Reset Scene", weight = EDIT_RESET_SCENE)])
+class ResetScene : Command {
+    @Parameter
+    private lateinit var logService: LogService
 
     @Parameter
     private lateinit var sciView: SciView
 
     override fun run() {
-        sciView.sceneryInputHandler?.openKeybindingsGuiEditor("SciView's Key bindings editor", ".sciview.keybindings.yaml", "all")
+        sciView.reset()
     }
 }

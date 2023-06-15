@@ -34,12 +34,10 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.script.ScriptREPL;
 import org.scijava.ui.swing.script.OutputPane;
-import org.scijava.ui.swing.script.VarsPane;
 import org.scijava.widget.UIComponent;
 
 import javax.script.ScriptContext;
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -91,7 +89,7 @@ public class REPLPane implements UIComponent<JComponent> {
     //prompt = new REPLEditor(repl, vars, output);
     prompt = new REPLEditor(repl, null, output);
     context.inject(prompt);
-    prompt.setREPLLanguage("Python");
+    prompt.setREPLLanguage("Python (Jython)");
     final JScrollPane promptScroll = new JScrollPane(prompt);
 
     final JPanel bottomPane = new JPanel();

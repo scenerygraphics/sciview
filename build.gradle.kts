@@ -19,10 +19,14 @@ plugins {
     signing
 }
 
+java {
+  sourceCompatibility = JavaVersion.VERSION_11
+  targetCompatibility = JavaVersion.VERSION_11
+}
+
 repositories {
     mavenCentral()
     maven("https://maven.scijava.org/content/groups/public")
-    maven("https://jitpack.io")
 }
 
 dependencies {
@@ -116,6 +120,7 @@ dependencies {
     implementation(platform(kotlin("bom")))
     implementation(kotlin("stdlib-jdk8"))
     testImplementation(kotlin("test-junit"))
+    testImplementation("org.slf4j:slf4j-simple:1.7.36")
 
     implementation("sc.fiji:bigdataviewer-core")
     implementation("sc.fiji:bigdataviewer-vistools")
@@ -136,7 +141,7 @@ dependencies {
 tasks {
     withType<KotlinCompile>().all {
         val version = System.getProperty("java.version").substringBefore('.').toInt()
-        val default = if (version == 1) "1.8" else "$version"
+        val default = if (version == 1) "11" else "$version"
         kotlinOptions {
             jvmTarget = project.properties["jvmTarget"]?.toString() ?: default
             freeCompilerArgs += listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
@@ -165,9 +170,6 @@ tasks {
             parent.appendNode("relativePath")
 
             val repositories = asNode().appendNode("repositories")
-            val jitpackRepo = repositories.appendNode("repository")
-            jitpackRepo.appendNode("id", "jitpack.io")
-            jitpackRepo.appendNode("url", "https://jitpack.io")
 
             val scijavaRepo = repositories.appendNode("repository")
             scijavaRepo.appendNode("id", "scijava.public")

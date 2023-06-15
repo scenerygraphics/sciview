@@ -26,27 +26,55 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.settings
+package sc.iview.commands.edit.add
 
+import org.joml.Vector3f
 import org.scijava.command.Command
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
+import org.scijava.util.ColorRGB
 import sc.iview.SciView
-import sc.iview.commands.MenuWeights
+import sc.iview.commands.MenuWeights.EDIT
+import sc.iview.commands.MenuWeights.EDIT_ADD
+import sc.iview.commands.MenuWeights.EDIT_ADD_CONE
+import sc.iview.commands.MenuWeights.EDIT_ADD_CYLINDER
 
 /**
- * A command for interactively editing input controls.
- * @author Vladimir Ulman
- * @author Ulrik Guenther
+ * Command to add a box to the scene
+ *
+ * @author Jan Tiemann
  */
-@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Edit", weight = MenuWeights.EDIT), Menu(label = "Settings", weight = MenuWeights.EDIT_SETTINGS), Menu(label = "Key Bindings", weight = MenuWeights.EDIT_SETTINGS_BINDINGS)])
-class KeyBindings : Command {
+@Plugin(
+    type = Command::class,
+    menuRoot = "SciView",
+    menu = [Menu(label = "Edit", weight = EDIT), Menu(label = "Add", weight = EDIT_ADD), Menu(
+        label = "Cone...",
+        weight = EDIT_ADD_CONE
+    )]
+)
+class AddCone : Command {
 
     @Parameter
     private lateinit var sciView: SciView
 
+    // FIXME
+    //    @Parameter
+    //    private String position = "0; 0; 0";
+
+    @Parameter
+    private var height = 1.0f
+
+    @Parameter
+    private var radius = 1.0f
+
+    @Parameter
+    private var color: ColorRGB = SciView.DEFAULT_COLOR;
+
     override fun run() {
-        sciView.sceneryInputHandler?.openKeybindingsGuiEditor("SciView's Key bindings editor", ".sciview.keybindings.yaml", "all")
+        //final Vector3 pos = ClearGLVector3.parse( position );
+        val pos = Vector3f(0f, 0f, 0f)
+
+        sciView.addCone(pos,radius,height,color,20)
     }
 }
