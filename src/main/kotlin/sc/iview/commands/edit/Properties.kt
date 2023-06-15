@@ -224,8 +224,6 @@ class Properties : InteractiveCommand() {
     @Parameter
     private lateinit var log: LogService
 
-    private var availableLUTs = LinkedHashMap<String, URL>()
-
     /**
      * Nothing happens here, as cancelling the dialog is not possible.
      */
@@ -242,13 +240,6 @@ class Properties : InteractiveCommand() {
     }
 
     protected fun initValues() {
-        if (colormap == null) {
-            try {
-                lutService.loadLUT(availableLUTs["Red.lut"])
-            } catch (ioe: IOException) {
-                System.err.println("IOException while loading Red.lut")
-            }
-        }
         rebuildSceneObjectChoiceList()
         refreshSceneNodeInDialog()
         updateCommandFields()
@@ -345,10 +336,6 @@ class Properties : InteractiveCommand() {
     /** Updates command fields to match current scene node properties.  */
     @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
     fun updateCommandFields() {
-        if(availableLUTs.isEmpty()) {
-            availableLUTs.putAll(lutService.findLUTs().entries.sortedBy { it.key }.map { it.key to it.value })
-        }
-
         val node = currentSceneNode ?: return
 
         fieldsUpdating = true
@@ -397,10 +384,10 @@ class Properties : InteractiveCommand() {
             slicingMode = slicingModeChoices[Volume.SlicingMode.values().indexOf(node .slicingMode)].toString()
 
             val lutNameItem = info.getMutableInput("colormapName", String::class.java)
-            lutNameItem.choices = availableLUTs.keys.toMutableList()
+            lutNameItem.choices = sciView.getAvailableLUTs()
             val cachedColormapName = node.metadata["sciview.colormap-name"] as? String
 
-            if(cachedColormapName != null && availableLUTs[cachedColormapName] != null) {
+            if(cachedColormapName != null && sciView.getLUT(cachedColormapName) != null) {
                 colormapName = cachedColormapName
             }
 
@@ -538,8 +525,8 @@ class Properties : InteractiveCommand() {
                 node.renderingMethod = Volume.RenderingMethod.values()[mode]
             }
             try {
-                val cm = lutService.loadLUT(availableLUTs[colormapName])
-                node.colormap = fromColorTable(cm)
+                val cm = sciView.getLUT(colormapName)
+                node.colormap = fromColorTable(cm!!)
                 node.metadata["sciview.colormap-name"] = colormapName
                 log.info("Setting new colormap to $colormapName / $cm")
 

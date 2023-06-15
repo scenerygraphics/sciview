@@ -112,6 +112,7 @@ import sc.iview.ui.TaskManager
 import tpietzsch.example2.VolumeViewerOptions
 import java.awt.event.WindowListener
 import java.io.IOException
+import java.net.URL
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.time.LocalDate
@@ -124,6 +125,7 @@ import java.util.function.Predicate
 import java.util.stream.Collectors
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
+import kotlin.collections.LinkedHashMap
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -135,6 +137,7 @@ import kotlin.math.sin
 // we suppress unused warnings here because @Parameter-annotated fields
 // get updated automatically by SciJava.
 class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
+
     val sceneryPanel = arrayOf<SceneryPanel?>(null)
 
     /*
@@ -216,6 +219,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      *//*
      * Set the SciJava Display
      */  var display: Display<*>? = null
+
+    /**
+     * List of available LUTs for caching
+     */
+    private var availableLUTs = LinkedHashMap<String, URL>()
 
     /**
      * Return the current SceneryJPanel. This is necessary for custom context menus
@@ -1725,6 +1733,41 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
 
     fun getAvailableServices() {
         println(scijavaContext!!.serviceIndex)
+    }
+
+    /**
+     * Return the color table corresponding to the [lutName]
+     * @param lutName a String represening an ImageJ style LUT name, like Fire.lut
+     * @return a [ColorTable] corresponding to the LUT or null if LUT not available
+     */
+    fun getLUT(lutName: String = "Fire.lut"): ColorTable? {
+        try {
+            refreshLUTs()
+            var lutResult = availableLUTs[lutName]
+            return lutService.loadLUT(lutResult)
+        } catch (e: IOException) {
+            log.error("LUT $lutName not available")
+            e.printStackTrace()
+            return null
+        }
+    }
+
+    /**
+     * Refresh the cache of available LUTs fetched from LutService
+     */
+    private fun refreshLUTs() {
+        if(availableLUTs.isEmpty()) {
+            availableLUTs.putAll(lutService.findLUTs().entries.sortedBy { it.key }.map { it.key to it.value })
+        }
+    }
+
+    /**
+     * Return a list of available LUTs/colormaps
+     * @return a list of LUT names
+     */
+    fun getAvailableLUTs(): List<String> {
+        refreshLUTs()
+        return availableLUTs.map {entry -> entry.key}
     }
 
     companion object {
