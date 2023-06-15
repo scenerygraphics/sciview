@@ -49,7 +49,6 @@ import sc.iview.controls.behaviours.Ruler
 import java.io.File
 import java.util.*
 import java.util.function.Supplier
-import kotlin.concurrent.thread
 import kotlin.math.acos
 
 /**
@@ -185,6 +184,9 @@ open class Controls(val sciview: SciView) {
         h.addKeyBinding("node: move selected one closer or further away", "ctrl scroll")
         h.addBehaviour("node: rotate selected one", NodeRotateControl(sciview))
         h.addKeyBinding("node: rotate selected one", "ctrl shift button1")
+        h.addBehaviour("node: delete selected one", ClickBehaviour { _, _ -> sciview.deleteActiveNode() })
+        h.addKeyBinding("node: delete selected one", "DELETE")
+
 
         // within-scene navigation: ArcBall and FPS
         enableArcBallControl()
