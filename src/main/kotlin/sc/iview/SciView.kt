@@ -112,6 +112,7 @@ import sc.iview.ui.TaskManager
 import tpietzsch.example2.VolumeViewerOptions
 import java.awt.event.WindowListener
 import java.io.IOException
+import java.net.URL
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.time.LocalDate
@@ -194,6 +195,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     private lateinit var unitService: UnitService
 
     private lateinit var imageToVolumeMap: HashMap<Any, Volume>
+
+    /**
+     * List of available LUTs
+     */
+    private var availableLUTs = LinkedHashMap<String, URL>()
 
     /**
      * Queue keeps track of the currently running animations
@@ -1443,6 +1449,19 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
         tf.addControlPoint(1.0f, rampMax)
         val bg = BoundingGrid()
         bg.node = v
+
+        // Set default colormap
+        var colormapName = "Fire.lut"
+        v.metadata["sciview.colormap-name"] = colormapName
+        try {
+            if(availableLUTs.isEmpty()) {
+                availableLUTs.putAll(lutService.findLUTs().entries.sortedBy { it.key }.map { it.key to it.value })
+            }
+            val cm = lutService.loadLUT(availableLUTs[colormapName])
+            v.colormap = Colormap.fromColorTable(cm)
+        } catch (ioe: IOException) {
+            log.error("Could not load LUT $colormapName")
+        }
 
         imageToVolumeMap[image] = v
         return addNode(v, block = block)

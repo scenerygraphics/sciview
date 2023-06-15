@@ -145,7 +145,7 @@ class Properties : InteractiveCommand() {
     private var max = 255
 
     @Parameter(label = "Color map", choices = [], callback = "updateNodeProperties", style = "group:Volume")
-    private var colormapName: String = "Red"
+    private var colormapName: String = "Fire.lut"
 
     @Parameter(label = " ", style = "group:Volume")
     private var colormap = dummyColorTable
@@ -402,6 +402,19 @@ class Properties : InteractiveCommand() {
 
             if(cachedColormapName != null && availableLUTs[cachedColormapName] != null) {
                 colormapName = cachedColormapName
+            }
+
+            if(availableLUTs[colormapName] != null) {
+                try {
+                    val cm = lutService.loadLUT(availableLUTs[colormapName])
+                    // Ensure the node matches
+                    node.colormap = fromColorTable(cm)
+                    node.metadata["sciview.colormap-name"] = colormapName
+
+                    colormap = cm
+                } catch (ioe: IOException) {
+                    log.error("Could not load LUT $colormapName")
+                }
             }
 
             min = node.converterSetups[0].displayRangeMin.toInt()
