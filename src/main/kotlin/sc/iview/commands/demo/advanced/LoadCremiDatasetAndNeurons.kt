@@ -215,9 +215,10 @@ class LoadCremiDatasetAndNeurons : Command {
 
     fun readCremiHDF5(path: String, scale: Double = 1.0): NeuronsAndImage? {
         log.info("Reading cremi HDF5 from $path")
-        val hdf5Reader = HDF5Factory.openForReading(path)
-        val n5Reader: N5HDF5Reader
+
         try {
+            val hdf5Reader = HDF5Factory.openForReading(path)
+            val n5Reader: N5HDF5Reader
             n5Reader = N5HDF5Reader(hdf5Reader, *intArrayOf(128, 128, 128))
             val neuronIds: RandomAccessibleInterval<UnsignedLongType> = N5Utils.open(n5Reader,
                     "/volumes/labels/neuron_ids",
@@ -246,6 +247,9 @@ class LoadCremiDatasetAndNeurons : Command {
             }
         } catch (e: IOException) {
             log.error("Could not read Cremi HDF5 file from $path")
+            e.printStackTrace()
+        } catch (e: hdf.hdf5lib.exceptions.HDF5FileInterfaceException) {
+            log.error("Could not read Cremi HDF5 file from $path. It might be the wrong file or corrupted. Please delete the file and rerun.")
             e.printStackTrace()
         }
 
