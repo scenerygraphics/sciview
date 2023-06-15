@@ -28,22 +28,15 @@
  */
 package sc.iview
 
-import org.scijava.ui.UIService
-
 /**
  * Entry point for testing SciView functionality.
  *
  * @author Kyle Harrington
  * @author Ulrik Guenther
  */
-object ImageJMain {
-    @Throws(Exception::class)
+object ImageJMainTest {
     @JvmStatic
     fun main(args: Array<String>) {
-        val sv = SciView.create()
-        val context = sv.scijavaContext
-        val uiService = context?.service(UIService::class.java)
-
-        uiService?.showUI()
+        ImageJMain.main(args)
     }
 }
