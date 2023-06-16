@@ -36,7 +36,7 @@ iso = Compute.inFloats(Scale2D(Red(ImgLib.wrap(imp)), scale2D))
 # Find peaks by difference of Gaussian  
 sigma = (cell_diameter  / cal.pixelWidth) * scale2D  
 peaks = DoGPeaks(iso, sigma, sigma * 0.5, minPeak, 1)  
-print "Found", len(peaks), "peaks"  
+print("Found", len(peaks), "peaks")
   
 def split_channels(image):
     channels = ArrayList()
@@ -87,7 +87,8 @@ sciview.setColormap(ch3, "Blue.lut")
 for peak in peaks:
     radius = cal.pixelWidth * 1/scale2D
     node = Sphere(radius, 20)
-    node.spatial().setPosition(Vector3f(peak).mul(scale))
+    new_pos = Vector3f(peak).mul(Vector3f([1.0/scale2D, 1.0/scale2D, 1.0]))
+    node.spatial().setPosition(new_pos)
     node.material().setDiffuse(Vector3f(1, 0, 0))
     ch1.addChild(node)
     sciview.publishNode(node)
@@ -97,6 +98,5 @@ ImageJFunctions.show(channels[0])
 ImageJFunctions.show(channels[1])
 ImageJFunctions.show(channels[2])
 ImageJFunctions.show(channels[3])
-
 
 
