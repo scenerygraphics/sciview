@@ -86,7 +86,7 @@ public class AddOrientationCompass implements Command {
             return null;
         });
 
-        Icosphere axisCap = new Icosphere(AXESBARRADIUS, 2);
+        Icosphere axisCap = new Icosphere(AXESBARRADIUS, 2, false);
         axisCap.ifSpatial(spatial -> {
             spatial.setPosition(new Vector3f(0, axisLength, 0));
             return null;
