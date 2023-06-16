@@ -32,6 +32,8 @@ import com.intellij.ui.components.JBPanel
 import graphics.scenery.Camera
 import graphics.scenery.Node
 import graphics.scenery.Scene
+import graphics.scenery.volumes.TransferFunctionEditor
+import graphics.scenery.volumes.Volume
 import net.miginfocom.swing.MigLayout
 import org.joml.Quaternionf
 import org.joml.Vector3f
@@ -340,6 +342,13 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                 try {
                     harvester.buildPanel(inputPanel, module)
                     updatePropertiesPanel(inputPanel.component)
+
+                    val n = sceneNode
+                    if(n is Volume) {
+                        val tfe = TransferFunctionEditor(n, n.name)
+                        inputPanel.component.add(tfe)
+                    }
+
                 } catch (exc: ModuleException) {
                     log.error(exc)
                     val stackTrace = DebugUtils.getStackTrace(exc)
