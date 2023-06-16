@@ -4,7 +4,7 @@ import java.net.URL
 import sciview.*
 
 plugins {
-    val ktVersion = "1.8.20"
+    val ktVersion = "1.8.22"
     val dokkaVersion = "1.8.20"
 
     java
@@ -25,43 +25,48 @@ java {
 }
 
 repositories {
+    if(project.properties["useMavenLocal"] == "true") {
+        logger.warn("Using local Maven repository as source")
+        mavenLocal()
+    }
     mavenCentral()
+    maven("https://oss.sonatype.org/content/repositories/graphicsscenery-1221")
     maven("https://maven.scijava.org/content/groups/public")
 }
 
 dependencies {
-    val ktVersion = "1.8.20"
-    implementation(platform("org.scijava:pom-scijava:31.1.0"))
+    val ktVersion = "1.8.22"
+    implementation(platform("org.scijava:pom-scijava:35.1.1"))
 
     // Graphics dependencies
 
-    annotationProcessor("org.scijava:scijava-common:2.90.0")
-    kapt("org.scijava:scijava-common:2.90.0") { // MANUAL version increment
+    // Attention! Manual version increment necessary here!
+    val scijavaCommonVersion = "2.94.1"
+    annotationProcessor("org.scijava:scijava-common:$scijavaCommonVersion")
+    kapt("org.scijava:scijava-common:$scijavaCommonVersion") {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "0.8.0"
+    val sceneryVersion = "0.9.0"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
         exclude("null", "unspecified")
     }
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4.2")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.4")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.4")
-    implementation("org.msgpack:jackson-dataformat-msgpack:0.9.3")
     implementation("net.java.dev.jna:jna-platform:5.11.0")
-    implementation("net.clearvolume:cleargl")
     implementation("org.janelia.saalfeldlab:n5")
     implementation("org.janelia.saalfeldlab:n5-imglib2")
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
     implementation("org.apache.logging.log4j:log4j-1.2-api:2.20.0")
 
-    implementation("com.formdev:flatlaf:2.6")
+    implementation("com.formdev:flatlaf")
 
     // SciJava dependencies
 
+    implementation("org.yaml:snakeyaml") {
+        version { strictly("1.33") }
+    }
     implementation("org.scijava:scijava-common")
     implementation("org.scijava:ui-behaviour")
     implementation("org.scijava:script-editor")
@@ -434,6 +439,8 @@ artifacts {
     archives(dokkaJavadocJar)
     archives(dokkaHtmlJar)
 }
+
+
 
 java.withSourcesJar()
 
