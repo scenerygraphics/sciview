@@ -37,11 +37,11 @@ import bdv.util.RandomAccessibleIntervalSource4D
 import bdv.util.volatiles.VolatileView
 import bdv.viewer.Source
 import bdv.viewer.SourceAndConverter
+import bvv.core.VolumeViewerOptions
 import dev.dirs.ProjectDirectories
 import graphics.scenery.*
 import graphics.scenery.Scene.RaycastResult
 import graphics.scenery.backends.Renderer
-import graphics.scenery.backends.opengl.OpenGLRenderer
 import graphics.scenery.backends.vulkan.VulkanRenderer
 import graphics.scenery.controls.InputHandler
 import graphics.scenery.controls.OpenVRHMD
@@ -110,7 +110,6 @@ import sc.iview.ui.CustomPropertyUI
 import sc.iview.ui.MainWindow
 import sc.iview.ui.SwingMainWindow
 import sc.iview.ui.TaskManager
-import tpietzsch.example2.VolumeViewerOptions
 import java.awt.event.WindowListener
 import java.io.IOException
 import java.net.URL
@@ -388,10 +387,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                 versionString = versionString.substring(0, 5)
                 val launcherVersion = Version(versionString)
                 val nonWorkingVersion = Version("4.0.5")
-                if (launcherVersion.compareTo(nonWorkingVersion) <= 0
+                if (launcherVersion <= nonWorkingVersion
                         && !java.lang.Boolean.parseBoolean(System.getProperty("sciview.DisableLauncherVersionCheck", "false"))) {
-                    logger.info("imagej-launcher version smaller or equal to non-working version ($versionString vs. 4.0.5), disabling Vulkan as rendering backend. Disable check by setting 'scenery.DisableLauncherVersionCheck' system property to 'true'.")
-                    System.setProperty("scenery.Renderer", "OpenGLRenderer")
+                    throw IllegalStateException("imagej-launcher version is outdated, please update your Fiji installation.")
                 } else {
                     logger.info("imagej-launcher version bigger that non-working version ($versionString vs. 4.0.5), all good.")
                 }
