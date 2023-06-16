@@ -31,6 +31,7 @@ package sc.iview.commands.demo.advanced
 import bdv.util.DefaultInterpolators
 import bdv.viewer.Interpolation
 import ch.systemsx.cisd.hdf5.HDF5Factory
+import dev.dirs.ProjectDirectories
 import graphics.scenery.Origin
 import graphics.scenery.utils.extensions.xyz
 import graphics.scenery.volumes.Colormap
@@ -130,10 +131,16 @@ class LoadCremiDatasetAndNeurons : Command {
         }
 
         // val files = ui.chooseFiles(null, emptyList(), filter, FileWidget.OPEN_STYLE)
-        val file = File(System.getProperty("user.home") + "/.sciview/examples/sample_A_20160501.hdf")
+        var projDirs = sciview.getProjectDirectories()
+
+        val file = File(projDirs.cacheDir,"sample_A_20160501.hdf")
         if (file.exists() == false) {
             task.status = "Downloading dataset"
             log.info("Downloading dataset")
+            // ensure this exists projDirs.cacheDir
+            if (!File(projDirs.cacheDir).exists()) {
+                File(projDirs.cacheDir).mkdirs()
+            }
             copyURLToFile(URL("https://cremi.org/static/data/sample_A_20160501.hdf"), file)
         }
 

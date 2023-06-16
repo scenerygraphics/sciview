@@ -37,6 +37,7 @@ import bdv.util.RandomAccessibleIntervalSource4D
 import bdv.util.volatiles.VolatileView
 import bdv.viewer.Source
 import bdv.viewer.SourceAndConverter
+import dev.dirs.ProjectDirectories
 import graphics.scenery.*
 import graphics.scenery.Scene.RaycastResult
 import graphics.scenery.backends.Renderer
@@ -1794,6 +1795,17 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
     fun getAvailableLUTs(): List<String> {
         refreshLUTs()
         return availableLUTs.map {entry -> entry.key}
+    }
+
+    /**
+     * Return ProjectDirectories for sciview.
+     *
+     * Use this to find the location of cache, etc.
+     *
+     * @return a [ProjectDirectories] for sciview
+     */
+    fun getProjectDirectories(): ProjectDirectories {
+        return ProjectDirectories.from("sc", "iview", "sciview")
     }
 
     companion object {
