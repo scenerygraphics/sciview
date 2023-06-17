@@ -491,6 +491,8 @@ class Properties : InteractiveCommand() {
 
         if (node is Line){
             edgeWidth = node.edgeWidth.toInt()
+        } else {
+            maybeRemoveInput("edgeWidth", java.lang.Integer::class.java)
         }
 
         name = node.name

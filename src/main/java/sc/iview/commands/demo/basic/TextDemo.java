@@ -6,13 +6,13 @@
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -31,6 +31,7 @@ package sc.iview.commands.demo.basic;
 import graphics.scenery.Node;
 import graphics.scenery.primitives.TextBoard;
 import net.imagej.mesh.Mesh;
+import net.imagej.mesh.io.stl.STLMeshIO;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.scijava.command.Command;
@@ -55,9 +56,9 @@ import static sc.iview.commands.MenuWeights.*;
  * @author Kyle Harrington
  */
 @Plugin(type = Command.class, label = "Mesh Demo", menuRoot = "SciView", //
-        menu = { @Menu(label = "Demo", weight = DEMO), //
-                 @Menu(label = "Basic", weight = DEMO_BASIC), //
-                 @Menu(label = "Text Demo", weight = DEMO_BASIC_TEXT) })
+        menu = {@Menu(label = "Demo", weight = DEMO), //
+                @Menu(label = "Basic", weight = DEMO_BASIC), //
+                @Menu(label = "Text Demo", weight = DEMO_BASIC_TEXT)})
 public class TextDemo implements Command {
 
     @Parameter
@@ -77,39 +78,51 @@ public class TextDemo implements Command {
         final Mesh m;
         String filePath = "/WieseRobert_simplified_Cip1.stl";
         try {
-            File meshFile = ResourceLoader.createFile( getClass(), filePath );
-            m = (Mesh) io.open( meshFile.getAbsolutePath() );
-        }
-        catch (IOException exc) {
-            log.error( exc );
+            File meshFile = ResourceLoader.createFile(getClass(), filePath);
+            STLMeshIO stlReader = new STLMeshIO();
+            m = stlReader.open(meshFile.getAbsolutePath());
+        } catch (IOException exc) {
+            log.error(exc);
             return;
         }
 
-        Node msh = sciView.addMesh( m );
-        msh.setName( filePath );
 
-        msh.ifMaterial( mat -> {
-            mat.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
-            mat.setDiffuse( new Vector3f( 0.8f, 0.5f, 0.4f ) );
-            mat.setSpecular( new Vector3f( 1.0f, 1.0f, 1.0f ) );
+        if (m == null) {
+            log.error("Cannot open mesh");
+            return;
+        }
+
+        Node msh = sciView.addMesh(m);
+        msh.setName(filePath);
+
+        msh.ifMaterial(mat -> {
+            mat.setAmbient(new Vector3f(1.0f, 0.0f, 0.0f));
+            mat.setDiffuse(new Vector3f(0.8f, 0.5f, 0.4f));
+            mat.setSpecular(new Vector3f(1.0f, 1.0f, 1.0f));
             return null;
         });
 
-        msh.ifSpatial( spatial -> { spatial.setNeedsUpdate(true); return null; });
-        msh.ifGeometry( geom -> { geom.setDirty(true); return null; });
+        msh.ifSpatial(spatial -> {
+            spatial.setNeedsUpdate(true);
+            return null;
+        });
+        msh.ifGeometry(geom -> {
+            geom.setDirty(true);
+            return null;
+        });
 
         TextBoard board = new TextBoard();
         board.setText("This mesh was contributed by Robert Wiese!");
         board.setName("TextBoard");
         board.setTransparent(0);
         board.setFontColor(new Vector4f(0, 0, 0, 0));
-        board.setBackgroundColor(new Vector4f(100,100,0, 0));
-        board.spatial().setPosition(msh.spatialOrNull().getPosition().add(new Vector3f(0,10,0)));
-        board.spatial().setScale(new Vector3f(10.0f,10.0f,10.0f));
+        board.setBackgroundColor(new Vector4f(100, 100, 0, 0));
+        board.spatial().setPosition(msh.spatialOrNull().getPosition().add(new Vector3f(0, 10, 0)));
+        board.spatial().setScale(new Vector3f(10.0f, 10.0f, 10.0f));
 
-        sciView.addNode(board,false);
+        sciView.addNode(board, false);
 
-        sciView.centerOnNode( msh );
+        sciView.centerOnNode(msh);
     }
 
     public static void main(String... args) throws Exception {
