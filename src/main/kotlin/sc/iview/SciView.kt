@@ -1424,6 +1424,26 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
     @JvmOverloads
     @Suppress("UNCHECKED_CAST")
     fun <T : NumericType<T>> addVolume(sources: List<SourceAndConverter<T>>,
+                                       converterSetups: List<ConverterSetup>,
+                                       numTimepoints: Int,
+                                       name: String = "Volume"): Volume {
+        return addVolume(sources, ArrayList(converterSetups), numTimepoints, name, *floatArrayOf(1.0f, 1.0f, 1.0f), block={}, colormapName = "Fire.lut")
+    }
+
+    /**
+     * Adds a SourceAndConverter to the scene.
+     *
+     * This method actually instantiates the volume.
+     *
+     * @param sources The list of SourceAndConverter to add
+     * @param name Name of the dataset
+     * @param voxelDimensions Array with voxel dimensions.
+     * @param <T> Type of the dataset.
+     * @return THe node corresponding to the volume just added.
+    </T> */
+    @JvmOverloads
+    @Suppress("UNCHECKED_CAST")
+    fun <T : NumericType<T>> addVolume(sources: List<SourceAndConverter<T>>,
                                        converterSetups: ArrayList<ConverterSetup>,
                                        numTimepoints: Int,
                                        name: String = "Volume",

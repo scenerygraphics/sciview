@@ -1,31 +1,27 @@
 package sc.iview.commands.demo.advanced
 
-import graphics.scenery.Origin
-import graphics.scenery.utils.extensions.xyz
-import graphics.scenery.volumes.Colormap
-import graphics.scenery.volumes.TransferFunction
+import bdv.cache.SharedQueue
+import bdv.util.volatiles.VolatileTypeMatcher
+import bdv.util.volatiles.VolatileViews
 import net.imagej.lut.LUTService
-import net.imagej.mesh.Mesh
-import net.imagej.mesh.Meshes
 import net.imagej.ops.OpService
 import net.imglib2.RandomAccessibleInterval
+import net.imglib2.Volatile
 import net.imglib2.cache.img.CachedCellImg
-import net.imglib2.roi.labeling.ImgLabeling
-import net.imglib2.roi.labeling.LabelRegions
+import net.imglib2.cache.volatiles.CacheHints
+import net.imglib2.cache.volatiles.LoadingStrategy
 import net.imglib2.type.NativeType
 import net.imglib2.type.numeric.ARGBType
-import net.imglib2.type.numeric.RealType
+import net.imglib2.type.numeric.integer.UnsignedByteType
 import net.imglib2.view.Views
 import org.janelia.saalfeldlab.n5.N5DatasetDiscoverer
 import org.janelia.saalfeldlab.n5.N5Reader
-import org.janelia.saalfeldlab.n5.N5TreeNode
 import org.janelia.saalfeldlab.n5.bdv.MultiscaleDatasets
+import org.janelia.saalfeldlab.n5.bdv.N5Source
 import org.janelia.saalfeldlab.n5.ij.N5Factory
 import org.janelia.saalfeldlab.n5.ij.N5Importer
 import org.janelia.saalfeldlab.n5.imglib2.N5Utils
 import org.janelia.saalfeldlab.n5.metadata.*
-import org.janelia.saalfeldlab.n5.ui.DataSelection
-import org.joml.Vector3f
 import org.joml.Vector4f
 import org.scijava.command.Command
 import org.scijava.command.CommandService
@@ -36,10 +32,7 @@ import org.scijava.plugin.Plugin
 import org.scijava.ui.UIService
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
-import sc.iview.commands.demo.basic.VolumeRenderDemo
-import sc.iview.process.MeshConverter
 import java.io.File
-import java.io.IOException
 import java.util.*
 import java.util.concurrent.Executors
 
@@ -221,7 +214,47 @@ class OpenOrganelle : Command {
 
         log.info("Opening image")
 
-        var img = N5Utils.openVolatile(n5, datasetToOpen)
+        val multiScaleDataset = multiscaleMetadata as N5CosemMultiScaleMetadata
+        val msd = MultiscaleDatasets.sort(multiScaleDataset.paths, multiScaleDataset.spatialTransforms3d())
+        var datasetsToOpen = msd.paths
+        var transforms = msd.transforms
+
+        var sharedQueue = SharedQueue(Math.max(1, Runtime.getRuntime().availableProcessors() / 2))
+
+        // Open the images
+        val images: Array<RandomAccessibleInterval<UnsignedByteType>?> = arrayOfNulls<RandomAccessibleInterval<UnsignedByteType>>(multiScaleDataset.paths.size)
+        for (s in images.indices) {
+            val vimg = N5Utils.openVolatile(n5, datasetsToOpen[s]) as RandomAccessibleInterval<UnsignedByteType>
+            if (vimg.numDimensions() == 2) {
+                images[s] = Views.addDimension(vimg, 0, 0)
+            } else {
+                images[s] = vimg
+            }
+        }
+
+        // Open the images as volatiles
+        val vimages = arrayOfNulls<RandomAccessibleInterval<Volatile<UnsignedByteType>>>(images.size)
+        for (s in 0 until images.size) {
+            val cacheHints = CacheHints(LoadingStrategy.VOLATILE, 0, true)
+            vimages[s] = VolatileViews.wrapAsVolatile<UnsignedByteType, Volatile<UnsignedByteType>>(images[s], sharedQueue as bdv.util.volatiles.SharedQueue?, cacheHints)
+        }
+
+        // Make a source
+        val source: N5Source<UnsignedByteType> = N5Source<UnsignedByteType>(
+                UnsignedByteType(),
+                "OpenOrganelle",
+                images,
+                transforms)
+
+        // Make a volatile source
+//        var volatileType = VolatileTypeMatcher.getVolatileTypeForType(UnsignedByteType())
+//        val volatileSource = N5Source<UnsignedByteType>(
+//                volatileType,
+//                "Volatile OpenOrganelle",
+//                vimages,
+//                transforms)
+
+        //var img = N5Utils.openVolatile(n5, datasetToOpen)
 
         log.info("Image opened")
 
@@ -229,7 +262,7 @@ class OpenOrganelle : Command {
         //N5Viewer.exec(new DataSelection( n5, Collections.singletonList( multiscaleMetadata )));
 
 
-        return img
+        return null
     }
 
 

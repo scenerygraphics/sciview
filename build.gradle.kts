@@ -130,8 +130,8 @@ dependencies {
     testImplementation(kotlin("test-junit"))
     testImplementation("org.slf4j:slf4j-simple:1.7.36")
 
-    implementation("sc.fiji:bigdataviewer-core")
-    implementation("sc.fiji:bigdataviewer-vistools")
+    implementation("sc.fiji:bigdataviewer-core:10.4.7")
+    implementation("sc.fiji:bigdataviewer-vistools:1.0.0-beta-32")
 
     // OME
     implementation("ome:formats-bsd")
