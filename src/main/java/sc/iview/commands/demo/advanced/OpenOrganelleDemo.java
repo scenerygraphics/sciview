@@ -35,6 +35,7 @@ import bdv.util.volatiles.VolatileTypeMatcher;
 import bdv.util.volatiles.VolatileViews;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
+import com.intellij.util.Consumer;
 import graphics.scenery.attribute.material.Material;
 import graphics.scenery.volumes.Volume;
 import io.scif.services.DatasetIOService;
@@ -46,10 +47,22 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.Volatile;
 import net.imglib2.algorithm.labeling.ConnectedComponents;
+import net.imglib2.cache.Cache;
+import net.imglib2.cache.CacheLoader;
+import net.imglib2.cache.LoaderCache;
 import net.imglib2.cache.img.CachedCellImg;
+import net.imglib2.cache.img.RandomAccessibleCacheLoader;
+import net.imglib2.cache.ref.SoftRefLoaderCache;
 import net.imglib2.cache.volatiles.CacheHints;
 import net.imglib2.cache.volatiles.LoadingStrategy;
+import net.imglib2.converter.Converters;
 import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.img.basictypeaccess.AccessFlags;
+import net.imglib2.img.basictypeaccess.ArrayDataAccessFactory;
+import net.imglib2.img.basictypeaccess.volatiles.VolatileByteAccess;
+import net.imglib2.img.basictypeaccess.volatiles.array.VolatileByteArray;
+import net.imglib2.img.basictypeaccess.volatiles.array.VolatileShortArray;
+import net.imglib2.img.cell.Cell;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.roi.labeling.ImgLabeling;
 import net.imglib2.roi.labeling.LabelRegion;
@@ -60,15 +73,19 @@ import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.volatiles.VolatileARGBType;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
+import org.janelia.saalfeldlab.n5.DataType;
+import org.janelia.saalfeldlab.n5.DatasetAttributes;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.bdv.MultiscaleDatasets;
 import org.janelia.saalfeldlab.n5.bdv.N5Source;
 import org.janelia.saalfeldlab.n5.bdv.N5ViewerTreeCellRenderer;
 import org.janelia.saalfeldlab.n5.ij.N5Factory;
 import org.janelia.saalfeldlab.n5.ij.N5Importer;
+import org.janelia.saalfeldlab.n5.imglib2.N5CacheLoader;
 import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
 import org.janelia.saalfeldlab.n5.metadata.*;
 import org.janelia.saalfeldlab.n5.metadata.canonical.CanonicalMultichannelMetadata;
@@ -87,12 +104,10 @@ import sc.iview.SciView;
 import sc.iview.process.MeshConverter;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 
 import static bdv.BigDataViewer.createConverterToARGB;
 import static bdv.BigDataViewer.wrapWithTransformedSource;
@@ -136,8 +151,6 @@ public class OpenOrganelleDemo implements Command {
     }
 
     static public void openN5(SciView sciView) {
-
-
         ExecutorService exec = Executors.newFixedThreadPool( ij.Prefs.getThreads() );
         final DatasetSelectorDialog dialog = new DatasetSelectorDialog(
                 new N5Importer.N5ViewerReaderFun(),
@@ -226,9 +239,27 @@ public class OpenOrganelleDemo implements Command {
             for ( int s = 0; s < images.length; ++s )
             {
                 final CachedCellImg<?, ?> vimg = N5Utils.openVolatile( n5, datasetsToOpen[s] );
+
+                // BVV can only handle UnsignedShortTypes now, we need to convert
+                Set<AccessFlags> accessFlags = AccessFlags.setOf(AccessFlags.VOLATILE);
+                UnsignedShortType type = new UnsignedShortType();
+                //ArrayDataAccessFactory.get(type, accessFlags);
+
+                // TODO need to finish making the cache
+                final Function<DataType, LoaderCache> loaderCacheFactory = dataType -> new SoftRefLoaderCache<>();
+                final DatasetAttributes attributes = n5.getDatasetAttributes(datasetsToOpen[s]);
+                // TODO hardcoded n5 datatype
+                final LoaderCache loaderCache = loaderCacheFactory.apply(DataType.UINT16);
+
+                CacheLoader<Long, Cell<VolatileShortArray>> loader = RandomAccessibleCacheLoader.get(vimg.getCellGrid(), vimg, accessFlags);
+                Cache cache = loaderCache.withLoader(loader);
+
+                CachedCellImg unsignedShortVimg = new CachedCellImg(vimg.getCellGrid(), type, cache, ArrayDataAccessFactory.get(type, accessFlags));
+                //final CachedCellImg<?, ?> unsignedShortVimg = Converters.convert(vimg, (i, o) -> o.set(i.getRealDouble()));
+
                 if( vimg.numDimensions() == 2 )
                 {
-                    images[ s ] = Views.addDimension(vimg, 0, 0);
+                    images[ s ] = Views.addDimension(unsignedShortVimg, 0, 0);
                 }
                 else
                 {
@@ -418,7 +449,18 @@ public class OpenOrganelleDemo implements Command {
             throw new RuntimeException(e);
         }
 
-
+        /**
+         * Notes:
+         *
+         * MultiResolutionStack3DImp
+         * https://github.com/bigdataviewer/bigvolumeviewer-core/blob/9f6a7d66dc4d92a7d9e011a680fdc5facd4706a0/src/main/java/bvv/core/multires/SourceStacks.java#L101
+         *
+         * TileAccess
+         * https://github.com/bigdataviewer/bigvolumeviewer-core/blob/9f6a7d66dc4d92a7d9e011a680fdc5facd4706a0/src/main/java/bvv/core/blocks/TileAccess.java#L133
+         *
+         * Only UnsignedShortType is supported
+         *
+         */
 
         Volume v = sciView.addVolume(
                 sourcesAndConverters,
