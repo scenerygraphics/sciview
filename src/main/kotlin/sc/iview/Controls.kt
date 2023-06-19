@@ -47,6 +47,7 @@ import org.scijava.ui.behaviour.io.yaml.YamlConfigIO
 import sc.iview.commands.help.Help
 import sc.iview.controls.behaviours.*
 import sc.iview.controls.behaviours.Ruler
+import sc.iview.ui.SwingMainWindow
 import java.io.*
 import java.util.*
 import java.util.function.Supplier
@@ -264,8 +265,8 @@ open class Controls(val sciview: SciView) {
         h.addKeyBinding("show help", "F1")
 
         //update scene inspector
-        h.addBehaviour("update scene graph", ClickBehaviour { _: Int, _: Int -> sciview.requestPropEditorRefresh() })
-        h.addKeyBinding("update scene graph", "shift ctrl I")
+        h.addBehaviour("refresh scene inspector", ClickBehaviour { _: Int, _: Int -> (sciview.mainWindow as SwingMainWindow).nodePropertyEditor.rebuildTree() })
+        h.addKeyBinding("refresh scene inspector", "shift ctrl I")
 
         //ruler
         val ruler = Ruler(sciview)
