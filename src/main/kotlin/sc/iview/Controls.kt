@@ -362,8 +362,9 @@ open class Controls(val sciview: SciView) {
         parameters.registerArcballCameraControl(targetArcball)
         h.addBehaviour("view: rotate around selected node", targetArcball)
         h.addKeyBinding("view: rotate around selected node", "button1")
+
         h.addBehaviour("view: zoom outward or toward selected node", targetArcball)
-        h.addKeyBinding("view: zoom outward or toward selected node", "shift scroll")
+        h.addKeyBinding("view: zoom outward or toward selected node", "scroll", "button3")
     }
 
     fun enableFPSControl() {
@@ -386,7 +387,7 @@ open class Controls(val sciview: SciView) {
             ClickAndDragWrapper(it, fpsControl!!)
         } ?: fpsControl!!
         h.addBehaviour("view: freely look around", wrappedFpsControl)
-        h.addKeyBinding("view: freely look around", "button3")
+        h.addKeyBinding("view: freely look around", "shift button3")
 
         //slow and fast camera motion
         h.addBehaviour("move_withMouse_back/forward/left/right", CameraTranslateControl(sciview, 1f))
