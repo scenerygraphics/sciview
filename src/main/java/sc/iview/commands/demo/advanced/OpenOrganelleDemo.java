@@ -51,6 +51,7 @@ import net.imglib2.cache.Cache;
 import net.imglib2.cache.CacheLoader;
 import net.imglib2.cache.LoaderCache;
 import net.imglib2.cache.img.CachedCellImg;
+import net.imglib2.cache.img.LoadedCellCacheLoader;
 import net.imglib2.cache.img.RandomAccessibleCacheLoader;
 import net.imglib2.cache.ref.SoftRefLoaderCache;
 import net.imglib2.cache.volatiles.CacheHints;
@@ -75,6 +76,7 @@ import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.volatiles.VolatileARGBType;
+import net.imglib2.type.volatiles.VolatileUnsignedShortType;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 import org.janelia.saalfeldlab.n5.DataType;
@@ -108,6 +110,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static bdv.BigDataViewer.createConverterToARGB;
 import static bdv.BigDataViewer.wrapWithTransformedSource;
@@ -118,9 +121,11 @@ import static sc.iview.commands.MenuWeights.*;
 /**
  * OpenOrganelle demo
  *
+ * This borrows heavily from n5-viewer and BVV code.
+ *
  * @author Kyle Harrington
  */
-@Plugin(type = Command.class, label = "Show segmentation", menuRoot = "SciView", //
+@Plugin(type = Command.class, label = "Open Organelle", menuRoot = "SciView", //
         menu = { @Menu(label = "Demo", weight = DEMO), //
                  @Menu(label = "Advanced", weight = DEMO_ADVANCED), //
                  @Menu(label = "Open Organelle (Java)", weight = DEMO_ADVANCED_SEGMENTATION) })
@@ -240,18 +245,30 @@ public class OpenOrganelleDemo implements Command {
             {
                 final CachedCellImg<?, ?> vimg = N5Utils.openVolatile( n5, datasetsToOpen[s] );
 
+                
+                RandomAccessibleInterval<VolatileUnsignedShortType> shortRAI = Converters.convert(
+                        (RandomAccessibleInterval<UnsignedByteType>) vimg,
+                        (a, b) -> b.set(a.get()),
+                        new VolatileUnsignedShortType());
+
+
+                // shortRAI = Converters.convert(vimg, (i, o) -> o.set(i.get().get()));
+
                 // BVV can only handle UnsignedShortTypes now, we need to convert
                 Set<AccessFlags> accessFlags = AccessFlags.setOf(AccessFlags.VOLATILE);
                 UnsignedShortType type = new UnsignedShortType();
                 //ArrayDataAccessFactory.get(type, accessFlags);
 
-                // TODO need to finish making the cache
                 final Function<DataType, LoaderCache> loaderCacheFactory = dataType -> new SoftRefLoaderCache<>();
-                final DatasetAttributes attributes = n5.getDatasetAttributes(datasetsToOpen[s]);
+                // final DatasetAttributes attributes = n5.getDatasetAttributes(datasetsToOpen[s]);
                 // TODO hardcoded n5 datatype
                 final LoaderCache loaderCache = loaderCacheFactory.apply(DataType.UINT16);
 
-                CacheLoader<Long, Cell<VolatileShortArray>> loader = RandomAccessibleCacheLoader.get(vimg.getCellGrid(), vimg, accessFlags);
+                // TODO problem is here: class net.imglib2.img.basictypeaccess.volatiles.array.VolatileByteArray cannot be cast to class net.imglib2.img.basictypeaccess.ShortAccess (net.imglib2.img.basictypeaccess.volatiles.array.VolatileByteArray and net.imglib2.img.basictypeaccess.ShortAccess are in unnamed module of loader 'app')
+                CacheLoader<Long, Cell<VolatileShortArray>> loader = RandomAccessibleCacheLoader.get(vimg.getCellGrid(), shortRAI, accessFlags);
+                // CacheLoader<Long, Cell<VolatileByteArray>> loader = RandomAccessibleCacheLoader.get(vimg.getCellGrid(), vimg, accessFlags);
+                // Could we use a LoadedCellCacheLoader here? How?
+
                 Cache cache = loaderCache.withLoader(loader);
 
                 CachedCellImg unsignedShortVimg = new CachedCellImg(vimg.getCellGrid(), type, cache, ArrayDataAccessFactory.get(type, accessFlags));
@@ -263,7 +280,7 @@ public class OpenOrganelleDemo implements Command {
                 }
                 else
                 {
-                    images[ s ] = vimg;
+                    images[ s ] = unsignedShortVimg;
                 }
             }
 
@@ -460,8 +477,13 @@ public class OpenOrganelleDemo implements Command {
          *
          * Only UnsignedShortType is supported
          *
+         * https://javadoc.scijava.org/ImgLib2/net/imglib2/cache/img/LoadedCellCacheLoader.html
+         *
          */
 
+
+
+        // use scenery's Volume.fromSpimData to open
         Volume v = sciView.addVolume(
                 sourcesAndConverters,
                 converterSetups,

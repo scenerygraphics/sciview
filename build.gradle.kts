@@ -29,9 +29,11 @@ repositories {
         logger.warn("Using local Maven repository as source")
         mavenLocal()
     }
+
     mavenCentral()
     maven("https://oss.sonatype.org/content/repositories/graphicsscenery-1222")
     maven("https://maven.scijava.org/content/groups/public")
+    mavenLocal()
 }
 
 dependencies {
