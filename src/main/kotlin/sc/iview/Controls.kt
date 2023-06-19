@@ -361,7 +361,7 @@ open class Controls(val sciview: SciView) {
         targetArcball.maximumDistance = Float.MAX_VALUE
         parameters.registerArcballCameraControl(targetArcball)
         h.addBehaviour("view: rotate around selected node", targetArcball)
-        h.addKeyBinding("view: rotate around selected node", "shift button1")
+        h.addKeyBinding("view: rotate around selected node", "button1")
         h.addBehaviour("view: zoom outward or toward selected node", targetArcball)
         h.addKeyBinding("view: zoom outward or toward selected node", "shift scroll")
     }
@@ -386,15 +386,15 @@ open class Controls(val sciview: SciView) {
             ClickAndDragWrapper(it, fpsControl!!)
         } ?: fpsControl!!
         h.addBehaviour("view: freely look around", wrappedFpsControl)
-        h.addKeyBinding("view: freely look around", "button1")
+        h.addKeyBinding("view: freely look around", "button3")
 
         //slow and fast camera motion
         h.addBehaviour("move_withMouse_back/forward/left/right", CameraTranslateControl(sciview, 1f))
-        h.addKeyBinding("move_withMouse_back/forward/left/right", "button3")
+        h.addKeyBinding("move_withMouse_back/forward/left/right", "shift button1")
         //
         //fast and very fast camera motion
         h.addBehaviour("move_withMouse_back/forward/left/right_fast", CameraTranslateControl(sciview, 10f))
-        h.addKeyBinding("move_withMouse_back/forward/left/right_fast", "shift button3")
+        h.addKeyBinding("move_withMouse_back/forward/left/right_fast", "ctrl button1")
 
         // Keyboard move around (WASD keys)
         //
