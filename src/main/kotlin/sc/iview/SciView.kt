@@ -871,9 +871,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     /**
-     * Add Node n to the scene and set it as the active node/publish it to the event service if activePublish is true
+     * Add Node n to the scene and set it as the active node/publish it to the event service if activePublish is true.
      * @param n node to add to scene
      * @param activePublish flag to specify whether the node becomes active *and* is published in the inspector/services
+     * @param block an optional code that will be executed as a part of adding the node
+     * @param parent optional name of the parent node, default is the scene root
      * @return a Node corresponding to the Node
      */
     @JvmOverloads
@@ -898,6 +900,19 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             }
         }
         return n
+    }
+
+    /**
+     * Add Node n to the scene and set it as the active node/publish it to the event service if activePublish is true.
+     * This is technically only a shortcut method (to the same named method) that has left out the 'block' parameter.
+     * @param n node to add to scene
+     * @param activePublish flag to specify whether the node becomes active *and* is published in the inspector/services
+     * @param parent name of the parent node
+     * @return a Node corresponding to the Node
+     */
+    @JvmOverloads
+    fun <N: Node?> addNode(n: N, activePublish: Boolean = true, parent: Node): N {
+        return addNode(n, activePublish, {}, parent)
     }
 
     /**
@@ -968,6 +983,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Remove a Mesh from the scene
      * @param scMesh mesh to remove from scene
      */
+    @Deprecated("Please use SciView.deleteNode() instead.", replaceWith = ReplaceWith("SciView.deleteNode()"))
     fun removeMesh(scMesh: graphics.scenery.Mesh?) {
         scene.removeChild(scMesh!!)
     }
@@ -1236,9 +1252,11 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
     }
 
     /**
+     * [Deprecated: use addNode]
      * Add a child to the scene. you probably want addNode
      * @param node node to add as a child to the scene
      */
+    @Deprecated("Please use SciView.addNode() instead.", replaceWith = ReplaceWith("SciView.addNode()"))
     fun addChild(node: Node) {
         scene.addChild(node)
     }
