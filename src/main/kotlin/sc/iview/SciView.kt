@@ -1251,9 +1251,11 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
     }
 
     /**
+     * [Deprecated: use addNode]
      * Add a child to the scene. you probably want addNode
      * @param node node to add as a child to the scene
      */
+    @Deprecated("Please use SciView.addNode() instead.", replaceWith = ReplaceWith("SciView.addNode()"))
     fun addChild(node: Node) {
         scene.addChild(node)
     }
