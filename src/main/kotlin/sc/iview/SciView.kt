@@ -983,6 +983,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Remove a Mesh from the scene
      * @param scMesh mesh to remove from scene
      */
+    @Deprecated("Please use SciView.deleteNode() instead.", replaceWith = ReplaceWith("SciView.deleteNode()"))
     fun removeMesh(scMesh: graphics.scenery.Mesh?) {
         scene.removeChild(scMesh!!)
     }
