@@ -91,8 +91,9 @@ dependencies {
     implementation("io.scif:scifio-bf-compat")
 
     // ImgLib2 dependencies
-    implementation("net.imglib2:imglib2")
+    implementation("net.imglib2:imglib2:6.2.0")
     implementation("net.imglib2:imglib2-roi")
+    implementation("net.imglib2:imglib2-algorithm:0.14.0")
 
     // XDG support
     implementation("dev.dirs:directories:26")

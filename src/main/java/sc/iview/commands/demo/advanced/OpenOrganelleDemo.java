@@ -46,7 +46,10 @@ import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
 import net.imglib2.Volatile;
+import net.imglib2.algorithm.blocks.BlockAlgoUtils;
+import net.imglib2.algorithm.blocks.convert.Convert;
 import net.imglib2.algorithm.labeling.ConnectedComponents;
+import net.imglib2.blocks.PrimitiveBlocks;
 import net.imglib2.cache.Cache;
 import net.imglib2.cache.CacheLoader;
 import net.imglib2.cache.LoaderCache;
@@ -175,6 +178,27 @@ public class OpenOrganelleDemo implements Command {
         } );
     }
 
+    /**
+     * Thanks Tobi!
+     * @param rai
+     * @return
+     */
+    static CachedCellImg< UnsignedShortType, ? > convert(
+            RandomAccessibleInterval< UnsignedByteType > rai )
+    {
+        final int[] cellDimensions = { 64, 64, 64 };
+        final PrimitiveBlocks< UnsignedByteType > blocks = PrimitiveBlocks.of( rai );
+        final CachedCellImg< UnsignedShortType, ? > img = BlockAlgoUtils.cellImg(
+                blocks,
+                Convert.convert( new UnsignedByteType(), new UnsignedShortType() ),
+                new UnsignedShortType(),
+                rai.dimensionsAsLongArray(),
+                cellDimensions
+        );
+        return img;
+        // return VolatileViews.wrapAsVolatile( img );
+    }
+
     static public < T extends NumericType< T > & NativeType< T >,
             V extends Volatile< T > & NumericType< V >> void buildN5Sources(
             final N5Reader n5,
@@ -243,44 +267,16 @@ public class OpenOrganelleDemo implements Command {
             final RandomAccessibleInterval[] images = new RandomAccessibleInterval[datasetsToOpen.length];
             for ( int s = 0; s < images.length; ++s )
             {
-                final CachedCellImg<?, ?> vimg = N5Utils.openVolatile( n5, datasetsToOpen[s] );
-
-                
-                RandomAccessibleInterval<VolatileUnsignedShortType> shortRAI = Converters.convert(
-                        (RandomAccessibleInterval<UnsignedByteType>) vimg,
-                        (a, b) -> b.set(a.get()),
-                        new VolatileUnsignedShortType());
-
-
-                // shortRAI = Converters.convert(vimg, (i, o) -> o.set(i.get().get()));
-
-                // BVV can only handle UnsignedShortTypes now, we need to convert
-                Set<AccessFlags> accessFlags = AccessFlags.setOf(AccessFlags.VOLATILE);
-                UnsignedShortType type = new UnsignedShortType();
-                //ArrayDataAccessFactory.get(type, accessFlags);
-
-                final Function<DataType, LoaderCache> loaderCacheFactory = dataType -> new SoftRefLoaderCache<>();
-                // final DatasetAttributes attributes = n5.getDatasetAttributes(datasetsToOpen[s]);
-                // TODO hardcoded n5 datatype
-                final LoaderCache loaderCache = loaderCacheFactory.apply(DataType.UINT16);
-
-                // TODO problem is here: class net.imglib2.img.basictypeaccess.volatiles.array.VolatileByteArray cannot be cast to class net.imglib2.img.basictypeaccess.ShortAccess (net.imglib2.img.basictypeaccess.volatiles.array.VolatileByteArray and net.imglib2.img.basictypeaccess.ShortAccess are in unnamed module of loader 'app')
-                CacheLoader<Long, Cell<VolatileShortArray>> loader = RandomAccessibleCacheLoader.get(vimg.getCellGrid(), shortRAI, accessFlags);
-                // CacheLoader<Long, Cell<VolatileByteArray>> loader = RandomAccessibleCacheLoader.get(vimg.getCellGrid(), vimg, accessFlags);
-                // Could we use a LoadedCellCacheLoader here? How?
-
-                Cache cache = loaderCache.withLoader(loader);
-
-                CachedCellImg unsignedShortVimg = new CachedCellImg(vimg.getCellGrid(), type, cache, ArrayDataAccessFactory.get(type, accessFlags));
+                CachedCellImg<UnsignedShortType, ?> vimg = convert(N5Utils.openVolatile(n5, datasetsToOpen[s]));
                 //final CachedCellImg<?, ?> unsignedShortVimg = Converters.convert(vimg, (i, o) -> o.set(i.getRealDouble()));
 
                 if( vimg.numDimensions() == 2 )
                 {
-                    images[ s ] = Views.addDimension(unsignedShortVimg, 0, 0);
+                    images[ s ] = Views.addDimension(vimg, 0, 0);
                 }
                 else
                 {
-                    images[ s ] = unsignedShortVimg;
+                    images[ s ] = vimg;
                 }
             }
 
