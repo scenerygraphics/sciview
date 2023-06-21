@@ -30,7 +30,7 @@ repositories {
         mavenLocal()
     }
     mavenCentral()
-    maven("https://oss.sonatype.org/content/repositories/graphicsscenery-1222")
+    maven("https://oss.sonatype.org/content/repositories/graphicsscenery-1223")
     maven("https://maven.scijava.org/content/groups/public")
 }
 
