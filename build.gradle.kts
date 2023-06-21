@@ -166,7 +166,7 @@ tasks {
             val parent = asNode().appendNode("parent")
             parent.appendNode("groupId", "org.scijava")
             parent.appendNode("artifactId", "pom-scijava")
-            parent.appendNode("version", "31.1.0")
+            parent.appendNode("version", "35.1.1")
             parent.appendNode("relativePath")
 
             val repositories = asNode().appendNode("repositories")
