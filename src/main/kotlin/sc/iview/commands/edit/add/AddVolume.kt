@@ -121,20 +121,20 @@ class AddVolume : Command {
             var splitDim = ((0 until image.numDimensions()).filter { d -> (image.imgPlus.axis(d) as CalibratedAxis).type().label == "Channel" }).first()
             var channels = splitChannels(image, splitDim)
 
-            for (ch in 0 until channels.size) {
+            for (ch in channels.indices) {
                 var channel = channels[ch]
-                // sciView.addVolume(channel as RandomAccessibleInterval<RealType>, name=image.name + "-ch$ch" , voxelDimensions=floatArrayOf(voxelWidth, voxelHeight, voxelDepth), block = {})
+                sciView.addVolume(channel as RandomAccessibleInterval<out RealType<*>>, name = image.name + "-ch$ch", voxelDimensions = floatArrayOf(voxelWidth, voxelHeight, voxelDepth), block = {})
             }
         } else {
-            sciView.addVolume(image, name=image.name, voxelDimensions=floatArrayOf(voxelWidth, voxelHeight, voxelDepth))
+            sciView.addVolume(image, name = image.name, voxelDimensions = floatArrayOf(voxelWidth, voxelHeight, voxelDepth))
         }
     }
 
     private fun setVoxelDimension() {
         val axis = arrayOf(
-                DefaultLinearAxis(DefaultAxisType("X", true), "um", 1.0),
-                DefaultLinearAxis(DefaultAxisType("Y", true), "um", 1.0),
-                DefaultLinearAxis(DefaultAxisType("Z", true), "um", 1.0)
+            DefaultLinearAxis(DefaultAxisType("X", true), "um", 1.0),
+            DefaultLinearAxis(DefaultAxisType("Y", true), "um", 1.0),
+            DefaultLinearAxis(DefaultAxisType("Z", true), "um", 1.0)
         )
 
         val voxelDims = FloatArray(minOf(image.numDimensions(), 3))
