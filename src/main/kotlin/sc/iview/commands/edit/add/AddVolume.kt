@@ -117,13 +117,15 @@ class AddVolume : Command {
         if (inheritFromImage)
             setVoxelDimension()
 
-        if (splitChannels) {
+        if (splitChannels && image.numDimensions() > 3) {
             var splitDim = ((0 until image.numDimensions()).filter { d -> (image.imgPlus.axis(d) as CalibratedAxis).type().label == "Channel" }).first()
             var channels = splitChannels(image, splitDim)
 
             for (ch in channels.indices) {
                 var channel = channels[ch]
-                sciView.addVolume(channel as RandomAccessibleInterval<out RealType<*>>, name = image.name + "-ch$ch", voxelDimensions = floatArrayOf(voxelWidth, voxelHeight, voxelDepth), block = {})
+                var v = sciView.addVolume(channel as RandomAccessibleInterval<out RealType<*>>, name = image.name + "-ch$ch", voxelDimensions = floatArrayOf(voxelWidth, voxelHeight, voxelDepth), block = {})
+                var lut = splitChannelLuts[ch % splitChannelLuts.size]
+                sciView.setColormap(v, lut)
             }
         } else {
             sciView.addVolume(image, name = image.name, voxelDimensions = floatArrayOf(voxelWidth, voxelHeight, voxelDepth))
@@ -131,27 +133,7 @@ class AddVolume : Command {
     }
 
     private fun setVoxelDimension() {
-        val axis = arrayOf(
-            DefaultLinearAxis(DefaultAxisType("X", true), "um", 1.0),
-            DefaultLinearAxis(DefaultAxisType("Y", true), "um", 1.0),
-            DefaultLinearAxis(DefaultAxisType("Z", true), "um", 1.0)
-        )
-
-        val voxelDims = FloatArray(minOf(image.numDimensions(), 3))
-
-        for (d in voxelDims.indices) {
-            val inValue = image.axis(d).averageScale(0.0, 1.0)
-            if (image.axis(d).unit() == null) {
-                voxelDims[d] = inValue.toFloat()
-            } else {
-                var imageUnit: String
-                if (image.axis(d).unit() == "µm")
-                    imageUnit = "um"
-                else
-                    imageUnit = image.axis(d).unit()
-                voxelDims[d] = unitService.value(inValue, imageUnit, axis[d].unit()).toFloat()
-            }
-        }
+        val voxelDims = sciView.getSciviewScale(image)
 
         voxelWidth = voxelDims.getOrElse(0) { 1.0f }
         voxelHeight = voxelDims.getOrElse(1) { 1.0f }

@@ -1268,6 +1268,7 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
      */
     fun setColormap(n: Node, lutName: String) {
         try {
+            n.metadata["sciview.colormapName"] = lutName
             setColormap(n, lutService.loadLUT(lutService.findLUTs()[lutName]))
         } catch (e: IOException) {
             e.printStackTrace()
@@ -1346,6 +1347,30 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
     }
 
     /**
+     * Returns the Dataset's scale/resolution converted to sciview units
+     *
+     * @param image the [Dataset]
+     * @return A [FloatArray] representing the image's 3D scale in sciview space
+     */
+    fun getSciviewScale(image: Dataset): FloatArray {
+        val voxelDims = FloatArray(3)
+        var axisNames = arrayOf("X", "Y", "Z")
+        for (axisIdx in voxelDims.indices) {
+            var d = (0 until image.numDimensions()).filter { idx -> image.axis(idx).type().label == axisNames[axisIdx] }.first()
+            val inValue = image.axis(d).averageScale(0.0, 1.0)
+            if (image.axis(d).unit() == null || d >= axes.size) {
+                voxelDims[axisIdx] = inValue.toFloat()
+            } else {
+                val imageAxisUnit = image.axis(d).unit().replace("µ", "u")
+                val sciviewAxisUnit = axis(axisIdx)!!.unit().replace("µ", "u")
+
+                voxelDims[axisIdx] = unitService.value(inValue, imageAxisUnit, sciviewAxisUnit).toFloat()
+            }
+        }
+        return voxelDims
+    }
+
+    /**
      * Adds a [Dataset]-backed [Volume] to the scene.
      *
      * @param image The [Dataset] to add.
@@ -1361,18 +1386,7 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
         block: Volume.() -> Unit = {}
     ): Volume {
         return if(voxelDimensions == null) {
-            val voxelDims = FloatArray(image.numDimensions())
-            for (d in voxelDims.indices) {
-                val inValue = image.axis(d).averageScale(0.0, 1.0)
-                if (image.axis(d).unit() == null) {
-                    voxelDims[d] = inValue.toFloat()
-                } else {
-                    val imageAxisUnit = image.axis(d).unit().replace("µ", "u")
-                    val sciviewAxisUnit = axis(d)!!.unit().replace("µ", "u")
-
-                    voxelDims[d] = unitService.value(inValue, imageAxisUnit, sciviewAxisUnit).toFloat()
-                }
-            }
+            val voxelDims = getSciviewScale(image)
             addVolume(image.imgPlus, image.name, voxelDims, block)
         } else {
             addVolume(image.imgPlus, image.name, voxelDimensions, block)
@@ -1479,10 +1493,12 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
         val ds = RAISource<T>(voxelType, sources, converterSetups, timepoints, cacheControl)
         val options = VolumeViewerOptions()
         val v: Volume = RAIVolume(ds, options, hub)
+        // Note we override scenery's default scale of mm
+        // v.pixelToWorldRatio = 0.1f
         v.name = name
         v.metadata["sources"] = sources
         v.metadata["VoxelDimensions"] = voxelDimensions
-        v.spatial().scale = Vector3f(1.0f, voxelDimensions[1]/voxelDimensions[0], voxelDimensions[2]/voxelDimensions[0]) * v.pixelToWorldRatio * 10.0f
+        v.spatial().scale = Vector3f(voxelDimensions[0], voxelDimensions[1], voxelDimensions[2]) * v.pixelToWorldRatio
         val tf = v.transferFunction
         val rampMin = 0f
         val rampMax = 0.1f
