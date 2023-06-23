@@ -1457,13 +1457,13 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
     </T> */
     @JvmOverloads
     @Suppress("UNCHECKED_CAST")
-    fun <T : NumericType<T>> addVolume(sources: List<SourceAndConverter<T>>,
-                                       converterSetups: ArrayList<ConverterSetup>? = null,
-                                       numTimepoints: Int,
-                                       name: String = "Volume",
-                                       vararg voxelDimensions: Float,
-                                       block: Volume.() -> Unit = {},
-                                       colormapName: String = "Fire.lut"): Volume {
+    fun <T : RealType<T>> addVolume(sources: List<SourceAndConverter<T>>,
+                                    converterSetups: ArrayList<ConverterSetup>,
+                                    numTimepoints: Int,
+                                    name: String = "Volume",
+                                    voxelDimensions: FloatArray,
+                                    block: Volume.() -> Unit = {},
+                                    colormapName: String = "Fire.lut"): Volume {
         var timepoints = numTimepoints
         var cacheControl: CacheControl? = null
 
@@ -1545,7 +1545,7 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
         for (source in sources) {
             converterSetups.add(BigDataViewer.createConverterSetup(source, setupId++))
         }
-        val v = addVolume(sources, converterSetups, numTimepoints, name, *voxelDimensions, block = block)
+        val v = addVolume(sources, converterSetups, numTimepoints, name, voxelDimensions, block = block)
         imageToVolumeMap[sources] = v
         return v
     }

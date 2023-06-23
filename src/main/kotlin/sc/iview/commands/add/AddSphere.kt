@@ -26,33 +26,44 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add
+package sc.iview.commands.add
 
+import org.joml.Vector3f
 import org.scijava.command.Command
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import sc.iview.SciView
-import sc.iview.commands.MenuWeights.ADD
-import sc.iview.commands.MenuWeights.EDIT_ADD_POINTLIGHT
+import sc.iview.commands.MenuWeights
+import sc.iview.commands.MenuWeights.EDIT_ADD_SPHERE
 
 /**
- * Command to add a point light to the scene
+ * Command to add a sphere in the scene
  *
  * @author Kyle Harrington
  */
 @Plugin(
     type = Command::class,
     menuRoot = "SciView",
-    menu = [Menu(label = "Add", weight = ADD), Menu(
-        label = "Point Light",
-        weight = EDIT_ADD_POINTLIGHT
+    menu = [Menu(label = "Add", weight = MenuWeights.ADD), Menu(
+        label = "Sphere...",
+        weight = EDIT_ADD_SPHERE
     )]
 )
-class AddPointLight : Command {
+class AddSphere : Command {
     @Parameter
-    private val sciView: SciView? = null
+    private lateinit var sciView: SciView
+
+    //    @Parameter
+    //    private String position = "0; 0; 0";
+    @Parameter
+    private val radius = 1.0f
+
+    @Parameter(required = false)
+    private val color = SciView.DEFAULT_COLOR
     override fun run() {
-        sciView!!.addPointLight()
+        //final Vector3 pos = ClearGLVector3.parse( position );
+        val pos = Vector3f(0.0f)
+        sciView.addSphere(pos, radius, color)
     }
 }

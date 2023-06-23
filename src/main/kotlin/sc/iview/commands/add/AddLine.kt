@@ -26,54 +26,54 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add
+package sc.iview.commands.add
 
-import graphics.scenery.Box
-import graphics.scenery.numerics.Random
-import graphics.scenery.volumes.SlicingPlane
-import graphics.scenery.volumes.VolumeManager
 import org.joml.Vector3f
 import org.scijava.command.Command
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
+import org.scijava.util.ColorRGB
 import sc.iview.SciView
-import sc.iview.commands.MenuWeights.ADD
-import sc.iview.commands.MenuWeights.EDIT_ADD_SLICING_PLANE
+import sc.iview.commands.MenuWeights
+import sc.iview.commands.MenuWeights.EDIT_ADD_LINE
 
 /**
- * Command to add a box to the scene
+ * Command to add a line in the scene
  *
  * @author Kyle Harrington
  */
 @Plugin(
     type = Command::class,
     menuRoot = "SciView",
-    menu = [Menu(label = "Add", weight = ADD), Menu(
-        label = "Slicing Plane...",
-        weight = EDIT_ADD_SLICING_PLANE
+    menu = [Menu(label = "Add", weight = MenuWeights.ADD), Menu(
+        label = "Line...",
+        weight = EDIT_ADD_LINE
     )]
 )
-class AddSlicingPlane : Command {
+class AddLine : Command {
     @Parameter
     private lateinit var sciView: SciView
 
-    @Parameter(label = "Slice all volumes")
-    private var targetAllVolumes = true
+    // FIXME
+    //    @Parameter(label = "First endpoint")
+    //    private String start = "0; 0; 0";
+    //
+    //    @Parameter(label = "Second endpoint")
+    //    private String stop = "1; 1; 1";
+    @Parameter(required = false)
+    private lateinit var color: ColorRGB
+
+    @Parameter(label = "Edge width", min = "0")
+    private var edgeWidth = 1.0
 
     override fun run() {
-
-        val plane = SlicingPlane()
-
-        if (targetAllVolumes){
-            sciView.hub.get<VolumeManager>()?.nodes?.forEach { plane.addTargetVolume(it) }
+        //Vector3[] endpoints = { JOMLVector3.parse( start ), JOMLVector3.parse( stop ) };
+        val endpoints = arrayOf(Vector3f(0f, 0f, 0f), Vector3f(1f, 1f, 1f))
+        if( !this::color.isInitialized ) {
+            color = SciView.DEFAULT_COLOR
         }
 
-        val handle = Box(Vector3f(1f,0.1f,1f))
-        handle.name = "Slicing Plane Handle"
-        handle.material().diffuse = Random.random3DVectorFromRange(0.5f, 1.0f)
-        handle.addChild(plane)
-
-        sciView.addNode(handle)
+        sciView.addLine(endpoints, color, edgeWidth)
     }
 }

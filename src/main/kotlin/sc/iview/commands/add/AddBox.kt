@@ -26,32 +26,35 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add
+package sc.iview.commands.add
 
 import org.joml.Vector3f
 import org.scijava.command.Command
+import org.scijava.display.DisplayService
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import org.scijava.util.ColorRGB
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights.ADD
-import sc.iview.commands.MenuWeights.EDIT_ADD_CYLINDER
+import sc.iview.commands.MenuWeights.EDIT_ADD_BOX
 
 /**
  * Command to add a box to the scene
  *
- * @author Jan Tiemann
+ * @author Kyle Harrington
  */
 @Plugin(
     type = Command::class,
     menuRoot = "SciView",
     menu = [Menu(label = "Add", weight = ADD), Menu(
-        label = "Cylinder...",
-        weight = EDIT_ADD_CYLINDER
+        label = "Box...",
+        weight = EDIT_ADD_BOX
     )]
 )
-class AddCylinder : Command {
+class AddBox : Command {
+    @Parameter
+    private lateinit var displayService: DisplayService
 
     @Parameter
     private lateinit var sciView: SciView
@@ -59,20 +62,24 @@ class AddCylinder : Command {
     // FIXME
     //    @Parameter
     //    private String position = "0; 0; 0";
+    @Parameter
+    private var size = 1.0f
+
+    @Parameter(required = false)
+    private lateinit var color: ColorRGB
 
     @Parameter
-    private var height = 1.0f
-
-    @Parameter
-    private var radius = 1.0f
-
-    @Parameter
-    private var color: ColorRGB = SciView.DEFAULT_COLOR;
+    private var inside = false
 
     override fun run() {
         //final Vector3 pos = ClearGLVector3.parse( position );
         val pos = Vector3f(0f, 0f, 0f)
+        val vSize = Vector3f(size, size, size)
 
-        sciView.addCylinder(pos,radius,height,color,20)
+        if( !this::color.isInitialized ) {
+            color = SciView.DEFAULT_COLOR
+        }
+
+        sciView.addBox(pos, vSize, color, inside)
     }
 }

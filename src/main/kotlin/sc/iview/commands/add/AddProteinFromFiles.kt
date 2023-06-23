@@ -6,13 +6,13 @@
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -26,62 +26,47 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add
+package sc.iview.commands.add
 
-import graphics.scenery.DetachedHeadCamera
+import graphics.scenery.proteins.Protein
+import graphics.scenery.proteins.RibbonDiagram
 import org.joml.Vector3f
 import org.scijava.command.Command
+import org.scijava.command.DynamicCommand
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
+import org.scijava.ui.UIService
 import sc.iview.SciView
-import sc.iview.commands.MenuWeights.ADD
-import sc.iview.commands.MenuWeights.EDIT_ADD_CAMERA
-import kotlin.math.max
-import kotlin.math.min
+import sc.iview.commands.MenuWeights
+import java.io.File
 
 /**
- * Command to add a camera to the scene
+ * Command to add a box to the scene
  *
  * @author Kyle Harrington
  */
-@Plugin(
-    type = Command::class,
-    menuRoot = "SciView",
-    menu = [Menu(label = "Add", weight = ADD),Menu(
-        label = "Camera...",
-        weight = EDIT_ADD_CAMERA
-    )]
-)
-class AddCamera : Command {
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Add", weight = MenuWeights.ADD), Menu(label = "Protein from files ...", weight = MenuWeights.EDIT_ADD_PROTEIN_FILE)])
+class AddProteinFromFiles : DynamicCommand() {
+
     @Parameter
     private lateinit var sciView: SciView
 
-    // FIXME
-    //	@Parameter
-    //	private String position = "0; 0; 0";
-    @Parameter(label = "Field of View")
-    private val fov = 50.0f
+    @Parameter
+    private lateinit var ui: UIService
 
-    @Parameter(label = "Near plane")
-    private val nearPlane = 0.1f
+    @Parameter(label = "Protein files", style = "extensions:pdb/mmtf/cif")
+    private lateinit var files: Array<File>
 
-    @Parameter(label = "farPlane")
-    private val farPlane = 500.0f
+    @Parameter(label = "Scale")
+    private var scale: Float = 0.1f
+
     override fun run() {
-        //final Vector3 pos = ClearGLVector3.parse( position );
-        val pos = Vector3f(0.0f)
-        val cam = DetachedHeadCamera()
-        cam.perspectiveCamera(
-            fov,
-            sciView!!.windowWidth,
-            sciView.windowHeight,
-            min(nearPlane, farPlane),
-            max(nearPlane, farPlane)
-        )
-        cam.ifSpatial {
-            position = pos
+        files.forEach { file ->
+            val ribbon = RibbonDiagram(Protein.fromID(file.absolutePath))
+            ribbon.name = file.name
+            ribbon.spatial().scale = Vector3f(scale)
+            sciView.addNode(ribbon, true)
         }
-        sciView.addNode(cam)
     }
 }

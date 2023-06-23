@@ -26,53 +26,54 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add
+package sc.iview.commands.add
 
+import graphics.scenery.Box
+import graphics.scenery.numerics.Random
+import graphics.scenery.volumes.SlicingPlane
+import graphics.scenery.volumes.VolumeManager
 import org.joml.Vector3f
 import org.scijava.command.Command
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
-import org.scijava.util.ColorRGB
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights.ADD
-import sc.iview.commands.MenuWeights.EDIT_ADD_CONE
+import sc.iview.commands.MenuWeights.EDIT_ADD_SLICING_PLANE
 
 /**
  * Command to add a box to the scene
  *
- * @author Jan Tiemann
+ * @author Kyle Harrington
  */
 @Plugin(
     type = Command::class,
     menuRoot = "SciView",
     menu = [Menu(label = "Add", weight = ADD), Menu(
-        label = "Cone...",
-        weight = EDIT_ADD_CONE
+        label = "Slicing Plane...",
+        weight = EDIT_ADD_SLICING_PLANE
     )]
 )
-class AddCone : Command {
-
+class AddSlicingPlane : Command {
     @Parameter
     private lateinit var sciView: SciView
 
-    // FIXME
-    //    @Parameter
-    //    private String position = "0; 0; 0";
-
-    @Parameter
-    private var height = 1.0f
-
-    @Parameter
-    private var radius = 1.0f
-
-    @Parameter
-    private var color: ColorRGB = SciView.DEFAULT_COLOR;
+    @Parameter(label = "Slice all volumes")
+    private var targetAllVolumes = true
 
     override fun run() {
-        //final Vector3 pos = ClearGLVector3.parse( position );
-        val pos = Vector3f(0f, 0f, 0f)
 
-        sciView.addCone(pos,radius,height,color,20)
+        val plane = SlicingPlane()
+
+        if (targetAllVolumes){
+            sciView.hub.get<VolumeManager>()?.nodes?.forEach { plane.addTargetVolume(it) }
+        }
+
+        val handle = Box(Vector3f(1f,0.1f,1f))
+        handle.name = "Slicing Plane Handle"
+        handle.material().diffuse = Random.random3DVectorFromRange(0.5f, 1.0f)
+        handle.addChild(plane)
+
+        sciView.addNode(handle)
     }
 }
