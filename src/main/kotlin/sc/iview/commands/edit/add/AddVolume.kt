@@ -28,11 +28,26 @@
  */
 package sc.iview.commands.edit.add
 
+import bdv.BigDataViewer
+import bdv.tools.brightness.ConverterSetup
+import bdv.util.AxisOrder
+import bdv.util.RandomAccessibleIntervalSource
+import bdv.util.RandomAccessibleIntervalSource4D
+import bdv.viewer.Source
+import bdv.viewer.SourceAndConverter
+import graphics.scenery.volumes.Volume
 import net.imagej.Dataset
+import net.imagej.axis.CalibratedAxis
 import net.imagej.axis.DefaultAxisType
 import net.imagej.axis.DefaultLinearAxis
 import net.imagej.ops.OpService
 import net.imagej.units.UnitService
+import net.imglib2.IterableRealInterval
+import net.imglib2.RandomAccessibleInterval
+import net.imglib2.img.Img
+import net.imglib2.realtransform.AffineTransform3D
+import net.imglib2.type.numeric.RealType
+import net.imglib2.view.Views
 import org.scijava.command.Command
 import org.scijava.log.LogService
 import org.scijava.plugin.Menu
@@ -41,6 +56,8 @@ import org.scijava.plugin.Plugin
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
 import sc.iview.commands.MenuWeights.EDIT_ADD
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Command to add a volume to the scene.
@@ -76,33 +93,52 @@ class AddVolume : Command {
     @Parameter(label = "Voxel Size Z", stepSize = "0.01f")
     private var voxelDepth = 1.0f
 
+    @Parameter(label = "Split channels")
+    private var splitChannels = true
+
+    private var splitChannelLuts = arrayOf("Red.lut", "Green.lut", "Blue.lut", "Magenta.lut", "Cyan.lut", "Yellow.lut")
+
+    private fun <RealType> splitChannels(img: Img<RealType>, splitChannelDimension: Int): List<RandomAccessibleInterval<RealType>> {
+        // Ensure we're safe in the dimension we choose
+        var splitDim = max(min(img.numDimensions() - 1, splitChannelDimension), 0)
+
+        val numChannels = img.dimension(splitDim)
+        val channelIntervals = mutableListOf<RandomAccessibleInterval<RealType>>()
+
+        for (channel in 0 until numChannels) {
+            val interval = Views.hyperSlice(img, splitDim, channel.toLong()) as RandomAccessibleInterval<RealType>
+            channelIntervals.add(interval)
+        }
+
+        return channelIntervals
+    }
+
     override fun run() {
         if (inheritFromImage)
             setVoxelDimension()
 
-        sciView.addVolume(image, name=image.name, voxelDimensions=floatArrayOf(voxelWidth, voxelHeight, voxelDepth))
+        if (splitChannels && image.numDimensions() > 3) {
+            var splitDim = ((0 until image.numDimensions()).filter { d -> (image.imgPlus.axis(d) as CalibratedAxis).type().label == "Channel" }).first()
+            var channels = splitChannels(image, splitDim)
+
+            for (ch in channels.indices) {
+                var channel = channels[ch]
+                var v = sciView.addVolume(channel as RandomAccessibleInterval<out RealType<*>>, name = image.name + "-ch$ch", voxelDimensions = floatArrayOf(voxelWidth, voxelHeight, voxelDepth), block = {})
+                var lut = splitChannelLuts[ch % splitChannelLuts.size]
+                sciView.setColormap(v, lut)
+            }
+        } else {
+            sciView.addVolume(image, name = image.name, voxelDimensions = floatArrayOf(voxelWidth, voxelHeight, voxelDepth))
+        }
     }
 
     private fun setVoxelDimension() {
-        val axis = arrayOf(
-                DefaultLinearAxis(DefaultAxisType("X", true), "um", 1.0),
-                DefaultLinearAxis(DefaultAxisType("Y", true), "um", 1.0),
-                DefaultLinearAxis(DefaultAxisType("Z", true), "um", 1.0)
-        )
-
-        val voxelDims = FloatArray(minOf(image.numDimensions(), 3))
-
-        for (d in voxelDims.indices) {
-            val inValue = image.axis(d).averageScale(0.0, 1.0)
-            if (image.axis(d).unit() == null) {
-                voxelDims[d] = inValue.toFloat()
-            } else {
-                voxelDims[d] = unitService.value(inValue, image.axis(d).unit(), axis[d].unit()).toFloat()
-            }
-        }
+        val voxelDims = sciView.getSciviewScale(image)
 
         voxelWidth = voxelDims.getOrElse(0) { 1.0f }
         voxelHeight = voxelDims.getOrElse(1) { 1.0f }
         voxelDepth = voxelDims.getOrElse(2) { 1.0f }
     }
 }
+
+
