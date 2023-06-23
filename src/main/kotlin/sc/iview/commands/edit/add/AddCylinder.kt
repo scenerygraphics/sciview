@@ -35,9 +35,7 @@ import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import org.scijava.util.ColorRGB
 import sc.iview.SciView
-import sc.iview.Utils
-import sc.iview.commands.MenuWeights.EDIT
-import sc.iview.commands.MenuWeights.EDIT_ADD
+import sc.iview.commands.MenuWeights.ADD
 import sc.iview.commands.MenuWeights.EDIT_ADD_CYLINDER
 
 /**
@@ -48,7 +46,7 @@ import sc.iview.commands.MenuWeights.EDIT_ADD_CYLINDER
 @Plugin(
     type = Command::class,
     menuRoot = "SciView",
-    menu = [Menu(label = "Edit", weight = EDIT), Menu(label = "Add", weight = EDIT_ADD), Menu(
+    menu = [Menu(label = "Add", weight = ADD), Menu(
         label = "Cylinder...",
         weight = EDIT_ADD_CYLINDER
     )]

@@ -37,8 +37,6 @@ import org.scijava.plugin.Plugin
 import org.scijava.util.ColorRGB
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights.ADD
-import sc.iview.commands.MenuWeights.EDIT
-import sc.iview.commands.MenuWeights.EDIT_ADD
 import sc.iview.commands.MenuWeights.EDIT_ADD_BOX
 
 /**

@@ -33,17 +33,13 @@ import graphics.scenery.proteins.RibbonDiagram
 import org.joml.Vector3f
 import org.scijava.command.Command
 import org.scijava.command.DynamicCommand
-import org.scijava.command.InteractiveCommand
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import org.scijava.ui.UIService
-import org.scijava.widget.Button
-import org.scijava.widget.FileWidget
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
 import java.io.File
-import java.io.FileFilter
 
 /**
  * Command to add a box to the scene

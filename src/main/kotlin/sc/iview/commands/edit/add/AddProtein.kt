@@ -40,7 +40,7 @@ import sc.iview.SciView
 import sc.iview.commands.MenuWeights
 
 /**
- * Command to add a box to the scene
+ * Command to add a protein model to the scene
  *
  * @author Kyle Harrington
  */

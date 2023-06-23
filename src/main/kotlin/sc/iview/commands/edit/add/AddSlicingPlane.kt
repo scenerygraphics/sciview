@@ -34,16 +34,11 @@ import graphics.scenery.volumes.SlicingPlane
 import graphics.scenery.volumes.VolumeManager
 import org.joml.Vector3f
 import org.scijava.command.Command
-import org.scijava.display.DisplayService
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
-import org.scijava.util.ColorRGB
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights.ADD
-import sc.iview.commands.MenuWeights.EDIT
-import sc.iview.commands.MenuWeights.EDIT_ADD
-import sc.iview.commands.MenuWeights.EDIT_ADD_BOX
 import sc.iview.commands.MenuWeights.EDIT_ADD_SLICING_PLANE
 
 /**
