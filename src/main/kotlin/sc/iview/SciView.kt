@@ -1526,8 +1526,6 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
     }
 
     /**
-<<<<<<< HEAD
-=======
      * Adds a SourceAndConverter to the scene.
      *
      * @param sources The list of SourceAndConverter to add
@@ -1553,7 +1551,6 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
     }
 
     /**
->>>>>>> master
      * Get the Volume that corresponds to an image if one exists
      * @param image an image of any type (e.g. IterableInterval, RAI, SourceAndConverter)
      * @return a Volume corresponding to the input image
