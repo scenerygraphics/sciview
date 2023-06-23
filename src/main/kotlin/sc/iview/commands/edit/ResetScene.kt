@@ -6,13 +6,13 @@
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -26,43 +26,31 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.ui
+package sc.iview.commands.edit
 
-import graphics.scenery.utils.lazyLogger
-import java.util.*
-import java.util.concurrent.CopyOnWriteArrayList
-import javax.swing.JLabel
+import org.scijava.command.Command
+import org.scijava.log.LogService
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.EDIT
+import sc.iview.commands.MenuWeights.EDIT_RESET_SCENE
 
-class TaskManager(var update: ((Task?) -> Any)? = null) {
-    val currentTasks = CopyOnWriteArrayList<Task>()
-    val pie = ProgressPie()
-    val label = JLabel()
-    val logger by lazyLogger()
+/**
+ * Command to reset the scene to default
+ *
+ * @author Kyle Harrington
+ */
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Edit", weight = EDIT), Menu(label = "Reset Scene", weight = EDIT_RESET_SCENE)])
+class ResetScene : Command {
+    @Parameter
+    private lateinit var logService: LogService
 
-    init {
+    @Parameter
+    private lateinit var sciView: SciView
 
-        val timerTask = object: TimerTask() {
-            override fun run() {
-                currentTasks.removeIf { it.completion > 99.9999f }
-                val current = currentTasks.lastOrNull()
-
-                update?.invoke(current)
-            }
-        }
-        Timer().scheduleAtFixedRate(timerTask, 0L, 200L)
-    }
-
-    fun addTask(task: Task) {
-        currentTasks.add(task)
-    }
-
-    fun newTask(source: String, status: String = ""): Task {
-        val task = Task(source, status, 0.0f)
-        currentTasks.add(task)
-        return task
-    }
-
-    fun removeTask(task: Task) {
-        currentTasks.remove(task)
+    override fun run() {
+        sciView.reset()
     }
 }

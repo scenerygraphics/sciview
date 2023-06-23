@@ -67,7 +67,7 @@ class AddBox : Command {
     @Parameter
     private var size = 1.0f
 
-    @Parameter
+    @Parameter(required = false)
     private lateinit var color: ColorRGB
 
     @Parameter

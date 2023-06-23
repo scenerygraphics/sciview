@@ -31,6 +31,7 @@ package sc.iview.commands.demo.advanced
 import bdv.util.DefaultInterpolators
 import bdv.viewer.Interpolation
 import ch.systemsx.cisd.hdf5.HDF5Factory
+import dev.dirs.ProjectDirectories
 import graphics.scenery.Origin
 import graphics.scenery.utils.extensions.xyz
 import graphics.scenery.volumes.Colormap
@@ -48,6 +49,7 @@ import net.imglib2.type.numeric.ARGBType
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import net.imglib2.type.numeric.integer.UnsignedLongType
 import net.imglib2.view.Views
+import org.apache.commons.io.FileUtils.copyURLToFile
 import org.janelia.saalfeldlab.n5.hdf5.N5HDF5Reader
 import org.janelia.saalfeldlab.n5.imglib2.N5Utils
 import org.joml.Vector3f
@@ -64,6 +66,9 @@ import sc.iview.commands.MenuWeights
 import sc.iview.process.MeshConverter
 import java.io.FileFilter
 import java.io.IOException
+import java.net.URL
+import java.io.File
+
 
 typealias NeuronsAndImage = Triple<HashMap<Long, Long>, RandomAccessibleInterval<UnsignedLongType>, RandomAccessibleInterval<UnsignedByteType>>
 
@@ -71,9 +76,9 @@ typealias NeuronsAndImage = Triple<HashMap<Long, Long>, RandomAccessibleInterval
         label = "Cremi Dataset rendering demo",
         menuRoot = "SciView",
         menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
-                Menu(label = "Advanced", weight = MenuWeights.DEMO_ADVANCED),
-                Menu(label = "Load Cremi dataset and neuron labels", weight = MenuWeights.DEMO_ADVANCED_CREMI)])
-class LoadCremiDatasetAndNeurons: Command {
+            Menu(label = "Advanced", weight = MenuWeights.DEMO_ADVANCED),
+            Menu(label = "Load Cremi dataset and neuron labels", weight = MenuWeights.DEMO_ADVANCED_CREMI)])
+class LoadCremiDatasetAndNeurons : Command {
     @Parameter
     private lateinit var ui: UIService
 
@@ -103,6 +108,7 @@ class LoadCremiDatasetAndNeurons: Command {
             throw UnsupportedOperationException()
         }
     }
+
     /**
      * When an object implementing interface `Runnable` is used
      * to create a thread, starting the thread causes the object's
@@ -115,6 +121,7 @@ class LoadCremiDatasetAndNeurons: Command {
      *
      * @see Thread.run
      */
+
     override fun run() {
         val task = sciview.taskManager.newTask("Cremi", "Loading dataset")
         val filter = FileFilter { file ->
@@ -122,17 +129,31 @@ class LoadCremiDatasetAndNeurons: Command {
 
             extension == "hdf5" || extension == "hdf"
         }
-        val files = ui.chooseFiles(null, emptyList(), filter, FileWidget.OPEN_STYLE)
 
-        val nai = readCremiHDF5(files.first().canonicalPath, 1.0)
+        // val files = ui.chooseFiles(null, emptyList(), filter, FileWidget.OPEN_STYLE)
+        var projDirs = sciview.getProjectDirectories()
 
-        if(nai == null) {
+        val file = File(projDirs.cacheDir,"sample_A_20160501.hdf")
+        if (file.exists() == false) {
+            task.status = "Downloading dataset"
+            log.info("Downloading dataset")
+            // ensure this exists projDirs.cacheDir
+            if (!File(projDirs.cacheDir).exists()) {
+                File(projDirs.cacheDir).mkdirs()
+            }
+            copyURLToFile(URL("https://cremi.org/static/data/sample_A_20160501.hdf"), file)
+        }
+
+        task.status = "Reading dataset"
+        val nai = readCremiHDF5(file.canonicalPath, 1.0)
+
+        if (nai == null) {
             log.error("Could not get neuron IDs")
             return
         }
         val raiVolume = nai.third
         val cursor = Views.iterable(raiVolume).localizingCursor()
-        while(cursor.hasNext() && cursor.getIntPosition(2) < 50) {
+        while (cursor.hasNext() && cursor.getIntPosition(2) < 50) {
             cursor.fwd()
             cursor.get().set(0)
         }
@@ -140,7 +161,7 @@ class LoadCremiDatasetAndNeurons: Command {
         val colormapVolume = lut.loadLUT(lut.findLUTs().get("Grays.lut"))
         val colormapNeurons = lut.loadLUT(lut.findLUTs().get("Fire.lut"))
 
-        sciview.addVolume(nai.third, files.first().name) {
+        val v = sciview.addVolume(nai.third, file.name) {
             origin = Origin.FrontBottomLeft
             this.spatialOrNull()?.scale = Vector3f(0.08f, 0.08f, 5.0f)
             transferFunction = TransferFunction.ramp(0.3f, 0.1f, 0.1f)
@@ -161,7 +182,7 @@ class LoadCremiDatasetAndNeurons: Command {
         // let's extract some neurons here
         log.info("Creating labeling ...")
 
-        val labels = (0 .. (nai.first.keys.maxOrNull()?.toInt() ?: 1)).toList()
+        val labels = (0..(nai.first.keys.maxOrNull()?.toInt() ?: 1)).toList()
         val labeling = ImgLabeling.fromImageAndLabels(rai, labels)
         log.info("Creating regions...")
         val regions = LabelRegions(labeling)
@@ -173,7 +194,7 @@ class LoadCremiDatasetAndNeurons: Command {
 
         regions.filter { largestNeuronLabels.contains(it.label.toLong() + 1L) }.forEachIndexed { i, region ->
             log.info("Meshing neuron ${i + 1}/${largestNeuronLabels.size} with label ${region.label}...")
-            task.status = "Meshing neuron ${i+1}/${largestNeuronLabels.size}"
+            task.status = "Meshing neuron ${i + 1}/${largestNeuronLabels.size}"
 
             // ui.show(region)
             // Generate the mesh with imagej-ops
@@ -182,17 +203,17 @@ class LoadCremiDatasetAndNeurons: Command {
             log.info("Converting neuron ${i + 1}/${largestNeuronLabels.size} to scenery format...")
             // Convert the mesh into a scenery mesh for visualization
             val mesh = MeshConverter.toScenery(m, false, flipWindingOrder = true)
-            sciview.addNode(mesh) {
-                spatial().scale = Vector3f(0.01f, 0.01f, 0.06f)
-                ifMaterial {
-                    diffuse =
+            v.addChild(mesh)
+            sciview.publishNode(mesh)
+            mesh.ifMaterial {
+                diffuse =
                         colormapNeurons.lookupARGB(0.0, 255.0, kotlin.random.Random.nextDouble(0.0, 255.0)).toRGBColor()
-                            .xyz()
-                    roughness = 0.0f
-                }
-                name = "Neuron $i"
+                                .xyz()
+                roughness = 0.0f
             }
-            val completion = 10.0f + ((i+1)/largestNeuronLabels.size.toFloat())*90.0f
+            mesh.name = "Neuron $i"
+
+            val completion = 10.0f + ((i + 1) / largestNeuronLabels.size.toFloat()) * 90.0f
             task.completion = completion
         }
 
@@ -201,9 +222,10 @@ class LoadCremiDatasetAndNeurons: Command {
 
     fun readCremiHDF5(path: String, scale: Double = 1.0): NeuronsAndImage? {
         log.info("Reading cremi HDF5 from $path")
-        val hdf5Reader = HDF5Factory.openForReading(path)
-        val n5Reader: N5HDF5Reader
+
         try {
+            val hdf5Reader = HDF5Factory.openForReading(path)
+            val n5Reader: N5HDF5Reader
             n5Reader = N5HDF5Reader(hdf5Reader, *intArrayOf(128, 128, 128))
             val neuronIds: RandomAccessibleInterval<UnsignedLongType> = N5Utils.open(n5Reader,
                     "/volumes/labels/neuron_ids",
@@ -215,7 +237,7 @@ class LoadCremiDatasetAndNeurons: Command {
             val cursor = Views.iterable(neuronIds).localizingCursor()
             val dest = img.randomAccess();
             val neurons = HashMap<Long, Long>()
-            while( cursor.hasNext() ) {
+            while (cursor.hasNext()) {
                 cursor.fwd();
                 dest.setPosition(cursor);
                 val value = cursor.get()
@@ -225,7 +247,7 @@ class LoadCremiDatasetAndNeurons: Command {
 
             log.info("Got RAI from HDF5, dimensions ${img.dimensionsAsLongArray().joinToString(",")}")
 
-            return if(scale != 1.0) {
+            return if (scale != 1.0) {
                 Triple(neurons, ops.transform().scaleView(img, doubleArrayOf(scale, scale, scale), DefaultInterpolators<UnsignedLongType>().get(Interpolation.NEARESTNEIGHBOR)), volume)
             } else {
                 Triple(neurons, img, volume)
@@ -233,16 +255,19 @@ class LoadCremiDatasetAndNeurons: Command {
         } catch (e: IOException) {
             log.error("Could not read Cremi HDF5 file from $path")
             e.printStackTrace()
+        } catch (e: hdf.hdf5lib.exceptions.HDF5FileInterfaceException) {
+            log.error("Could not read Cremi HDF5 file from $path. It might be the wrong file or corrupted. Please delete the file and rerun.")
+            e.printStackTrace()
         }
 
         return null
     }
 
     private fun Int.toRGBColor(): Vector4f {
-        val a = ARGBType.alpha(this)/255.0f
-        val r = ARGBType.red(this)/255.0f
-        val g = ARGBType.green(this)/255.0f
-        val b = ARGBType.blue(this)/255.0f
+        val a = ARGBType.alpha(this) / 255.0f
+        val r = ARGBType.red(this) / 255.0f
+        val g = ARGBType.green(this) / 255.0f
+        val b = ARGBType.blue(this) / 255.0f
 
         return Vector4f(r, g, b, a)
     }

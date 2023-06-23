@@ -35,6 +35,7 @@ import org.scijava.plugin.Plugin
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights.VIEW
 import sc.iview.commands.MenuWeights.VIEW_START_RECORDING_VIDEO
+import java.io.File
 import kotlin.math.max
 
 /**
@@ -54,10 +55,21 @@ class StartRecordingVideo : Command {
     private lateinit var videoEncodingQuality // listed as an enum here, cant access from java https://github.com/scenerygraphics/scenery/blob/1a451c2864e5a48e47622d9313fe1681e47d7958/src/main/kotlin/graphics/scenery/utils/H264Encoder.kt#L65
             : String
 
+    @Parameter(style="save")
+    private lateinit var filename: File
+
+    @Parameter(label="Use hardware encoding?")
+    private var useHWEncoding = true
+    // Note that this parameter is affirmative, while scenery's is a negation. We flip this later
+
+    @Parameter(label="Overwrite existing?")
+    private var overwrite = false
+
     override fun run() {
         bitrate = max(0, bitrate)
         sciView.getScenerySettings().set("VideoEncoder.Bitrate", bitrate)
         sciView.getScenerySettings().set("VideoEncoder.Quality", videoEncodingQuality)
-        sciView.toggleRecordVideo()
+        sciView.getScenerySettings().set("VideoEncoder.DisableHWEncoding", !useHWEncoding)
+        sciView.toggleRecordVideo(filename.absolutePath, overwrite)
     }
 }

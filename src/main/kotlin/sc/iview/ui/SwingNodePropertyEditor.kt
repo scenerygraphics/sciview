@@ -72,12 +72,14 @@ import javax.swing.JSplitPane
 import javax.swing.JTextArea
 import javax.swing.JTree
 import javax.swing.WindowConstants
+import javax.swing.border.EmptyBorder
 import javax.swing.event.TreeSelectionEvent
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreeNode
 import javax.swing.tree.TreePath
 import javax.swing.tree.TreeSelectionModel
+import kotlin.concurrent.thread
 
 /**
  * Interactive UI for visualizing and editing the scene graph.
@@ -143,6 +145,9 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
         val node = evt.node ?: return
         log.trace("Node removed: $node");
         rebuildTree()
+        if (sciView.activeNode == null){
+            updateProperties(null)
+        }
     }
 
     @EventHandler
@@ -276,13 +281,21 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
     private val updateLock = ReentrantLock()
 
     /** Generates a properties panel for the given node.  */
-    fun updateProperties(sceneNode: Node?) {
+    fun updateProperties(sceneNode: Node?, rebuild: Boolean = false) {
         if (sceneNode == null) {
+            try {
+                if (updateLock.tryLock() || updateLock.tryLock(200, TimeUnit.MILLISECONDS)) {
+                    updatePropertiesPanel(null)
+                    updateLock.unlock()
+                }
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
             return
         }
         try {
             if (updateLock.tryLock() || updateLock.tryLock(200, TimeUnit.MILLISECONDS)) {
-                if (currentNode === sceneNode && currentProperties != null) {
+                if (!rebuild && currentNode === sceneNode && currentProperties != null) {
                     currentProperties!!.updateCommandFields()
                     inputPanel.refresh()
                     updateLock.unlock()
@@ -334,6 +347,7 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                     textArea.text = "<html><pre>$stackTrace</pre>"
                     updatePropertiesPanel(textArea)
                 }
+
                 updateLock.unlock()
             }
         } catch (e: InterruptedException) {
@@ -344,10 +358,26 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
     private fun updatePropertiesPanel(c: Component?) {
         props.removeAll()
         if (c == null) {
-            val usageLabel = JLabel("<html><em>No node selected.</em><br><br>" +
-                    Help.getBasicUsageText(sciView.publicGetInputHandler()) + "</html>")
+            var handler = sciView.sceneryInputHandler
+            if (handler == null){
+                // at startup this panel is initialized before scenery. Wait until sceneries input handler is initialized and start again.
+                thread {
+                    while (handler == null) {
+                        Thread.sleep(200)
+                        handler = sciView.sceneryInputHandler
+                    }
+                    updatePropertiesPanel(null)
+                }
+                return
+            }
+            val usageLabel = JLabel(
+                ("<html><em>No node selected.</em><br><br>" +
+                        Help.getBasicUsageText(handler)
+                        + "</html>")
+            )
+            usageLabel.border = EmptyBorder(2, 5, 0, 5);
             usageLabel.preferredSize = Dimension(300, 100)
-            props.add(usageLabel)
+            props.add(usageLabel,"wrap")
         } else {
             props.add(c)
             props.size = c.size
@@ -389,9 +419,7 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
         if (newPath != null) {
             tree.selectionPath = newPath
             tree.scrollPathToVisible(newPath)
-            if (node !== sciView.activeNode) {
-                updateProperties(node)
-            }
+            updateProperties(node)
         }
     }
 

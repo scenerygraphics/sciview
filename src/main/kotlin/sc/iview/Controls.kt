@@ -35,7 +35,7 @@ import graphics.scenery.controls.behaviours.FPSCameraControl
 import graphics.scenery.controls.behaviours.MovementCommand
 import graphics.scenery.controls.behaviours.SelectCommand
 import graphics.scenery.primitives.TextBoard
-import graphics.scenery.utils.LazyLogger
+import graphics.scenery.utils.lazyLogger
 import org.joml.Quaternionf
 import org.joml.Vector2f
 import org.joml.Vector3f
@@ -49,7 +49,6 @@ import sc.iview.controls.behaviours.Ruler
 import java.io.File
 import java.util.*
 import java.util.function.Supplier
-import kotlin.concurrent.thread
 import kotlin.math.acos
 
 /**
@@ -59,7 +58,7 @@ import kotlin.math.acos
  * @author Ulrik Guenther
  */
 open class Controls(val sciview: SciView) {
-    private val logger by LazyLogger()
+    private val logger by lazyLogger()
 
     companion object {
         const val STASH_BEHAVIOUR_KEY = "behaviour:"
@@ -68,7 +67,7 @@ open class Controls(val sciview: SciView) {
     }
 
     private val inputHandler
-        get() = sciview.sceneryInputHandler
+        get() = sciview.sceneryInputHandler!!
 
     /**
      * Speeds for input controls
@@ -185,6 +184,9 @@ open class Controls(val sciview: SciView) {
         h.addKeyBinding("node: move selected one closer or further away", "ctrl scroll")
         h.addBehaviour("node: rotate selected one", NodeRotateControl(sciview))
         h.addKeyBinding("node: rotate selected one", "ctrl shift button1")
+        h.addBehaviour("node: delete selected one", ClickBehaviour { _, _ -> sciview.deleteActiveNode(true) })
+        h.addKeyBinding("node: delete selected one", "DELETE")
+
 
         // within-scene navigation: ArcBall and FPS
         enableArcBallControl()
@@ -225,7 +227,7 @@ open class Controls(val sciview: SciView) {
         h.addBehaviour("ruler: keep the button pressed and drag with the mouse", ruler)
         h.addKeyBinding("ruler: keep the button pressed and drag with the mouse", "E")
 
-        val configFile = File(System.getProperty("user.home")).resolve(".sciview.keybindings.yaml")
+        val configFile = File(sciview.getProjectDirectories().configDir, ".keybindings.yaml")
         if( configFile.exists() )
             inputHandler.readFromFile(configFile)
         else
@@ -277,7 +279,11 @@ open class Controls(val sciview: SciView) {
         )
         
         parameters.registerFpsCameraControl(fpsControl)
-        h.addBehaviour("view: freely look around", fpsControl!!)
+        val selectCommand = h.getBehaviour("node: choose one from the view panel") as? ClickBehaviour
+        val wrappedFpsControl = selectCommand?.let {
+            ClickAndDragWrapper(it, fpsControl!!)
+        } ?: fpsControl!!
+        h.addBehaviour("view: freely look around", wrappedFpsControl)
         h.addKeyBinding("view: freely look around", "button1")
 
         //slow and fast camera motion

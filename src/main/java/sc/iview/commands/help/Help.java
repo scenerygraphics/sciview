@@ -61,8 +61,8 @@ public class Help implements Command {
         //opens own, not modal!, window with the help
         JFrame frame = new JFrame("SciView Input Controls Overview");
         frame.getContentPane().add( new JScrollPane( new JLabel(
-                "<html>" + getBasicUsageText(sciView.publicGetInputHandler()) +
-                "<br><br>" + getKeybindingsAsHtmlFrom(sciView.publicGetInputHandler()) )));
+                "<html>" + getBasicUsageText(sciView.getSceneryInputHandler()) +
+                "<br><br>" + getKeybindingsAsHtmlFrom(sciView.getSceneryInputHandler()) )));
         frame.pack();
         frame.setVisible(true);
     }
