@@ -26,45 +26,55 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.settings;
+package sc.iview.commands.edit.add
 
-import org.scijava.command.Command;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import sc.iview.SciView;
-
-import static sc.iview.commands.MenuWeights.*;
+import org.joml.Vector3f
+import org.scijava.command.Command
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import org.scijava.util.ColorRGB
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.EDIT
+import sc.iview.commands.MenuWeights.EDIT_ADD
+import sc.iview.commands.MenuWeights.EDIT_ADD_CONE
+import sc.iview.commands.MenuWeights.EDIT_ADD_CYLINDER
 
 /**
- * Command to adjust SciView settings
+ * Command to add a box to the scene
  *
- * @author Kyle Harrington
- *
+ * @author Jan Tiemann
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-menu = {@Menu(label = "Edit", weight = EDIT), //
-        @Menu(label = "Settings", weight = EDIT_SETTINGS), //
-        @Menu(label = "SciView", weight = EDIT_SETTINGS_SCIVIEW)})
-public class SciViewSettings implements Command {
+@Plugin(
+    type = Command::class,
+    menuRoot = "SciView",
+    menu = [Menu(label = "Edit", weight = EDIT), Menu(label = "Add", weight = EDIT_ADD), Menu(
+        label = "Cone...",
+        weight = EDIT_ADD_CONE
+    )]
+)
+class AddCone : Command {
 
     @Parameter
-    private LogService logService;
+    private lateinit var sciView: SciView
+
+    // FIXME
+    //    @Parameter
+    //    private String position = "0; 0; 0";
 
     @Parameter
-    private SciView sciView;
+    private var height = 1.0f
 
     @Parameter
-    private boolean inspectorVisible;
+    private var radius = 1.0f
 
     @Parameter
-    private boolean interpreterVisible;
+    private var color: ColorRGB = SciView.DEFAULT_COLOR;
 
-    @Override
-    public void run() {
-        sciView.setInspectorWindowVisibility(inspectorVisible);
-        sciView.setInterpreterWindowVisibility(interpreterVisible);
+    override fun run() {
+        //final Vector3 pos = ClearGLVector3.parse( position );
+        val pos = Vector3f(0f, 0f, 0f)
+
+        sciView.addCone(pos,radius,height,color,20)
     }
-
 }

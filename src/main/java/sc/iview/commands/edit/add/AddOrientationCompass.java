@@ -66,13 +66,13 @@ public class AddOrientationCompass implements Command {
     @Parameter
     private float AXESBARRADIUS = 0.001f;
 
-    @Parameter
+    @Parameter(required = false)
     private Vector3f xColor = new Vector3f(1f,0f,0f);
 
-    @Parameter
+    @Parameter(required = false)
     private Vector3f yColor = new Vector3f(0f,1f,0f);
 
-    @Parameter
+    @Parameter(required = false)
     private Vector3f zColor = new Vector3f(0f,0f,1f);
 
     private Node makeAxis( float axisLength, float angleX, float angleY, float angleZ, Vector3f color ) {
@@ -120,9 +120,10 @@ public class AddOrientationCompass implements Command {
         axisNode.setName("compass axis: Z");
         root.addChild( axisNode );
 
-        sciView.addNode( root );
+        root.setName("Compass");
 
         sciView.getCamera().addChild(root);
+        sciView.publishNode(root);
 
         root.getUpdate().add(() -> {
             final Camera cam = sciView.getCamera();

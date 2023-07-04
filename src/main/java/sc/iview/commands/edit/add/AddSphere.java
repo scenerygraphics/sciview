@@ -60,7 +60,7 @@ public class AddSphere implements Command {
     @Parameter
     private float radius = 1.0f;
 
-    @Parameter
+    @Parameter(required = false)
     private ColorRGB color = SciView.DEFAULT_COLOR;
 
     @Override

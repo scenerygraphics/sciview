@@ -59,7 +59,7 @@ public class DeleteObject implements Command {
     @Override
     public void run() {
         if( sciView.getActiveNode() != null ) {
-            sciView.deleteActiveNode();
+            sciView.deleteActiveNode(false);
         }
     }
 

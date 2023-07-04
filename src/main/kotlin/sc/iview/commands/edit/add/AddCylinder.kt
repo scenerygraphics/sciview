@@ -26,43 +26,55 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.ui
+package sc.iview.commands.edit.add
 
-import graphics.scenery.utils.lazyLogger
-import java.util.*
-import java.util.concurrent.CopyOnWriteArrayList
-import javax.swing.JLabel
+import org.joml.Vector3f
+import org.scijava.command.Command
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import org.scijava.util.ColorRGB
+import sc.iview.SciView
+import sc.iview.Utils
+import sc.iview.commands.MenuWeights.EDIT
+import sc.iview.commands.MenuWeights.EDIT_ADD
+import sc.iview.commands.MenuWeights.EDIT_ADD_CYLINDER
 
-class TaskManager(var update: ((Task?) -> Any)? = null) {
-    val currentTasks = CopyOnWriteArrayList<Task>()
-    val pie = ProgressPie()
-    val label = JLabel()
-    val logger by lazyLogger()
+/**
+ * Command to add a box to the scene
+ *
+ * @author Jan Tiemann
+ */
+@Plugin(
+    type = Command::class,
+    menuRoot = "SciView",
+    menu = [Menu(label = "Edit", weight = EDIT), Menu(label = "Add", weight = EDIT_ADD), Menu(
+        label = "Cylinder...",
+        weight = EDIT_ADD_CYLINDER
+    )]
+)
+class AddCylinder : Command {
 
-    init {
+    @Parameter
+    private lateinit var sciView: SciView
 
-        val timerTask = object: TimerTask() {
-            override fun run() {
-                currentTasks.removeIf { it.completion > 99.9999f }
-                val current = currentTasks.lastOrNull()
+    // FIXME
+    //    @Parameter
+    //    private String position = "0; 0; 0";
 
-                update?.invoke(current)
-            }
-        }
-        Timer().scheduleAtFixedRate(timerTask, 0L, 200L)
-    }
+    @Parameter
+    private var height = 1.0f
 
-    fun addTask(task: Task) {
-        currentTasks.add(task)
-    }
+    @Parameter
+    private var radius = 1.0f
 
-    fun newTask(source: String, status: String = ""): Task {
-        val task = Task(source, status, 0.0f)
-        currentTasks.add(task)
-        return task
-    }
+    @Parameter
+    private var color: ColorRGB = SciView.DEFAULT_COLOR;
 
-    fun removeTask(task: Task) {
-        currentTasks.remove(task)
+    override fun run() {
+        //final Vector3 pos = ClearGLVector3.parse( position );
+        val pos = Vector3f(0f, 0f, 0f)
+
+        sciView.addCylinder(pos,radius,height,color,20)
     }
 }

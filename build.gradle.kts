@@ -4,8 +4,8 @@ import java.net.URL
 import sciview.*
 
 plugins {
-    val ktVersion = "1.7.20"
-    val dokkaVersion = "1.6.21"
+    val ktVersion = "1.8.20"
+    val dokkaVersion = "1.8.20"
 
     java
     kotlin("jvm") version ktVersion
@@ -77,19 +77,9 @@ dependencies {
     implementation("net.imglib2:imglib2")
     implementation("net.imglib2:imglib2-roi")
 
-    implementation("org.janelia.saalfeldlab:n5")
-    implementation("org.janelia.saalfeldlab:n5-imglib2")
-
-    implementation("org.apache.logging.log4j:log4j-api:2.19.0")
-    implementation("org.apache.logging.log4j:log4j-1.2-api:2.19.0")
-    implementation("org.apache.logging.log4j:log4j-core:2.19.0")
-
     // Math dependencies
 //    implementation(commons.math3)
 //    implementation(misc.joml)
-
-    implementation("net.java.dev.jna:jna:5.12.0")
-    implementation("net.java.dev.jna:jna-platform:5.12.0")
 
     // Kotlin dependencies
     implementation("org.jetbrains.kotlin:kotlin-stdlib-common:$ktVersion")
@@ -173,8 +163,6 @@ tasks {
             val dependenciesNode = asNode().appendNode("dependencies")
             val propertiesNode = asNode().appendNode("properties")
             propertiesNode.appendNode("inceptionYear", 2016)
-            propertiesNode.appendNode("lwjgl.version", "3.3.1")
-            propertiesNode.appendNode("jna-platform.version", "5.12.0")
 
             // lwjgl natives
             lwjglNatives.forEach { nativePlatform ->
@@ -433,3 +421,4 @@ artifacts {
 }
 
 java.withSourcesJar()
+

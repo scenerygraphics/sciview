@@ -34,12 +34,10 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.script.ScriptREPL;
 import org.scijava.ui.swing.script.OutputPane;
-import org.scijava.ui.swing.script.VarsPane;
 import org.scijava.widget.UIComponent;
 
 import javax.script.ScriptContext;
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.IOException;
 import java.io.PrintWriter;

@@ -37,6 +37,7 @@ import bdv.util.RandomAccessibleIntervalSource4D
 import bdv.util.volatiles.VolatileView
 import bdv.viewer.Source
 import bdv.viewer.SourceAndConverter
+import dev.dirs.ProjectDirectories
 import graphics.scenery.*
 import graphics.scenery.Scene.RaycastResult
 import graphics.scenery.backends.Renderer
@@ -56,7 +57,6 @@ import graphics.scenery.utils.Statistics
 import graphics.scenery.utils.extensions.times
 import graphics.scenery.volumes.Colormap
 import graphics.scenery.volumes.RAIVolume
-import graphics.scenery.volumes.TransferFunction
 import graphics.scenery.volumes.Volume
 import graphics.scenery.volumes.Volume.Companion.fromXML
 import graphics.scenery.volumes.Volume.Companion.setupId
@@ -86,7 +86,6 @@ import net.imglib2.type.numeric.integer.UnsignedByteType
 import net.imglib2.view.Views
 import org.joml.Quaternionf
 import org.joml.Vector3f
-import org.joml.Vector4f
 import org.scijava.Context
 import org.scijava.`object`.ObjectService
 import org.scijava.display.Display
@@ -102,7 +101,6 @@ import org.scijava.thread.ThreadService
 import org.scijava.util.ColorRGB
 import org.scijava.util.Colors
 import org.scijava.util.VersionUtils
-import sc.iview.commands.demo.animation.ParticleDemo
 import sc.iview.event.NodeActivatedEvent
 import sc.iview.event.NodeAddedEvent
 import sc.iview.event.NodeChangedEvent
@@ -114,11 +112,12 @@ import sc.iview.ui.SwingMainWindow
 import sc.iview.ui.TaskManager
 import tpietzsch.example2.VolumeViewerOptions
 import java.awt.event.WindowListener
-import java.io.File
 import java.io.IOException
+import java.net.URL
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
-import java.nio.file.Path
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.Future
 import java.util.function.Consumer
@@ -127,9 +126,10 @@ import java.util.function.Predicate
 import java.util.stream.Collectors
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
+import kotlin.collections.LinkedHashMap
+import javax.swing.JOptionPane
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.system.measureTimeMillis
 
 /**
  * Main SciView class.
@@ -139,6 +139,7 @@ import kotlin.system.measureTimeMillis
 // we suppress unused warnings here because @Parameter-annotated fields
 // get updated automatically by SciJava.
 class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
+
     val sceneryPanel = arrayOf<SceneryPanel?>(null)
 
     /*
@@ -222,6 +223,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */  var display: Display<*>? = null
 
     /**
+     * List of available LUTs for caching
+     */
+    private var availableLUTs = LinkedHashMap<String, URL>()
+
+    /**
      * Return the current SceneryJPanel. This is necessary for custom context menus
      * @return panel the current SceneryJPanel
      */
@@ -251,16 +257,12 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
     constructor(applicationName: String?, windowWidth: Int, windowHeight: Int) : super(applicationName!!, windowWidth, windowHeight, false)
 
-    fun publicGetInputHandler(): InputHandler {
-        return inputHandler!!
-    }
-
     /**
      * Toggle video recording with scenery's video recording mechanism
      * Note: this video recording may skip frames because it is asynchronous
      */
     fun toggleRecordVideo() {
-        if (renderer is OpenGLRenderer) (renderer as OpenGLRenderer).recordMovie() else (renderer as VulkanRenderer).recordMovie()
+        toggleRecordVideo("sciview_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss")), false)
     }
 
     /**
@@ -271,7 +273,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param overwrite should the file be replaced, otherwise a unique incrementing counter will be appended
      */
     fun toggleRecordVideo(filename: String?, overwrite: Boolean) {
-        if (renderer is OpenGLRenderer) (renderer as OpenGLRenderer).recordMovie(filename!!, overwrite) else (renderer as VulkanRenderer).recordMovie(filename!!, overwrite)
+        if (renderer is VulkanRenderer)
+            (renderer as VulkanRenderer).recordMovie(filename!!, overwrite)
+        else
+            log.info("This renderer does not support video recording.")
     }
 
     /**
@@ -365,7 +370,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Initialization of SWING and scenery. Also triggers an initial population of lights/camera in the scene
      */
     override fun init() {
-        println("hello world!")
         val logLevel = System.getProperty("scenery.LogLevel", "info")
         log.level = LogLevel.value(logLevel)
         LogbackUtils.setLogLevel(null, logLevel)
@@ -446,8 +450,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     /*
      * Get the InputHandler that is managing mouse, input, VR controls, etc.
      */
-    val sceneryInputHandler: InputHandler
-        get() = inputHandler!!
+    val sceneryInputHandler: InputHandler?
+        get() = inputHandler
 
     /*
      * Return a bounding box around a subgraph of the scenegraph
@@ -605,7 +609,24 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             diffuse = Utils.convertToVector3f(color)
             specular = Vector3f(1.0f, 1.0f, 1.0f)
         }
+        box.name = generateUniqueName("Box")
         return addNode(box, block = block)
+    }
+
+    /**
+     * Return a Unique name (in terms of the scene) given a [candidateName].
+     * @param candidateName a candidate name
+     * @return a unique name based on [candidateName]
+     */
+    fun generateUniqueName(candidateName: String): String {
+        var uniqueName = candidateName
+        var counter = 1
+        val names = allSceneNodes.map { el -> el.name }
+        while (names.contains(uniqueName)) {
+            uniqueName = "$candidateName $counter"
+            counter++
+        }
+        return uniqueName
     }
 
     /**
@@ -621,7 +642,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             diffuse = Utils.convertToVector3f(color)
             specular = Vector3f(1.0f, 1.0f, 1.0f)
         }
-
+        sphere.name = generateUniqueName("Sphere")
         return addNode(sphere, block = block)
     }
 
@@ -633,9 +654,15 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param num_segments number of segments to represent the cylinder
      * @return  the Node corresponding to the cylinder
      */
-    fun addCylinder(position: Vector3f, radius: Float, height: Float, num_segments: Int, block: Cylinder.() -> Unit = {}): Cylinder {
+    fun addCylinder(position: Vector3f, radius: Float, height: Float, color: ColorRGB = DEFAULT_COLOR, num_segments: Int, block: Cylinder.() -> Unit = {}): Cylinder {
         val cyl = Cylinder(radius, height, num_segments)
         cyl.spatial().position = position
+        cyl.material {
+            ambient = Vector3f(1.0f, 0.0f, 0.0f)
+            diffuse = Utils.convertToVector3f(color)
+            specular = Vector3f(1.0f, 1.0f, 1.0f)
+        }
+        cyl.name = generateUniqueName("Cylinder")
         return addNode(cyl, block = block)
     }
 
@@ -647,9 +674,15 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param num_segments number of segments used to represent cone
      * @return  the Node corresponding to the cone
      */
-    fun addCone(position: Vector3f, radius: Float, height: Float, num_segments: Int, block: Cone.() -> Unit = {}): Cone {
+    fun addCone(position: Vector3f, radius: Float, height: Float, color: ColorRGB = DEFAULT_COLOR, num_segments: Int, block: Cone.() -> Unit = {}): Cone {
         val cone = Cone(radius, height, num_segments, Vector3f(0.0f, 0.0f, 1.0f))
         cone.spatial().position = position
+        cone.material {
+            ambient = Vector3f(1.0f, 0.0f, 0.0f)
+            diffuse = Utils.convertToVector3f(color)
+            specular = Vector3f(1.0f, 1.0f, 1.0f)
+        }
+        cone.name = generateUniqueName("Cone")
         return addNode(cone, block = block)
     }
 
@@ -685,6 +718,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             specular = Vector3f(1.0f, 1.0f, 1.0f)
         }
         line.spatial().position = points[0]
+        line.name = generateUniqueName("Line")
         return addNode(line, block = block)
     }
 
@@ -702,6 +736,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         }
         light.spatial().position = Vector3f(0.0f, 0.0f, 0.0f)
         lights!!.add(light)
+        light.name = generateUniqueName("Point Light")
         return addNode(light, block = block)
     }
 
@@ -722,130 +757,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         }
     }
 
-    @Throws(IOException::class)
-    fun openDirTiff(source: Path, onlyFirst: Int? = null)
-    {
-        val v = Volume.fromPath(source, hub, onlyFirst)
-        v.name = "volume"
-        v.spatial().position = Vector3f(-3.0f, 10.0f, 0.0f)
-        v.colormap = Colormap.get("jet")
-        v.spatial().scale = Vector3f(15.0f, 15.0f,45.0f)
-        v.transferFunction = TransferFunction.ramp(0.05f, 0.8f)
-        v.metadata["animating"] = true
-        v.converterSetups.firstOrNull()?.setDisplayRange(0.0, 1500.0)
-        v.visible = true
-
-        v.spatial().wantsComposeModel = true
-        v.spatial().updateWorld(true)
-//        System.out.println("v.model: " + v.model)
-        addChild(v)
-//        System.out.println("v.getDimensions: "+ v.getDimensions())
-//
-//        System.out.println(" v.pixelToWorldRatio: "+  v.pixelToWorldRatio)
-//        System.out.println("v.world.matrix: " + v.spatial().world)
-    }
-
-    data class PointInTrack(
-            val t: Int,
-            val loc: Vector3f,
-            val cellId: Long,
-            val parentId: Long,
-            val nodeScore: Float,
-            val edgeScore: Float
-    )
-
-    data class Track(
-            val track: List<PointInTrack>,
-            val trackId: Int
-    )
-
-    @Throws(IOException::class)
-    fun openTrackFile(file: File)
-    {
-        val lines = file.readLines()
-        var track = ArrayList<PointInTrack>()
-        val tracks = ArrayList<Track>()
-        val separator = ","
-
-        var lastTrackId = -1
-        lines.drop(1).forEach { line ->
-            val tokens = line.split(separator)
-            val t = tokens[0].toInt()
-            val z = tokens[1].toFloat()  -2000f
-            val y = tokens[2].toFloat() -800f
-            val x = tokens[3].toFloat() -1300f
-            val cellId = tokens[4].toLong()
-            val parentId = tokens[5].toLong()
-            val trackId = tokens[6].toInt()
-            val nodeScore = tokens[7].toFloat()
-            val edgeScore = tokens[8].toFloat()/45.0f
-
-            val currentPointInTrack =  PointInTrack(
-                t,
-                Vector3f(x,y,z),
-                cellId,
-                parentId,
-                nodeScore,
-                edgeScore
-            )
-            if(lastTrackId != trackId)
-            {
-                lastTrackId = trackId
-                val sortedTrack = track.sortedBy { it.t }
-                tracks.add(Track(sortedTrack, trackId))
-
-                track.clear()
-            }
-            track.add(currentPointInTrack)
-        }
-        val timeCost = measureTimeMillis {
-            addTracks(tracks)
-        }
-        println("time: $timeCost")
-    }
-
-    fun addTracks(tracks: ArrayList<Track>)
-    {
-        val rng = Random(17)
-        for(track in tracks)
-        {
-            if(track.trackId > 10)
-            {
-                continue
-            }
-            System.out.println("add track: "+ track.trackId.toString() )
-            val master = Cylinder(0.1f, 1.0f, 10)
-//            master.setMaterial (ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag"))
-            master.setMaterial(ShaderMaterial.fromClass(ParticleDemo::class.java))
-            master.ifMaterial{
-                ambient = Vector3f(0.1f, 0f, 0f)
-                diffuse = Vector3f(0.05f, 0f, 0f)
-                metallic = 0.01f
-                roughness = 0.5f
-            }
-
-            val mInstanced = InstancedNode(master)
-            mInstanced.name = "TrackID-${track.trackId}"
-            mInstanced.instancedProperties["Color"] = { Vector4f(1.0f) }
-            addNode(mInstanced)
-
-            var cnt = 0
-            val a = rng.nextFloat()
-            val b = rng.nextFloat()
-            track.track.windowed(2,1).forEach { pair ->
-                cnt = cnt + 1
-                val element = mInstanced.addInstance()
-                element.name ="EdgeID-$cnt"
-                element.instancedProperties["Color"] =  {Vector4f( a,b,pair[0].edgeScore, 1.0f)}
-                element.spatial().orientBetweenPoints(Vector3f(pair[0].loc).mul(0.1f) , Vector3f(pair[1].loc).mul(0.1f) , rescale = true, reposition = true)
-                //mInstanced.instances.add(element)
-
-            }
-        }
-
-    }
-
-
     /**
      * Open a file specified by the source path. The file can be anything that SciView knows about: mesh, volume, point cloud
      * @param source string of a data source
@@ -854,29 +765,35 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @Suppress("UNCHECKED_CAST")
     @Throws(IOException::class)
     fun open(source: String) {
+        var name = source.split("/").last()
+
         if (source.endsWith(".xml", ignoreCase = true)) {
-            addNode(fromXML(source, hub, VolumeViewerOptions()))
+            val openedNode = fromXML(source, hub, VolumeViewerOptions())
+            openedNode.name = generateUniqueName(name)
+            addNode(openedNode)
             return
         } else if (source.takeLast(4).equals(".pdb", true)) {
             val protein = Protein.fromFile(source)
             val ribbon = RibbonDiagram(protein)
             ribbon.spatial().position = Vector3f(0f, 0f, 0f)
+            ribbon.name = generateUniqueName(name)
             addNode(ribbon)
             return
         } else if (source.endsWith(".stl", ignoreCase = true)) {
             val stlReader = STLMeshIO()
-            addMesh(stlReader.open(source))
+            addMesh(stlReader.open(source), name=name)
             return
         } else if (source.endsWith(".ply", ignoreCase = true)) {
             val plyReader = PLYMeshIO()
-            addMesh(plyReader.open(source))
+            addMesh(plyReader.open(source), name=name)
             return
         }
+
         val data = io.open(source)
         when (data) {
-            is Mesh -> addMesh(data)
-            is PointCloud -> addPointCloud(data)
-            is graphics.scenery.Mesh -> addMesh(data)
+            is Mesh -> addMesh(data, name=name)
+            is PointCloud -> addPointCloud(data, name)
+            is graphics.scenery.Mesh -> addMesh(data, name=name)
             is Dataset -> addVolume(data, floatArrayOf(1.0f, 1.0f, 1.0f))
 //            is RandomAccessibleInterval<*> -> {
 //                val t = data.randomAccess().get()
@@ -890,7 +807,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                     // NB: For now, we assume all elements will be RealLocalizable.
                     // Highly likely to be the case, barring antagonistic importers.
                     val points = list as List<RealLocalizable>
-                    addPointCloud(points, source)
+                    addPointCloud(points, name)
                 } else {
                     val type = if (element == null) "<null>" else element.javaClass.name
                     throw IllegalArgumentException("Data source '" + source +  //
@@ -944,23 +861,30 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return a Node corresponding to the PointCloud
      */
     @JvmOverloads
-    fun addPointCloud(pointCloud: PointCloud, block: PointCloud.() -> Unit = {}): PointCloud {
+    fun addPointCloud(pointCloud: PointCloud,
+                      name: String = "Point Cloud",
+                      block: PointCloud.() -> Unit = {}): PointCloud {
         pointCloud.setupPointCloud()
         pointCloud.spatial().position = Vector3f(0f, 0f, 0f)
+        pointCloud.name = generateUniqueName(name)
         return addNode(pointCloud, block = block)
     }
 
     /**
-     * Add Node n to the scene and set it as the active node/publish it to the event service if activePublish is true
+     * Add Node n to the scene and set it as the active node/publish it to the event service if activePublish is true.
      * @param n node to add to scene
      * @param activePublish flag to specify whether the node becomes active *and* is published in the inspector/services
+     * @param block an optional code that will be executed as a part of adding the node
+     * @param parent optional name of the parent node, default is the scene root
      * @return a Node corresponding to the Node
      */
     @JvmOverloads
-    fun <N: Node?> addNode(n: N, activePublish: Boolean = true, block: N.() -> Unit = {}): N {
+    fun <N: Node?> addNode(n: N, activePublish: Boolean = true, block: N.() -> Unit = {}, parent: Node = scene): N {
         n?.let {
             it.block()
-            scene.addChild(it)
+            // Ensure name is unique
+            n.name = generateUniqueName(n.name)
+            parent.addChild(it)
             objectService.addObject(n)
             if (blockOnNewNodes) {
                 Utils.blockWhile({ this.find(n.name) == null }, 20)
@@ -979,19 +903,70 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     /**
+     * Add Node n to the scene and set it as the active node/publish it to the event service if activePublish is true.
+     * This is technically only a shortcut method (to the same named method) that has left out the 'block' parameter.
+     * @param n node to add to scene
+     * @param activePublish flag to specify whether the node becomes active *and* is published in the inspector/services
+     * @param parent name of the parent node
+     * @return a Node corresponding to the Node
+     */
+    @JvmOverloads
+    fun <N: Node?> addNode(n: N, activePublish: Boolean = true, parent: Node): N {
+        return addNode(n, activePublish, {}, parent)
+    }
+
+    /**
+     * Make a node known to the services.
+     * Used for nodes that are not created/added by a SciView controlled process e.g. [BoundingGrid].
+     *
+     * @param n node to add to publish
+     */
+    fun <N: Node> publishNode(n: N): N {
+        n.let {
+            objectService.addObject(n)
+            eventService.publish(NodeAddedEvent(n))
+            (mainWindow as SwingMainWindow).nodePropertyEditor.updateProperties(n, rebuild = true)
+        }
+        return n
+    }
+
+    /**
      * Add a scenery Mesh to the scene
      * @param scMesh scenery mesh to add to scene
+     * @param name the name of the mesh
      * @return a Node corresponding to the mesh
      */
-    fun addMesh(scMesh: graphics.scenery.Mesh): graphics.scenery.Mesh {
+    fun addMesh(scMesh: graphics.scenery.Mesh, name: String ="Mesh"): graphics.scenery.Mesh {
         scMesh.ifMaterial {
             ambient = Vector3f(1.0f, 0.0f, 0.0f)
             diffuse = Vector3f(0.0f, 1.0f, 0.0f)
             specular = Vector3f(1.0f, 1.0f, 1.0f)
         }
         scMesh.spatial().position = Vector3f(0.0f, 0.0f, 0.0f)
+        scMesh.name = generateUniqueName(name)
         objectService.addObject(scMesh)
         return addNode(scMesh)
+    }
+
+    /**
+     * Add a scenery Mesh to the scene
+     * @param scMesh scenery mesh to add to scene
+     * @return a Node corresponding to the mesh
+     */
+    fun addMesh(scMesh: graphics.scenery.Mesh): graphics.scenery.Mesh {
+        return addMesh(scMesh, "Mesh")
+    }
+
+
+    /**
+     * Add an ImageJ mesh to the scene
+     * @param mesh net.imagej.mesh to add to scene
+     * @param name the name of the mesh
+     * @return a Node corresponding to the mesh
+     */
+    fun addMesh(mesh: Mesh, name: String="Mesh"): graphics.scenery.Mesh {
+        val scMesh = MeshConverter.toScenery(mesh)
+        return addMesh(scMesh, name=name)
     }
 
     /**
@@ -1000,8 +975,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return a Node corresponding to the mesh
      */
     fun addMesh(mesh: Mesh): graphics.scenery.Mesh {
-        val scMesh = MeshConverter.toScenery(mesh)
-        return addMesh(scMesh)
+        return addMesh(mesh, "Mesh")
     }
 
     /**
@@ -1009,6 +983,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Remove a Mesh from the scene
      * @param scMesh mesh to remove from scene
      */
+    @Deprecated("Please use SciView.deleteNode() instead.", replaceWith = ReplaceWith("SciView.deleteNode()"))
     fun removeMesh(scMesh: graphics.scenery.Mesh?) {
         scene.removeChild(scMesh!!)
     }
@@ -1182,7 +1157,18 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     /**
      * Delete the current active node
      */
-    fun deleteActiveNode() {
+    fun deleteActiveNode(askUser: Boolean = false) {
+        if(askUser && activeNode != null){
+            val options = arrayOf("Cancel", "Delete ${activeNode!!.name}")
+            val x = JOptionPane.showOptionDialog(
+                null, "Please confirm delete of ${activeNode!!.name}? ",
+                "Delete confirm",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[1]
+            )
+            if (x == 0){
+                return
+            }
+        }
         deleteNode(activeNode)
     }
 
@@ -1192,7 +1178,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param activePublish whether the deletion should be published
      */
     @JvmOverloads
-    fun deleteNode(node: Node?, activePublish: Boolean = true) {
+fun deleteNode(node: Node?, activePublish: Boolean = true) {
         if(node is Volume) {
             node.volumeManager.remove(node)
             val toRemove = ArrayList<Any>()
@@ -1266,9 +1252,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     /**
+     * [Deprecated: use addNode]
      * Add a child to the scene. you probably want addNode
      * @param node node to add as a child to the scene
      */
+    @Deprecated("Please use SciView.addNode() instead.", replaceWith = ReplaceWith("SciView.addNode()"))
     fun addChild(node: Node) {
         scene.addChild(node)
     }
@@ -1280,6 +1268,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     fun setColormap(n: Node, lutName: String) {
         try {
+            n.metadata["sciview.colormapName"] = lutName
             setColormap(n, lutService.loadLUT(lutService.findLUTs()[lutName]))
         } catch (e: IOException) {
             e.printStackTrace()
@@ -1294,7 +1283,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     fun setColormap(n: Node, colorTable: ColorTable) {
         val copies = 16
         val byteBuffer = ByteBuffer.allocateDirect(
-            4 * colorTable.length * copies) // Num bytes * num components * color map length * height of color map texture
+                4 * colorTable.length * copies) // Num bytes * num components * color map length * height of color map texture
         val tmp = ByteArray(4 * colorTable.length)
         for (k in 0 until colorTable.length) {
             for (c in 0 until colorTable.componentCount) {
@@ -1350,23 +1339,54 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return The volume node corresponding to the [Dataset]-backed volume that has just been added.
      */
     fun addVolume(
+            image: Dataset,
+            voxelDimensions: FloatArray? = null,
+            block: Volume.() -> Unit = {}
+    ): Volume {
+        return addVolume(image, "Volume", voxelDimensions, block)
+    }
+
+    /**
+     * Returns the Dataset's scale/resolution converted to sciview units
+     *
+     * @param image the [Dataset]
+     * @return A [FloatArray] representing the image's 3D scale in sciview space
+     */
+    fun getSciviewScale(image: Dataset): FloatArray {
+        val voxelDims = FloatArray(3)
+        var axisNames = arrayOf("X", "Y", "Z")
+        for (axisIdx in voxelDims.indices) {
+            var d = (0 until image.numDimensions()).filter { idx -> image.axis(idx).type().label == axisNames[axisIdx] }.first()
+            val inValue = image.axis(d).averageScale(0.0, 1.0)
+            if (image.axis(d).unit() == null || d >= axes.size) {
+                voxelDims[axisIdx] = inValue.toFloat()
+            } else {
+                val imageAxisUnit = image.axis(d).unit().replace("µ", "u")
+                val sciviewAxisUnit = axis(axisIdx)!!.unit().replace("µ", "u")
+
+                voxelDims[axisIdx] = unitService.value(inValue, imageAxisUnit, sciviewAxisUnit).toFloat()
+            }
+        }
+        return voxelDims
+    }
+
+    /**
+     * Adds a [Dataset]-backed [Volume] to the scene.
+     *
+     * @param image The [Dataset] to add.
+     * @param name The name of the [Volume].
+     * @param voxelDimensions An array containing the relative voxel dimensions of the dataset.
+     * @param block A lambda with additional code to execute upon adding the volume.
+     * @return The volume node corresponding to the [Dataset]-backed volume that has just been added.
+     */
+    fun addVolume(
         image: Dataset,
+        name: String = "Volume",
         voxelDimensions: FloatArray? = null,
         block: Volume.() -> Unit = {}
     ): Volume {
         return if(voxelDimensions == null) {
-            val voxelDims = FloatArray(image.numDimensions())
-            for (d in voxelDims.indices) {
-                val inValue = image.axis(d).averageScale(0.0, 1.0)
-                if (image.axis(d).unit() == null) {
-                    voxelDims[d] = inValue.toFloat()
-                } else {
-                    val imageAxisUnit = image.axis(d).unit().replace("µ", "u")
-                    val sciviewAxisUnit = axis(d)!!.unit().replace("µ", "u")
-
-                    voxelDims[d] = unitService.value(inValue, imageAxisUnit, sciviewAxisUnit).toFloat()
-                }
-            }
+            val voxelDims = getSciviewScale(image)
             addVolume(image.imgPlus, image.name, voxelDims, block)
         } else {
             addVolume(image.imgPlus, image.name, voxelDimensions, block)
@@ -1413,7 +1433,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                 s = RandomAccessibleIntervalSource(stack, voxelType, sourceTransform, name)
             }
             val source = BigDataViewer.wrapWithTransformedSource(
-                SourceAndConverter(s, BigDataViewer.createConverterToARGB(voxelType)))
+                    SourceAndConverter(s, BigDataViewer.createConverterToARGB(voxelType)))
             converterSetups.add(BigDataViewer.createConverterSetup(source, setupId.getAndIncrement()))
             sources.add(source)
         }
@@ -1442,7 +1462,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                                        numTimepoints: Int,
                                        name: String = "Volume",
                                        vararg voxelDimensions: Float,
-                                       block: Volume.() -> Unit = {}): Volume {
+                                       block: Volume.() -> Unit = {},
+                                       colormapName: String = "Fire.lut"): Volume {
         var timepoints = numTimepoints
         var cacheControl: CacheControl? = null
 
@@ -1472,10 +1493,12 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         val ds = RAISource<T>(voxelType, sources, converterSetups, timepoints, cacheControl)
         val options = VolumeViewerOptions()
         val v: Volume = RAIVolume(ds, options, hub)
+        // Note we override scenery's default scale of mm
+        // v.pixelToWorldRatio = 0.1f
         v.name = name
         v.metadata["sources"] = sources
         v.metadata["VoxelDimensions"] = voxelDimensions
-        v.spatial().scale = Vector3f(1.0f, voxelDimensions[1]/voxelDimensions[0], voxelDimensions[2]/voxelDimensions[0]) * v.pixelToWorldRatio * 10.0f
+        v.spatial().scale = Vector3f(voxelDimensions[0], voxelDimensions[1], voxelDimensions[2]) * v.pixelToWorldRatio
         val tf = v.transferFunction
         val rampMin = 0f
         val rampMax = 0.1f
@@ -1485,6 +1508,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         tf.addControlPoint(1.0f, rampMax)
         val bg = BoundingGrid()
         bg.node = v
+
+        // Set default colormap
+        v.metadata["sciview.colormapName"] = colormapName
+        v.colormap = Colormap.fromColorTable(getLUT(colormapName))
 
         imageToVolumeMap[image] = v
         return addNode(v, block = block)
@@ -1767,6 +1794,52 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
     fun getAvailableServices() {
         println(scijavaContext!!.serviceIndex)
+    }
+
+    /**
+     * Return the color table corresponding to the [lutName]
+     * @param lutName a String represening an ImageJ style LUT name, like Fire.lut
+     * @return a [ColorTable] corresponding to the LUT or null if LUT not available
+     */
+    fun getLUT(lutName: String = "Fire.lut"): ColorTable {
+        try {
+            refreshLUTs()
+            var lutResult = availableLUTs[lutName]
+            return lutService.loadLUT(lutResult)
+        } catch (e: IOException) {
+            log.error("LUT $lutName not available")
+            e.printStackTrace()
+            throw e
+        }
+    }
+
+    /**
+     * Refresh the cache of available LUTs fetched from LutService
+     */
+    private fun refreshLUTs() {
+        if(availableLUTs.isEmpty()) {
+            availableLUTs.putAll(lutService.findLUTs().entries.sortedBy { it.key }.map { it.key to it.value })
+        }
+    }
+
+    /**
+     * Return a list of available LUTs/colormaps
+     * @return a list of LUT names
+     */
+    fun getAvailableLUTs(): List<String> {
+        refreshLUTs()
+        return availableLUTs.map {entry -> entry.key}
+    }
+
+    /**
+     * Return ProjectDirectories for sciview.
+     *
+     * Use this to find the location of cache, etc.
+     *
+     * @return a [ProjectDirectories] for sciview
+     */
+    fun getProjectDirectories(): ProjectDirectories {
+        return ProjectDirectories.from("sc", "iview", "sciview")
     }
 
     companion object {
