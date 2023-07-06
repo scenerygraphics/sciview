@@ -57,6 +57,7 @@ import graphics.scenery.utils.Statistics
 import graphics.scenery.utils.extensions.times
 import graphics.scenery.volumes.Colormap
 import graphics.scenery.volumes.RAIVolume
+import graphics.scenery.volumes.TransferFunction
 import graphics.scenery.volumes.Volume
 import graphics.scenery.volumes.Volume.Companion.fromXML
 import graphics.scenery.volumes.Volume.Companion.setupId
@@ -86,6 +87,7 @@ import net.imglib2.type.numeric.integer.UnsignedByteType
 import net.imglib2.view.Views
 import org.joml.Quaternionf
 import org.joml.Vector3f
+import org.joml.Vector4f
 import org.scijava.Context
 import org.scijava.`object`.ObjectService
 import org.scijava.display.Display
@@ -101,6 +103,7 @@ import org.scijava.thread.ThreadService
 import org.scijava.util.ColorRGB
 import org.scijava.util.Colors
 import org.scijava.util.VersionUtils
+import sc.iview.commands.demo.animation.ParticleDemo
 import sc.iview.event.NodeActivatedEvent
 import sc.iview.event.NodeAddedEvent
 import sc.iview.event.NodeChangedEvent
@@ -111,10 +114,12 @@ import sc.iview.ui.MainWindow
 import sc.iview.ui.SwingMainWindow
 import sc.iview.ui.TaskManager
 import java.awt.event.WindowListener
+import java.io.File
 import java.io.IOException
 import java.net.URL
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
+import java.nio.file.Path
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -129,6 +134,7 @@ import kotlin.collections.LinkedHashMap
 import javax.swing.JOptionPane
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.system.measureTimeMillis
 
 /**
  * Main SciView class.
@@ -754,6 +760,132 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             light.spatial().position = Vector3f(x, y, z)
         }
     }
+
+    @Throws(IOException::class)
+    fun openDirTiff(source: Path, onlyFirst: Int? = null)
+    {
+        val v = Volume.fromPath(source, hub, onlyFirst)
+        v.name = "volume"
+        v.spatial().position = Vector3f(-3.0f, 10.0f, 0.0f)
+        v.colormap = Colormap.get("jet")
+        v.spatial().scale = Vector3f(15.0f, 15.0f,45.0f)
+        v.transferFunction = TransferFunction.ramp(0.05f, 0.8f)
+        v.metadata["animating"] = true
+        v.converterSetups.firstOrNull()?.setDisplayRange(0.0, 1500.0)
+        v.visible = true
+
+        v.spatial().wantsComposeModel = true
+        v.spatial().updateWorld(true)
+//        System.out.println("v.model: " + v.model)
+        addChild(v)
+//        System.out.println("v.getDimensions: "+ v.getDimensions())
+//
+//        System.out.println(" v.pixelToWorldRatio: "+  v.pixelToWorldRatio)
+//        System.out.println("v.world.matrix: " + v.spatial().world)
+    }
+
+    data class PointInTrack(
+            val t: Int,
+            val loc: Vector3f,
+            val cellId: Long,
+            val parentId: Long,
+            val nodeScore: Float,
+            val edgeScore: Float
+    )
+
+    data class Track(
+            val track: List<PointInTrack>,
+            val trackId: Int
+    )
+
+    @Throws(IOException::class)
+    fun openTrackFile(file: File)
+    {
+        val lines = file.readLines()
+        var track = ArrayList<PointInTrack>()
+        val tracks = ArrayList<Track>()
+        val separator = ","
+
+        var lastTrackId = -1
+        lines.drop(1).forEach { line ->
+            val tokens = line.split(separator)
+            val t = tokens[0].toInt()
+            val z = tokens[1].toFloat()  -2000f
+            val y = tokens[2].toFloat() -800f
+            val x = tokens[3].toFloat() -1300f
+            val cellId = tokens[4].toLong()
+            val parentId = tokens[5].toLong()
+            val trackId = tokens[6].toInt()
+            val nodeScore = tokens[7].toFloat()
+            val edgeScore = tokens[8].toFloat()/45.0f
+
+            val currentPointInTrack =  PointInTrack(
+                    t,
+                    Vector3f(x,y,z),
+                    cellId,
+                    parentId,
+                    nodeScore,
+                    edgeScore
+            )
+            if(lastTrackId != trackId)
+            {
+                lastTrackId = trackId
+                val sortedTrack = track.sortedBy { it.t }
+                tracks.add(Track(sortedTrack, trackId))
+
+                track.clear()
+            }
+            track.add(currentPointInTrack)
+        }
+        val timeCost = measureTimeMillis {
+            addTracks(tracks)
+        }
+        println("time: $timeCost")
+    }
+
+    fun addTracks(tracks: ArrayList<Track>)
+    {
+        val rng = Random(17)
+        for(track in tracks)
+        {
+            if(track.trackId > 10)
+            {
+                continue
+            }
+            System.out.println("add track: "+ track.trackId.toString() )
+            val master = Cylinder(0.1f, 1.0f, 10)
+//            master.setMaterial (ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag"))
+            master.setMaterial(ShaderMaterial.fromClass(ParticleDemo::class.java))
+            master.ifMaterial{
+                ambient = Vector3f(0.1f, 0f, 0f)
+                diffuse = Vector3f(0.05f, 0f, 0f)
+                metallic = 0.01f
+                roughness = 0.5f
+            }
+
+            val mInstanced = InstancedNode(master)
+            mInstanced.name = "TrackID-${track.trackId}"
+            mInstanced.instancedProperties["Color"] = { Vector4f(1.0f) }
+            addNode(mInstanced)
+
+            var cnt = 0
+            val a = rng.nextFloat()
+            val b = rng.nextFloat()
+            track.track.windowed(2,1).forEach { pair ->
+                cnt = cnt + 1
+                val element = mInstanced.addInstance()
+                element.name ="EdgeID-$cnt"
+                element.instancedProperties["Color"] =  { Vector4f( a,b,pair[0].edgeScore, 1.0f) }
+                element.spatial().orientBetweenPoints(Vector3f(pair[0].loc).mul(0.1f) , Vector3f(pair[1].loc).mul(0.1f) , rescale = true, reposition = true)
+                //mInstanced.instances.add(element)
+
+            }
+        }
+
+    }
+
+
+
 
     /**
      * Open a file specified by the source path. The file can be anything that SciView knows about: mesh, volume, point cloud

@@ -5,7 +5,7 @@ import graphics.scenery.controls.OpenVRHMD
 import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.TrackerRole
 import graphics.scenery.controls.behaviours.ControllerDrag
-import graphics.scenery.controls.eyetracking.PupilEyeTrackerNew
+import graphics.scenery.controls.eyetracking.PupilEyeTracker
 import graphics.scenery.numerics.Random
 import graphics.scenery.textures.Texture
 import graphics.scenery.utils.MaybeIntersects
@@ -53,7 +53,7 @@ class EyeTrackingDemo: Command{
     @Parameter
     private lateinit var log: LogService
 
-    val pupilTracker = PupilEyeTrackerNew(calibrationType = PupilEyeTrackerNew.CalibrationType.WorldSpace, port = System.getProperty("PupilPort", "50020").toInt())
+    val pupilTracker = PupilEyeTracker(calibrationType = PupilEyeTracker.CalibrationType.WorldSpace, port = System.getProperty("PupilPort", "50020").toInt())
     lateinit var hmd: OpenVRHMD
     val referenceTarget = Icosphere(0.004f, 2)
     val calibrationTarget = Icosphere(0.02f, 2)
@@ -468,7 +468,7 @@ class EyeTrackingDemo: Command{
 
                     pupilTracker.onGazeReceived = when (pupilTracker.calibrationType) {
                         //NEW
-                        PupilEyeTrackerNew.CalibrationType.WorldSpace -> { gaze ->
+                        PupilEyeTracker.CalibrationType.WorldSpace -> { gaze ->
                             if (gaze.confidence > confidenceThreshold) {
                                 val p = gaze.gazePoint()
                                 referenceTarget.visible = true
