@@ -3,8 +3,8 @@ package sc.iview.commands.demo.advanced
 import org.joml.Vector3f
 import org.joml.Matrix4f
 import org.joml.Quaternionf
-import graphics.scenery.utils.LazyLogger
 import graphics.scenery.utils.extensions.*
+import graphics.scenery.utils.lazyLogger
 import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.math.sqrt
@@ -16,7 +16,7 @@ import kotlin.math.sqrt
  */
 class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix4f) {
 
-	private val logger by LazyLogger()
+	private val logger by lazyLogger()
 	
 	val timepoints = LinkedHashMap<Int, ArrayList<SpineMetadata>>()
 
@@ -246,7 +246,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 	}
 
 	companion object {
-		private val logger by LazyLogger(System.getProperty("scenery.LogLevel", "info"))
+		private val logger by lazyLogger(System.getProperty("scenery.LogLevel", "info"))
 
 		fun fromIncompleteCSV(csv: File, separator: String = ","): HedgehogAnalysis {
 			logger.info("Loading spines from incomplete CSV at ${csv.absolutePath}")
