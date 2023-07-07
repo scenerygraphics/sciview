@@ -95,7 +95,7 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
                         if(panel.component.isVisible) {
                             label.text = "<html><strong>▼ ${group.key}</strong></html>"
                         } else {
-                            label.text = "<html><strong>▶ ${group.key}</strong></html>"
+                            label.text = """<html><strong><span style="color: gray;">▶</span> ${group.key}</strong></html>"""
                         }
                         inputPanel.component.revalidate()
                     }
