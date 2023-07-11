@@ -22,6 +22,8 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+
+
 public class DefaultLogger extends Logger {
   @SuppressWarnings("UnusedParameters")
   public DefaultLogger(String category) { }

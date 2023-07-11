@@ -29,6 +29,7 @@
 package sc.iview.io;
 
 import bdv.util.AxisOrder;
+import bvv.core.VolumeViewerOptions;
 import graphics.scenery.Group;
 import graphics.scenery.Node;
 import graphics.scenery.primitives.PointCloud;
@@ -46,7 +47,6 @@ import org.scijava.plugin.Plugin;
 import sc.iview.SciView;
 import sc.iview.SciViewService;
 import sc.iview.process.MeshConverter;
-import tpietzsch.example2.VolumeViewerOptions;
 
 import java.io.File;
 import java.io.IOException;

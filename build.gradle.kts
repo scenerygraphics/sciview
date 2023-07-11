@@ -40,7 +40,7 @@ dependencies {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "0.8.0"
+    val sceneryVersion = "0.8.2-SNAPSHOT"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
@@ -219,6 +219,7 @@ tasks {
             propertiesNode.appendNode("lwjgl.version", "3.3.1")
 
             val versionedArtifacts = listOf("scenery",
+                                            "directories",
                                             "flatlaf",
                                             "kotlin-stdlib-common",
                                             "kotlin-stdlib",
