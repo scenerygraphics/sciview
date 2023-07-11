@@ -219,6 +219,7 @@ tasks {
             propertiesNode.appendNode("lwjgl.version", "3.3.1")
 
             val versionedArtifacts = listOf("scenery",
+                                            "directories",
                                             "flatlaf",
                                             "kotlin-stdlib-common",
                                             "kotlin-stdlib",
