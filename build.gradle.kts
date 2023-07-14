@@ -113,7 +113,7 @@ dependencies {
 //    implementation(n5.imglib2)
     implementation("org.janelia.saalfeldlab:n5")
     implementation("org.janelia.saalfeldlab:n5-hdf5")
-    implementation("org.janelia.saalfeldlab:n5-ij:3.2.4-SNAPSHOT")
+    implementation("org.janelia.saalfeldlab:n5-ij")
     implementation("org.janelia.saalfeldlab:n5-imglib2:5.0.0")
     implementation("org.janelia.saalfeldlab:n5-viewer_fiji:5.3.0")
     //implementation("com.github.saalfeldlab:n5-viewer:ec0b177")
