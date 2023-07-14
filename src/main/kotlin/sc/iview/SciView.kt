@@ -869,9 +869,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     /**
-     * Add Node n to the scene and set it as the active node/publish it to the event service if activePublish is true
+     * Add Node n to the scene and set it as the active node/publish it to the event service if activePublish is true.
      * @param n node to add to scene
      * @param activePublish flag to specify whether the node becomes active *and* is published in the inspector/services
+     * @param block an optional code that will be executed as a part of adding the node
+     * @param parent optional name of the parent node, default is the scene root
      * @return a Node corresponding to the Node
      */
     @JvmOverloads
@@ -896,6 +898,19 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             }
         }
         return n
+    }
+
+    /**
+     * Add Node n to the scene and set it as the active node/publish it to the event service if activePublish is true.
+     * This is technically only a shortcut method (to the same named method) that has left out the 'block' parameter.
+     * @param n node to add to scene
+     * @param activePublish flag to specify whether the node becomes active *and* is published in the inspector/services
+     * @param parent name of the parent node
+     * @return a Node corresponding to the Node
+     */
+    @JvmOverloads
+    fun <N: Node?> addNode(n: N, activePublish: Boolean = true, parent: Node): N {
+        return addNode(n, activePublish, {}, parent)
     }
 
     /**
@@ -966,6 +981,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Remove a Mesh from the scene
      * @param scMesh mesh to remove from scene
      */
+    @Deprecated("Please use SciView.deleteNode() instead.", replaceWith = ReplaceWith("SciView.deleteNode()"))
     fun removeMesh(scMesh: graphics.scenery.Mesh?) {
         scene.removeChild(scMesh!!)
     }
@@ -1234,9 +1250,11 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
     }
 
     /**
+     * [Deprecated: use addNode]
      * Add a child to the scene. you probably want addNode
      * @param node node to add as a child to the scene
      */
+    @Deprecated("Please use SciView.addNode() instead.", replaceWith = ReplaceWith("SciView.addNode()"))
     fun addChild(node: Node) {
         scene.addChild(node)
     }
@@ -1248,6 +1266,7 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
      */
     fun setColormap(n: Node, lutName: String) {
         try {
+            n.metadata["sciview.colormapName"] = lutName
             setColormap(n, lutService.loadLUT(lutService.findLUTs()[lutName]))
         } catch (e: IOException) {
             e.printStackTrace()
@@ -1326,6 +1345,30 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
     }
 
     /**
+     * Returns the Dataset's scale/resolution converted to sciview units
+     *
+     * @param image the [Dataset]
+     * @return A [FloatArray] representing the image's 3D scale in sciview space
+     */
+    fun getSciviewScale(image: Dataset): FloatArray {
+        val voxelDims = FloatArray(3)
+        var axisNames = arrayOf("X", "Y", "Z")
+        for (axisIdx in voxelDims.indices) {
+            var d = (0 until image.numDimensions()).filter { idx -> image.axis(idx).type().label == axisNames[axisIdx] }.first()
+            val inValue = image.axis(d).averageScale(0.0, 1.0)
+            if (image.axis(d).unit() == null || d >= axes.size) {
+                voxelDims[axisIdx] = inValue.toFloat()
+            } else {
+                val imageAxisUnit = image.axis(d).unit().replace("µ", "u")
+                val sciviewAxisUnit = axis(axisIdx)!!.unit().replace("µ", "u")
+
+                voxelDims[axisIdx] = unitService.value(inValue, imageAxisUnit, sciviewAxisUnit).toFloat()
+            }
+        }
+        return voxelDims
+    }
+
+    /**
      * Adds a [Dataset]-backed [Volume] to the scene.
      *
      * @param image The [Dataset] to add.
@@ -1341,18 +1384,7 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
         block: Volume.() -> Unit = {}
     ): Volume {
         return if(voxelDimensions == null) {
-            val voxelDims = FloatArray(image.numDimensions())
-            for (d in voxelDims.indices) {
-                val inValue = image.axis(d).averageScale(0.0, 1.0)
-                if (image.axis(d).unit() == null) {
-                    voxelDims[d] = inValue.toFloat()
-                } else {
-                    val imageAxisUnit = image.axis(d).unit().replace("µ", "u")
-                    val sciviewAxisUnit = axis(d)!!.unit().replace("µ", "u")
-
-                    voxelDims[d] = unitService.value(inValue, imageAxisUnit, sciviewAxisUnit).toFloat()
-                }
-            }
+            val voxelDims = getSciviewScale(image)
             addVolume(image.imgPlus, image.name, voxelDims, block)
         } else {
             addVolume(image.imgPlus, image.name, voxelDimensions, block)
@@ -1459,10 +1491,12 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
         val ds = RAISource<T>(voxelType, sources, converterSetups, timepoints, cacheControl)
         val options = VolumeViewerOptions()
         val v: Volume = RAIVolume(ds, options, hub)
+        // Note we override scenery's default scale of mm
+        // v.pixelToWorldRatio = 0.1f
         v.name = name
         v.metadata["sources"] = sources
         v.metadata["VoxelDimensions"] = voxelDimensions
-        v.spatial().scale = Vector3f(1.0f, voxelDimensions[1]/voxelDimensions[0], voxelDimensions[2]/voxelDimensions[0]) * v.pixelToWorldRatio * 10.0f
+        v.spatial().scale = Vector3f(voxelDimensions[0], voxelDimensions[1], voxelDimensions[2]) * v.pixelToWorldRatio
         val tf = v.transferFunction
         val rampMin = 0f
         val rampMax = 0.1f
