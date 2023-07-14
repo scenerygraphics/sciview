@@ -4,15 +4,13 @@ import java.net.URL
 import sciview.*
 
 plugins {
-    val ktVersion = "1.8.22"
-    val dokkaVersion = "1.8.20"
-
     java
-    kotlin("jvm") version ktVersion
-    kotlin("kapt") version ktVersion
+    // Kotlin/Dokka versions are managed in gradle.properties
+    kotlin("jvm")
+    kotlin("kapt")
     sciview.publish
     sciview.sign
-    id("org.jetbrains.dokka") version dokkaVersion
+    id("org.jetbrains.dokka")
     jacoco
     `maven-publish`
     `java-library`
@@ -34,8 +32,9 @@ repositories {
 }
 
 dependencies {
-    val ktVersion = "1.8.22"
-    implementation(platform("org.scijava:pom-scijava:35.1.1"))
+    val scijavaParentPomVersion = project.properties["scijavaParentPOMVersion"]
+    val ktVersion = project.properties["kotlinVersion"]
+    implementation(platform("org.scijava:pom-scijava:$scijavaParentPomVersion"))
 
     // Graphics dependencies
 
@@ -155,6 +154,7 @@ tasks {
     }
 
     withType<GenerateMavenPom>().configureEach {
+        val scijavaParentPomVersion = project.properties["scijavaParentPOMVersion"]
         val matcher = Regex("""generatePomFileFor(\w+)Publication""").matchEntire(name)
         val publicationName = matcher?.let { it.groupValues[1] }
 
@@ -165,7 +165,7 @@ tasks {
             val parent = asNode().appendNode("parent")
             parent.appendNode("groupId", "org.scijava")
             parent.appendNode("artifactId", "pom-scijava")
-            parent.appendNode("version", "35.1.1")
+            parent.appendNode("version", "$scijavaParentPomVersion")
             parent.appendNode("relativePath")
 
             val repositories = asNode().appendNode("repositories")
