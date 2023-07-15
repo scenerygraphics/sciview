@@ -6,13 +6,13 @@
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *
+ * 
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -26,40 +26,53 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add
+package sc.iview.commands.add
 
-import graphics.scenery.proteins.Protein
-import graphics.scenery.proteins.RibbonDiagram
 import org.joml.Vector3f
 import org.scijava.command.Command
-import org.scijava.command.DynamicCommand
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
+import org.scijava.util.ColorRGB
 import sc.iview.SciView
-import sc.iview.commands.MenuWeights
+import sc.iview.commands.MenuWeights.ADD
+import sc.iview.commands.MenuWeights.EDIT_ADD_CONE
 
 /**
  * Command to add a box to the scene
  *
- * @author Kyle Harrington
+ * @author Jan Tiemann
  */
-@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Edit", weight = MenuWeights.EDIT), Menu(label = "Add", weight = MenuWeights.EDIT_ADD), Menu(label = "Protein from PDB  ID ...", weight = MenuWeights.EDIT_ADD_BOX)])
-class AddProtein : DynamicCommand() {
+@Plugin(
+    type = Command::class,
+    menuRoot = "SciView",
+    menu = [Menu(label = "Add", weight = ADD), Menu(
+        label = "Cone...",
+        weight = EDIT_ADD_CONE
+    )]
+)
+class AddCone : Command {
 
     @Parameter
     private lateinit var sciView: SciView
 
-    @Parameter(label = "Protein ID", persist = false)
-    private var protein: String = "2rnm"
+    // FIXME
+    //    @Parameter
+    //    private String position = "0; 0; 0";
 
-    @Parameter(label = "Scale")
-    private var scale: Float = 0.1f
+    @Parameter
+    private var height = 1.0f
+
+    @Parameter
+    private var radius = 1.0f
+
+    @Parameter
+    private var color: ColorRGB = SciView.DEFAULT_COLOR;
 
     override fun run() {
-        val ribbon = RibbonDiagram(Protein.fromID(protein))
-        ribbon.name = protein
-        ribbon.spatial().scale = Vector3f(scale)
-        sciView.addNode(ribbon, true)
+        //final Vector3 pos = ClearGLVector3.parse( position );
+        val pos = Vector3f(0f, 0f, 0f)
+
+        sciView.addCone(pos,radius,height,color,20)
     }
 }

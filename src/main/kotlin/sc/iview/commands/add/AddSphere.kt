@@ -26,47 +26,44 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add;
+package sc.iview.commands.add
 
-import org.joml.Vector3f;
-import org.scijava.command.Command;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import org.scijava.util.ColorRGB;
-
-import sc.iview.SciView;
-
-import static sc.iview.commands.MenuWeights.*;
+import org.joml.Vector3f
+import org.scijava.command.Command
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights
+import sc.iview.commands.MenuWeights.EDIT_ADD_SPHERE
 
 /**
  * Command to add a sphere in the scene
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Add", weight = EDIT_ADD), //
-                 @Menu(label = "Sphere...", weight = EDIT_ADD_SPHERE) })
-public class AddSphere implements Command {
-
+@Plugin(
+    type = Command::class,
+    menuRoot = "SciView",
+    menu = [Menu(label = "Add", weight = MenuWeights.ADD), Menu(
+        label = "Sphere...",
+        weight = EDIT_ADD_SPHERE
+    )]
+)
+class AddSphere : Command {
     @Parameter
-    private SciView sciView;
+    private lateinit var sciView: SciView
 
-//    @Parameter
-//    private String position = "0; 0; 0";
-
+    //    @Parameter
+    //    private String position = "0; 0; 0";
     @Parameter
-    private float radius = 1.0f;
+    private val radius = 1.0f
 
     @Parameter(required = false)
-    private ColorRGB color = SciView.DEFAULT_COLOR;
-
-    @Override
-    public void run() {
+    private val color = SciView.DEFAULT_COLOR
+    override fun run() {
         //final Vector3 pos = ClearGLVector3.parse( position );
-        final Vector3f pos = new Vector3f(0, 0, 0);
-        sciView.addSphere( pos, radius, color );
+        val pos = Vector3f(0.0f)
+        sciView.addSphere(pos, radius, color)
     }
 }

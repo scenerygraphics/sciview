@@ -26,36 +26,21 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add
+package sc.iview.commands.add
 
-import bdv.BigDataViewer
-import bdv.tools.brightness.ConverterSetup
-import bdv.util.AxisOrder
-import bdv.util.RandomAccessibleIntervalSource
-import bdv.util.RandomAccessibleIntervalSource4D
-import bdv.viewer.Source
-import bdv.viewer.SourceAndConverter
-import graphics.scenery.volumes.Volume
 import net.imagej.Dataset
 import net.imagej.axis.CalibratedAxis
-import net.imagej.axis.DefaultAxisType
-import net.imagej.axis.DefaultLinearAxis
-import net.imagej.ops.OpService
 import net.imagej.units.UnitService
-import net.imglib2.IterableRealInterval
 import net.imglib2.RandomAccessibleInterval
 import net.imglib2.img.Img
-import net.imglib2.realtransform.AffineTransform3D
 import net.imglib2.type.numeric.RealType
 import net.imglib2.view.Views
 import org.scijava.command.Command
-import org.scijava.log.LogService
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
-import sc.iview.commands.MenuWeights.EDIT_ADD
 import kotlin.math.max
 import kotlin.math.min
 
@@ -64,21 +49,19 @@ import kotlin.math.min
  *
  * @author Kyle Harrington
  */
-@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Edit", weight = MenuWeights.EDIT), Menu(label = "Add", weight = EDIT_ADD), Menu(label = "Volume", weight = MenuWeights.EDIT_ADD_VOLUME)])
+@Plugin(
+    type = Command::class,
+    menuRoot = "SciView",
+    menu = [Menu(label = "Add", weight = MenuWeights.ADD), Menu(label = "Volume from ImageJ ...", weight = MenuWeights.EDIT_ADD_VOLUME)]
+)
 class AddVolume : Command {
-    @Parameter
-    private lateinit var log: LogService
-
-    @Parameter
-    private lateinit var ops: OpService
-
     @Parameter
     private lateinit var sciView: SciView
 
     @Parameter
     private lateinit var unitService: UnitService
 
-    @Parameter
+    @Parameter(autoFill = false)
     private lateinit var image: Dataset
 
     @Parameter(label = "Use voxel dimensions from image", callback = "setVoxelDimensions")

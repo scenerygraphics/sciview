@@ -30,7 +30,6 @@ package sc.iview.commands.demo.animation
 
 import bdv.util.BdvFunctions
 import graphics.scenery.numerics.OpenSimplexNoise
-import graphics.scenery.volumes.Volume
 import net.imglib2.FinalInterval
 import net.imglib2.Localizable
 import net.imglib2.RandomAccessibleInterval
@@ -70,9 +69,8 @@ class VolumeTimeseriesDemo : Command {
         val dataset = makeDataset()
 
         val bdv = BdvFunctions.show(dataset, "test")
-        sciView.addVolume(dataset, "test", floatArrayOf(1f, 1f, 1f)) {
+        sciView.addVolume(dataset, "Volume Render Demo", floatArrayOf(1f, 1f, 1f)) {
             pixelToWorldRatio = 10f
-            name = "Volume Render Demo"
             this.geometryOrNull()?.dirty = true
             this.spatialOrNull()?.needsUpdate = true
 

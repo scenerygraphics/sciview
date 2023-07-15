@@ -26,35 +26,54 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add;
+package sc.iview.commands.add
 
-import org.scijava.command.Command;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-
-import sc.iview.SciView;
-
-import static sc.iview.commands.MenuWeights.*;
+import org.joml.Vector3f
+import org.scijava.command.Command
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import org.scijava.util.ColorRGB
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights
+import sc.iview.commands.MenuWeights.EDIT_ADD_LINE
 
 /**
- * Command to add a point light to the scene
+ * Command to add a line in the scene
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Add", weight = EDIT_ADD), //
-                 @Menu(label = "Point Light", weight = EDIT_ADD_POINTLIGHT) })
-public class AddPointLight implements Command {
-
+@Plugin(
+    type = Command::class,
+    menuRoot = "SciView",
+    menu = [Menu(label = "Add", weight = MenuWeights.ADD), Menu(
+        label = "Line...",
+        weight = EDIT_ADD_LINE
+    )]
+)
+class AddLine : Command {
     @Parameter
-    private SciView sciView;
+    private lateinit var sciView: SciView
 
-    @Override
-    public void run() {
-        sciView.addPointLight();
+    // FIXME
+    //    @Parameter(label = "First endpoint")
+    //    private String start = "0; 0; 0";
+    //
+    //    @Parameter(label = "Second endpoint")
+    //    private String stop = "1; 1; 1";
+    @Parameter(required = false)
+    private lateinit var color: ColorRGB
+
+    @Parameter(label = "Edge width", min = "0")
+    private var edgeWidth = 1.0
+
+    override fun run() {
+        //Vector3[] endpoints = { JOMLVector3.parse( start ), JOMLVector3.parse( stop ) };
+        val endpoints = arrayOf(Vector3f(0f, 0f, 0f), Vector3f(1f, 1f, 1f))
+        if( !this::color.isInitialized ) {
+            color = SciView.DEFAULT_COLOR
+        }
+
+        sciView.addLine(endpoints, color, edgeWidth)
     }
-
 }

@@ -60,6 +60,8 @@ dependencies {
 
     implementation("com.formdev:flatlaf")
 
+    implementation("org.slf4j:slf4j-simple")
+
     // SciJava dependencies
 
     implementation("org.yaml:snakeyaml") {

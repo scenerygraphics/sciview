@@ -1455,19 +1455,16 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
     </T> */
     @JvmOverloads
     @Suppress("UNCHECKED_CAST")
-    fun <T : NumericType<T>> addVolume(sources: List<SourceAndConverter<T>>,
-                                       converterSetups: ArrayList<ConverterSetup>,
-                                       numTimepoints: Int,
-                                       name: String = "Volume",
-                                       vararg voxelDimensions: Float,
-                                       block: Volume.() -> Unit = {},
-                                       colormapName: String = "Fire.lut"): Volume {
+    fun <T : RealType<T>> addVolume(sources: List<SourceAndConverter<T>>,
+                                    converterSetups: ArrayList<ConverterSetup>,
+                                    numTimepoints: Int,
+                                    name: String = "Volume",
+                                    voxelDimensions: FloatArray,
+                                    block: Volume.() -> Unit = {},
+                                    colormapName: String = "Fire.lut"): Volume {
         var timepoints = numTimepoints
         var cacheControl: CacheControl? = null
 
-//        RandomAccessibleInterval<T> image =
-//                ((RandomAccessibleIntervalSource4D) sources.get(0).getSpimSource()).
-//                .getSource(0, 0);
         val image = sources[0].spimSource.getSource(0, 0)
         if (image is VolatileView<*, *>) {
             val viewData = (image as VolatileView<T, Volatile<T>>).volatileViewData
@@ -1488,7 +1485,18 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
         if (image.numDimensions() > 3) {
             timepoints = image.dimension(3).toInt()
         }
-        val ds = RAISource<T>(voxelType, sources, converterSetups, timepoints, cacheControl)
+
+        val ds = if(converterSetups != null) {
+            RAISource<T>(voxelType, sources, converterSetups, timepoints, cacheControl)
+        } else {
+            val cs = ArrayList<ConverterSetup>()
+            for ((setupId, source) in sources.withIndex()) {
+                cs.add(BigDataViewer.createConverterSetup(source, setupId))
+            }
+
+            RAISource<T>(voxelType, sources, cs, timepoints, cacheControl)
+        }
+
         val options = VolumeViewerOptions()
         val v: Volume = RAIVolume(ds, options, hub)
         // Note we override scenery's default scale of mm
@@ -1535,7 +1543,7 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
         for (source in sources) {
             converterSetups.add(BigDataViewer.createConverterSetup(source, setupId++))
         }
-        val v = addVolume(sources, converterSetups, numTimepoints, name, *voxelDimensions, block = block)
+        val v = addVolume(sources, converterSetups, numTimepoints, name, voxelDimensions, block = block)
         imageToVolumeMap[sources] = v
         return v
     }
