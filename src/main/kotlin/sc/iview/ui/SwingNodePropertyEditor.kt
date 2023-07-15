@@ -32,6 +32,8 @@ import com.intellij.ui.components.JBPanel
 import graphics.scenery.Camera
 import graphics.scenery.Node
 import graphics.scenery.Scene
+import graphics.scenery.volumes.TransferFunctionEditor
+import graphics.scenery.volumes.Volume
 import net.miginfocom.swing.MigLayout
 import org.joml.Quaternionf
 import org.joml.Vector3f
@@ -334,12 +336,21 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                 val pluginInstance = pluginService.createInstance(pluginInfo)
                 val harvester = pluginInstance as SwingGroupingInputHarvester
                 inputPanel = harvester.createInputPanel()
-                inputPanel.component.layout = MigLayout("fillx,wrap 1", "[right,fill,grow]")
+                inputPanel.component.layout = MigLayout("fillx,wrap 1,debug,insets 0 0 0 0", "[right,fill,grow]")
 
                 // Build the panel.
                 try {
                     harvester.buildPanel(inputPanel, module)
                     updatePropertiesPanel(inputPanel.component)
+
+                    // TODO: This needs to move to a widget and be included in Properties
+                    if(sceneNode is Volume) {
+                        val tfe = TransferFunctionEditor(sceneNode, sceneNode.name)
+                        tfe.preferredSize = Dimension(300, 300)
+                        tfe.layout = MigLayout("fillx,flowy,insets 0 0 0 0, debug", "[right,fill,grow]")
+                        inputPanel.component.add(tfe)
+                    }
+
                 } catch (exc: ModuleException) {
                     log.error(exc)
                     val stackTrace = DebugUtils.getStackTrace(exc)
