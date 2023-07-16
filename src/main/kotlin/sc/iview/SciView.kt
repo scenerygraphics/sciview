@@ -1176,7 +1176,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param activePublish whether the deletion should be published
      */
     @JvmOverloads
-fun deleteNode(node: Node?, activePublish: Boolean = true) {
+    fun deleteNode(node: Node?, activePublish: Boolean = true) {
         if(node is Volume) {
             node.volumeManager.remove(node)
             val toRemove = ArrayList<Any>()
@@ -1210,7 +1210,7 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
     fun dispose() {
         val objs: List<Node> = objectService.getObjects(Node::class.java)
         for (obj in objs) {
-            objectService.removeObject(obj)
+            deleteNode(obj, activePublish = false)
         }
         scijavaContext!!.service(SciViewService::class.java).close(this)
         close()
