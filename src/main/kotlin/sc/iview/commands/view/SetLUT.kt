@@ -65,7 +65,7 @@ class SetLUT : DynamicCommand() {
     @Parameter
     private lateinit var prefs: PrefService
 
-    @Parameter
+    @Parameter(label = "Apply to child nodes?")
     private var runRecursive: Boolean = false
 
     protected fun initLutName() {

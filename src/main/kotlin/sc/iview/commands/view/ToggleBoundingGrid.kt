@@ -30,6 +30,7 @@ package sc.iview.commands.view
 
 import graphics.scenery.BoundingGrid
 import graphics.scenery.Node
+import graphics.scenery.primitives.TextBoard
 import org.scijava.command.Command
 import org.scijava.log.LogService
 import org.scijava.plugin.Menu
@@ -52,7 +53,15 @@ class ToggleBoundingGrid : Command {
     @Parameter
     private lateinit var node: Node
 
-    override fun run() {
+    @Parameter(label = "Apply to child nodes?")
+    private var runRecursive: Boolean = false
+
+    fun toggleBoundingGrid(node: Node) {
+        // We need to skip BoundingGrid and TextBoard otherwise we get an infinite loop
+        if (node is BoundingGrid || node is TextBoard) {
+            return
+        }
+
         val bg = node.children.findLast { it is BoundingGrid } as? BoundingGrid
         if (bg != null) {
             bg.node = null
@@ -61,6 +70,14 @@ class ToggleBoundingGrid : Command {
             val newBg = BoundingGrid()
             newBg.node = node
             sciView.publishNode(newBg)
+        }
+    }
+
+    override fun run() {
+        if (runRecursive) {
+            node.runRecursive({node: Node -> toggleBoundingGrid(node)})
+        } else {
+            toggleBoundingGrid(node)
         }
     }
 }
