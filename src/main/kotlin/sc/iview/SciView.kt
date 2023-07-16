@@ -1155,7 +1155,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     /**
      * Delete the current active node
      */
-    fun deleteActiveNode(askUser: Boolean = false) {
+    fun deleteActiveNode(askUser: Boolean = false, runRecursive: Boolean = false) {
         if(askUser && activeNode != null){
             val options = arrayOf("Cancel", "Delete ${activeNode!!.name}")
             val x = JOptionPane.showOptionDialog(
@@ -1167,7 +1167,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                 return
             }
         }
-        deleteNode(activeNode)
+        if (runRecursive) {
+            activeNode?.runRecursive( { node: Node -> this.deleteNode(node) })
+        } else {
+            deleteNode(activeNode)
+        }
     }
 
     /**
@@ -1278,29 +1282,33 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param n node to apply colortable to
      * @param colorTable ColorTable to use
      */
-    fun setColormap(n: Node, colorTable: ColorTable) {
-        val copies = 16
-        val byteBuffer = ByteBuffer.allocateDirect(
-                4 * colorTable.length * copies) // Num bytes * num components * color map length * height of color map texture
-        val tmp = ByteArray(4 * colorTable.length)
-        for (k in 0 until colorTable.length) {
-            for (c in 0 until colorTable.componentCount) {
-                // TODO this assumes numBits is 8, could be 16
-                tmp[4 * k + c] = colorTable[c, k].toByte()
+    fun setColormap(n: Node, colorTable: ColorTable, runRecursive: Boolean = false) {
+        if (runRecursive) {
+            n.runRecursive( {node -> this.setColormap(node, colorTable) })
+        } else {
+            val copies = 16
+            val byteBuffer = ByteBuffer.allocateDirect(
+                    4 * colorTable.length * copies) // Num bytes * num components * color map length * height of color map texture
+            val tmp = ByteArray(4 * colorTable.length)
+            for (k in 0 until colorTable.length) {
+                for (c in 0 until colorTable.componentCount) {
+                    // TODO this assumes numBits is 8, could be 16
+                    tmp[4 * k + c] = colorTable[c, k].toByte()
+                }
+                if (colorTable.componentCount == 3) {
+                    tmp[4 * k + 3] = 255.toByte()
+                }
             }
-            if (colorTable.componentCount == 3) {
-                tmp[4 * k + 3] = 255.toByte()
+            for (i in 0 until copies) {
+                byteBuffer.put(tmp)
             }
-        }
-        for (i in 0 until copies) {
-            byteBuffer.put(tmp)
-        }
-        byteBuffer.flip()
-        n.metadata["sciviewColormap"] = colorTable
-        if (n is Volume) {
-            n.colormap = Colormap.fromColorTable(colorTable)
-            n.geometryOrNull()?.dirty = true
-            n.spatial().needsUpdate = true
+            byteBuffer.flip()
+            n.metadata["sciviewColormap"] = colorTable
+            if (n is Volume) {
+                n.colormap = Colormap.fromColorTable(colorTable)
+                n.geometryOrNull()?.dirty = true
+                n.spatial().needsUpdate = true
+            }
         }
     }
 

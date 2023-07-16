@@ -52,6 +52,9 @@ public class DeleteObject implements Command {
     @Parameter
     private SciView sciView;
 
+    @Parameter(label = "Delete children?")
+    private boolean runRecursive = false;
+
 // TODO it would be good if this could continue to use active node but also use an @Parameter by using a callback or sth
 //    @Parameter
 //    private Node node;
@@ -59,7 +62,7 @@ public class DeleteObject implements Command {
     @Override
     public void run() {
         if( sciView.getActiveNode() != null ) {
-            sciView.deleteActiveNode(false);
+            sciView.deleteActiveNode(false, runRecursive);
         }
     }
 
