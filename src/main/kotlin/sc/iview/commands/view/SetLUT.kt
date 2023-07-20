@@ -31,7 +31,6 @@ package sc.iview.commands.view
 import graphics.scenery.Node
 import net.imglib2.display.ColorTable
 import org.scijava.command.Command
-import org.scijava.command.CommandService
 import org.scijava.command.DynamicCommand
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
@@ -40,9 +39,7 @@ import org.scijava.prefs.PrefService
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights.VIEW
 import sc.iview.commands.MenuWeights.VIEW_SET_LUT
-import sc.iview.commands.demo.basic.VolumeRenderDemo
 import java.io.IOException
-import java.util.*
 
 
 /**
@@ -67,6 +64,9 @@ class SetLUT : DynamicCommand() {
 
     @Parameter
     private lateinit var prefs: PrefService
+
+    @Parameter(label = "Apply to child nodes?")
+    private var runRecursive: Boolean = false
 
     protected fun initLutName() {
         lutName = "Fire.lut"
@@ -97,8 +97,9 @@ class SetLUT : DynamicCommand() {
 
     override fun run() {
         node.metadata["sciview.colormapName"] = lutName
-        sciView.setColormap(node, colorTable)
+        sciView.setColormap(node, colorTable, runRecursive)
         // Trigger an update to the UI for the colormap
         sciView.publishNode(node)
     }
+
 }
