@@ -31,9 +31,8 @@ package sc.iview
 import graphics.scenery.*
 import graphics.scenery.primitives.Line
 import graphics.scenery.Node
-import graphics.scenery.controls.behaviours.FPSCameraControl
-import graphics.scenery.controls.behaviours.MovementCommand
-import graphics.scenery.controls.behaviours.SelectCommand
+import graphics.scenery.backends.RenderConfigReader
+import graphics.scenery.controls.behaviours.*
 import graphics.scenery.primitives.TextBoard
 import graphics.scenery.utils.lazyLogger
 import org.joml.Quaternionf
@@ -43,10 +42,13 @@ import org.joml.Vector4f
 import org.scijava.command.CommandService
 import org.scijava.ui.behaviour.Behaviour
 import org.scijava.ui.behaviour.ClickBehaviour
+import org.scijava.ui.behaviour.io.InputTriggerConfig
+import org.scijava.ui.behaviour.io.yaml.YamlConfigIO
 import sc.iview.commands.help.Help
 import sc.iview.controls.behaviours.*
 import sc.iview.controls.behaviours.Ruler
-import java.io.File
+import sc.iview.ui.SwingMainWindow
+import java.io.*
 import java.util.*
 import java.util.function.Supplier
 import kotlin.math.acos
@@ -76,7 +78,7 @@ open class Controls(val sciview: SciView) {
 
     lateinit var targetArcball: AnimatedCenteringBeforeArcBallControl
         protected set
-    
+
     protected var controlStack: Stack<HashMap<String, Any>> = Stack()
 
     /**
@@ -152,7 +154,7 @@ open class Controls(val sciview: SciView) {
                 }
                 control.key.startsWith(STASH_CONTROLSPARAMS_KEY) -> {
                     //processing mouse sensitivities and step sizes...
-                    parameters = control.value as ControlsParameters 
+                    parameters = control.value as ControlsParameters
                 }
             }
         }
@@ -163,7 +165,6 @@ open class Controls(val sciview: SciView) {
      * This is automatically called and should not be used directly
      */
     fun inputSetup() {
-        val h = inputHandler
         //when we get here, the Behaviours and key bindings from scenery are already in place
 
         //possibly, disable some (unused?) controls from scenery
@@ -173,6 +174,51 @@ open class Controls(val sciview: SciView) {
         h.removeBehaviour( "gamepad_movement_control");
         h.removeKeyBinding("gamepad_movement_control");
         */
+
+        val configFile = File(sciview.getProjectDirectories().configDir, ".keybindings.yaml")
+
+        useDefaultBindings(configFile.absolutePath)
+
+        if( configFile.exists() )
+            inputHandler.readFromFile(configFile)
+    }
+
+    private fun useDefaultBindings(bindingConfigFile: String) {
+        val h = inputHandler
+
+        // Load YAML config
+        var reader: Reader
+
+        try {
+            reader = FileReader(bindingConfigFile)
+        } catch (e: FileNotFoundException) {
+            logger.info("No custom key configuration found, using default keybindings.")
+            reader = StringReader("---\n" +
+                    "- !mapping" + "\n" +
+                    "  action: mouse_control" + "\n" +
+                    "  contexts: [all]" + "\n" +
+                    "  triggers: [button1, M]" + "\n" +
+                    "- !mapping" + "\n" +
+                    "  action: gamepad_movement_control" + "\n" +
+                    "  contexts: [all]" + "\n" +
+                    "  triggers: [button1]" + "\n" +
+                    "- !mapping" + "\n" +
+                    "  action: gamepad_camera_control" + "\n" +
+                    "  contexts: [all]" + "\n" +
+                    "  triggers: [G]" + "\n" +
+                    "- !mapping" + "\n" +
+                    "  action: scroll1" + "\n" +
+                    "  contexts: [all]" + "\n" +
+                    "  triggers: [scroll]" + "\n" +
+                    "")
+        }
+
+        var config = InputTriggerConfig(YamlConfigIO.read(reader))
+
+        val settings = sciview.hub.get(SceneryElement.Settings) as? Settings
+        val slowMovementSpeed: Float = settings?.get("Input.SlowMovementSpeed", 0.5f) ?: 0.5f
+        val fastMovementSpeed: Float = settings?.get("Input.FastMovementSpeed", 1.0f) ?: 1.0f
+
 
         // node-selection and node-manipulation (translate & rotate) controls
         setObjectSelectionMode()
@@ -219,19 +265,75 @@ open class Controls(val sciview: SciView) {
         h.addKeyBinding("show help", "F1")
 
         //update scene inspector
-        h.addBehaviour("update scene graph", ClickBehaviour { _: Int, _: Int -> sciview.requestPropEditorRefresh() })
-        h.addKeyBinding("update scene graph", "shift ctrl I")
+        h.addBehaviour("refresh scene inspector", ClickBehaviour { _: Int, _: Int -> (sciview.mainWindow as SwingMainWindow).nodePropertyEditor.rebuildTree() })
+        h.addKeyBinding("refresh scene inspector", "shift ctrl I")
 
         //ruler
         val ruler = Ruler(sciview)
         h.addBehaviour("ruler: keep the button pressed and drag with the mouse", ruler)
         h.addKeyBinding("ruler: keep the button pressed and drag with the mouse", "E")
 
-        val configFile = File(sciview.getProjectDirectories().configDir, ".keybindings.yaml")
-        if( configFile.exists() )
-            inputHandler.readFromFile(configFile)
-        else
-            inputHandler.useDefaultBindings(configFile.absolutePath)
+
+        /*
+         * Create behaviours and input mappings.
+         */
+        sciview.sceneryInputHandler?.addBehaviour("mouse_control", FPSCameraControl({ sciview.camera }, sciview.windowWidth, sciview.windowHeight))
+        // behaviourMap.put("gamepad_camera_control", GamepadRotationControl(listOf(Component.Identifier.Axis.Z, Component.Identifier.Axis.RZ)) { scene.findObserver() })
+        // behaviourMap.put("gamepad_movement_control", GamepadMovementControl(listOf(Component.Identifier.Axis.X, Component.Identifier.Axis.Y)) { scene.findObserver() })
+
+        //unused until some reasonable action (to the selection) would be provided
+        //behaviourMap.put("select_command", SelectCommand("select_command", renderer, scene, { scene.findObserver() }))
+
+        sciview.sceneryInputHandler?.addBehaviour("move_forward", MovementCommand("forward", { sciview.currentScene.findObserver() }, slowMovementSpeed))
+        sciview.sceneryInputHandler?.addBehaviour("move_back", MovementCommand("back", { sciview.currentScene.findObserver() }, slowMovementSpeed))
+        sciview.sceneryInputHandler?.addBehaviour("move_left", MovementCommand("left", { sciview.currentScene.findObserver() }, slowMovementSpeed))
+        sciview.sceneryInputHandler?.addBehaviour("move_right", MovementCommand("right", { sciview.currentScene.findObserver() }, slowMovementSpeed))
+        sciview.sceneryInputHandler?.addBehaviour("move_up", MovementCommand("up", { sciview.currentScene.findObserver() }, slowMovementSpeed))
+        sciview.sceneryInputHandler?.addBehaviour("move_down", MovementCommand("down", { sciview.currentScene.findObserver() }, slowMovementSpeed))
+
+        sciview.sceneryInputHandler?.addBehaviour("move_forward_fast", MovementCommand("forward", { sciview.currentScene.findObserver() }, fastMovementSpeed))
+        sciview.sceneryInputHandler?.addBehaviour("move_back_fast", MovementCommand("back", { sciview.currentScene.findObserver() }, fastMovementSpeed))
+        sciview.sceneryInputHandler?.addBehaviour("move_left_fast", MovementCommand("left", { sciview.currentScene.findObserver() }, fastMovementSpeed))
+        sciview.sceneryInputHandler?.addBehaviour("move_right_fast", MovementCommand("right", { sciview.currentScene.findObserver() }, fastMovementSpeed))
+        sciview.sceneryInputHandler?.addBehaviour("move_up_fast", MovementCommand("up", { sciview.currentScene.findObserver() }, fastMovementSpeed))
+        sciview.sceneryInputHandler?.addBehaviour("move_down_fast", MovementCommand("down", { sciview.currentScene.findObserver() }, fastMovementSpeed))
+
+        sciview.sceneryInputHandler?.addBehaviour("toggle_debug", ToggleCommand(sciview.getSceneryRenderer()!!, "toggleDebug"))
+        sciview.sceneryInputHandler?.addBehaviour("toggle_fullscreen", ToggleCommand(sciview.getSceneryRenderer()!!, "toggleFullscreen"))
+        sciview.sceneryInputHandler?.addBehaviour("screenshot", ToggleCommand(sciview.getSceneryRenderer()!!, "screenshot"))
+        sciview.sceneryInputHandler?.addBehaviour("set_rendering_quality", EnumCycleCommand(RenderConfigReader.RenderingQuality::class.java, sciview.getSceneryRenderer()!!, "setRenderingQuality"))
+        sciview.sceneryInputHandler?.addBehaviour("record_movie", ToggleCommand(sciview.getSceneryRenderer()!!, "recordMovie"))
+
+        sciview.sceneryInputHandler?.addBehaviour("toggle_vr", ToggleCommand(sciview.getSceneryRenderer()!!, "toggleVR"))
+
+        //val adder = config.inputTriggerAdder(inputMap, "all")
+        sciview.sceneryInputHandler?.addKeyBinding("mouse_control") // put input trigger as defined in config
+        //sciview.sceneryInputHandler?.addKeyBinding("gamepad_movement_control")
+        //sciview.sceneryInputHandler?.addKeyBinding("gamepad_camera_control")
+
+        //sciview.sceneryInputHandler?.addKeyBinding("select_command", "double-click button1")
+
+        sciview.sceneryInputHandler?.addKeyBinding("move_forward", "W")
+        sciview.sceneryInputHandler?.addKeyBinding("move_left", "A")
+        sciview.sceneryInputHandler?.addKeyBinding("move_back", "S")
+        sciview.sceneryInputHandler?.addKeyBinding("move_right", "D")
+
+        sciview.sceneryInputHandler?.addKeyBinding("move_forward_fast", "shift W")
+        sciview.sceneryInputHandler?.addKeyBinding("move_left_fast", "shift A")
+        sciview.sceneryInputHandler?.addKeyBinding("move_back_fast", "shift S")
+        sciview.sceneryInputHandler?.addKeyBinding("move_right_fast", "shift D")
+
+        sciview.sceneryInputHandler?.addKeyBinding("move_up", "K")
+        sciview.sceneryInputHandler?.addKeyBinding("move_down", "J")
+
+        sciview.sceneryInputHandler?.addKeyBinding("set_rendering_quality", "Q")
+        sciview.sceneryInputHandler?.addKeyBinding("toggle_debug", "shift Q")
+        sciview.sceneryInputHandler?.addKeyBinding("toggle_fullscreen", "F")
+
+        sciview.sceneryInputHandler?.addKeyBinding("screenshot", "P")
+        sciview.sceneryInputHandler?.addKeyBinding("record_movie", "shift P")
+
+        sciview.sceneryInputHandler?.addKeyBinding("toggle_vr", "shift V")
     }
 
     /*
@@ -246,7 +348,7 @@ open class Controls(val sciview: SciView) {
         val cameraSupplier = { sciview.currentScene.findObserver() }
         val initAction = { _: Int, _: Int -> }
         val scrollAction = { _: Double, _: Boolean, _: Int, _:Int -> }
-        
+
         targetArcball = AnimatedCenteringBeforeArcBallControl(
                 initAction,
                 scrollAction,
@@ -259,11 +361,12 @@ open class Controls(val sciview: SciView) {
         targetArcball.maximumDistance = Float.MAX_VALUE
         parameters.registerArcballCameraControl(targetArcball)
         h.addBehaviour("view: rotate around selected node", targetArcball)
-        h.addKeyBinding("view: rotate around selected node", "shift button1")
+        h.addKeyBinding("view: rotate around selected node", "button1")
+
         h.addBehaviour("view: zoom outward or toward selected node", targetArcball)
-        h.addKeyBinding("view: zoom outward or toward selected node", "shift scroll")
+        h.addKeyBinding("view: zoom outward or toward selected node", "scroll", "button3")
     }
-    
+
     fun enableFPSControl() {
         val h = inputHandler
 
@@ -277,22 +380,22 @@ open class Controls(val sciview: SciView) {
                 sciview.getSceneryRenderer()!!.window.width,
                 sciview.getSceneryRenderer()!!.window.height
         )
-        
+
         parameters.registerFpsCameraControl(fpsControl)
         val selectCommand = h.getBehaviour("node: choose one from the view panel") as? ClickBehaviour
         val wrappedFpsControl = selectCommand?.let {
             ClickAndDragWrapper(it, fpsControl!!)
         } ?: fpsControl!!
         h.addBehaviour("view: freely look around", wrappedFpsControl)
-        h.addKeyBinding("view: freely look around", "button1")
+        h.addKeyBinding("view: freely look around", "shift button3")
 
         //slow and fast camera motion
         h.addBehaviour("move_withMouse_back/forward/left/right", CameraTranslateControl(sciview, 1f))
-        h.addKeyBinding("move_withMouse_back/forward/left/right", "button3")
+        h.addKeyBinding("move_withMouse_back/forward/left/right", "shift button1")
         //
         //fast and very fast camera motion
         h.addBehaviour("move_withMouse_back/forward/left/right_fast", CameraTranslateControl(sciview, 10f))
-        h.addKeyBinding("move_withMouse_back/forward/left/right_fast", "shift button3")
+        h.addKeyBinding("move_withMouse_back/forward/left/right_fast", "ctrl button1")
 
         // Keyboard move around (WASD keys)
         //
@@ -432,7 +535,7 @@ open class Controls(val sciview: SciView) {
         parameters.mouseScrollMult = newSpeed.coerceIn(SciView.MOUSESCROLL_MINBOUND, SciView.MOUSESCROLL_MAXBOUND)
         logger.debug("Mouse scroll speed: " + parameters.mouseScrollMult)
     }
-    
+
     fun setObjectSelectionMode() {
         val selectAction = { nearest: Scene.RaycastResult, x: Int, y: Int ->
             if (nearest.matches.isNotEmpty()) {
@@ -456,7 +559,7 @@ open class Controls(val sciview: SciView) {
         ignoredObjects.add(DetachedHeadCamera::class.java)
         ignoredObjects.add(DirectionalLight::class.java)
         ignoredObjects.add(PointLight::class.java)
-        
+
         h.addBehaviour("node: choose one from the view panel",
                 SelectCommand("objectSelector", sciview.getSceneryRenderer()!!, sciview.currentScene,
                         { sciview.currentScene.findObserver() }, false, ignoredObjects,
