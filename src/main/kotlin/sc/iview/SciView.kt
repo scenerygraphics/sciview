@@ -1450,6 +1450,18 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         return v
     }
 
+    fun <T : RealType<T>> addVolume(sources: List<SourceAndConverter<T>>,
+                                    converterSetups: ArrayList<ConverterSetup>,
+                                    numTimepoints: Int,
+                                    name: String = "Volume"): Volume {
+        val numDimensions = 3// TODO Awful, get this value another way
+        val voxelDimensions = FloatArray(numDimensions)
+        for(idx in 0..voxelDimensions.size - 1) {
+            voxelDimensions[idx] = 1.0f
+        }
+        return addVolume(sources, converterSetups, numTimepoints, name, voxelDimensions, {}, "Fire.lut")
+    }
+
     /**
      * Adds a SourceAndConverter to the scene.
      *

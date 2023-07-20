@@ -89,8 +89,9 @@ dependencies {
     implementation("io.scif:scifio-bf-compat")
 
     // ImgLib2 dependencies
-    implementation("net.imglib2:imglib2")
+    implementation("net.imglib2:imglib2:6.2.0")
     implementation("net.imglib2:imglib2-roi")
+    implementation("net.imglib2:imglib2-algorithm:0.14.0")
 
     // XDG support
     implementation("dev.dirs:directories:26")
@@ -117,7 +118,7 @@ dependencies {
     implementation("org.janelia.saalfeldlab:n5-hdf5")
     implementation("org.janelia.saalfeldlab:n5-ij:3.2.4-SNAPSHOT")
     implementation("org.janelia.saalfeldlab:n5-imglib2:5.0.0")
-    implementation("org.janelia.saalfeldlab:n5-viewer_fiji:5.3.0")
+    implementation("org.janelia.saalfeldlab:n5-viewer_fiji:5.3.1-SNAPSHOT")
     //implementation("com.github.saalfeldlab:n5-viewer:ec0b177")
     implementation("org.janelia.saalfeldlab:n5-aws-s3")
     implementation("org.janelia.saalfeldlab:n5-google-cloud")
@@ -130,8 +131,8 @@ dependencies {
     testImplementation(kotlin("test-junit"))
     testImplementation("org.slf4j:slf4j-simple:1.7.36")
 
-    implementation("sc.fiji:bigdataviewer-core")
-    implementation("sc.fiji:bigdataviewer-vistools")
+    implementation("sc.fiji:bigdataviewer-core:10.4.7")
+    implementation("sc.fiji:bigdataviewer-vistools:1.0.0-beta-32")
 
     // OME
     implementation("ome:formats-bsd")
