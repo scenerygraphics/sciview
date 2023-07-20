@@ -311,7 +311,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         // Remove everything except camera
         val toRemove = getSceneNodes { n: Node? -> n !is Camera }
         for (n in toRemove) {
-            deleteNode(n, false)
+            // activePublish is true to update the inspector's tree view
+            // it used to be false for fear of slowdowns when resetting a large scene
+            deleteNode(n, true)
         }
 
         imageToVolumeMap = HashMap<Any, Volume>()
