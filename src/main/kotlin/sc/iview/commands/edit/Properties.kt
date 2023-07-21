@@ -150,9 +150,6 @@ class Properties : InteractiveCommand() {
     @Parameter(label = " ", style = "group:Volume")
     private var colormap = dummyColorTable
 
-    @Parameter(label = "Mode", style = ChoiceWidget.LIST_BOX_STYLE+"group:Volume", callback = "updateNodeProperties")
-    private var renderingMode: String = Volume.RenderingMethod.AlphaBlending.name
-
     @Parameter(label = "AO steps", style = NumberWidget.SPINNER_STYLE+"group:Volume", callback = "updateNodeProperties")
     private val occlusionSteps = 0
 
@@ -214,7 +211,6 @@ class Properties : InteractiveCommand() {
     @Parameter(label = "Edge width", callback = "updateNodeProperties", style = "group:Line")
     private var edgeWidth = 0
 
-    private val renderingModeChoices = Volume.RenderingMethod.values().toMutableList()
     private val slicingModeChoices = Volume.SlicingMode.values().toMutableList()
 
     var fieldsUpdating = true
@@ -373,11 +369,6 @@ class Properties : InteractiveCommand() {
         scaleZ = scale.z()
         if (node is Volume) {
 
-            val renderingModeInput = info.getMutableInput("renderingMode", String::class.java)
-            val methods = Volume.RenderingMethod.values().map { method: Volume.RenderingMethod -> method.toString() }.toList()
-            renderingModeInput.choices = methods
-            renderingMode = renderingModeChoices[Volume.RenderingMethod.values().indexOf(node.renderingMethod)].toString()
-
             val slicingModeInput = info.getMutableInput("slicingMode", String::class.java)
             val slicingMethods = Volume.SlicingMode.values().map { mode: Volume.SlicingMode -> mode.toString() }.toList()
             slicingModeInput.setChoices(slicingMethods)
@@ -419,7 +410,6 @@ class Properties : InteractiveCommand() {
 
             maybeRemoveInput("colour", ColorRGB::class.java)
         } else {
-            maybeRemoveInput("renderingMode", String::class.java)
             maybeRemoveInput("slicingMode", String::class.java)
             maybeRemoveInput("min", java.lang.Integer::class.java)
             maybeRemoveInput("max", java.lang.Integer::class.java)
@@ -533,10 +523,6 @@ class Properties : InteractiveCommand() {
             node.intensity = intensity
         }
         if (node is Volume) {
-            val mode = renderingModeChoices.indexOf(Volume.RenderingMethod.valueOf(renderingMode))
-            if (mode != -1) {
-                node.renderingMethod = Volume.RenderingMethod.values()[mode]
-            }
             try {
                 val cm = sciView.getLUT(colormapName)
                 node.colormap = fromColorTable(cm!!)

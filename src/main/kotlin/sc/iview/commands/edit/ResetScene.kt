@@ -52,5 +52,7 @@ class ResetScene : Command {
 
     override fun run() {
         sciView.reset()
+        
+        sciView.mainWindow.rebuildSceneTree()
     }
 }

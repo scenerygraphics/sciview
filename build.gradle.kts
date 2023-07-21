@@ -39,7 +39,7 @@ dependencies {
     // Graphics dependencies
 
     // Attention! Manual version increment necessary here!
-    val scijavaCommonVersion = "2.94.1"
+    val scijavaCommonVersion = "2.94.2"
     annotationProcessor("org.scijava:scijava-common:$scijavaCommonVersion")
     kapt("org.scijava:scijava-common:$scijavaCommonVersion") {
         exclude("org.lwjgl")
@@ -310,7 +310,7 @@ tasks {
         dokkaSourceSets.configureEach {
             sourceLink {
                 localDirectory.set(file("src/main/kotlin"))
-                remoteUrl.set(URL("https://github.com/scenerygraphics/sciview/tree/master/src/main/kotlin"))
+                remoteUrl.set(URL("https://github.com/scenerygraphics/sciview/tree/main/src/main/kotlin"))
                 remoteLineSuffix.set("#L")
             }
         }
