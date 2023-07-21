@@ -386,8 +386,8 @@ open class Controls(val sciview: SciView) {
         val wrappedFpsControl = selectCommand?.let {
             ClickAndDragWrapper(it, fpsControl!!)
         } ?: fpsControl!!
-        h.addBehaviour("view: freely look around", wrappedFpsControl)
-        h.addKeyBinding("view: freely look around", "shift button3")
+//        h.addBehaviour("view: freely look around", wrappedFpsControl)
+//        h.addKeyBinding("view: freely look around", "shift button3")
 
         //slow and fast camera motion
         h.addBehaviour("move_withMouse_back/forward/left/right", CameraTranslateControl(sciview, 1f))

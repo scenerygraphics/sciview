@@ -30,6 +30,9 @@ package sc.iview
 
 import graphics.scenery.Camera
 import graphics.scenery.controls.behaviours.ArcballCameraControl
+import graphics.scenery.utils.extensions.minus
+import graphics.scenery.utils.extensions.plus
+import graphics.scenery.utils.extensions.times
 import org.joml.Vector3f
 import java.util.function.Supplier
 
@@ -51,6 +54,20 @@ class AnimatedCenteringBeforeArcBallControl(val initAction: (Int, Int) -> Any, v
 
     override fun scroll(wheelRotation: Double, isHorizontal: Boolean, x: Int, y: Int) {
         scrollAction.invoke(wheelRotation, isHorizontal, x, y)
-        super.scroll(wheelRotation, isHorizontal, x, y)
+
+        if (isHorizontal || cam == null) {
+            return
+        }
+
+        val sign = if (wheelRotation.toFloat() > 0) 1 else -1
+
+        distance = (target.invoke() - cam!!.spatial().position).length()
+        // This is the difference from scenery's scroll: we use a quadratic speed
+        distance += sign * wheelRotation.toFloat() * wheelRotation.toFloat() * scrollSpeedMultiplier
+
+        if (distance >= maximumDistance) distance = maximumDistance
+        if (distance <= minimumDistance) distance = minimumDistance
+
+        cam?.let { node -> node.spatialOrNull()?.position = target.invoke() + node.forward * distance * (-1.0f) }
     }
 }
