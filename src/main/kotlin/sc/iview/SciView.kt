@@ -1882,11 +1882,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         @Throws(Exception::class)
         fun create(): SciView {
             xinitThreads()
-            val context = Context(ImageJService::class.java, SciJavaService::class.java, SCIFIOService::class.java,
-                ThreadService::class.java, ObjectService::class.java, LogService::class.java, MenuService::class.java,
-                IOService::class.java, EventService::class.java, LUTService::class.java, UnitService::class.java,
-                DatasetIOService::class.java)
-            val objectService = context.getService(ObjectService::class.java)
+            val context = Context(ImageJService::class.java, SciJavaService::class.java, SCIFIOService::class.java)
+            val objectService = context.service(ObjectService::class.java)
             objectService.addObject(Utils.SciviewStandalone())
             val sciViewService = context.service(SciViewService::class.java)
             return sciViewService.orCreateActiveSciView
