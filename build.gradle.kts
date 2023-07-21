@@ -310,7 +310,7 @@ tasks {
         dokkaSourceSets.configureEach {
             sourceLink {
                 localDirectory.set(file("src/main/kotlin"))
-                remoteUrl.set(URL("https://github.com/scenerygraphics/sciview/tree/master/src/main/kotlin"))
+                remoteUrl.set(URL("https://github.com/scenerygraphics/sciview/tree/main/src/main/kotlin"))
                 remoteLineSuffix.set("#L")
             }
         }
