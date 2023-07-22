@@ -40,6 +40,7 @@ import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.Vector4f
 import org.scijava.command.CommandService
+import org.scijava.prefs.PrefService
 import org.scijava.ui.behaviour.Behaviour
 import org.scijava.ui.behaviour.ClickBehaviour
 import org.scijava.ui.behaviour.io.InputTriggerConfig
@@ -75,6 +76,14 @@ open class Controls(val sciview: SciView) {
      * Speeds for input controls
      */
     var parameters: ControlsParameters = ControlsParameters()
+
+    init {
+        parameters.fpsSpeedFast = load("fpsSpeedFast", ControlsParameters.DEFAULT_FPS_SPEED_FAST)
+        parameters.fpsSpeedSlow = load("fpsSpeedSlow", ControlsParameters.DEFAULT_FPS_SPEED_SLOW)
+        parameters.fpsSpeedVeryFast = load("fpsSpeedVeryFast", ControlsParameters.DEFAULT_FPS_SPEED_VERY_FAST)
+        parameters.mouseSpeedMult = load("mouseSpeedMult", ControlsParameters.DEFAULT_MOUSE_SPEED_MULT)
+        parameters.mouseScrollMult = load("mouseScrollMult", ControlsParameters.DEFAULT_MOUSE_SCROLL_MULT)
+    }
 
     lateinit var targetArcball: AnimatedCenteringBeforeArcBallControl
         protected set
@@ -502,14 +511,17 @@ open class Controls(val sciview: SciView) {
     //a couple of setters with scene sensible boundary checks
     fun setFPSSpeedSlow(slowSpeed: Float) {
         parameters.fpsSpeedSlow = slowSpeed.coerceIn(SciView.FPSSPEED_MINBOUND_SLOW, SciView.FPSSPEED_MAXBOUND_SLOW)
+        save("fpsSpeedSlow", parameters.fpsSpeedSlow)
     }
 
     fun setFPSSpeedFast(fastSpeed: Float) {
         parameters.fpsSpeedFast = fastSpeed.coerceIn(SciView.FPSSPEED_MINBOUND_FAST, SciView.FPSSPEED_MAXBOUND_FAST)
+        save("fpsSpeedFast", parameters.fpsSpeedFast)
     }
 
     fun setFPSSpeedVeryFast(veryFastSpeed: Float) {
         parameters.fpsSpeedVeryFast = veryFastSpeed.coerceIn(SciView.FPSSPEED_MINBOUND_VERYFAST, SciView.FPSSPEED_MAXBOUND_VERYFAST)
+        save("fpsSpeedVeryFast", parameters.fpsSpeedVeryFast)
     }
 
     fun setFPSSpeed(newBaseSpeed: Float) {
@@ -528,11 +540,28 @@ open class Controls(val sciview: SciView) {
     fun setMouseSpeed(newSpeed: Float) {
         parameters.mouseSpeedMult = newSpeed.coerceIn(SciView.MOUSESPEED_MINBOUND, SciView.MOUSESPEED_MAXBOUND)
         logger.debug("Mouse movement speed: " + parameters.mouseSpeedMult)
+        save("mouseSpeedMult", parameters.mouseSpeedMult)
     }
 
     fun setMouseScrollSpeed(newSpeed: Float) {
         parameters.mouseScrollMult = newSpeed.coerceIn(SciView.MOUSESCROLL_MINBOUND, SciView.MOUSESCROLL_MAXBOUND)
         logger.debug("Mouse scroll speed: " + parameters.mouseScrollMult)
+        save("mouseScrollMult", parameters.mouseScrollMult)
+    }
+
+    private val prefs get() = sciview.scijavaContext?.getService(PrefService::class.java)
+
+    fun resetParameters() {
+        parameters.reset()
+        prefs?.clear(this::class.java)
+    }
+
+    private fun load(name: String, defaultValue: Float): Float {
+        return prefs?.getFloat(this::class.java, name, defaultValue) ?: defaultValue
+    }
+
+    private fun save(name: String, value: Float) {
+        prefs?.put(this::class.java, name, value)
     }
 
     fun setObjectSelectionMode() {

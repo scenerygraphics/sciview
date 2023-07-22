@@ -46,12 +46,11 @@ import static sc.iview.commands.MenuWeights.*;
  * A command for interactively editing step sizes and mouse sensitivity of all navigation controls.
  * @author Vladimir Ulman
  */
-@Plugin(type = Command.class, menuRoot = "SciView",
+@Plugin(type = Command.class, initializer = "refreshWidgets", menuRoot = "SciView",
         menu = { @Menu(label = "Edit", weight = EDIT),
                  @Menu(label = "Settings", weight = EDIT_SETTINGS),
                  @Menu(label = "Controls", weight = EDIT_SETTINGS_CONTROLS) },
-        label = "Input Controls Step Sizes and Mouse Sensitivities",
-        initializer = "setupBoundsFromSciView")
+        label = "Input Controls Step Sizes and Mouse Sensitivities")
 public class NavigationControlsSettings extends InteractiveCommand {
 
     //these follow SciView.setFPSSpeed()
@@ -61,133 +60,97 @@ public class NavigationControlsSettings extends InteractiveCommand {
     private static final float MOUSE_MOVE_INCR = 0.02f;
     private static final float MOUSE_SCROLL_INCR = 0.3f;
 
-    @Parameter(required = false)
-    private PrefService ps;
-
     @Parameter
-    private SciView sciView;
+    private SciView sciview;
 
-    @Parameter(label = "Small step size:", style = NumberWidget.SCROLL_BAR_STYLE, callback = "processSlowSpeed",
+    @Parameter(label = "Small step size", style = NumberWidget.SCROLL_BAR_STYLE, callback = "processSlowSpeed",
         description = "How much of a world coordinate the camera moves with W,A,S,D keys or mouse right click&drag.",
         min = "" + SciView.FPSSPEED_MINBOUND_SLOW, max = "" + SciView.FPSSPEED_MAXBOUND_SLOW, stepSize = "" + BASE_SPEED_INCR)
     private Float fpsSlowSpeed;
 
-    @Parameter(label = "Large step size:", style = NumberWidget.SCROLL_BAR_STYLE, callback = "processFastSpeed",
+    @Parameter(label = "Large step size", style = NumberWidget.SCROLL_BAR_STYLE, callback = "processFastSpeed",
             description = "How much of a world coordinate the camera moves with shift+ W,A,S,D keys or shift+ mouse right click&drag.",
             min = "" + SciView.FPSSPEED_MINBOUND_FAST, max = "" + SciView.FPSSPEED_MAXBOUND_FAST,
             stepSize = "" + (FAST_TO_SLOW_RATIO * BASE_SPEED_INCR))
     private Float fpsFastSpeed;
 
-    @Parameter(label = "Very large step size:", style = NumberWidget.SCROLL_BAR_STYLE, callback = "processVeryFastSpeed",
+    @Parameter(label = "Very large step size", style = NumberWidget.SCROLL_BAR_STYLE, callback = "processVeryFastSpeed",
             description = "How much of a world coordinate the camera moves with ctrl+shift+ W,A,S,D keys.",
             min = "" + SciView.FPSSPEED_MINBOUND_VERYFAST, max = "" + SciView.FPSSPEED_MAXBOUND_VERYFAST,
             stepSize = "" + (VERY_FAST_TO_SLOW_RATIO * BASE_SPEED_INCR))
     private Float fpsVeryFastSpeed;
 
-    @Parameter(label = "Adjust all step sizes together:",
+    @Parameter(label = "Adjust all step sizes together",
             description = "When locked (checked), all step sizes above are updated simultaneously.")
     private boolean adjustStepsLock = true;
 
-    @Parameter(label = "Mouse move sensitivity:", style = NumberWidget.SCROLL_BAR_STYLE, callback = "processMouseMove",
+    @Parameter(label = "Mouse move sensitivity", style = NumberWidget.SCROLL_BAR_STYLE, callback = "processMouseMove",
             description = "Influences proportionally how much of a mouse move is required for an action in SciView.",
             min = "" + SciView.MOUSESPEED_MINBOUND, max = "" + SciView.MOUSESPEED_MAXBOUND, stepSize = "" + MOUSE_MOVE_INCR)
     private Float mouseMoveSensitivity;
 
-    @Parameter(label = "Mouse scroll sensitivity:", style = NumberWidget.SCROLL_BAR_STYLE, callback = "processMouseScroll",
+    @Parameter(label = "Mouse scroll sensitivity", style = NumberWidget.SCROLL_BAR_STYLE, callback = "processMouseScroll",
             description = "Influences proportionally how much of a mouse wheel scrolling is required for an action in SciView.",
             min = "" + SciView.MOUSESCROLL_MINBOUND, max = "" + SciView.MOUSESCROLL_MAXBOUND, stepSize = "" + MOUSE_SCROLL_INCR)
     private Float mouseScrollSensitivity;
 
-    /** Initiates GUI, all the spinners (scroll bars) */
-    private void setupBoundsFromSciView() {
-        //backup the current state of SciView before we eventually override it
-        //so that there is something to return to with the "first toggle"
-        orig_fpsSlowSpeed = sciView.getControls().getParameters().getFpsSpeedSlow();
-        orig_fpsFastSpeed = sciView.getControls().getParameters().getFpsSpeedFast();
-        orig_fpsVeryFastSpeed = sciView.getControls().getParameters().getFpsSpeedVeryFast();
-        orig_mouseMoveSensitivity = sciView.getControls().getParameters().getMouseSpeedMult();
-        orig_mouseScrollSensitivity = sciView.getControls().getParameters().getMouseScrollMult();
-
-        //try to retrieve stored dialog state and push it to SciView
-        //so that the SciView and dialog states match
-        if (ps == null) return;
-        sciView.setFPSSpeedSlow(     ps.getFloat( NavigationControlsSettings.class, "fpsSlowSpeed", orig_fpsSlowSpeed) );
-        sciView.setFPSSpeedFast(     ps.getFloat( NavigationControlsSettings.class, "fpsFastSpeed", orig_fpsFastSpeed) );
-        sciView.setFPSSpeedVeryFast( ps.getFloat( NavigationControlsSettings.class, "fpsVeryFastSpeed", orig_fpsVeryFastSpeed) );
-        sciView.setMouseSpeed(       ps.getFloat( NavigationControlsSettings.class, "mouseMoveSensitivity", orig_mouseMoveSensitivity) );
-        sciView.setMouseScrollSpeed( ps.getFloat( NavigationControlsSettings.class, "mouseScrollSensitivity", orig_mouseScrollSensitivity) );
+    private void refreshWidgets() {
+        fpsSlowSpeed = sciview.getFPSSpeedSlow();
+        fpsFastSpeed = sciview.getFPSSpeedFast();
+        fpsVeryFastSpeed = sciview.getFPSSpeedVeryFast();
+        mouseMoveSensitivity = sciview.getMouseSpeed();
+        mouseScrollSensitivity = sciview.getMouseScrollSpeed();
     }
-
-    //updates GUI with fresh values
-    private void updateDialogSpeedsAndMouseParams() {
-        fpsSlowSpeed = sciView.getControls().getParameters().getFpsSpeedSlow();
-        fpsFastSpeed = sciView.getControls().getParameters().getFpsSpeedFast();
-        fpsVeryFastSpeed = sciView.getControls().getParameters().getFpsSpeedVeryFast();
-        mouseMoveSensitivity = sciView.getControls().getParameters().getMouseSpeedMult();
-        mouseScrollSensitivity = sciView.getControls().getParameters().getMouseScrollMult();
-    }
-
 
     private void processSlowSpeed()
     {
-        if (!adjustStepsLock)
-            sciView.setFPSSpeedSlow( fpsSlowSpeed );
+        if (adjustStepsLock) {
+            sciview.setFPSSpeed(fpsSlowSpeed);
+            refreshWidgets();
+        }
         else
-            sciView.setFPSSpeed( fpsSlowSpeed );
-        updateDialogSpeedsAndMouseParams();
+            sciview.setFPSSpeedSlow( fpsSlowSpeed );
+
     }
     private void processFastSpeed()
     {
-        if (!adjustStepsLock)
-            sciView.setFPSSpeedFast( fpsFastSpeed );
+        if (adjustStepsLock) {
+            sciview.setFPSSpeed(fpsFastSpeed / FAST_TO_SLOW_RATIO);
+            refreshWidgets();
+        }
         else
-            sciView.setFPSSpeed( fpsFastSpeed / FAST_TO_SLOW_RATIO );
-        updateDialogSpeedsAndMouseParams();
+            sciview.setFPSSpeedFast( fpsFastSpeed );
     }
     private void processVeryFastSpeed()
     {
-        if (!adjustStepsLock)
-            sciView.setFPSSpeedVeryFast( fpsVeryFastSpeed );
+        if (adjustStepsLock) {
+            sciview.setFPSSpeed(fpsVeryFastSpeed / VERY_FAST_TO_SLOW_RATIO);
+            refreshWidgets();
+        }
         else
-            sciView.setFPSSpeed( fpsVeryFastSpeed / VERY_FAST_TO_SLOW_RATIO );
-        updateDialogSpeedsAndMouseParams();
+            sciview.setFPSSpeedVeryFast( fpsVeryFastSpeed );
     }
 
     private void processMouseMove()
     {
-        sciView.setMouseSpeed( mouseMoveSensitivity );
-        //updateDialogSpeedsAndMouseParams();
+        sciview.setMouseSpeed( mouseMoveSensitivity );
     }
     private void processMouseScroll()
     {
-        sciView.setMouseScrollSpeed( mouseScrollSensitivity );
-        //updateDialogSpeedsAndMouseParams();
+        sciview.setMouseScrollSpeed( mouseScrollSensitivity );
     }
 
-
-    @Parameter(label = "Click to re-read current state:", callback = "refreshDialog",
-            description = "Changing its state triggers the dialog update -- useful when, e.g., step size is changed which keyboard shortcuts.")
+    @Parameter(label = "Refresh", callback = "refreshWidgets",
+            description = "Click to refresh the dialog from sciview's current state -- useful when, e.g., step size is changed which keyboard shortcuts.")
     private Button refreshButton;
 
-    private boolean firstHitOfRefreshButton = true; //the "first toggle" flag
 
-    private float orig_fpsSlowSpeed, orig_fpsFastSpeed, orig_fpsVeryFastSpeed;
-    private float orig_mouseMoveSensitivity, orig_mouseScrollSensitivity;
+    @Parameter(label = "Reset", callback = "resetValues",
+            description = "Click to set controls back to default values.")
+    private Button resetButton;
 
-    private void refreshDialog()
-    {
-        //only the "first toggle" will restore values in SciView
-        //as they were at the time this dialog started,
-        if (firstHitOfRefreshButton) {
-            sciView.setFPSSpeedSlow( orig_fpsSlowSpeed );
-            sciView.setFPSSpeedFast( orig_fpsFastSpeed );
-            sciView.setFPSSpeedVeryFast( orig_fpsVeryFastSpeed );
-            sciView.setMouseSpeed( orig_mouseMoveSensitivity );
-            sciView.setMouseScrollSpeed( orig_mouseScrollSensitivity );
-            firstHitOfRefreshButton = false;
-        }
-
-        //in any case, update the dialog to the current state of SciView
-        updateDialogSpeedsAndMouseParams();
+    private void resetValues() {
+        sciview.controls.resetParameters();
+        refreshWidgets();
     }
 }
