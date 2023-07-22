@@ -2,6 +2,15 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URL
 import sciview.*
 
+// Read versions from properties file.
+val versions: Map<String, String> = project.properties.
+    filter { (k, _) -> k.endsWith(".version") }.
+    map { (k, v) -> k.removeSuffix(".version") to v as String }.
+    toMap()
+fun v(k: String): String {
+  return versions[k] ?: throw RuntimeException("No version for " + k)
+}
+
 plugins {
     java
     // Kotlin/Dokka versions are managed in gradle.properties
@@ -31,31 +40,26 @@ repositories {
 }
 
 dependencies {
-    val scijavaParentPomVersion = project.properties["scijavaParentPOMVersion"]
-    val ktVersion = project.properties["kotlinVersion"]
-    implementation(platform("org.scijava:pom-scijava:$scijavaParentPomVersion"))
+    implementation(platform("org.scijava:pom-scijava:${v("pom-scijava")}"))
 
     // Graphics dependencies
 
-    // Attention! Manual version increment necessary here!
-    val scijavaCommonVersion = "2.94.2"
-    annotationProcessor("org.scijava:scijava-common:$scijavaCommonVersion")
-    kapt("org.scijava:scijava-common:$scijavaCommonVersion") {
+    annotationProcessor("org.scijava:scijava-common:${v("scijava-common")}")
+    kapt("org.scijava:scijava-common:${v("scijava-common")}") {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "0.9.0"
-    api("graphics.scenery:scenery:$sceneryVersion") {
-        version { strictly(sceneryVersion) }
+    api("graphics.scenery:scenery") {
+        version { strictly(v("scenery")) }
         exclude("org.biojava.thirdparty", "forester")
         exclude("null", "unspecified")
     }
 
-    implementation("net.java.dev.jna:jna-platform:5.11.0")
+    implementation("net.java.dev.jna:jna-platform")
     implementation("org.janelia.saalfeldlab:n5")
     implementation("org.janelia.saalfeldlab:n5-imglib2")
-    implementation("org.apache.logging.log4j:log4j-api:2.20.0")
-    implementation("org.apache.logging.log4j:log4j-1.2-api:2.20.0")
+    implementation("org.apache.logging.log4j:log4j-api")
+    implementation("org.apache.logging.log4j:log4j-1.2-api:${v("log4j-1.2-api")}")
 
     implementation("com.formdev:flatlaf")
 
@@ -64,7 +68,7 @@ dependencies {
     // SciJava dependencies
 
     implementation("org.yaml:snakeyaml") {
-        version { strictly("1.33") }
+        version { strictly(v("snakeyaml")) }
     }
     implementation("org.scijava:scijava-common")
     implementation("org.scijava:ui-behaviour")
@@ -78,7 +82,7 @@ dependencies {
     // ImageJ dependencies
 
     implementation("net.imagej:imagej-common")
-    api("net.imagej:imagej-mesh:0.8.1")
+    api("net.imagej:imagej-mesh")
     implementation("net.imagej:imagej-mesh-io")
     implementation("net.imagej:imagej-ops")
     implementation("net.imagej:imagej-launcher")
@@ -92,16 +96,16 @@ dependencies {
     implementation("net.imglib2:imglib2-roi")
 
     // XDG support
-    implementation("dev.dirs:directories:26")
+    implementation("dev.dirs:directories")
 
     // Math dependencies
 //    implementation(commons.math3)
 //    implementation(misc.joml)
 
     // Kotlin dependencies
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-common:$ktVersion")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:$ktVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
 
     // Test scope
 
@@ -119,7 +123,7 @@ dependencies {
     implementation(platform(kotlin("bom")))
     implementation(kotlin("stdlib-jdk8"))
     testImplementation(kotlin("test-junit"))
-    testImplementation("org.slf4j:slf4j-simple:1.7.36")
+    testImplementation("org.slf4j:slf4j-simple")
 
     implementation("sc.fiji:bigdataviewer-core")
     implementation("sc.fiji:bigdataviewer-vistools")
@@ -155,7 +159,6 @@ tasks {
     }
 
     withType<GenerateMavenPom>().configureEach {
-        val scijavaParentPomVersion = project.properties["scijavaParentPOMVersion"]
         val matcher = Regex("""generatePomFileFor(\w+)Publication""").matchEntire(name)
         val publicationName = matcher?.let { it.groupValues[1] }
 
@@ -166,7 +169,7 @@ tasks {
             val parent = asNode().appendNode("parent")
             parent.appendNode("groupId", "org.scijava")
             parent.appendNode("artifactId", "pom-scijava")
-            parent.appendNode("version", "$scijavaParentPomVersion")
+            parent.appendNode("version", v("pom-scijava"))
             parent.appendNode("relativePath")
 
             val repositories = asNode().appendNode("repositories")
@@ -218,10 +221,10 @@ tasks {
                 dependencyNode.appendNode("scope", "runtime")
             }
             // add jvrpn property because it only has runtime native deps
-            propertiesNode.appendNode("jvrpn.version", "1.2.0")
+            propertiesNode.appendNode("jvrpn.version", v("jvrpn"))
 
             // add correct lwjgl version
-            propertiesNode.appendNode("lwjgl.version", "3.3.1")
+            propertiesNode.appendNode("lwjgl.version", v("lwjgl"))
 
             val versionedArtifacts = listOf("scenery",
                                             "flatlaf",
@@ -432,7 +435,7 @@ val dokkaHtmlJar by tasks.register<Jar>("dokkaHtmlJar") {
 }
 
 jacoco {
-    toolVersion = "0.8.7"
+    toolVersion = v("jacoco")
 }
 
 artifacts {
@@ -443,4 +446,3 @@ artifacts {
 
 
 java.withSourcesJar()
-
