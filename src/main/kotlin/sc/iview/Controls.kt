@@ -91,7 +91,6 @@ open class Controls(val sciview: SciView) {
 
     /**
      * This pushes the current input setup onto a stack that allows them to be restored with restoreControls
-     * This pushes the current input setup onto a stack that allows them to be restored with restoreControls.
      * It stacks in particular: all keybindings, all Behaviours, and all step sizes and mouse sensitivities
      * (which are held together in [parameters]).
      *
