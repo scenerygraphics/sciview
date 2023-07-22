@@ -134,20 +134,26 @@ public class ControlsParameters
     }
 
     // ---------------------- the movement controls in sciview ----------------------
+    public static final float DEFAULT_FPS_SPEED_SLOW = 0.05f;
+    public static final float DEFAULT_FPS_SPEED_FAST = 1.0f;
+    public static final float DEFAULT_FPS_SPEED_VERY_FAST = 25.0f;
+    public static final float DEFAULT_MOUSE_SPEED_MULT = 0.25f;
+    public static final float DEFAULT_MOUSE_SCROLL_MULT = 2.5f;
+
     /** Speeds for input controls: normal step size. */
-    private float fpsSpeedSlow = 0.05f;
+    private float fpsSpeedSlow = DEFAULT_FPS_SPEED_SLOW;
 
     /** Speeds for input controls: big step size */
-    private float fpsSpeedFast = 1.0f;
+    private float fpsSpeedFast = DEFAULT_FPS_SPEED_FAST;
 
     /** Speeds for input controls: very big step size */
-    private float fpsSpeedVeryFast = 25.0f;
+    private float fpsSpeedVeryFast = DEFAULT_FPS_SPEED_VERY_FAST;
 
     /** Speeds for mouse move controls: higher means more sensitive to mouse movement */
-    private float mouseSpeedMult = 0.25f;
+    private float mouseSpeedMult = DEFAULT_MOUSE_SPEED_MULT;
 
     /** Speeds for mouse scroll controls: higher means more sensitive to a roll of the scroll wheel */
-    private float mouseScrollMult = 2.5f;
+    private float mouseScrollMult = DEFAULT_MOUSE_SCROLL_MULT;
 
     // ---------------------- setters ----------------------
     public void setFpsSpeedSlow(float fpsSpeedSlow) {
@@ -189,6 +195,14 @@ public class ControlsParameters
         if (arcballCameraControl != null) {
             arcballCameraControl.setScrollSpeedMultiplier(fpsSpeedSlow * mouseScrollMult);
         }
+    }
+
+    public void reset() {
+        fpsSpeedSlow = DEFAULT_FPS_SPEED_SLOW;
+        fpsSpeedFast = DEFAULT_FPS_SPEED_FAST;
+        fpsSpeedVeryFast = DEFAULT_FPS_SPEED_VERY_FAST;
+        mouseSpeedMult = DEFAULT_MOUSE_SPEED_MULT;
+        mouseScrollMult = DEFAULT_MOUSE_SCROLL_MULT;
     }
 
     // ---------------------- modifiers ----------------------
