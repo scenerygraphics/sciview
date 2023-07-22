@@ -232,8 +232,10 @@ open class Controls(val sciview: SciView) {
         setObjectSelectionMode()
         setDistanceMeasurer()
         val nodeTranslateControl = NodeTranslateControl(sciview)
+
         h.addBehaviour("node: move selected one left, right, up, or down", nodeTranslateControl)
-        h.addKeyBinding("node: move selected one left, right, up, or down", "ctrl button1")
+        // Node translation is disabled until someone chooses a good keybind
+        //h.addKeyBinding("node: move selected one left, right, up, or down", "ctrl button1")
         h.addBehaviour("node: move selected one closer or further away", nodeTranslateControl)
         h.addKeyBinding("node: move selected one closer or further away", "ctrl scroll")
         h.addBehaviour("node: rotate selected one", NodeRotateControl(sciview))

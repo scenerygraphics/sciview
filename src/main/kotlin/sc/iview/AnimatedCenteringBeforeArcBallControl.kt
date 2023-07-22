@@ -47,8 +47,8 @@ import java.util.function.Supplier
  * @author Ulrik Guenther
  */
 class AnimatedCenteringBeforeArcBallControl(val initAction: (Int, Int) -> Any, val scrollAction: (Double, Boolean, Int, Int) -> Any, name: String, n: () -> Camera?, w: Int, h: Int, target: () -> Vector3f) : ArcballCameraControl(name, n, w, h, target) {
-    protected var lastX = w / 2
-    protected var lastY = h / 2
+    protected var lastX = -1
+    protected var lastY = -1
 
     override fun init(x: Int, y: Int) {
         initAction.invoke(x, y)
