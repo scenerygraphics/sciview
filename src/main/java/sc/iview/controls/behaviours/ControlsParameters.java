@@ -156,7 +156,7 @@ public class ControlsParameters
     private float mouseScrollMult = DEFAULT_MOUSE_SCROLL_MULT;
 
     // ---------------------- setters ----------------------
-    public void setFpsSpeedSlow(float fpsSpeedSlow) {
+    public void setFPSSpeedSlow(float fpsSpeedSlow) {
         this.fpsSpeedSlow = fpsSpeedSlow;
         slowStepMovers.forEach( m -> m.setSpeed( fpsSpeedSlow ) );
 
@@ -166,12 +166,12 @@ public class ControlsParameters
         }
     }
 
-    public void setFpsSpeedFast(float fpsSpeedFast) {
+    public void setFPSSpeedFast(float fpsSpeedFast) {
         this.fpsSpeedFast = fpsSpeedFast;
         fastStepMovers.forEach( m -> m.setSpeed( fpsSpeedFast ) );
     }
 
-    public void setFpsSpeedVeryFast(float fpsSpeedVeryFast) {
+    public void setFPSSpeedVeryFast(float fpsSpeedVeryFast) {
         this.fpsSpeedVeryFast = fpsSpeedVeryFast;
         veryFastStepMovers.forEach( m -> m.setSpeed( fpsSpeedVeryFast ) );
     }
@@ -208,15 +208,15 @@ public class ControlsParameters
     // ---------------------- modifiers ----------------------
 
     // ---------------------- getters ----------------------
-    public float getFpsSpeedSlow() {
+    public float getFPSSpeedSlow() {
         return fpsSpeedSlow;
     }
 
-    public float getFpsSpeedFast() {
+    public float getFPSSpeedFast() {
         return fpsSpeedFast;
     }
 
-    public float getFpsSpeedVeryFast() {
+    public float getFPSSpeedVeryFast() {
         return fpsSpeedVeryFast;
     }
 
