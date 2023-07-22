@@ -62,7 +62,7 @@ class AnimatedCenteringBeforeArcBallControl(val initAction: (Int, Int) -> Any, v
             }
 
             val xoffset: Float = (x - lastX).toFloat() * mouseSpeedMultiplier
-            val yoffset: Float = -1 * (lastY - y).toFloat() * mouseSpeedMultiplier
+            val yoffset: Float = (lastY - y).toFloat() * mouseSpeedMultiplier
 
             lastX = x
             lastY = y
