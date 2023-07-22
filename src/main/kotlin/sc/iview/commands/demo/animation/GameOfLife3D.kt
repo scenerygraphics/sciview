@@ -30,7 +30,6 @@ package sc.iview.commands.demo.animation
 
 import graphics.scenery.BoundingGrid
 import graphics.scenery.volumes.Volume
-import ij.gui.GenericDialog
 import net.imglib2.IterableInterval
 import net.imglib2.RandomAccess
 import net.imglib2.RandomAccessibleInterval
@@ -122,7 +121,6 @@ class GameOfLife3D : InteractiveCommand() {
 
     /** Temporary buffer for use while recomputing the image.  */
     private val bits = BooleanArray(w * h * d)
-    private var dialog: GenericDialog? = null
 
     /** Repeatedly iterates the simulation until stopped  */
     fun play() {
