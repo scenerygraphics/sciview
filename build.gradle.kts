@@ -73,14 +73,11 @@ dependencies {
 
     // ImageJ dependencies
     api("net.imagej:imagej-mesh")
-    implementation("net.imagej:ij")
     implementation("net.imagej:imagej-common")
     implementation("net.imagej:imagej-launcher")
-    implementation("net.imagej:imagej-legacy")
     implementation("net.imagej:imagej-mesh-io")
     implementation("net.imagej:imagej-ops")
     implementation("net.imagej:imagej-ui-swing")
-    implementation("net.imglib2:imglib2-ij")
 
     // SCIFIO dependencies
     implementation("io.scif:scifio")

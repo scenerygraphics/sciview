@@ -29,13 +29,10 @@
 package sc.iview.commands.demo.animation;
 
 import graphics.scenery.*;
-import ij.gui.GenericDialog;
-import ij.gui.NonBlockingGenericDialog;
 import net.imagej.mesh.Mesh;
 import net.imagej.mesh.io.stl.STLMeshIO;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
-import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import org.joml.Vector3f;
@@ -48,6 +45,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
 import sc.iview.SciView;
+import sc.iview.Utils;
 import sc.iview.commands.demo.ResourceLoader;
 
 import java.io.File;
@@ -142,17 +140,8 @@ public class SceneRiggingDemo implements Command {
     }
 
     private void makeDialog() {
-        GenericDialog dialog = new NonBlockingGenericDialog("Run scene");
-        dialog.showDialog();
-        while( dialog.isVisible() ) {
-            try {
-                Thread.sleep(20);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        if( dialog.wasCanceled() )
-            return;
+        var nonModal = Utils.showStopDialog(sciView, "Running scene", "Stop");
+        Utils.blockWhile(() -> nonModal.isVisible(), 200);
 
         Camera prevCamera = sciView.getActiveObserver();
         sciView.setCamera(screenshotCam);
@@ -167,11 +156,11 @@ public class SceneRiggingDemo implements Command {
         try {
             Thread.sleep(200);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            log.error(e);
         }
 
         RandomAccessibleInterval<ARGBType> colorScreenshot = convertToARGB(screenshot);
-        ImageJFunctions.show(colorScreenshot);
+        uiService.show(colorScreenshot);
 
         sciView.setCamera( prevCamera );
 
@@ -180,7 +169,7 @@ public class SceneRiggingDemo implements Command {
     public static void main(String... args) throws Exception {
         SciView sv = SciView.create();
 
-        CommandService command = sv.getScijavaContext().getService(CommandService.class);
+        CommandService command = sv.getScijavaContext().service(CommandService.class);
 
         HashMap<String, Object> argmap = new HashMap<String, Object>();
 
