@@ -31,6 +31,7 @@ package sc.iview.commands.edit
 import graphics.scenery.*
 import graphics.scenery.attribute.material.HasMaterial
 import graphics.scenery.primitives.Line
+import graphics.scenery.primitives.PointCloud
 import graphics.scenery.primitives.TextBoard
 import graphics.scenery.volumes.Colormap.Companion.fromColorTable
 import graphics.scenery.volumes.SlicingPlane
@@ -210,6 +211,11 @@ class Properties : InteractiveCommand() {
 
     @Parameter(label = "Edge width", callback = "updateNodeProperties", style = "group:Line")
     private var edgeWidth = 0
+
+    /* Point cloud properties */
+
+    @Parameter(label = "Point size", callback = "updateNodeProperties", style = "group:PointCloud")
+    private var pointRadius = 0f
 
     private val slicingModeChoices = Volume.SlicingMode.values().toMutableList()
 
@@ -485,6 +491,13 @@ class Properties : InteractiveCommand() {
             maybeRemoveInput("edgeWidth", java.lang.Integer::class.java)
         }
 
+        if (node is PointCloud){
+            pointRadius = node.pointRadius
+        } else {
+            maybeRemoveInput("pointSize", java.lang.Float::class.java)
+        }
+
+
         name = node.name
         fieldsUpdating = false
     }
@@ -594,6 +607,10 @@ class Properties : InteractiveCommand() {
             node.edgeWidth = edgeWidth.toFloat()
         }
 
+        if (node is PointCloud) {
+            node.pointRadius = pointRadius
+        }
+        
         events.publish(NodeChangedEvent(node))
     }
 
