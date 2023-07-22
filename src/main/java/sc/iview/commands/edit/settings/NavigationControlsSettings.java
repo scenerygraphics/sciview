@@ -64,18 +64,18 @@ public class NavigationControlsSettings extends InteractiveCommand {
     private SciView sciview;
 
     @Parameter(label = "Small step size", style = NumberWidget.SCROLL_BAR_STYLE, callback = "processSlowSpeed",
-        description = "How much of a world coordinate the camera moves with W,A,S,D keys or mouse right click&drag.",
+        description = "Normal speed camera movement.",
         min = "" + SciView.FPSSPEED_MINBOUND_SLOW, max = "" + SciView.FPSSPEED_MAXBOUND_SLOW, stepSize = "" + BASE_SPEED_INCR)
     private Float fpsSlowSpeed;
 
     @Parameter(label = "Large step size", style = NumberWidget.SCROLL_BAR_STYLE, callback = "processFastSpeed",
-            description = "How much of a world coordinate the camera moves with shift+ W,A,S,D keys or shift+ mouse right click&drag.",
+            description = "Fast camera movement.",
             min = "" + SciView.FPSSPEED_MINBOUND_FAST, max = "" + SciView.FPSSPEED_MAXBOUND_FAST,
             stepSize = "" + (FAST_TO_SLOW_RATIO * BASE_SPEED_INCR))
     private Float fpsFastSpeed;
 
     @Parameter(label = "Very large step size", style = NumberWidget.SCROLL_BAR_STYLE, callback = "processVeryFastSpeed",
-            description = "How much of a world coordinate the camera moves with ctrl+shift+ W,A,S,D keys.",
+            description = "Very fast camera movement.",
             min = "" + SciView.FPSSPEED_MINBOUND_VERYFAST, max = "" + SciView.FPSSPEED_MAXBOUND_VERYFAST,
             stepSize = "" + (VERY_FAST_TO_SLOW_RATIO * BASE_SPEED_INCR))
     private Float fpsVeryFastSpeed;
@@ -85,12 +85,12 @@ public class NavigationControlsSettings extends InteractiveCommand {
     private boolean adjustStepsLock = true;
 
     @Parameter(label = "Mouse move sensitivity", style = NumberWidget.SCROLL_BAR_STYLE, callback = "processMouseMove",
-            description = "Influences proportionally how much of a mouse move is required for an action in SciView.",
+            description = "Mouse movement sensitivity.",
             min = "" + SciView.MOUSESPEED_MINBOUND, max = "" + SciView.MOUSESPEED_MAXBOUND, stepSize = "" + MOUSE_MOVE_INCR)
     private Float mouseMoveSensitivity;
 
     @Parameter(label = "Mouse scroll sensitivity", style = NumberWidget.SCROLL_BAR_STYLE, callback = "processMouseScroll",
-            description = "Influences proportionally how much of a mouse wheel scrolling is required for an action in SciView.",
+            description = "Mouse scroll sensitivity.",
             min = "" + SciView.MOUSESCROLL_MINBOUND, max = "" + SciView.MOUSESCROLL_MAXBOUND, stepSize = "" + MOUSE_SCROLL_INCR)
     private Float mouseScrollSensitivity;
 
