@@ -2,6 +2,7 @@ pluginManagement {
     val kotlinVersion: String by settings
     val dokkaVersion: String by settings
     val shadowVersion: String = "8.1.1"
+    val analyzeVersion: String = "1.9.1"
 
     plugins {
         kotlin("jvm") version kotlinVersion
@@ -9,6 +10,7 @@ pluginManagement {
         id("org.jetbrains.dokka") version dokkaVersion
 
         id("com.github.johnrengelman.shadow") version shadowVersion
+        id("ca.cutterslade.analyze") version analyzeVersion
     }
 
     repositories {

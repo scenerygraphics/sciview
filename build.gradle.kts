@@ -23,6 +23,7 @@ plugins {
     `maven-publish`
     `java-library`
     signing
+    id("ca.cutterslade.analyze")
 }
 
 java {
@@ -156,6 +157,14 @@ tasks {
     }
     jar {
         archiveVersion.set(rootProject.version.toString())
+    }
+    analyzeClassesDependencies {
+        warnUsedUndeclared = true
+        warnUnusedDeclared = true
+    }
+    analyzeTestClassesDependencies {
+        warnUsedUndeclared = true
+        warnUnusedDeclared = true
     }
 
     withType<GenerateMavenPom>().configureEach {
