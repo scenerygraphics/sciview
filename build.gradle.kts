@@ -141,7 +141,7 @@ tasks {
         val default = if (version == 1) "11" else "$version"
         kotlinOptions {
             jvmTarget = project.properties["jvmTarget"]?.toString() ?: default
-            freeCompilerArgs += listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
+            freeCompilerArgs += listOf("-Xinline-classes", "-opt-in=kotlin.RequiresOptIn")
         }
 //        sourceCompatibility = project.properties["sourceCompatibility"]?.toString() ?: default
     }
