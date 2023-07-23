@@ -41,36 +41,28 @@ repositories {
 }
 
 dependencies {
+    // Bills of Materials
     implementation(platform("org.scijava:pom-scijava:${v("pom-scijava")}"))
+    implementation(platform(kotlin("bom")))
 
-    // Graphics dependencies
-
+    // Annotation processing
     annotationProcessor("org.scijava:scijava-common:${v("scijava-common")}")
     kapt("org.scijava:scijava-common:${v("scijava-common")}") {
         exclude("org.lwjgl")
     }
 
+    // Kotlin dependencies
+    implementation(kotlin("stdlib-jdk8"))
+    implementation("org.jetbrains.kotlin:kotlin-stdlib")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+
+    // Graphics dependencies
     api("graphics.scenery:scenery") {
         version { strictly(v("scenery")) }
-        exclude("org.biojava.thirdparty", "forester")
-        exclude("null", "unspecified")
     }
-
-    implementation("net.java.dev.jna:jna-platform")
-    implementation("org.janelia.saalfeldlab:n5")
-    implementation("org.janelia.saalfeldlab:n5-imglib2")
-    implementation("org.apache.logging.log4j:log4j-api")
-    implementation("org.apache.logging.log4j:log4j-1.2-api:${v("log4j-1.2-api")}")
-
-    implementation("com.formdev:flatlaf")
-
-    implementation("org.slf4j:slf4j-simple")
 
     // SciJava dependencies
-
-    implementation("org.yaml:snakeyaml") {
-        version { strictly(v("snakeyaml")) }
-    }
     implementation("org.scijava:scijava-common")
     implementation("org.scijava:ui-behaviour")
     implementation("org.scijava:script-editor")
@@ -78,60 +70,61 @@ dependencies {
     implementation("org.scijava:scijava-ui-awt")
     implementation("org.scijava:scijava-search")
     implementation("org.scijava:scripting-jython")
-//    implementation(migLayout.swing)
 
     // ImageJ dependencies
-
-    implementation("net.imagej:imagej-common")
     api("net.imagej:imagej-mesh")
+    implementation("net.imagej:ij")
+    implementation("net.imagej:imagej-common")
+    implementation("net.imagej:imagej-launcher")
+    implementation("net.imagej:imagej-legacy")
     implementation("net.imagej:imagej-mesh-io")
     implementation("net.imagej:imagej-ops")
-    implementation("net.imagej:imagej-launcher")
     implementation("net.imagej:imagej-ui-swing")
-    implementation("net.imagej:imagej-legacy")
+    implementation("net.imglib2:imglib2-ij")
+
+    // SCIFIO dependencies
     implementation("io.scif:scifio")
     implementation("io.scif:scifio-bf-compat")
 
     // ImgLib2 dependencies
     implementation("net.imglib2:imglib2")
+    implementation("net.imglib2:imglib2-algorithm")
+    implementation("net.imglib2:imglib2-realtransform")
     implementation("net.imglib2:imglib2-roi")
 
-    // XDG support
-    implementation("dev.dirs:directories")
-
-    // Math dependencies
-//    implementation(commons.math3)
-//    implementation(misc.joml)
-
-    // Kotlin dependencies
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
-
-    // Test scope
-
-//    testImplementation(misc.junit4)
-    implementation("net.imagej:ij")
-    implementation("net.imglib2:imglib2-ij")
-
-//    implementation(n5.core)
-//    implementation(n5.hdf5)
-//    implementation(n5.imglib2)
-    implementation("org.janelia.saalfeldlab:n5")
-    implementation("org.janelia.saalfeldlab:n5-hdf5")
-    implementation("sc.fiji:spim_data")
-
-    implementation(platform(kotlin("bom")))
-    implementation(kotlin("stdlib-jdk8"))
-    testImplementation(kotlin("test-junit"))
-    testImplementation("org.slf4j:slf4j-simple")
-
+    // BigDataViewer dependencies
     implementation("sc.fiji:bigdataviewer-core")
     implementation("sc.fiji:bigdataviewer-vistools")
+    implementation("sc.fiji:spim_data")
 
-    // OME
-    implementation("ome:formats-bsd")
-    implementation("ome:formats-gpl")
+    // N5 dependencies
+    implementation("org.janelia.saalfeldlab:n5")
+    implementation("org.janelia.saalfeldlab:n5-hdf5")
+    implementation("org.janelia.saalfeldlab:n5-imglib2")
+
+    // Third party dependencies
+    implementation("com.formdev:flatlaf")
+    implementation("dev.dirs:directories") // XDG support
+    implementation("net.java.dev.jna:jna")
+    implementation("org.apache.logging.log4j:log4j-1.2-api:${v("log4j-1.2-api")}")
+    implementation("org.apache.logging.log4j:log4j-api")
+    implementation("org.slf4j:slf4j-simple")
+    implementation("org.yaml:snakeyaml") {
+        version { strictly(v("snakeyaml")) }
+    }
+
+    // Runtime dependencies
+    runtimeOnly("io.scif:scifio-bf-compat")
+    runtimeOnly("net.imagej:imagej-launcher")
+    runtimeOnly("net.java.dev.jna:jna-platform")
+    runtimeOnly("ome:formats-bsd")
+    runtimeOnly("org.scijava:scripting-jython")
+
+    // Test dependencies
+    testImplementation("net.clearvolume:cleargl")
+    testImplementation("org.slf4j:slf4j-simple")
+    testImplementation(kotlin("test-junit"))
+    testImplementation(kotlin("test-junit"))
 }
 
 //kapt {
