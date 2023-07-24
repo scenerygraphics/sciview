@@ -52,7 +52,12 @@ class AnimatedCenteringBeforeArcBallControl(val initAction: (Int, Int) -> Any, v
 
     override fun init(x: Int, y: Int) {
         initAction.invoke(x, y)
-        super.init(x, y)
+
+        lastX = x
+        lastY = y
+
+        cam?.targeted = true
+        cam?.target = target.invoke()
     }
 
     override fun drag(x: Int, y: Int) {
@@ -68,7 +73,7 @@ class AnimatedCenteringBeforeArcBallControl(val initAction: (Int, Int) -> Any, v
             lastY = y
 
             val frameYaw = (xoffset) / 180.0f * Math.PI.toFloat()
-            val framePitch = yoffset / 180.0f * Math.PI.toFloat()
+            val framePitch = yoffset / 180.0f * Math.PI.toFloat() * -1f
 
             // first calculate the total rotation quaternion to be applied to the camera
             val yawQ = Quaternionf().rotateXYZ(0.0f, frameYaw, 0.0f).normalize()
