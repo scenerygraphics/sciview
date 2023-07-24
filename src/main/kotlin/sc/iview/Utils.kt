@@ -35,16 +35,16 @@ import net.imglib2.img.Img
 import net.imglib2.img.array.ArrayImgs
 import net.imglib2.type.numeric.ARGBType
 import net.imglib2.type.numeric.integer.UnsignedByteType
-import net.imglib2.view.Views
 import org.joml.Vector3f
 import org.scijava.util.ColorRGB
 import org.scijava.util.ColorRGBA
-import java.awt.RenderingHints
+import sc.iview.ui.SwingMainWindow
+import java.awt.*
 import java.awt.image.BufferedImage
 import java.io.*
 import java.net.URL
 import java.util.*
-import javax.swing.ImageIcon
+import javax.swing.*
 
 /**
  * Utility methods.
@@ -242,6 +242,54 @@ object Utils {
         } catch (e: IOException) {
             e.printStackTrace()
         }
+    }
+
+    /**
+     * Displays a non-modal dialog window consisting of a single button, which dismisses the dialog when pressed.
+     * The dialog is centered vertically adjacent to the owner window if given, or centered on the screen otherwise.
+     * @param parent the parent object of the dialog, null by default
+     * @param title title of the dialog, "sciview" by default
+     * @param buttonText text for the button, "Stop" by default
+     * @return the dialog object
+     */
+    @JvmStatic
+    fun showStopDialog(parent: Any? = null, title: String = "sciview", buttonText: String = "Stop"): JDialog {
+        // Discern the owner frame to use, if any.
+        val owner: Frame? = when (parent) {
+            is SciView -> windowFrame(parent)
+            is Frame -> parent
+            else -> null
+        }
+
+        // Create and pack the dialog.
+        val nonModal = JDialog(owner, title, false)
+        nonModal.defaultCloseOperation = WindowConstants.DISPOSE_ON_CLOSE
+        val stopButton = JButton("Stop")
+        stopButton.addActionListener { _ -> nonModal.dispose() }
+        nonModal.contentPane.add(stopButton, java.awt.BorderLayout.CENTER)
+        nonModal.pack()
+
+        // Position the dialog nicely.
+        val ss = Toolkit.getDefaultToolkit().screenSize
+        val bounds = owner?.bounds ?: Rectangle(0, 0, ss.width, ss.height)
+        nonModal.location = Point(
+            bounds.x + (bounds.width - nonModal.width) / 2,
+            (bounds.y + (bounds.height - nonModal.height) / 2).coerceIn(50, ss.height - 50)
+        )
+
+        // Show and return the dialog.
+        nonModal.isVisible = true
+        return nonModal
+    }
+
+    /**
+     * Gets the AWT {Frame} displaying this {SciView} instance, or null if none.
+     * @param sciview the {SciView} instance
+     * @return the containing {Frame}, or null if none
+     */
+    fun windowFrame(sciview: SciView): Frame? {
+        val mw = sciview.mainWindow
+        return if (mw is SwingMainWindow) mw.frame else null
     }
 
     class SciviewStandalone {
