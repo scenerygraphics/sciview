@@ -1870,7 +1870,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         const val MOUSESPEED_MINBOUND = 0.1f
         const val MOUSESPEED_MAXBOUND = 3.0f
         const val MOUSESCROLL_MINBOUND = 0.3f
-        const val MOUSESCROLL_MAXBOUND = 10.0f
+        const val MOUSESCROLL_MAXBOUND = 100.0f
 
         @JvmField
         val DEFAULT_COLOR: ColorRGB = Colors.LIGHTGRAY
