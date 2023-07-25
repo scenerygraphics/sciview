@@ -52,6 +52,8 @@ dependencies {
     }
 
     // Kotlin dependencies
+    //implementation(kotlin("stdlib"))
+    //implementation(kotlin("stdlib-common"))
     implementation(kotlin("stdlib-jdk8"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
@@ -64,24 +66,19 @@ dependencies {
 
     // SciJava dependencies
     implementation("org.scijava:scijava-common")
-    implementation("org.scijava:ui-behaviour")
-    implementation("org.scijava:script-editor")
+    implementation("org.scijava:scijava-table") // sc.iview.commands.view.DisplayVertices
     implementation("org.scijava:scijava-ui-swing")
-    implementation("org.scijava:scijava-ui-awt")
-    implementation("org.scijava:scijava-search")
-    implementation("org.scijava:scripting-jython")
+    implementation("org.scijava:script-editor") // sc.iview.ui.REPLEditor, sc.iview.ui.REPLPane
+    implementation("org.scijava:ui-behaviour")
 
     // ImageJ dependencies
     api("net.imagej:imagej-mesh")
     implementation("net.imagej:imagej-common")
-    implementation("net.imagej:imagej-launcher")
     implementation("net.imagej:imagej-mesh-io")
     implementation("net.imagej:imagej-ops")
-    implementation("net.imagej:imagej-ui-swing")
 
     // SCIFIO dependencies
     implementation("io.scif:scifio")
-    implementation("io.scif:scifio-bf-compat")
 
     // ImgLib2 dependencies
     implementation("net.imglib2:imglib2")
@@ -92,6 +89,7 @@ dependencies {
     // BigDataViewer dependencies
     implementation("sc.fiji:bigdataviewer-core")
     implementation("sc.fiji:bigdataviewer-vistools")
+    implementation("sc.fiji:bigvolumeviewer") // sc.iview.io.N5IO, sc.iview.SciView
     implementation("sc.fiji:spim_data")
 
     // N5 dependencies
@@ -100,27 +98,38 @@ dependencies {
     implementation("org.janelia.saalfeldlab:n5-imglib2")
 
     // Third party dependencies
-    implementation("com.formdev:flatlaf")
+    implementation("cisd:jhdf5") // LoadCremiDatasetAndNeurons
+    implementation("com.formdev:flatlaf") // sc.iview.ui.SwingMainWindow
+    implementation("com.google.guava:guava") // sc.iview.commands.view.SaveCameraConfiguration
+    implementation("com.miglayout:miglayout-swing") // sc.iview.ui.REPLPane
+    implementation("commons-io:commons-io") // LoadCremiDatasetAndNeurons
     implementation("dev.dirs:directories") // XDG support
+    implementation("org.joml:joml")
+    implementation("org.slf4j:slf4j-api") // sc.iview.SplashLabel
+
+    // For vendored com.intellij classes.
     implementation("net.java.dev.jna:jna")
+    implementation("net.sf.trove4j:trove4j")
     implementation("org.apache.logging.log4j:log4j-1.2-api:${v("log4j-1.2-api")}")
-    implementation("org.apache.logging.log4j:log4j-api")
-    implementation("org.slf4j:slf4j-simple")
-    implementation("org.yaml:snakeyaml") {
-        version { strictly(v("snakeyaml")) }
-    }
+    implementation("org.jetbrains:annotations")
 
     // Runtime dependencies
     runtimeOnly("io.scif:scifio-bf-compat")
     runtimeOnly("net.imagej:imagej-launcher")
+    runtimeOnly("net.imagej:imagej-ui-swing")
     runtimeOnly("net.java.dev.jna:jna-platform")
     runtimeOnly("ome:formats-bsd")
+    runtimeOnly("org.apache.logging.log4j:log4j-api")
     runtimeOnly("org.scijava:scripting-jython")
+    runtimeOnly("org.yaml:snakeyaml") {
+        version { strictly(v("snakeyaml")) }
+    }
+
+    // Optional (non-transitive) dependencies
+    //optional("org.slf4j:slf4j-simple")
 
     // Test dependencies
     testImplementation("net.clearvolume:cleargl")
-    testImplementation("org.slf4j:slf4j-simple")
-    testImplementation(kotlin("test-junit"))
     testImplementation(kotlin("test-junit"))
 }
 
