@@ -89,7 +89,10 @@ dependencies {
     // BigDataViewer dependencies
     implementation("sc.fiji:bigdataviewer-core")
     implementation("sc.fiji:bigdataviewer-vistools")
-    implementation("sc.fiji:bigvolumeviewer") // sc.iview.io.N5IO, sc.iview.SciView
+    implementation("sc.fiji:bigvolumeviewer") { // sc.iview.io.N5IO, sc.iview.SciView
+        exclude("org.jogamp.gluegen:gluegen-rt")
+        exclude("org.jogamp.jogl:jogl-all")
+    }
     implementation("sc.fiji:spim_data")
 
     // N5 dependencies
