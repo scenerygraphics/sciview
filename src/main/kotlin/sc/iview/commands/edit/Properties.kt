@@ -41,6 +41,7 @@ import net.imglib2.display.ColorTable
 import org.joml.Quaternionf
 import org.joml.Vector3f
 import org.joml.Vector4f
+import org.scijava.ItemVisibility
 import org.scijava.command.Command
 import org.scijava.command.InteractiveCommand
 import org.scijava.event.EventService
@@ -155,6 +156,15 @@ class Properties : InteractiveCommand() {
 
     @Parameter(label = "Volume slicing mode", callback = "updateNodeProperties", style = ChoiceWidget.LIST_BOX_STYLE+"group:Volume")
     private var slicingMode: String = Volume.SlicingMode.Slicing.name
+
+    @Parameter(label = "Width", callback = "updateNodeProperties", visibility = ItemVisibility.MESSAGE, style = "group:Volume")
+    private var width: Int = 0
+
+    @Parameter(label = "Height", callback = "updateNodeProperties", visibility = ItemVisibility.MESSAGE, style = "group:Volume")
+    private var height: Int = 0
+
+    @Parameter(label = "Depth", callback = "updateNodeProperties", visibility = ItemVisibility.MESSAGE, style = "group:Volume")
+    private var depth: Int = 0
 
     /* Light properties */
 
@@ -393,6 +403,10 @@ class Properties : InteractiveCommand() {
                 log.error("Could not load LUT $colormapName")
             }
 
+            width = node.getDimensions().x
+            height = node.getDimensions().y
+            depth = node.getDimensions().z
+
             min = node.converterSetups[0].displayRangeMin.toInt()
             max = node.converterSetups[0].displayRangeMax.toInt()
 
@@ -418,6 +432,9 @@ class Properties : InteractiveCommand() {
             maybeRemoveInput("colormapName", String::class.java)
             maybeRemoveInput("playPauseButton", Button::class.java)
             maybeRemoveInput("playSpeed", java.lang.Integer::class.java)
+            maybeRemoveInput("width", java.lang.Integer::class.java)
+            maybeRemoveInput("height", java.lang.Integer::class.java)
+            maybeRemoveInput("depth", java.lang.Integer::class.java)
         }
 
         if (node is PointLight) {
