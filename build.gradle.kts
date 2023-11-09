@@ -27,6 +27,7 @@ repositories {
         logger.warn("Using local Maven repository as source")
         mavenLocal()
     }
+    maven("https://jitpack.io")
     mavenCentral()
     maven("https://maven.scijava.org/content/groups/public")
 }
@@ -45,7 +46,7 @@ dependencies {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "0.9.0"
+    val sceneryVersion = "055400e"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
