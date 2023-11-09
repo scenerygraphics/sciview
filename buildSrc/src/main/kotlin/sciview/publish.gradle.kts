@@ -8,7 +8,8 @@ import java.net.URI
 // configuration of the Maven artifacts
 plugins {
     `maven-publish`
-    //    id("org.jetbrains.dokka")
+    `java-library`
+    id("org.jetbrains.dokka")
 }
 
 val sciviewUrl = "https://github.com/scenerygraphics/sciview"
@@ -21,6 +22,22 @@ publishing {
             version = rootProject.version.toString()
 
             from(components["java"])
+
+            val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
+                dependsOn(tasks.dokkaJavadoc)
+                from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
+                archiveClassifier.set("javadoc")
+            }
+
+            val dokkaHtmlJar by tasks.register<Jar>("dokkaHtmlJar") {
+                dependsOn(tasks.dokkaHtml)
+                from(tasks.dokkaHtml.flatMap { it.outputDirectory })
+                archiveClassifier.set("html-doc")
+            }
+
+
+            artifact(dokkaJavadocJar)
+            artifact(dokkaHtmlJar)
 
             // TODO, resolved dependencies versions? https://docs.gradle.org/current/userguide/publishing_maven.html#publishing_maven:resolved_dependencies
 

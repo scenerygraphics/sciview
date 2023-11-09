@@ -139,6 +139,9 @@ dependencies {
 //    }
 //}
 
+val isRelease: Boolean
+    get() = System.getProperty("release") == "true"
+
 tasks {
     withType<KotlinCompile>().all {
         val version = System.getProperty("java.version").substringBefore('.').toInt()
@@ -422,30 +425,37 @@ tasks {
             }
         }
     }
-}
 
-val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
-    dependsOn(tasks.dokkaJavadoc)
-    from(tasks.dokkaJavadoc.get().outputDirectory.get())
-    archiveClassifier.set("javadoc")
-}
+    dokkaHtml {
+        enabled = isRelease
+        dokkaSourceSets.configureEach {
+            sourceLink {
+                localDirectory.set(file("src/main/kotlin"))
+                remoteUrl.set(URL("https://github.com/scenerygraphics/sciview/tree/main/src/main/kotlin"))
+                remoteLineSuffix.set("#L")
+            }
+        }
+    }
 
-val dokkaHtmlJar by tasks.register<Jar>("dokkaHtmlJar") {
-    dependsOn(tasks.dokkaHtml)
-    from(tasks.dokkaHtml.get().outputDirectory.get())
-    archiveClassifier.set("html-doc")
+    dokkaJavadoc {
+        enabled = isRelease
+    }
+
+    if(project.properties["buildFatJAR"] == true) {
+        apply(plugin = "com.github.johnrengelman.shadow")
+        jar {
+            isZip64 = true
+        }
+    }
+
+    withType<GenerateModuleMetadata> {
+        enabled = false
+    }
 }
 
 jacoco {
-    toolVersion = "0.8.7"
+    toolVersion = "0.8.11"
 }
-
-artifacts {
-    archives(dokkaJavadocJar)
-    archives(dokkaHtmlJar)
-}
-
-
 
 java.withSourcesJar()
 
