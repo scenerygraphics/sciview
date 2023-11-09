@@ -259,7 +259,10 @@ tasks {
 
                     val propertyName = "$artifactId.version"
 
-                    if (versionedArtifacts.contains(artifactId)) {
+                    // we only add our own property if the version is not null,
+                    // as that indicates something managed by the parent POM, where
+                    // we did not specify an explicit version.
+                    if (versionedArtifacts.contains(artifactId) && it.version != null) {
                         // add "<artifactid.version>[version]</artifactid.version>" to pom
                         propertiesNode.appendNode(propertyName, it.version)
                     }

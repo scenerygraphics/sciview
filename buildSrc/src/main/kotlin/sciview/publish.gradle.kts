@@ -1,5 +1,7 @@
 package sciview
 
+import java.net.URI
+
 //import gradle.kotlin.dsl.accessors._e98ba513b34f86980a981ef4cafb3d49.publishing
 //import org.gradle.kotlin.dsl.`maven-publish`
 
@@ -107,15 +109,14 @@ publishing {
 
     repositories {
         maven {
-//            name = "sonatype" TODO
-//            credentials(PasswordCredentials::class)
-//
-//            val releaseRepo = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-//            val snapshotRepo = "https://oss.sonatype.org/content/repositories/snapshots/"
-//
-//            val snapshot = rootProject.version.toString().endsWith("SNAPSHOT")
-//            url = URI(if (snapshot) snapshotRepo else releaseRepo)
-//            //            url = URI("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+            name = "scijava"
+            credentials(PasswordCredentials::class)
+
+            val releaseRepo = "https://maven.scijava.org/content/repositories/releases/"
+            val snapshotRepo = "https://maven.scijava.org/content/repositories/snapshots/"
+
+            val snapshot = rootProject.version.toString().endsWith("SNAPSHOT")
+            url = URI(if (snapshot) snapshotRepo else releaseRepo)
         }
     }
 }
