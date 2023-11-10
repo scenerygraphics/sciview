@@ -251,7 +251,8 @@ tasks {
                                             "lwjgl-xxhash",
                                             "lwjgl-remotery",
                                             "lwjgl-spvc",
-                                            "lwjgl-shaderc")
+                                            "lwjgl-shaderc",
+                                            "log4j-1.2-api")
 
             val toSkip = listOf("pom-scijava")
 
