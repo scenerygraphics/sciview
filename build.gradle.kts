@@ -28,6 +28,8 @@ repositories {
         mavenLocal()
     }
     mavenCentral()
+    mavenLocal()
+    maven("https://jitpack.io")
     maven("https://maven.scijava.org/content/groups/public")
 }
 
@@ -62,6 +64,8 @@ dependencies {
 
     implementation("org.slf4j:slf4j-simple")
 
+    //implementation("graphics.scenery:streamline-vis:1.0-SNAPSHOT") //local dependency
+
     // SciJava dependencies
 
     implementation("org.yaml:snakeyaml") {
@@ -79,7 +83,8 @@ dependencies {
     // ImageJ dependencies
 
     implementation("net.imagej:imagej-common")
-    api("net.imagej:imagej-mesh:0.8.1")
+    //api("net.imagej:imagej-mesh:0.8.1")
+    api("com.github.imglib:imglib2-mesh:e7d4e89")
     implementation("net.imagej:imagej-mesh-io")
     implementation("net.imagej:imagej-ops")
     implementation("net.imagej:imagej-launcher")
