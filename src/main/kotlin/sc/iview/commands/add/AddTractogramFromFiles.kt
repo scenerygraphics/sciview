@@ -52,7 +52,8 @@ class AddTractogramFromFiles: DynamicCommand() { //TODO: check which class is su
     @Parameter
     private lateinit var ms: ModuleService
 
-    @Parameter(label = "Tractogram file", style = "extensions:trx") //TODO: I expected, that it would only show .trx files, but it doesn't
+    //outcommented since using command without actual files
+    /*@Parameter(label = "Tractogram file", style = "extensions:trx") //TODO: I expected, that it would only show .trx files, but it doesn't
     private lateinit var tractogramFile: File
 
     @Parameter(label = "Parcellation file", style = "extensions:nii.gz") //TODO: autofill if there is a nifti called parcellation in that folder
@@ -62,15 +63,15 @@ class AddTractogramFromFiles: DynamicCommand() { //TODO: check which class is su
     private lateinit var labelMapFile: File
 
     @Parameter(label = "Brain Volume", style = "extensions:nii.gz")
-    private lateinit var volume: File
+    private lateinit var volume: File*/
 
     @Parameter(label = "Maximum Streamlines Displayed") //min =1, max=5000?
     private var maxStreamlines = 5000
 
     override fun run(){
-        val trx = tractogramFile.path
-        val parcellation= parcellationFile.path
-        val labelMap = labelMapFile.path
+        //val trx = tractogramFile.path //using command without acutal files
+        //val parcellation= parcellationFile.path //using command without actual files
+        //val labelMap = labelMapFile.path //using command without actual files
         //val s = Streamlines(maxStreamlines) //can only be used with local dependency
         //val comp = getComponents(trx, parcellation, labelMap, volume, s) //this is what is normally used to initialize all components correctly
         val comp = dummyComponents()
