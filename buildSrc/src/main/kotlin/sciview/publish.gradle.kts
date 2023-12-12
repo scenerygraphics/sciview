@@ -2,9 +2,6 @@ package sciview
 
 import java.net.URI
 
-//import gradle.kotlin.dsl.accessors._e98ba513b34f86980a981ef4cafb3d49.publishing
-//import org.gradle.kotlin.dsl.`maven-publish`
-
 // configuration of the Maven artifacts
 plugins {
     `maven-publish`
@@ -19,7 +16,29 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = "sc.iview"
             artifactId = rootProject.name
-            version = rootProject.version.toString()
+            val customVersion = project.properties["customVersion"]
+            val v = if(customVersion != null) {
+                if(customVersion == "git") {
+                    val gitCommand = Runtime.getRuntime().exec("git rev-parse --verify --short HEAD")
+                    val result = gitCommand.waitFor()
+
+                    if(result == 0) {
+                        gitCommand.inputStream.bufferedReader().use { it.readText() }.trim().substring(0, 7)
+                    } else {
+                        logger.error("Could not execute git to get commit hash (exit code $result). Is git installed?")
+                        logger.error("Will fall back to default project version.")
+                        rootProject.version
+                    }
+                } else {
+                    customVersion
+                }
+            } else {
+                rootProject.version
+            }
+
+            version = v.toString()
+
+            logger.quiet("Creating Maven publication $groupId:$artifactId:$version ...")
 
             from(components["java"])
 
