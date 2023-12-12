@@ -27,6 +27,7 @@ repositories {
         logger.warn("Using local Maven repository as source")
         mavenLocal()
     }
+    maven("https://jitpack.io")
     mavenCentral()
     maven("https://maven.scijava.org/content/groups/public")
 }
@@ -45,7 +46,7 @@ dependencies {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "0.9.0"
+    val sceneryVersion = "de3897c"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
@@ -137,6 +138,9 @@ dependencies {
 //        arg("-Xopt-in", "kotlin.RequiresOptIn")
 //    }
 //}
+
+val isRelease: Boolean
+    get() = System.getProperty("release") == "true"
 
 tasks {
     withType<KotlinCompile>().all {
@@ -247,9 +251,13 @@ tasks {
                                             "lwjgl-xxhash",
                                             "lwjgl-remotery",
                                             "lwjgl-spvc",
-                                            "lwjgl-shaderc")
+                                            "lwjgl-shaderc",
+                                            "lwjgl-jawt",
+                                            "log4j-1.2-api")
 
             val toSkip = listOf("pom-scijava")
+
+            logger.quiet("Adding pom-scijava-managed dependencies for Maven publication:")
 
             configurations.implementation.get().allDependencies.forEach {
                 val artifactId = it.name
@@ -258,7 +266,10 @@ tasks {
 
                     val propertyName = "$artifactId.version"
 
-                    if (versionedArtifacts.contains(artifactId)) {
+                    // we only add our own property if the version is not null,
+                    // as that indicates something managed by the parent POM, where
+                    // we did not specify an explicit version.
+                    if (versionedArtifacts.contains(artifactId) && it.version != null) {
                         // add "<artifactid.version>[version]</artifactid.version>" to pom
                         propertiesNode.appendNode(propertyName, it.version)
                     }
@@ -269,7 +280,7 @@ tasks {
                     dependencyNode.appendNode("version", "\${$propertyName}")
 
                     // Custom per artifact tweaks
-                    println(artifactId)
+                    logger.quiet("* ${it.group}:$artifactId with version property \$$propertyName")
                     if ("\\-bom".toRegex().find(artifactId) != null) {
                         dependencyNode.appendNode("type", "pom")
                     }
@@ -369,11 +380,10 @@ tasks {
             }
         }
         .forEach { className ->
-            println("Working on $className")
             val exampleName = className.substringAfterLast(".")
             val exampleType = className.substringBeforeLast(".").substringAfterLast(".")
 
-            println("Registering $exampleName of $exampleType")
+            logger.quiet("Registering $exampleName of $exampleType from $className")
             register<JavaExec>(name = className.substringAfterLast(".")) {
                 classpath = sourceSets.test.get().runtimeClasspath
                 mainClass.set(className)
@@ -418,30 +428,37 @@ tasks {
             }
         }
     }
-}
 
-val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
-    dependsOn(tasks.dokkaJavadoc)
-    from(tasks.dokkaJavadoc.get().outputDirectory.get())
-    archiveClassifier.set("javadoc")
-}
+    dokkaHtml {
+        enabled = isRelease
+        dokkaSourceSets.configureEach {
+            sourceLink {
+                localDirectory.set(file("src/main/kotlin"))
+                remoteUrl.set(URL("https://github.com/scenerygraphics/sciview/tree/main/src/main/kotlin"))
+                remoteLineSuffix.set("#L")
+            }
+        }
+    }
 
-val dokkaHtmlJar by tasks.register<Jar>("dokkaHtmlJar") {
-    dependsOn(tasks.dokkaHtml)
-    from(tasks.dokkaHtml.get().outputDirectory.get())
-    archiveClassifier.set("html-doc")
+    dokkaJavadoc {
+        enabled = isRelease
+    }
+
+    if(project.properties["buildFatJAR"] == true) {
+        apply(plugin = "com.github.johnrengelman.shadow")
+        jar {
+            isZip64 = true
+        }
+    }
+
+    withType<GenerateModuleMetadata> {
+        enabled = false
+    }
 }
 
 jacoco {
-    toolVersion = "0.8.7"
+    toolVersion = "0.8.11"
 }
-
-artifacts {
-    archives(dokkaJavadocJar)
-    archives(dokkaHtmlJar)
-}
-
-
 
 java.withSourcesJar()
 
