@@ -46,7 +46,7 @@ dependencies {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "055400e"
+    val sceneryVersion = "de3897c"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
@@ -252,9 +252,12 @@ tasks {
                                             "lwjgl-remotery",
                                             "lwjgl-spvc",
                                             "lwjgl-shaderc",
+                                            "lwjgl-jawt",
                                             "log4j-1.2-api")
 
             val toSkip = listOf("pom-scijava")
+
+            logger.quiet("Adding pom-scijava-managed dependencies for Maven publication:")
 
             configurations.implementation.get().allDependencies.forEach {
                 val artifactId = it.name
@@ -277,7 +280,7 @@ tasks {
                     dependencyNode.appendNode("version", "\${$propertyName}")
 
                     // Custom per artifact tweaks
-                    println(artifactId)
+                    logger.quiet("* ${it.group}:$artifactId with version property \$$propertyName")
                     if ("\\-bom".toRegex().find(artifactId) != null) {
                         dependencyNode.appendNode("type", "pom")
                     }
@@ -377,11 +380,10 @@ tasks {
             }
         }
         .forEach { className ->
-            println("Working on $className")
             val exampleName = className.substringAfterLast(".")
             val exampleType = className.substringBeforeLast(".").substringAfterLast(".")
 
-            println("Registering $exampleName of $exampleType")
+            logger.quiet("Registering $exampleName of $exampleType from $className")
             register<JavaExec>(name = className.substringAfterLast(".")) {
                 classpath = sourceSets.test.get().runtimeClasspath
                 mainClass.set(className)
