@@ -57,8 +57,8 @@ import org.scijava.widget.ChoiceWidget
 import org.scijava.widget.NumberWidget
 import sc.iview.SciView
 import sc.iview.event.NodeChangedEvent
+import sc.iview.node.TractogramCalcContainer
 import java.io.IOException
-import java.net.URL
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -230,6 +230,31 @@ class Properties : InteractiveCommand() {
     @Parameter
     private lateinit var log: LogService
 
+    /* Tractogram properties */
+    @Parameter(label = "Select brain region", choices = [])
+    private var firstBrainRegion: String = "none"
+
+    @Parameter(label = "Select brain region", choices = [])
+    private var secondBrainRegion: String = "none"
+
+    @Parameter(label = "Calculate Selection", callback = "selection")
+    private lateinit var selection: Button
+
+    @Parameter(label = "Exclusion regions", style = ChoiceWidget.RADIO_BUTTON_HORIZONTAL_STYLE + ",group:selected regions")
+    private var exclusion = false
+
+    // Minimum length filter via slider
+    @Parameter(label = "Select minimal length of fibers to be displayed", persist = false, callback = "filterLength")
+    private var minLength: Float = 0f
+
+    // Maximum length filter via slider
+    @Parameter(label = "Select maximal length of fibers to be displayed", persist = false, callback = "filterLength")
+    private var maxLength: Float = 0f
+
+    // Maximum length filter via slider
+    @Parameter(label = "Select maximal local curvature allowed", persist = false, callback = "filterCurvature")
+    private var maxCurvature: Float = 0f
+
     /**
      * Nothing happens here, as cancelling the dialog is not possible.
      */
@@ -339,6 +364,47 @@ class Properties : InteractiveCommand() {
         }
     }
 
+    fun selection(){
+        log.info("Selecting streamlines connecting brain region $firstBrainRegion with brain region $secondBrainRegion.")
+        val calcComponent = currentSceneNode?.getChildrenByName("Streamline Calcs")?.get(0) as TractogramCalcContainer // TODO: check if empty
+        val streamlineCalcs = calcComponent.streamlineCalcs
+        val parcellationObjectList = currentSceneNode?.getChildrenByName("Brain areas") // TODO: check if empty
+        val parcellationObject = parcellationObjectList?.get(0) as RichNode
+        parcellationObject.children.forEach{
+            it.visible = false
+        }
+        val tractogramObjectList = currentSceneNode?.getChildrenByName("tractogram") // TODO: check if empty
+        val tractogramObject = tractogramObjectList?.get(0)
+        tractogramObject?.visible = false
+
+        val meshes = ArrayList<Mesh>(2)
+
+        if(firstBrainRegion!="none"){
+            val mesh = parcellationObject.getChildrenByName(firstBrainRegion)[0] as Mesh
+            mesh.visible = true
+            meshes.add(mesh)
+
+        } //TODO: get rid of duplicate code
+        if (secondBrainRegion != "none"){
+            val mesh = parcellationObject.getChildrenByName(secondBrainRegion)[0] as Mesh
+            mesh.visible = true
+            meshes.add(mesh)
+        }
+        // TODO: if firstMesh is empty, then no streamline selection needs to be performed!
+        //TODO: check is meshes actually contain something
+        streamlineCalcs.streamlineSelectionTransformedMesh(parcellationObject, tractogramObject as RichNode, meshes)
+    }
+
+    fun filterLength(){
+        //TODO implement
+        print("filterLength")
+    }
+
+    fun filterCurvature(){
+        //TODO implement
+        print("filterCurvature")
+    }
+
     /** Updates command fields to match current scene node properties.  */
     @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
     fun updateCommandFields() {
@@ -423,7 +489,30 @@ class Properties : InteractiveCommand() {
             }
 
             maybeRemoveInput("colour", ColorRGB::class.java)
-        } else {
+        } else{
+            if (node.name == "tractogram parent"){
+                val firstBrainRegionItem = info.getMutableInput("firstBrainRegion", String::class.java)
+                val secondBrainRegionItem = info.getMutableInput("secondBrainRegion", String::class.java)
+                val parcellation = node.getChildrenByName("Brain areas").get(0) // TODO: check, if there is a parcellation
+                val brainAreas = parcellation.metadata.get("brainAreas")
+                firstBrainRegionItem.choices = (brainAreas as? ArrayList<String>) ?: ArrayList()
+                secondBrainRegionItem.choices = (brainAreas as? ArrayList<String>) ?: ArrayList()
+
+                // read fiber length from metadata of tractogram and create sliders with according min/max values
+                val tractogram = node.getChildrenByName("tractogram").get(0) //TODO: check, if there is a tractogram
+                val minLengthItem = info.getMutableInput("minLength", java.lang.Float::class.java)
+                val maxLengthItem = info.getMutableInput("maxLength", java.lang.Float::class.java)
+                //val minimumLenght = tractogram.metadata.get("minLength") as java.lang.Float
+                val minimumLength = 0f as java.lang.Float
+                val maximumLength = tractogram.metadata.get("maxLength") as java.lang.Float //TODO: check if available
+                minLengthItem.minimumValue = minimumLength
+                minLengthItem.maximumValue = maximumLength
+                maxLengthItem.minimumValue = minimumLength
+                maxLengthItem.maximumValue = maximumLength
+                minLengthItem.widgetStyle = NumberWidget.SLIDER_STYLE
+                maxLengthItem.widgetStyle = NumberWidget.SLIDER_STYLE
+            }
+
             maybeRemoveInput("slicingMode", String::class.java)
             maybeRemoveInput("min", java.lang.Integer::class.java)
             maybeRemoveInput("max", java.lang.Integer::class.java)
