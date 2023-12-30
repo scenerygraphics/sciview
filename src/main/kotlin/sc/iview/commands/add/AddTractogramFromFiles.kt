@@ -2,13 +2,10 @@ package sc.iview.commands.add
 
 import TractogramTools
 import org.scijava.command.Command
-import org.scijava.command.CommandService
 import org.scijava.command.DynamicCommand
-import org.scijava.module.ModuleService
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
-import org.scijava.ui.*
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
 import java.io.File
@@ -18,20 +15,17 @@ class AddTractogramFromFiles: DynamicCommand() {
     @Parameter
     private lateinit var sciView: SciView
 
-    @Parameter(label = "Tractogram file", style = "extensions:trx") //TODO: I expected, that it would only show .trx files, but it doesn't
+    @Parameter(label = "Tractogram file", style = "extensions:trx")
     private lateinit var tractogramFile: File
 
-    @Parameter(label = "Parcellation file", style = "extensions:nii.gz") //TODO: autofill if there is a nifti called parcellation in that folder
+    @Parameter(label = "Parcellation file", style = "extensions:nii.gz")
     private lateinit var parcellationFile: File
 
-    @Parameter(label = "Label map parcellation", style = "extensions:csv") //TODO: autofill if there is a csv in that folder
+    @Parameter(label = "Label map parcellation", style = "extensions:csv")
     private lateinit var labelMapFile: File
 
     @Parameter(label = "Brain Volume", style = "extensions:nii.gz")
     private lateinit var volumeFile: File
-
-    //@Parameter(label = "Maximum Streamlines Displayed") //min =1, max=5000?
-    //private var maxStreamlines = 5000
 
     override fun run(){
         val trx = tractogramFile.path

@@ -232,13 +232,14 @@ class Properties : InteractiveCommand() {
     private lateinit var log: LogService
 
     /* Tractogram properties */
+
     @Parameter(label = "Select brain region", choices = [], style = "group:Select Streamlines")
     private var firstBrainRegion: String = "none"
 
     @Parameter(label = "Select brain region", choices = [], style = "group:Select Streamlines")
     private var secondBrainRegion: String = "none"
 
-    @Parameter(label = "Calculate Selection", callback = "selection", style = "group: Select Streamlines")
+    @Parameter(label = "Calculate Selection", callback = "selection", style = "group:Select Streamlines")
     private lateinit var selection: Button
 
     @Parameter(label = "Exclusion regions", style = ChoiceWidget.RADIO_BUTTON_HORIZONTAL_STYLE + ",group:Select Streamlines")
@@ -250,10 +251,7 @@ class Properties : InteractiveCommand() {
     @Parameter(label = "Select maximal length of fibers to be displayed", persist = false, callback = "filterLength", style = "group:Select Streamlines")
     private var maxLength: Float = 0f
 
-    @Parameter(label = "Select maximal local curvature allowed", persist = false, callback = "filterCurvature", style = "group: Select Streamlines")
-    private var maxCurvature: Float = 0f
-
-    @Parameter(label = "Select maximal number of shown streamlines", callback = "changedMaxStreamlines", persist = true, style = "group: Select Streamlines")
+    @Parameter(label = "Select maximal number of shown streamlines", callback = "changedMaxStreamlines", persist = true, style = "group:Select Streamlines")
     private var maxStreamlines: Int = 1000
 
     /**
@@ -389,54 +387,88 @@ class Properties : InteractiveCommand() {
         }
     }
 
+    /**
+     * Creates a new scene node that contains a selection of streamlines. This selection is determined by one or
+     * two given brain regions (meshes), in which the streamlines have to start / end. The original streamlines to
+     * select from are given in the metadata object "tractogramCalc" of the current scene node.
+     * */
     fun selection(){
         log.info("Selecting streamlines connecting brain region $firstBrainRegion with brain region $secondBrainRegion.")
-        val streamlineCalcs = currentSceneNode?.metadata?.get("tractogramCalc") as TractogramTools //TODO: Check if empty
-        val parcellationObjectList = currentSceneNode?.getChildrenByName("Brain areas") // TODO: check if empty
-        val parcellationObject = parcellationObjectList?.get(0) as RichNode
-        parcellationObject.children.forEach{
-            it.visible = false
-        }
-        val tractogramObjectList = currentSceneNode?.getChildrenByName("Tractogram") // TODO: check if empty
-        val tractogramObject = tractogramObjectList?.get(0)
-        tractogramObject?.visible = false
+        currentSceneNode?.let {node ->
+            // TODO: Use data structure to verify the characteristics of the current node and access the following
+            // objects via that structure, so that no check is needed if these objects actually exist
+            val streamlineCalcs = node.metadata["tractogramCalc"] as TractogramTools
+            val parcellationObject = node.getChildrenByName("Brain areas")[0] as RichNode
+            parcellationObject.children.forEach{it.visible = false}
+            val tractogramObject = node.getChildrenByName("Tractogram")[0]
+            tractogramObject.visible = false
 
-        val meshes = ArrayList<Mesh>(2)
+            val meshes = ArrayList<Mesh>(2)
 
-        arrayOf(firstBrainRegion, secondBrainRegion).forEach {
-            if(it != "None"){
-                val mesh = parcellationObject.getChildrenByName(it)[0] as Mesh
-                mesh.visible = true
-                meshes.add(mesh)
+            arrayOf(firstBrainRegion, secondBrainRegion).forEach {
+                if(it != "None"){
+                    val mesh = parcellationObject.getChildrenByName(it)[0] as Mesh
+                    mesh.visible = true
+                    meshes.add(mesh)
+                }
             }
-        }
-        if(meshes.isNotEmpty()){
-            val selectedTractogram = streamlineCalcs.streamlineSelectionTransformedMesh(parcellationObject, tractogramObject as RichNode, meshes)
-            sciView.addNode(selectedTractogram, true, tractogramObject.parent ?: RichNode())
-        }else{
-            log.warn("No selection meshes provided. No streamlines could be selected.")
-        }
+            if(meshes.isNotEmpty()){
+                val selectedTractogram = streamlineCalcs.streamlineSelectionTransformedMesh(parcellationObject, tractogramObject as RichNode, meshes, !exclusion)
+                sciView.addNode(selectedTractogram, true, tractogramObject.parent ?: RichNode())
+            }else{
+                log.warn("No selection meshes provided. No streamlines could be selected.")
+            }
+        }?: log.error("Current scene node is null. Streamline selection can't be performed.")
+
     }
 
+    /**
+     * Filter streamlines of the tractogram object, so that only streamlines with a length between minLength and maxLength
+     * are shown.
+     * */
     fun filterLength(){
-        //TODO implement
-        print("filterLength")
+        val lengthMin = minLength
+        val lengthMax = maxLength
+        // TODO: Use data structure to verify the characteristics of the current node and access the following
+        // objects via that structure, so that no check is needed if these objects actually exist
+        currentSceneNode?.getChildrenByName("Tractogram")?.get(0)?.children?.forEach{streamline ->
+            val length = streamline.metadata["length"] as Float
+            streamline.visible = !(length < lengthMin || length > lengthMax)
+        }
     }
 
-    fun filterCurvature(){
-        //TODO implement
-        print("filterCurvature")
-    }
-
+    /**
+     * Updates the tractogram (as the current scene node) to match the command field maxStreamlines.
+     *
+     * // TODO: see TODOs within the code: the function does not work like expected yet.
+     */
     fun changedMaxStreamlines(){
-        val currentParent = currentSceneNode?.parent
-        val streamlineCalcs = currentParent?.metadata?.get("tractogramCalc") as TractogramTools
-        val newTractogram = streamlineCalcs.changeNumberOfStreamlines((currentSceneNode?.metadata?.get("Streamlines")
-            ?: ArrayList<ArrayList<Vector3f>>()) as ArrayList<ArrayList<Vector3f>>,
-            currentSceneNode as RichNode,
-            maxStreamlines)
-        sciView.deleteNode(currentSceneNode)
-        sciView.addNode(newTractogram, true, currentParent)
+        val testing = false
+        if(testing){
+            // TODO: Check min / max requirements for maxStreamlines: Should not go lower than 0 and not higher than 5000 or so
+            // TODO: Check first if the current scene node is actually a tractogram by checking with data structure, to
+            // ensure it has the following children and metadata attached to it
+            val currentParent = currentSceneNode?.parent
+            val streamlineCalcs = currentParent?.metadata?.get("tractogramCalc") as TractogramTools
+            val streamlineNumData = streamlineCalcs.changeNumberOfStreamlines((currentSceneNode?.metadata?.get("Streamlines")
+                ?: ArrayList<ArrayList<Vector3f>>()) as ArrayList<ArrayList<Vector3f>>,
+                currentSceneNode as RichNode,
+                maxStreamlines)
+
+            if(streamlineNumData.reduction){
+                streamlineNumData.streamlines.children.forEach{
+                    sciView.deleteNode(it)
+                    // TODO: nodes are still displayed in the node tree, which should not happen
+                }
+            }else{
+                sciView.publishNode(streamlineNumData.streamlines)
+                // TODO: changeNumberOfStreamlines works directly on the node, however the node is not updated in the node
+                // tree and the new streamlines don't show in the scene. It might help to remove the old node and add
+                // the new, updated one
+            }
+        }else{
+            log.warn("Changing the maximum streamline count is not supported yet.")
+        }
     }
 
     /** Updates command fields to match current scene node properties.  */
@@ -526,26 +558,28 @@ class Properties : InteractiveCommand() {
             maybeRemoveInputTractogram()
         } else {
             if (node.name == "tractogram parent") {
+                // TODO: Check data structure to verify and check that all following relevant objects are there and of
+                // correct dataformat
                 val firstBrainRegionItem = info.getMutableInput("firstBrainRegion", String::class.java)
                 val secondBrainRegionItem = info.getMutableInput("secondBrainRegion", String::class.java)
-                val parcellation = node.getChildrenByName("Brain areas")[0] // TODO: check, if there is a parcellation
+                val parcellation = node.getChildrenByName("Brain areas")[0]
                 val brainAreas = parcellation.metadata["brainAreas"] as ArrayList<String>
                 firstBrainRegionItem.choices = brainAreas
                 secondBrainRegionItem.choices = brainAreas
 
                 // read fiber length from metadata of tractogram and create sliders with according min/max values
-                val tractogram = node.getChildrenByName("Tractogram")[0] //TODO: check, if there is a tractogram
+                val tractogram = node.getChildrenByName("Tractogram")[0]
                 val minLengthItem = info.getMutableInput("minLength", java.lang.Float::class.java)
                 val maxLengthItem = info.getMutableInput("maxLength", java.lang.Float::class.java)
-                //val minimumLenght = tractogram.metadata.get("minLength") as java.lang.Float
                 val minimumLength = 0f as java.lang.Float
-                val maximumLength = tractogram.metadata["maxLength"] as java.lang.Float //TODO: check if available
+                val maximumLength = tractogram.metadata["maxLength"] as java.lang.Float
                 minLengthItem.minimumValue = minimumLength
                 minLengthItem.maximumValue = maximumLength
                 maxLengthItem.minimumValue = minimumLength
                 maxLengthItem.maximumValue = maximumLength
-                minLengthItem.widgetStyle = NumberWidget.SLIDER_STYLE
-                maxLengthItem.widgetStyle = NumberWidget.SLIDER_STYLE
+                maxLength = maximumLength.toFloat()
+                minLengthItem.widgetStyle = NumberWidget.SLIDER_STYLE + ",group:Select Streamlines"
+                maxLengthItem.widgetStyle = NumberWidget.SLIDER_STYLE + ",group:Select Streamlines"
                 maybeRemoveInputVolume()
                 maybeRemoveInput("maxStreamlines", java.lang.Integer::class.java)
             }else if(node.name.contains("Tractogram")){
