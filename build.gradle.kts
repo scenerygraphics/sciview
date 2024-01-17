@@ -316,21 +316,6 @@ tasks {
         }
     }
 
-    dokkaHtml {
-        enabled = false
-        dokkaSourceSets.configureEach {
-            sourceLink {
-                localDirectory.set(file("src/main/kotlin"))
-                remoteUrl.set(URL("https://github.com/scenerygraphics/sciview/tree/main/src/main/kotlin"))
-                remoteLineSuffix.set("#L")
-            }
-        }
-    }
-
-    dokkaJavadoc {
-        enabled = false
-    }
-
     jacocoTestReport {
         reports {
             xml.required.set(true)
