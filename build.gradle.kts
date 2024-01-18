@@ -10,6 +10,7 @@ plugins {
     kotlin("kapt")
     sciview.publish
     sciview.sign
+    sciview.populateFiji
     id("org.jetbrains.dokka")
     jacoco
     `maven-publish`
@@ -27,8 +28,6 @@ repositories {
         logger.warn("Using local Maven repository as source")
         mavenLocal()
     }
-    maven("https://jitpack.io")
-    mavenCentral()
     maven("https://maven.scijava.org/content/groups/public")
 }
 
@@ -51,6 +50,10 @@ dependencies {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
         exclude("null", "unspecified")
+
+        // from biojava artifacts; clashes with jakarta-activation-api
+        exclude("javax.xml.bind", "jaxb-api")
+        exclude("org.glassfish.jaxb", "jaxb-runtime")
     }
 
     implementation("net.java.dev.jna:jna-platform:5.11.0")
@@ -60,8 +63,6 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-1.2-api:2.20.0")
 
     implementation("com.formdev:flatlaf")
-
-    implementation("org.slf4j:slf4j-simple")
 
     // SciJava dependencies
 
@@ -121,7 +122,7 @@ dependencies {
     implementation(platform(kotlin("bom")))
     implementation(kotlin("stdlib-jdk8"))
     testImplementation(kotlin("test-junit"))
-    testImplementation("org.slf4j:slf4j-simple:1.7.36")
+    testImplementation("org.slf4j:slf4j-simple")
 
     implementation("sc.fiji:bigdataviewer-core")
     implementation("sc.fiji:bigdataviewer-vistools")
@@ -443,6 +444,10 @@ tasks {
 
 jacoco {
     toolVersion = "0.8.11"
+}
+
+task("copyDependencies", Copy::class) {
+    from(configurations.runtimeClasspath).into("$buildDir/dependencies")
 }
 
 java.withSourcesJar()
