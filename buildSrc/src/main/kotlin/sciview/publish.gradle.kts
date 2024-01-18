@@ -164,7 +164,7 @@ publishing {
 //<package-name>sciview</package-name>
 //
 //<license.licenseName>bsd_2</license.licenseName>
-//<license.copyrightOwners>SciView developers.</license.copyrightOwners>
+//<license.copyrightOwners>sciview developers.</license.copyrightOwners>
 
 //val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
 //    dependsOn(tasks.dokkaJavadoc)
