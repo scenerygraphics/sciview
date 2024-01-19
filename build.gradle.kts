@@ -59,8 +59,20 @@ dependencies {
     implementation("net.java.dev.jna:jna-platform:5.11.0")
     implementation("org.janelia.saalfeldlab:n5")
     implementation("org.janelia.saalfeldlab:n5-imglib2")
+    implementation("org.janelia.saalfeldlab:n5-zarr")
+    implementation("org.janelia.saalfeldlab:n5-aws-s3")
+
+    implementation("org.embl.mobie:mobie-io:2.2.3")
+
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
     implementation("org.apache.logging.log4j:log4j-1.2-api:2.20.0")
+
+    // Dependency for AWS Java SDK
+    //implementation("software.amazon.awssdk:s3:2.17.174")
+    implementation("com.amazonaws:aws-java-sdk-s3")
+
+    // Dependency for NetCDF-Java, if needed for Zarr handling
+    implementation("edu.ucar:netcdf4:5.5.1")
 
     implementation("com.formdev:flatlaf")
 
@@ -129,7 +141,7 @@ dependencies {
 
     // OME
     implementation("ome:formats-bsd")
-    implementation("ome:formats-gpl")
+    // implementation("ome:formats-gpl")
 }
 
 //kapt {
