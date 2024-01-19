@@ -62,13 +62,7 @@ import sc.iview.commands.MenuWeights
             Menu(label = "Load CryoET Data Portal demo", weight = MenuWeights.DEMO_ADVANCED_CREMI)])
 class LoadCryoETDataPortal : Command {
     @Parameter
-    private lateinit var ui: UIService
-
-    @Parameter
     private lateinit var log: LogService
-
-    @Parameter
-    private lateinit var ops: OpService
 
     @Parameter
     private lateinit var sciview: SciView
@@ -77,21 +71,6 @@ class LoadCryoETDataPortal : Command {
     private lateinit var lut: LUTService
 
     private var zarrPath = "https://files.cryoetdataportal.cziscience.com/10000/TS_043/Tomograms/VoxelSpacing13.480/CanonicalTomogram/TS_043.zarr"
-
-    internal class DefaultLabelIterator : MutableIterator<Long> {
-        private var i = 0L
-        override fun hasNext(): Boolean {
-            return i < Long.MAX_VALUE
-        }
-
-        override fun next(): Long {
-            return i++
-        }
-
-        override fun remove() {
-            throw UnsupportedOperationException()
-        }
-    }
 
     /**
      * When an object implementing interface `Runnable` is used
@@ -156,16 +135,6 @@ class LoadCryoETDataPortal : Command {
         }
 
         task.completion = 100.0f
-    }
-
-
-    private fun Int.toRGBColor(): Vector4f {
-        val a = ARGBType.alpha(this) / 255.0f
-        val r = ARGBType.red(this) / 255.0f
-        val g = ARGBType.green(this) / 255.0f
-        val b = ARGBType.blue(this) / 255.0f
-
-        return Vector4f(r, g, b, a)
     }
 
     companion object {
