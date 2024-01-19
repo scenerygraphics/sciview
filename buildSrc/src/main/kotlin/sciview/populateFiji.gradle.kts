@@ -34,7 +34,7 @@ tasks {
                 db("ImageJ", "https://update.imagej.net"),
                 db("Fiji", "https://update.fiji.sc"),
                 db("Java-8", "https://sites.imagej.net/Java-8"),
-                db("sciview", "https://sites.imagej.net/sciview-buttercup"),
+                db("sciview", "https://sites.imagej.net/sciview"),
                 mutableMapOf()
             )
 

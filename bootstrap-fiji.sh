@@ -31,8 +31,8 @@ unzip fiji-nojre.zip || die "Failed to unpack Fiji"
 
 echo
 echo "--> Enabling sciview and updating Fiji"
-Fiji.app/$launcher --update add-update-site SciView \
-  https://sites.imagej.net/sciview-buttercup ||
+Fiji.app/$launcher --update add-update-site sciview \
+  https://sites.imagej.net/sciview ||
   die "Failed to enable sciview"
 Fiji.app/$launcher --update update-force-pristine ||
   die "Failed to update Fiji"
