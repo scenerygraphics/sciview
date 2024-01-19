@@ -36,6 +36,7 @@ import net.imglib2.FinalInterval
 import net.imglib2.RandomAccessibleInterval
 import net.imglib2.img.Img
 import net.imglib2.img.array.ArrayImgs
+import net.imglib2.img.cell.CellImgFactory
 import net.imglib2.loops.LoopBuilder
 import net.imglib2.type.numeric.ARGBType
 import net.imglib2.type.numeric.integer.UnsignedByteType
@@ -110,9 +111,14 @@ class LoadCryoETDataPortal : Command {
         // Create a view over half of the z-axis
         val halfZView = Views.interval(rawRaiVolume, halfZInterval)
 
-        // Create an empty RandomAccessibleInterval of UnsignedByteType with half z-dimension
+        // Create a CellImgFactory for UnsignedByteType with a specified cell size
+        val cellSize = 64
+        val factory = CellImgFactory<UnsignedByteType>(UnsignedByteType(), cellSize, cellSize, cellSize)
+
+        // Create an empty RandomAccessibleInterval of UnsignedByteType with half z-dimension using the factory
         val halfDimensions = longArrayOf(rawRaiVolume.dimension(0), rawRaiVolume.dimension(1), halfZ + 1)
-        val halfRaiVolume: Img<UnsignedByteType> = ArrayImgs.unsignedBytes(*halfDimensions)
+        val halfRaiVolume: Img<UnsignedByteType> = factory.create(*halfDimensions)
+
 
         // Copy and convert the data from the view into the new RAI
         LoopBuilder.setImages(halfZView as RandomAccessibleInterval<FloatType>, halfRaiVolume).forEachPixel { input, output ->
