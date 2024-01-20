@@ -116,6 +116,7 @@ object MenuWeights {
     // Demo/Advanced
     const val DEMO_ADVANCED_SEGMENTATION = 0.0
     const val DEMO_ADVANCED_CREMI = 1.0
+    const val DEMO_ADVANCED_FLYBRAIN = 1.5
     const val DEMO_ADVANCED_BDVSLICING = 2.0
     const val DEMO_ADVANCED_MESHTEXTURE = 3.0
     // Help

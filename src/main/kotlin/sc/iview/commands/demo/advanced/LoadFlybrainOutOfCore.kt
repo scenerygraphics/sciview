@@ -66,7 +66,7 @@ Based on Ulrik and Tobi's flybrain example from scenery
         menuRoot = "SciView",
         menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
             Menu(label = "Advanced", weight = MenuWeights.DEMO_ADVANCED),
-            Menu(label = "Load Flybrain Out-of-Core demo", weight = MenuWeights.DEMO_ADVANCED_CREMI)])
+            Menu(label = "Load Flybrain Out-of-Core demo", weight = MenuWeights.DEMO_ADVANCED_FLYBRAIN)])
 class LoadFlybrainOutOfCore : Command {
     @Parameter
     private lateinit var sciview: SciView
