@@ -45,7 +45,7 @@ dependencies {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "be5063b"
+    val sceneryVersion = "22e8047"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
@@ -54,6 +54,7 @@ dependencies {
         // from biojava artifacts; clashes with jakarta-activation-api
         exclude("javax.xml.bind", "jaxb-api")
         exclude("org.glassfish.jaxb", "jaxb-runtime")
+        exclude("org.jogamp.jogl","jogl-all")
     }
 
     implementation("net.java.dev.jna:jna-platform:5.11.0")
@@ -126,6 +127,14 @@ dependencies {
 
     implementation("sc.fiji:bigdataviewer-core")
     implementation("sc.fiji:bigdataviewer-vistools")
+    implementation("sc.fiji:bigvolumeviewer:0.3.3") {
+        exclude("org.jogamp.jogl","jogl-all")
+        exclude("org.jogamp.gluegen", "gluegen-rt")
+    }
+
+    // TODO hacks for testing
+    runtimeOnly("org.jogamp.jogl:jogl-all:2.4.0:natives-macosx-universal")
+    runtimeOnly("com.metsci.ext.org.jogamp.gluegen:gluegen-rt:2.4.0-rc-20200202:natives-macosx-universal")
 
     // OME
     implementation("ome:formats-bsd")
