@@ -890,13 +890,14 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                 Utils.blockWhile({ this.find(n.name) == null }, 20)
                 //System.out.println("find(name) " + find(n.getName()) );
             }
-            // Set new node as active and centered
-            if (centerOnNewNodes) {
-                centerOnNode(n)
-                setActiveNode(n)
-            }
+
             if (activePublish) {
                 eventService.publish(NodeAddedEvent(n))
+                setActiveNode(n)
+                // Set new node as centered
+                if (centerOnNewNodes) {
+                    centerOnNode(n)
+                }
             }
         }
         return n
