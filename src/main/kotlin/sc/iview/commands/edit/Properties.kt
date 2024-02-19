@@ -287,7 +287,6 @@ class Properties : InteractiveCommand() {
 
         // update property fields according to scene node properties
         sciView.setActiveNode(currentSceneNode)
-        println("referschSceneNodeInDialog")
         updateCommandFields()
         if (sceneNodeChoices.size != sciView.getSceneNodes { _: Node? -> true }.size) {
             rebuildSceneObjectChoiceList()
