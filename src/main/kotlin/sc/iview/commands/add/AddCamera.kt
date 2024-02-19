@@ -61,13 +61,13 @@ class AddCamera : Command {
     //	@Parameter
     //	private String position = "0; 0; 0";
     @Parameter(label = "Field of View")
-    private val fov = 50.0f
+    private var fov = 50.0f
 
     @Parameter(label = "Near plane")
-    private val nearPlane = 0.1f
+    private var nearPlane = 0.1f
 
     @Parameter(label = "farPlane")
-    private val farPlane = 500.0f
+    private var farPlane = 500.0f
     override fun run() {
         //final Vector3 pos = ClearGLVector3.parse( position );
         val pos = Vector3f(0.0f)
