@@ -61,8 +61,6 @@ class CameraTranslateControl(protected val sciView: SciView, var dragSpeed: Floa
         lastX = x
         lastY = y
 
-
-
         //set up (the current) shortcuts to the FPS movement routines
         val inputHandler = sciView.sceneryInputHandler!!
         move_left_slow = inputHandler.getBehaviour("move_left") as ClickBehaviour
