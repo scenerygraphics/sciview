@@ -32,6 +32,7 @@ import com.intellij.ui.components.JBPanel
 import graphics.scenery.Camera
 import graphics.scenery.Node
 import graphics.scenery.Scene
+import graphics.scenery.Settings
 import graphics.scenery.volumes.TransferFunctionEditor
 import graphics.scenery.volumes.Volume
 import net.miginfocom.swing.MigLayout
@@ -335,8 +336,10 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                 val pluginInfo = pluginService.getPlugin(SwingGroupingInputHarvester::class.java)
                 val pluginInstance = pluginService.createInstance(pluginInfo)
                 val harvester = pluginInstance as SwingGroupingInputHarvester
+                val uiDebug = sciView.hub.get<Settings>()?.get("sciview.DebugUI", false) ?: false
+
                 inputPanel = harvester.createInputPanel()
-                inputPanel.component.layout = MigLayout("fillx,wrap 1,debug,insets 0 0 0 0", "[right,fill,grow]")
+                inputPanel.component.layout = MigLayout("fillx,wrap 1,${if(uiDebug) "debug," else { "" } }insets 0 0 0 0", "[right,fill,grow]")
 
                 // Build the panel.
                 try {
@@ -347,7 +350,7 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                     if(sceneNode is Volume) {
                         val tfe = TransferFunctionEditor(sceneNode, sceneNode.name)
                         tfe.preferredSize = Dimension(300, 300)
-                        tfe.layout = MigLayout("fillx,flowy,insets 0 0 0 0, debug", "[right,fill,grow]")
+                        tfe.layout = MigLayout("fillx,flowy,insets 0 0 0 0, ${if(uiDebug) "debug" else { "" } }", "[right,fill,grow]")
                         inputPanel.component.add(tfe)
                     }
 
