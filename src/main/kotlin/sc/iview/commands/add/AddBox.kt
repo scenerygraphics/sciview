@@ -69,7 +69,7 @@ class AddBox : Command {
     private lateinit var color: ColorRGB
 
     @Parameter
-    private var inside = false
+    private var inside: Boolean = false
 
     override fun run() {
         //final Vector3 pos = ClearGLVector3.parse( position );

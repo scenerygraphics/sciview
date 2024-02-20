@@ -146,7 +146,7 @@ class Properties : InteractiveCommand() {
     private var max = 255
 
     @Parameter(label = "Color map", choices = [], callback = "updateNodeProperties", style = "group:Volume")
-    private var colormapName: String = "Red"
+    private var colormapName: String = "Fire.lut"
 
     @Parameter(label = " ", style = "group:Volume")
     private var colormap = dummyColorTable
@@ -286,6 +286,7 @@ class Properties : InteractiveCommand() {
         }
 
         // update property fields according to scene node properties
+        sciView.setActiveNode(currentSceneNode)
         updateCommandFields()
         if (sceneNodeChoices.size != sciView.getSceneNodes { _: Node? -> true }.size) {
             rebuildSceneObjectChoiceList()
