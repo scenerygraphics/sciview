@@ -19,8 +19,8 @@ plugins {
 }
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_11
-  targetCompatibility = JavaVersion.VERSION_11
+  sourceCompatibility = JavaVersion.VERSION_21
+  targetCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
@@ -39,13 +39,13 @@ dependencies {
     // Graphics dependencies
 
     // Attention! Manual version increment necessary here!
-    val scijavaCommonVersion = "2.94.2"
+    val scijavaCommonVersion = "2.97.1"
     annotationProcessor("org.scijava:scijava-common:$scijavaCommonVersion")
     kapt("org.scijava:scijava-common:$scijavaCommonVersion") {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "de3897c"
+    val sceneryVersion = "0.9.1"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
@@ -54,6 +54,7 @@ dependencies {
         // from biojava artifacts; clashes with jakarta-activation-api
         exclude("javax.xml.bind", "jaxb-api")
         exclude("org.glassfish.jaxb", "jaxb-runtime")
+        exclude("org.jogamp.jogl","jogl-all")
     }
 
     implementation("net.java.dev.jna:jna-platform:5.11.0")
@@ -62,7 +63,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
     implementation("org.apache.logging.log4j:log4j-1.2-api:2.20.0")
 
-    implementation("com.formdev:flatlaf")
+    implementation("com.formdev:flatlaf:3.3")
 
     // SciJava dependencies
 
@@ -84,9 +85,9 @@ dependencies {
     api("net.imagej:imagej-mesh:0.8.1")
     implementation("net.imagej:imagej-mesh-io")
     implementation("net.imagej:imagej-ops")
-    implementation("net.imagej:imagej-launcher")
+//    implementation("net.imagej:imagej-launcher")
     implementation("net.imagej:imagej-ui-swing")
-    implementation("net.imagej:imagej-legacy")
+//    implementation("net.imagej:imagej-legacy")
     implementation("io.scif:scifio")
     implementation("io.scif:scifio-bf-compat")
 
@@ -109,7 +110,7 @@ dependencies {
     // Test scope
 
 //    testImplementation(misc.junit4)
-    implementation("net.imagej:ij")
+//    implementation("net.imagej:ij")
     implementation("net.imglib2:imglib2-ij")
 
 //    implementation(n5.core)
@@ -126,6 +127,14 @@ dependencies {
 
     implementation("sc.fiji:bigdataviewer-core")
     implementation("sc.fiji:bigdataviewer-vistools")
+    implementation("sc.fiji:bigvolumeviewer:0.3.3") {
+        exclude("org.jogamp.jogl","jogl-all")
+        exclude("org.jogamp.gluegen", "gluegen-rt")
+    }
+
+    // TODO hacks for testing
+    runtimeOnly("org.jogamp.jogl:jogl-all:2.4.0:natives-macosx-universal")
+    runtimeOnly("com.metsci.ext.org.jogamp.gluegen:gluegen-rt:2.4.0-rc-20200202:natives-macosx-universal")
 
     // OME
     implementation("ome:formats-bsd")
@@ -146,7 +155,7 @@ val isRelease: Boolean
 tasks {
     withType<KotlinCompile>().all {
         val version = System.getProperty("java.version").substringBefore('.').toInt()
-        val default = if (version == 1) "11" else "$version"
+        val default = if (version == 1) "21" else "$version"
         kotlinOptions {
             jvmTarget = project.properties["jvmTarget"]?.toString() ?: default
             freeCompilerArgs += listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")

@@ -57,10 +57,10 @@ class AddSphere : Command {
     //    @Parameter
     //    private String position = "0; 0; 0";
     @Parameter
-    private val radius = 1.0f
+    private var radius = 1.0f
 
     @Parameter(required = false)
-    private val color = SciView.DEFAULT_COLOR
+    private var color = SciView.DEFAULT_COLOR
     override fun run() {
         //final Vector3 pos = ClearGLVector3.parse( position );
         val pos = Vector3f(0.0f)
