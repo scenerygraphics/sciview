@@ -66,6 +66,7 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
+import javax.swing.JCheckBox
 import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JMenuItem
@@ -365,6 +366,11 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                         val parent = inputPanel.component.components.find { it.name == "group:Volume" } as? JPanel
                         val tfe = TransferFunctionEditor(sceneNode, sceneNode.name)
                         tfe.preferredSize = Dimension(300, 300)
+
+                        // the next line is a workaround for a ChangeListener being attached to the Show Histogram checkbox,
+                        // which will continously show/hide the histogram on mouse over. We disable rollover to prevent this.
+                        (tfe.components.find { it is JCheckBox && it.text == "Show Histogram" } as? JCheckBox)?.isRolloverEnabled = false
+
                         tfe.layout = MigLayout("fillx,flowy,insets 0 0 0 0".maybeActivateDebug(uiDebug), "[right,fill,grow]")
                         parent?.add(tfe, "span 2, growx")
                     }
