@@ -139,7 +139,7 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
             for (item in group.value) {
                 val model = addInput(panel, module, item)
                 if (model != null) {
-                    log.info("Adding input ${item.name}/${item.label}")
+                    log.debug("Adding input ${item.name}/${item.label}")
                     models.add(model)
                 } else {
                     log.error("Model for ${item.name}/${item.label} is null!")
