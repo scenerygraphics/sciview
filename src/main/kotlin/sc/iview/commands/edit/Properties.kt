@@ -626,7 +626,7 @@ class Properties : InteractiveCommand() {
 
     fun getCustomModuleForModuleItem(moduleInfo: ModuleItem<*>): Module? {
         val custom = inputModuleMaps[moduleInfo]
-        log.info("Custom module found: $custom")
+        log.debug("Custom module found: $custom")
         return custom
     }
 

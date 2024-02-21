@@ -587,7 +587,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * This is automatically called and should not be used directly
      */
     override fun inputSetup() {
-        log.info("Running InputSetup")
+        log.debug("Running InputSetup")
         controls.inputSetup()
     }
 
