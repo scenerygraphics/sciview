@@ -1,0 +1,6 @@
+before_install:
+   - sdk install java 21.0.2-zulu
+   - sdk use java 21.0.2-zulu
+install:
+   - echo "Running a custom install command"
+   - ./gradlew clean build publishMavenPublicationToMavenLocal
