@@ -236,7 +236,10 @@ tasks {
             propertiesNode.appendNode("jvrpn.version", "1.2.0")
 
             // add correct lwjgl version
-            propertiesNode.appendNode("lwjgl.version", "3.3.1")
+            propertiesNode.appendNode("lwjgl.version", "3.3.3")
+
+            // add bigvolumeviewer version
+            propertiesNode.appendNode("bigvolumeviewer.version", "0.3.3")
 
             val versionedArtifacts = listOf("scenery",
                                             "flatlaf",
