@@ -84,6 +84,8 @@ import net.imglib2.type.numeric.NumericType
 import net.imglib2.type.numeric.RealType
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import net.imglib2.view.Views
+import org.janelia.saalfeldlab.n5.N5FSReader
+import org.janelia.saalfeldlab.n5.imglib2.N5Utils
 import org.joml.Quaternionf
 import org.joml.Vector3f
 import org.scijava.Context
@@ -765,59 +767,77 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @Suppress("UNCHECKED_CAST")
     @Throws(IOException::class)
     fun open(source: String) {
-        var name = source.split("/").last()
+        val name = source.split("/").last()//
+        //
+        // NB: For now, we assume all elements will be RealLocalizable.
+        // Highly likely to be the case, barring antagonistic importers.
 
-        if (source.endsWith(".xml", ignoreCase = true)) {
-            val openedNode = fromXML(source, hub, VolumeViewerOptions())
-            openedNode.name = generateUniqueName(name)
-            addNode(openedNode)
-            return
-        } else if (source.takeLast(4).equals(".pdb", true)) {
-            val protein = Protein.fromFile(source)
-            val ribbon = RibbonDiagram(protein)
-            ribbon.spatial().position = Vector3f(0f, 0f, 0f)
-            ribbon.name = generateUniqueName(name)
-            addNode(ribbon)
-            return
-        } else if (source.endsWith(".stl", ignoreCase = true)) {
-            val stlReader = STLMeshIO()
-            addMesh(stlReader.open(source), name=name)
-            return
-        } else if (source.endsWith(".ply", ignoreCase = true)) {
-            val plyReader = PLYMeshIO()
-            addMesh(plyReader.open(source), name=name)
-            return
-        }
-
-        val data = io.open(source)
-        when (data) {
-            is Mesh -> addMesh(data, name=name)
-            is PointCloud -> addPointCloud(data, name)
-            is graphics.scenery.Mesh -> addMesh(data, name=name)
-            is Dataset -> addVolume(data, floatArrayOf(1.0f, 1.0f, 1.0f))
-//            is RandomAccessibleInterval<*> -> {
+        //            is RandomAccessibleInterval<*> -> {
 //                val t = data.randomAccess().get()
 //                addVolume(data, source, floatArrayOf(1.0f, 1.0f, 1.0f))
 //            }
-            is List<*> -> {
-                val list = data
-                require(!list.isEmpty()) { "Data source '$source' appears empty." }
-                val element = list[0]
-                if (element is RealLocalizable) {
-                    // NB: For now, we assume all elements will be RealLocalizable.
-                    // Highly likely to be the case, barring antagonistic importers.
-                    val points = list as List<RealLocalizable>
-                    addPointCloud(points, name)
-                } else {
-                    val type = if (element == null) "<null>" else element.javaClass.name
-                    throw IllegalArgumentException("Data source '" + source +  //
-                            "' contains elements of unknown type '" + type + "'")
-                }
+        when {
+            source.endsWith(".xml", ignoreCase = true) -> {
+                val openedNode = fromXML(source, hub, VolumeViewerOptions())
+                openedNode.name = generateUniqueName(name)
+                addNode(openedNode)
+                return
+            }
+            source.endsWith(".pdb", ignoreCase = true) -> {
+                val protein = Protein.fromFile(source)
+                val ribbon = RibbonDiagram(protein)
+                ribbon.spatial().position = Vector3f(0f, 0f, 0f)
+                ribbon.name = generateUniqueName(name)
+                addNode(ribbon)
+                return
+            }
+            source.endsWith(".stl", ignoreCase = true) -> {
+                val stlReader = STLMeshIO()
+                addMesh(stlReader.open(source), name=name)
+                return
+            }
+            source.endsWith(".ply", ignoreCase = true) -> {
+                val plyReader = PLYMeshIO()
+                addMesh(plyReader.open(source), name=name)
+                return
             }
             else -> {
-                val type = if (data == null) "<null>" else data.javaClass.name
-                throw IllegalArgumentException("Data source '" + source +  //
-                        "' contains data of unknown type '" + type + "'")
+                val data = io.open(source)
+                when(data) {
+                    is Mesh -> addMesh(data, name = name)
+                    is PointCloud -> addPointCloud(data, name)
+                    is graphics.scenery.Mesh -> addMesh(data, name = name)
+                    is Dataset -> addVolume(data, floatArrayOf(1.0f, 1.0f, 1.0f))
+                    //            is RandomAccessibleInterval<*> -> {
+                    //                val t = data.randomAccess().get()
+                    //                addVolume(data, source, floatArrayOf(1.0f, 1.0f, 1.0f))
+                    //            }
+                    is List<*> -> {
+                        val list = data
+                        require(!list.isEmpty()) { "Data source '$source' appears empty." }
+                        val element = list[0]
+                        if(element is RealLocalizable) {
+                            // NB: For now, we assume all elements will be RealLocalizable.
+                            // Highly likely to be the case, barring antagonistic importers.
+                            val points = list as List<RealLocalizable>
+                            addPointCloud(points, name)
+                        } else {
+                            val type = if(element == null) "<null>" else element.javaClass.name
+                            throw IllegalArgumentException(
+                                "Data source '" + source +  //
+                                        "' contains elements of unknown type '" + type + "'"
+                            )
+                        }
+                    }
+
+                    else -> {
+                        val type = if(data == null) "<null>" else data.javaClass.name
+                        throw IllegalArgumentException(
+                            "Data source '" + source +  //
+                                    "' contains data of unknown type '" + type + "'"
+                        )
+                    }
+                }
             }
         }
     }
