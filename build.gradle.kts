@@ -45,7 +45,7 @@ dependencies {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "0.9.2"
+    val sceneryVersion = "0.9.3"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
@@ -119,6 +119,7 @@ dependencies {
     implementation("org.janelia.saalfeldlab:n5")
     implementation("org.janelia.saalfeldlab:n5-hdf5")
     implementation("sc.fiji:spim_data")
+    implementation("org.slf4j:slf4j-simple")
 
     implementation(platform(kotlin("bom")))
     implementation(kotlin("stdlib-jdk8"))
