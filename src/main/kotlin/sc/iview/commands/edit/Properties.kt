@@ -30,6 +30,7 @@ package sc.iview.commands.edit
 
 import graphics.scenery.*
 import graphics.scenery.attribute.material.HasMaterial
+import graphics.scenery.primitives.Atmosphere
 import graphics.scenery.primitives.Line
 import graphics.scenery.primitives.TextBoard
 import graphics.scenery.volumes.Colormap.Companion.fromColorTable
@@ -221,6 +222,14 @@ class Properties : InteractiveCommand() {
     private var edgeWidth = 0
 
     private val slicingModeChoices = Volume.SlicingMode.values().toMutableList()
+
+    /* Atmosphere properties*/
+
+    @Parameter(label = "Atmosphere Latitude", style = NumberWidget.SPINNER_STYLE+"group:Atmosphere"+",format:0", min = "-90", max = "90", stepSize = "1", callback = "updateNodeProperties")
+    private var atmosphereLatitude = 50f
+
+    @Parameter(label = "Use Sun Controls", style = "group:Atmosphere", callback = "updateNodeProperties")
+    private var attachSunControls = true
 
     var fieldsUpdating = true
     var sceneNodeChoices = ArrayList<String>()
@@ -500,6 +509,10 @@ class Properties : InteractiveCommand() {
             edgeWidth = node.edgeWidth.toInt()
         } else {
             maybeRemoveInput("edgeWidth", java.lang.Integer::class.java)
+        }
+
+        if (node is Atmosphere) {
+            // TODO add hasControls flag to atmosphere and detachSunControls
         }
 
         name = node.name
