@@ -45,7 +45,7 @@ dependencies {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "0.9.1"
+    val sceneryVersion = "0.9.3"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
@@ -99,7 +99,7 @@ dependencies {
     implementation("net.imagej:imagej-ops")
 //    implementation("net.imagej:imagej-launcher")
     implementation("net.imagej:imagej-ui-swing")
-//    implementation("net.imagej:imagej-legacy")
+    implementation("net.imagej:imagej-legacy")
     implementation("io.scif:scifio")
     implementation("io.scif:scifio-bf-compat")
 
@@ -131,6 +131,7 @@ dependencies {
     implementation("org.janelia.saalfeldlab:n5")
     implementation("org.janelia.saalfeldlab:n5-hdf5")
     implementation("sc.fiji:spim_data")
+    implementation("org.slf4j:slf4j-simple")
 
     implementation(platform(kotlin("bom")))
     implementation(kotlin("stdlib-jdk8"))
@@ -248,7 +249,10 @@ tasks {
             propertiesNode.appendNode("jvrpn.version", "1.2.0")
 
             // add correct lwjgl version
-            propertiesNode.appendNode("lwjgl.version", "3.3.1")
+            propertiesNode.appendNode("lwjgl.version", "3.3.3")
+
+            // add bigvolumeviewer version
+            propertiesNode.appendNode("bigvolumeviewer.version", "0.3.3")
 
             val versionedArtifacts = listOf("scenery",
                                             "flatlaf",

@@ -58,7 +58,6 @@ import org.scijava.widget.NumberWidget
 import sc.iview.SciView
 import sc.iview.event.NodeChangedEvent
 import java.io.IOException
-import java.net.URL
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -626,7 +625,7 @@ class Properties : InteractiveCommand() {
 
     fun getCustomModuleForModuleItem(moduleInfo: ModuleItem<*>): Module? {
         val custom = inputModuleMaps[moduleInfo]
-        log.info("Custom module found: $custom")
+        log.debug("Custom module found: $custom")
         return custom
     }
 

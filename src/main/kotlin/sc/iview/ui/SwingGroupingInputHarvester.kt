@@ -28,6 +28,7 @@
  */
 package sc.iview.ui
 
+import net.miginfocom.swing.MigLayout
 import org.scijava.`object`.ObjectService
 import org.scijava.convert.ConvertService
 import org.scijava.log.LogService
@@ -40,12 +41,18 @@ import org.scijava.ui.swing.widget.SwingInputHarvester
 import org.scijava.ui.swing.widget.SwingInputPanel
 import org.scijava.widget.*
 import sc.iview.commands.edit.Properties
+import sc.iview.ui.SwingNodePropertyEditor.Companion.maybeActivateDebug
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import java.util.*
 import javax.swing.JLabel
 import javax.swing.JPanel
 
+
+/**
+ * An implementation of [SwingInputHarvester] that allows to build grouped JPanels. In order to define a group,
+ * use the string "group:Something" in the widget's style.
+ */
 @Plugin(type = org.scijava.module.process.PreprocessorPlugin::class, priority = InputHarvester.PRIORITY)
 class SwingGroupingInputHarvester : SwingInputHarvester() {
 
@@ -61,10 +68,21 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
     @Parameter
     private lateinit var convertService: ConvertService
 
-
     // -- InputHarvester methods --
+    /**
+     * Builds the Swing panel, with groups defined by the "group:" string in the widget style.
+     */
     @Throws(ModuleException::class)
     override fun buildPanel(inputPanel: InputPanel<JPanel, JPanel>, module: Module) {
+        buildPanel(inputPanel, module, false)
+    }
+
+    /**
+     * Builds the Swing panel, with groups defined by the "group:" string in the widget style.
+     * If [uiDebug] is set to true, MigLayout's debug drawing will be activated.
+     */
+    @Throws(ModuleException::class)
+    fun buildPanel(inputPanel: InputPanel<JPanel, JPanel>, module: Module, uiDebug: Boolean) {
         val inputs = module.info.inputs()
         val models = ArrayList<WidgetModel>()
         val sortedInputs = inputs.groupBy {
@@ -81,6 +99,10 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
             val panel = SwingInputPanel()
             val labelPanel = SwingInputPanel()
             val label = JLabel("<html><strong>▼ ${group.key}</strong></html>")
+
+            panel.component.name = "group:${group.key}"
+            panel.component.layout = MigLayout("fillx,wrap 2, gap 2 2, ins 4 4".maybeActivateDebug(uiDebug), "[right]5[fill,grow]")
+            labelPanel.component.layout = MigLayout("fillx,wrap 2, gap 2 2, ins 4 4".maybeActivateDebug(uiDebug), "[right]5[fill,grow]")
 
             label.addMouseListener(object: MouseListener {
                 /**
@@ -139,7 +161,7 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
             for (item in group.value) {
                 val model = addInput(panel, module, item)
                 if (model != null) {
-                    log.info("Adding input ${item.name}/${item.label}")
+                    log.debug("Adding input ${item.name}/${item.label}")
                     models.add(model)
                 } else {
                     log.error("Model for ${item.name}/${item.label} is null!")
