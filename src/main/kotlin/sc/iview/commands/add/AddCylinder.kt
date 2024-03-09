@@ -65,7 +65,6 @@ class AddCylinder : Command {
     private var color: ColorRGB = SciView.DEFAULT_COLOR;
 
     override fun run() {
-        //final Vector3 pos = ClearGLVector3.parse( position );
         val pos = Vector3f(0f, 0f, 0f)
 
         sciView.addCylinder(pos,radius,height,color,20)
