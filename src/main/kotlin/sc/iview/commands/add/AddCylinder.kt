@@ -39,7 +39,7 @@ import sc.iview.commands.MenuWeights.ADD
 import sc.iview.commands.MenuWeights.EDIT_ADD_CYLINDER
 
 /**
- * Command to add a box to the scene
+ * Command to add a cylinder to the scene
  *
  * @author Jan Tiemann
  */
@@ -52,13 +52,8 @@ import sc.iview.commands.MenuWeights.EDIT_ADD_CYLINDER
     )]
 )
 class AddCylinder : Command {
-
     @Parameter
     private lateinit var sciView: SciView
-
-    // FIXME
-    //    @Parameter
-    //    private String position = "0; 0; 0";
 
     @Parameter
     private var height = 1.0f
