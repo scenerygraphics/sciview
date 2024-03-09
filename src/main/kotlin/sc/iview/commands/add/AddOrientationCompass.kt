@@ -64,19 +64,16 @@ class AddOrientationCompass : Command {
     private lateinit var sciView: SciView
 
     @Parameter
-    private val axisLength = 0.1f
+    private var axisLength = 0.1f
 
     @Parameter
-    private val AXESBARRADIUS = 0.001f
+    private var AXESBARRADIUS = 0.001f
 
-    @Parameter
-    private val xColor = Vector3f(1f, 0f, 0f)
+    private var xColor = Vector3f(1f, 0f, 0f)
 
-    @Parameter
-    private val yColor = Vector3f(0f, 1f, 0f)
-
-    @Parameter
-    private val zColor = Vector3f(0f, 0f, 1f)
+    private var yColor = Vector3f(0f, 1f, 0f)
+    
+    private var zColor = Vector3f(0f, 0f, 1f)
     private fun makeAxis(axisLength: Float, angleX: Float, angleY: Float, angleZ: Float, color: Vector3f): Node {
         val axisNode = Cylinder(AXESBARRADIUS, axisLength, 4)
         axisNode.name = "compass axis: X"

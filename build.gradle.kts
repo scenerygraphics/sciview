@@ -87,7 +87,7 @@ dependencies {
     implementation("net.imagej:imagej-ops")
 //    implementation("net.imagej:imagej-launcher")
     implementation("net.imagej:imagej-ui-swing")
-//    implementation("net.imagej:imagej-legacy")
+    implementation("net.imagej:imagej-legacy")
     implementation("io.scif:scifio")
     implementation("io.scif:scifio-bf-compat")
 
