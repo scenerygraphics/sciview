@@ -225,11 +225,14 @@ class Properties : InteractiveCommand() {
 
     /* Atmosphere properties*/
 
-    @Parameter(label = "Atmosphere Latitude", style = NumberWidget.SPINNER_STYLE+"group:Atmosphere"+",format:0", min = "-90", max = "90", stepSize = "1", callback = "updateNodeProperties")
+    @Parameter(label = "Latitude", style = NumberWidget.SPINNER_STYLE+"group:Atmosphere"+",format:0", min = "-90", max = "90", stepSize = "1", callback = "updateNodeProperties")
     private var atmosphereLatitude = 50f
 
-    @Parameter(label = "Use Sun Controls", style = "group:Atmosphere", callback = "updateNodeProperties")
-    private var attachSunControls = true
+    @Parameter(label = "Enable keybindings and manual control", style = "group:Atmosphere", callback = "updateNodeProperties", description = "Use key bindings for controlling the sun.\nCtrl + Arrow Keys = large increments.\nCtrl + Shift + Arrow keys = small increments.")
+    private var attachSunControls = false
+
+    @Parameter(label = "Emission Strength", style = NumberWidget.SPINNER_STYLE+"group:Atmosphere"+",format:0.0", min = "0", max="10", stepSize = "0.1", callback = "updateNodeProperties")
+    private var atmosphereStrength = 1f
 
     var fieldsUpdating = true
     var sceneNodeChoices = ArrayList<String>()
@@ -512,7 +515,13 @@ class Properties : InteractiveCommand() {
         }
 
         if (node is Atmosphere) {
-            // TODO add hasControls flag to atmosphere and detachSunControls
+            attachSunControls = node.hasControls
+            atmosphereLatitude = node.latitude
+            atmosphereStrength = node.emissionStrength
+        } else {
+            maybeRemoveInput("attachSunControls", java.lang.Boolean::class.java)
+            maybeRemoveInput("atmosphereLatitude", java.lang.Float::class.java)
+            maybeRemoveInput("atmosphereStrength", java.lang.Float::class.java)
         }
 
         name = node.name
@@ -622,6 +631,20 @@ class Properties : InteractiveCommand() {
 
         if (node is Line) {
             node.edgeWidth = edgeWidth.toFloat()
+        }
+
+        if (node is Atmosphere) {
+            node.latitude = atmosphereLatitude
+            node.emissionStrength = atmosphereStrength
+            node.hasControls = attachSunControls
+            if (node.hasControls) {
+                sciView.sceneryInputHandler?.let { node.attachRotateBehaviors(it) }
+            } else {
+                sciView.sceneryInputHandler?.let { node.detachRotateBehaviors(it) }
+            }
+            node.updateEmissionStrength()
+            // Update the sun position immediately
+            node.getSunDirectionFromTime()
         }
 
         events.publish(NodeChangedEvent(node))

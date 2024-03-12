@@ -28,10 +28,6 @@ class AddAtmosphere : Command {
 
     private val atmos = Atmosphere()
 
-    private fun runAttachControls() {
-        sciView.sceneryInputHandler?.let { atmos.attachRotateBehaviours(it) }
-    }
-
     override fun run() {
         sciView.addNode(atmos)
     }
