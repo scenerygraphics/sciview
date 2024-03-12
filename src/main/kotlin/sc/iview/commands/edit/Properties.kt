@@ -231,7 +231,7 @@ class Properties : InteractiveCommand() {
     @Parameter(label = "Enable keybindings and manual control", style = "group:Atmosphere", callback = "updateNodeProperties", description = "Use key bindings for controlling the sun.\nCtrl + Arrow Keys = large increments.\nCtrl + Shift + Arrow keys = small increments.")
     private var attachSunControls = false
 
-    @Parameter(label = "Emission Strength", style = NumberWidget.SPINNER_STYLE+"group:Atmosphere"+",format:0.0", min = "0", max="10", stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "Emission Strength", style = NumberWidget.SPINNER_STYLE+"group:Atmosphere"+",format:0.00", min = "0", max="10", stepSize = "0.1", callback = "updateNodeProperties")
     private var atmosphereStrength = 1f
 
     var fieldsUpdating = true
