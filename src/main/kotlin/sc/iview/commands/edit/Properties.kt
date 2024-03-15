@@ -636,15 +636,15 @@ class Properties : InteractiveCommand() {
         if (node is Atmosphere) {
             node.latitude = atmosphereLatitude
             node.emissionStrength = atmosphereStrength
-            node.hasControls = attachSunControls
-            if (node.hasControls) {
-                sciView.sceneryInputHandler?.let { node.attachRotateBehaviors(it) }
+            // attach/detach methods also handle the update of node.updateControls
+            if (attachSunControls) {
+                sciView.sceneryInputHandler?.let { node.attachBehaviors(it) }
             } else {
-                sciView.sceneryInputHandler?.let { node.detachRotateBehaviors(it) }
+                sciView.sceneryInputHandler?.let { node.detachBehaviors(it) }
+                // Update the sun position immediately
+                node.setSunDirectionFromTime()
             }
-            node.updateEmissionStrength()
-            // Update the sun position immediately
-            node.getSunDirectionFromTime()
+
         }
 
         events.publish(NodeChangedEvent(node))
