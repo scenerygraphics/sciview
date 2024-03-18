@@ -26,9 +26,8 @@ class AddAtmosphere : Command {
     @Parameter
     private lateinit var sciView: SciView
 
-    private val atmos = Atmosphere()
-
     override fun run() {
+        val atmos = Atmosphere()
         sciView.addNode(atmos)
     }
 }
