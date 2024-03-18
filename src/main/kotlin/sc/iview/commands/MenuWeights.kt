@@ -67,6 +67,7 @@ object MenuWeights {
     const val EDIT_ADD_SLICING_PLANE = 10.0
     const val EDIT_ADD_SPHERE = 11.0
     const val EDIT_ADD_VOLUME = 12.0
+    const val EDIT_ADD_ATMOSPHERE = 13.0
 
     // Edit/Settings
     const val EDIT_SETTINGS_BINDINGS = 0.0

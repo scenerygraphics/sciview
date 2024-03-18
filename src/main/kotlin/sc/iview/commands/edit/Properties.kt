@@ -30,6 +30,7 @@ package sc.iview.commands.edit
 
 import graphics.scenery.*
 import graphics.scenery.attribute.material.HasMaterial
+import graphics.scenery.primitives.Atmosphere
 import graphics.scenery.primitives.Line
 import graphics.scenery.primitives.TextBoard
 import graphics.scenery.volumes.Colormap.Companion.fromColorTable
@@ -221,6 +222,17 @@ class Properties : InteractiveCommand() {
     private var edgeWidth = 0
 
     private val slicingModeChoices = Volume.SlicingMode.values().toMutableList()
+
+    /* Atmosphere properties*/
+
+    @Parameter(label = "Latitude", style = NumberWidget.SPINNER_STYLE+"group:Atmosphere"+",format:0", min = "-90", max = "90", stepSize = "1", callback = "updateNodeProperties")
+    private var atmosphereLatitude = 50f
+
+    @Parameter(label = "Enable keybindings and manual control", style = "group:Atmosphere", callback = "updateNodeProperties", description = "Use key bindings for controlling the sun.\nCtrl + Arrow Keys = large increments.\nCtrl + Shift + Arrow keys = small increments.")
+    private var attachSunControls = false
+
+    @Parameter(label = "Emission Strength", style = NumberWidget.SPINNER_STYLE+"group:Atmosphere"+",format:0.00", min = "0", max="10", stepSize = "0.1", callback = "updateNodeProperties")
+    private var atmosphereStrength = 1f
 
     var fieldsUpdating = true
     var sceneNodeChoices = ArrayList<String>()
@@ -502,6 +514,16 @@ class Properties : InteractiveCommand() {
             maybeRemoveInput("edgeWidth", java.lang.Integer::class.java)
         }
 
+        if (node is Atmosphere) {
+            attachSunControls = node.hasControls
+            atmosphereLatitude = node.latitude
+            atmosphereStrength = node.emissionStrength
+        } else {
+            maybeRemoveInput("attachSunControls", java.lang.Boolean::class.java)
+            maybeRemoveInput("atmosphereLatitude", java.lang.Float::class.java)
+            maybeRemoveInput("atmosphereStrength", java.lang.Float::class.java)
+        }
+
         name = node.name
         fieldsUpdating = false
     }
@@ -609,6 +631,20 @@ class Properties : InteractiveCommand() {
 
         if (node is Line) {
             node.edgeWidth = edgeWidth.toFloat()
+        }
+
+        if (node is Atmosphere) {
+            node.latitude = atmosphereLatitude
+            node.emissionStrength = atmosphereStrength
+            // attach/detach methods also handle the update of node.updateControls
+            if (attachSunControls) {
+                sciView.sceneryInputHandler?.let { node.attachBehaviors(it) }
+            } else {
+                sciView.sceneryInputHandler?.let { node.detachBehaviors(it) }
+                // Update the sun position immediately
+                node.setSunDirectionFromTime()
+            }
+
         }
 
         events.publish(NodeChangedEvent(node))
