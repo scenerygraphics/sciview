@@ -364,7 +364,7 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                         // This will find the group that corresponds to the expandable label. If the type of
                         // the node is indeed Volume, this must exist.
                         val parent = inputPanel.component.components.find { it.name == "group:Volume" } as? JPanel
-                        val tfe = TransferFunctionEditor(sceneNode, sceneNode.name)
+                        val tfe = TransferFunctionEditor(sceneNode)
                         tfe.preferredSize = Dimension(300, 300)
 
                         // the next line is a workaround for a ChangeListener being attached to the Show Histogram checkbox,
