@@ -2,7 +2,7 @@
  * #%L
  * Scenery-backed 3D visualization package for ImageJ.
  * %%
- * Copyright (C) 2016 - 2021 SciView developers.
+ * Copyright (C) 2016 - 2024 sciview developers.
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -134,23 +134,29 @@ public class ControlsParameters
     }
 
     // ---------------------- the movement controls in sciview ----------------------
+    public static final float DEFAULT_FPS_SPEED_SLOW = 0.05f;
+    public static final float DEFAULT_FPS_SPEED_FAST = 1.0f;
+    public static final float DEFAULT_FPS_SPEED_VERY_FAST = 25.0f;
+    public static final float DEFAULT_MOUSE_SPEED_MULT = 0.25f;
+    public static final float DEFAULT_MOUSE_SCROLL_MULT = 2.5f;
+
     /** Speeds for input controls: normal step size. */
-    private float fpsSpeedSlow = 0.05f;
+    private float fpsSpeedSlow = DEFAULT_FPS_SPEED_SLOW;
 
     /** Speeds for input controls: big step size */
-    private float fpsSpeedFast = 1.0f;
+    private float fpsSpeedFast = DEFAULT_FPS_SPEED_FAST;
 
     /** Speeds for input controls: very big step size */
-    private float fpsSpeedVeryFast = 25.0f;
+    private float fpsSpeedVeryFast = DEFAULT_FPS_SPEED_VERY_FAST;
 
     /** Speeds for mouse move controls: higher means more sensitive to mouse movement */
-    private float mouseSpeedMult = 0.25f;
+    private float mouseSpeedMult = DEFAULT_MOUSE_SPEED_MULT;
 
     /** Speeds for mouse scroll controls: higher means more sensitive to a roll of the scroll wheel */
-    private float mouseScrollMult = 2.5f;
+    private float mouseScrollMult = DEFAULT_MOUSE_SCROLL_MULT;
 
     // ---------------------- setters ----------------------
-    public void setFpsSpeedSlow(float fpsSpeedSlow) {
+    public void setFPSSpeedSlow(float fpsSpeedSlow) {
         this.fpsSpeedSlow = fpsSpeedSlow;
         slowStepMovers.forEach( m -> m.setSpeed( fpsSpeedSlow ) );
 
@@ -160,12 +166,12 @@ public class ControlsParameters
         }
     }
 
-    public void setFpsSpeedFast(float fpsSpeedFast) {
+    public void setFPSSpeedFast(float fpsSpeedFast) {
         this.fpsSpeedFast = fpsSpeedFast;
         fastStepMovers.forEach( m -> m.setSpeed( fpsSpeedFast ) );
     }
 
-    public void setFpsSpeedVeryFast(float fpsSpeedVeryFast) {
+    public void setFPSSpeedVeryFast(float fpsSpeedVeryFast) {
         this.fpsSpeedVeryFast = fpsSpeedVeryFast;
         veryFastStepMovers.forEach( m -> m.setSpeed( fpsSpeedVeryFast ) );
     }
@@ -191,18 +197,26 @@ public class ControlsParameters
         }
     }
 
+    public void reset() {
+        fpsSpeedSlow = DEFAULT_FPS_SPEED_SLOW;
+        fpsSpeedFast = DEFAULT_FPS_SPEED_FAST;
+        fpsSpeedVeryFast = DEFAULT_FPS_SPEED_VERY_FAST;
+        mouseSpeedMult = DEFAULT_MOUSE_SPEED_MULT;
+        mouseScrollMult = DEFAULT_MOUSE_SCROLL_MULT;
+    }
+
     // ---------------------- modifiers ----------------------
 
     // ---------------------- getters ----------------------
-    public float getFpsSpeedSlow() {
+    public float getFPSSpeedSlow() {
         return fpsSpeedSlow;
     }
 
-    public float getFpsSpeedFast() {
+    public float getFPSSpeedFast() {
         return fpsSpeedFast;
     }
 
-    public float getFpsSpeedVeryFast() {
+    public float getFPSSpeedVeryFast() {
         return fpsSpeedVeryFast;
     }
 

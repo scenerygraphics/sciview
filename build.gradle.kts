@@ -1,19 +1,17 @@
 import org.gradle.kotlin.dsl.implementation
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URL
 import sciview.*
 
 plugins {
-    val ktVersion = "1.8.20"
-    val dokkaVersion = "1.8.20"
-
     java
-    kotlin("jvm") version ktVersion
-    kotlin("kapt") version ktVersion
+    // Kotlin/Dokka versions are managed in gradle.properties
+    kotlin("jvm")
+    kotlin("kapt")
     sciview.publish
     sciview.sign
-    id("org.jetbrains.dokka") version dokkaVersion
+    sciview.populateFiji
+    id("org.jetbrains.dokka")
     jacoco
     `maven-publish`
     `java-library`
@@ -21,37 +19,44 @@ plugins {
 }
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_11
-  targetCompatibility = JavaVersion.VERSION_11
+  sourceCompatibility = JavaVersion.VERSION_21
+  targetCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
-    mavenCentral()
+    if(project.properties["useMavenLocal"] == "true") {
+        logger.warn("Using local Maven repository as source")
+        mavenLocal()
+    }
     maven("https://maven.scijava.org/content/groups/public")
 }
 
 dependencies {
-    val ktVersion = "1.8.20"
-    implementation(platform("org.scijava:pom-scijava:31.1.0"))
+    val scijavaParentPomVersion = project.properties["scijavaParentPOMVersion"]
+    val ktVersion = project.properties["kotlinVersion"]
+    implementation(platform("org.scijava:pom-scijava:$scijavaParentPomVersion"))
 
     // Graphics dependencies
 
-    annotationProcessor("org.scijava:scijava-common:2.90.0")
-    kapt("org.scijava:scijava-common:2.90.0") { // MANUAL version increment
+    // Attention! Manual version increment necessary here!
+    val scijavaCommonVersion = "2.97.1"
+    annotationProcessor("org.scijava:scijava-common:$scijavaCommonVersion")
+    kapt("org.scijava:scijava-common:$scijavaCommonVersion") {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "0.8.2-SNAPSHOT"
+    val sceneryVersion = "0.10.1"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
         exclude("null", "unspecified")
+
+        // from biojava artifacts; clashes with jakarta-activation-api
+        exclude("javax.xml.bind", "jaxb-api")
+        exclude("org.glassfish.jaxb", "jaxb-runtime")
+        exclude("org.jogamp.jogl","jogl-all")
     }
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4.2")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.4")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.4")
-    implementation("org.msgpack:jackson-dataformat-msgpack:0.9.3")
     implementation("net.java.dev.jna:jna-platform:5.11.0")
     implementation("net.clearvolume:cleargl")
     implementation("org.janelia.saalfeldlab:n5")
@@ -59,10 +64,13 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
     implementation("org.apache.logging.log4j:log4j-1.2-api:2.20.0")
 
-    implementation("com.formdev:flatlaf:2.6")
+    implementation("com.formdev:flatlaf:3.3")
 
     // SciJava dependencies
 
+    implementation("org.yaml:snakeyaml") {
+        version { strictly("1.33") }
+    }
     implementation("org.scijava:scijava-common")
     implementation("org.scijava:ui-behaviour")
     implementation("org.scijava:script-editor")
@@ -78,9 +86,8 @@ dependencies {
     api("net.imagej:imagej-mesh:0.8.1")
     implementation("net.imagej:imagej-mesh-io")
     implementation("net.imagej:imagej-ops")
-    implementation("net.imagej:imagej-launcher")
+//    implementation("net.imagej:imagej-launcher")
     implementation("net.imagej:imagej-ui-swing")
-    implementation("net.imagej:imagej-legacy")
     implementation("io.scif:scifio")
     implementation("io.scif:scifio-bf-compat")
 
@@ -103,7 +110,7 @@ dependencies {
     // Test scope
 
 //    testImplementation(misc.junit4)
-    implementation("net.imagej:ij")
+//    implementation("net.imagej:ij")
     implementation("net.imglib2:imglib2-ij")
 
 //    implementation(n5.core)
@@ -112,14 +119,23 @@ dependencies {
     implementation("org.janelia.saalfeldlab:n5")
     implementation("org.janelia.saalfeldlab:n5-hdf5")
     implementation("sc.fiji:spim_data")
+    implementation("org.slf4j:slf4j-simple")
 
     implementation(platform(kotlin("bom")))
     implementation(kotlin("stdlib-jdk8"))
     testImplementation(kotlin("test-junit"))
-    testImplementation("org.slf4j:slf4j-simple:1.7.36")
+    testImplementation("org.slf4j:slf4j-simple")
 
     implementation("sc.fiji:bigdataviewer-core")
     implementation("sc.fiji:bigdataviewer-vistools")
+    implementation("sc.fiji:bigvolumeviewer:0.3.3") {
+        exclude("org.jogamp.jogl","jogl-all")
+        exclude("org.jogamp.gluegen", "gluegen-rt")
+    }
+
+    // TODO hacks for testing
+    runtimeOnly("org.jogamp.jogl:jogl-all:2.4.0:natives-macosx-universal")
+    runtimeOnly("com.metsci.ext.org.jogamp.gluegen:gluegen-rt:2.4.0-rc-20200202:natives-macosx-universal")
 
     // OME
     implementation("ome:formats-bsd")
@@ -133,6 +149,9 @@ dependencies {
 //        arg("-Xopt-in", "kotlin.RequiresOptIn")
 //    }
 //}
+
+val isRelease: Boolean
+    get() = System.getProperty("release") == "true"
 
 kotlin {
     jvmToolchain(21)
@@ -165,6 +184,7 @@ tasks {
     }
 
     withType<GenerateMavenPom>().configureEach {
+        val scijavaParentPomVersion = project.properties["scijavaParentPOMVersion"]
         val matcher = Regex("""generatePomFileFor(\w+)Publication""").matchEntire(name)
         val publicationName = matcher?.let { it.groupValues[1] }
 
@@ -175,7 +195,7 @@ tasks {
             val parent = asNode().appendNode("parent")
             parent.appendNode("groupId", "org.scijava")
             parent.appendNode("artifactId", "pom-scijava")
-            parent.appendNode("version", "31.1.0")
+            parent.appendNode("version", "$scijavaParentPomVersion")
             parent.appendNode("relativePath")
 
             val repositories = asNode().appendNode("repositories")
@@ -230,10 +250,12 @@ tasks {
             propertiesNode.appendNode("jvrpn.version", "1.2.0")
 
             // add correct lwjgl version
-            propertiesNode.appendNode("lwjgl.version", "3.3.1")
+            propertiesNode.appendNode("lwjgl.version", "3.3.3")
+
+            // add bigvolumeviewer version
+            propertiesNode.appendNode("bigvolumeviewer.version", "0.3.3")
 
             val versionedArtifacts = listOf("scenery",
-                                            "directories",
                                             "flatlaf",
                                             "kotlin-stdlib-common",
                                             "kotlin-stdlib",
@@ -256,9 +278,13 @@ tasks {
                                             "lwjgl-xxhash",
                                             "lwjgl-remotery",
                                             "lwjgl-spvc",
-                                            "lwjgl-shaderc")
+                                            "lwjgl-shaderc",
+                                            "lwjgl-jawt",
+                                            "log4j-1.2-api")
 
             val toSkip = listOf("pom-scijava")
+
+            logger.quiet("Adding pom-scijava-managed dependencies for Maven publication:")
 
             configurations.implementation.get().allDependencies.forEach {
                 val artifactId = it.name
@@ -267,7 +293,10 @@ tasks {
 
                     val propertyName = "$artifactId.version"
 
-                    if (versionedArtifacts.contains(artifactId)) {
+                    // we only add our own property if the version is not null,
+                    // as that indicates something managed by the parent POM, where
+                    // we did not specify an explicit version.
+                    if (versionedArtifacts.contains(artifactId) && it.version != null) {
                         // add "<artifactid.version>[version]</artifactid.version>" to pom
                         propertiesNode.appendNode(propertyName, it.version)
                     }
@@ -278,7 +307,7 @@ tasks {
                     dependencyNode.appendNode("version", "\${$propertyName}")
 
                     // Custom per artifact tweaks
-                    println(artifactId)
+                    logger.quiet("* ${it.group}:$artifactId with version property \$$propertyName")
                     if ("\\-bom".toRegex().find(artifactId) != null) {
                         dependencyNode.appendNode("type", "pom")
                     }
@@ -312,21 +341,6 @@ tasks {
                 }
             }
         }
-    }
-
-    dokkaHtml {
-        enabled = false
-        dokkaSourceSets.configureEach {
-            sourceLink {
-                localDirectory.set(file("src/main/kotlin"))
-                remoteUrl.set(URL("https://github.com/scenerygraphics/sciview/tree/master/src/main/kotlin"))
-                remoteLineSuffix.set("#L")
-            }
-        }
-    }
-
-    dokkaJavadoc {
-        enabled = false
     }
 
     jacocoTestReport {
@@ -378,11 +392,10 @@ tasks {
             }
         }
         .forEach { className ->
-            println("Working on $className")
             val exampleName = className.substringAfterLast(".")
             val exampleType = className.substringBeforeLast(".").substringAfterLast(".")
 
-            println("Registering $exampleName of $exampleType")
+            logger.quiet("Registering $exampleName of $exampleType from $className")
             register<JavaExec>(name = className.substringAfterLast(".")) {
                 classpath = sourceSets.test.get().runtimeClasspath
                 mainClass.set(className)
@@ -427,28 +440,40 @@ tasks {
             }
         }
     }
-}
 
-val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
-    dependsOn(tasks.dokkaJavadoc)
-    from(tasks.dokkaJavadoc.get().outputDirectory.get())
-    archiveClassifier.set("javadoc")
-}
+    dokkaHtml {
+        enabled = isRelease
+        dokkaSourceSets.configureEach {
+            sourceLink {
+                localDirectory.set(file("src/main/kotlin"))
+                remoteUrl.set(URL("https://github.com/scenerygraphics/sciview/tree/main/src/main/kotlin"))
+                remoteLineSuffix.set("#L")
+            }
+        }
+    }
 
-val dokkaHtmlJar by tasks.register<Jar>("dokkaHtmlJar") {
-    dependsOn(tasks.dokkaHtml)
-    from(tasks.dokkaHtml.get().outputDirectory.get())
-    archiveClassifier.set("html-doc")
+    dokkaJavadoc {
+        enabled = isRelease
+    }
+
+    if(project.properties["buildFatJAR"] == true) {
+        apply(plugin = "com.github.johnrengelman.shadow")
+        jar {
+            isZip64 = true
+        }
+    }
+
+    withType<GenerateModuleMetadata> {
+        enabled = false
+    }
 }
 
 jacoco {
-    toolVersion = "0.8.7"
+    toolVersion = "0.8.11"
 }
 
-artifacts {
-    archives(dokkaJavadocJar)
-    archives(dokkaHtmlJar)
+task("copyDependencies", Copy::class) {
+    from(configurations.runtimeClasspath).into("$buildDir/dependencies")
 }
 
 java.withSourcesJar()
-

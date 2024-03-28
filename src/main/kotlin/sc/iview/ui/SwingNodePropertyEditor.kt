@@ -2,7 +2,7 @@
  * #%L
  * Scenery-backed 3D visualization package for ImageJ.
  * %%
- * Copyright (C) 2016 - 2021 SciView developers.
+ * Copyright (C) 2016 - 2024 sciview developers.
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,6 +32,9 @@ import com.intellij.ui.components.JBPanel
 import graphics.scenery.Camera
 import graphics.scenery.Node
 import graphics.scenery.Scene
+import graphics.scenery.Settings
+import graphics.scenery.volumes.TransferFunctionEditor
+import graphics.scenery.volumes.Volume
 import net.miginfocom.swing.MigLayout
 import org.joml.Quaternionf
 import org.joml.Vector3f
@@ -56,12 +59,14 @@ import sc.iview.event.NodeRemovedEvent
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Component
+import java.awt.Container
 import java.awt.Dimension
 import java.awt.event.ActionEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
+import javax.swing.JCheckBox
 import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JMenuItem
@@ -333,13 +338,42 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                 val pluginInfo = pluginService.getPlugin(SwingGroupingInputHarvester::class.java)
                 val pluginInstance = pluginService.createInstance(pluginInfo)
                 val harvester = pluginInstance as SwingGroupingInputHarvester
+                val uiDebug = sciView.hub.get<Settings>()?.get("sciview.DebugUI", false) ?: false
+
                 inputPanel = harvester.createInputPanel()
-                inputPanel.component.layout = MigLayout("fillx,wrap 1", "[right,fill,grow]")
+                inputPanel.component.layout = MigLayout("fillx,wrap 1,insets 0 0 0 0".maybeActivateDebug(uiDebug), "[right,fill,grow]")
+
+                fun changeFont(component: Array<Component>, scale: Float) {
+                    component.forEach {
+                        val newFont = it.font.deriveFont(it.font.size * scale)
+                        it.font = newFont
+
+                        if(it is Container) {
+                            changeFont(it.components, scale)
+                        }
+                    }
+                }
 
                 // Build the panel.
                 try {
-                    harvester.buildPanel(inputPanel, module)
+                    harvester.buildPanel(inputPanel, module, uiDebug)
                     updatePropertiesPanel(inputPanel.component)
+
+                    // TODO: This needs to move to a widget and be included in Properties
+                    if(sceneNode is Volume) {
+                        // This will find the group that corresponds to the expandable label. If the type of
+                        // the node is indeed Volume, this must exist.
+                        val parent = inputPanel.component.components.find { it.name == "group:Volume" } as? JPanel
+                        val tfe = TransferFunctionEditor(sceneNode)
+                        tfe.preferredSize = Dimension(300, 300)
+
+                        // the next line is a workaround for a ChangeListener being attached to the Show Histogram checkbox,
+                        // which will continously show/hide the histogram on mouse over. We disable rollover to prevent this.
+                        (tfe.components.find { it is JCheckBox && it.text == "Show Histogram" } as? JCheckBox)?.isRolloverEnabled = false
+
+                        tfe.layout = MigLayout("fillx,flowy,insets 0 0 0 0".maybeActivateDebug(uiDebug), "[right,fill,grow]")
+                        parent?.add(tfe, "span 2, growx")
+                    }
                 } catch (exc: ModuleException) {
                     log.error(exc)
                     val stackTrace = DebugUtils.getStackTrace(exc)
@@ -347,6 +381,8 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                     textArea.text = "<html><pre>$stackTrace</pre>"
                     updatePropertiesPanel(textArea)
                 }
+
+                changeFont(arrayOf(inputPanel.component), 0.9f)
 
                 updateLock.unlock()
             }
@@ -443,5 +479,22 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
 
     init {
         sciView.scijavaContext!!.inject(this)
+    }
+
+    /**
+     * Companion object for [SwingNodePropertyEditor] with useful utility functions.
+     */
+    companion object {
+        /**
+         * Can be attached to a MigLayout layout constraint string and will activate debug drawing
+         * if [uiDebug] is true.
+         */
+        fun String.maybeActivateDebug(uiDebug: Boolean): String {
+            return if(uiDebug) {
+                "$this, debug"
+            } else {
+                this
+            }
+        }
     }
 }

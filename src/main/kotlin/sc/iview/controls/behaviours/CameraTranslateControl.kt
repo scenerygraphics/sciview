@@ -2,7 +2,7 @@
  * #%L
  * Scenery-backed 3D visualization package for ImageJ.
  * %%
- * Copyright (C) 2016 - 2021 SciView developers.
+ * Copyright (C) 2016 - 2024 sciview developers.
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -60,8 +60,6 @@ class CameraTranslateControl(protected val sciView: SciView, var dragSpeed: Floa
     override fun init(x: Int, y: Int) {
         lastX = x
         lastY = y
-
-
 
         //set up (the current) shortcuts to the FPS movement routines
         val inputHandler = sciView.sceneryInputHandler!!

@@ -1,12 +1,12 @@
 package sciview
 
-//import gradle.kotlin.dsl.accessors._e98ba513b34f86980a981ef4cafb3d49.publishing
-//import org.gradle.kotlin.dsl.`maven-publish`
+import java.net.URI
 
 // configuration of the Maven artifacts
 plugins {
     `maven-publish`
-    //    id("org.jetbrains.dokka")
+    `java-library`
+    id("org.jetbrains.dokka")
 }
 
 val sciviewUrl = "https://github.com/scenerygraphics/sciview"
@@ -16,9 +16,47 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = "sc.iview"
             artifactId = rootProject.name
-            version = rootProject.version.toString()
+            val customVersion = project.properties["customVersion"]
+            val v = if(customVersion != null) {
+                if(customVersion == "git") {
+                    val gitCommand = Runtime.getRuntime().exec("git rev-parse --verify --short HEAD")
+                    val result = gitCommand.waitFor()
+
+                    if(result == 0) {
+                        gitCommand.inputStream.bufferedReader().use { it.readText() }.trim().substring(0, 7)
+                    } else {
+                        logger.error("Could not execute git to get commit hash (exit code $result). Is git installed?")
+                        logger.error("Will fall back to default project version.")
+                        rootProject.version
+                    }
+                } else {
+                    customVersion
+                }
+            } else {
+                rootProject.version
+            }
+
+            version = v.toString()
+
+            logger.quiet("Creating Maven publication $groupId:$artifactId:$version ...")
 
             from(components["java"])
+
+            val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
+                dependsOn(tasks.dokkaJavadoc)
+                from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
+                archiveClassifier.set("javadoc")
+            }
+
+            val dokkaHtmlJar by tasks.register<Jar>("dokkaHtmlJar") {
+                dependsOn(tasks.dokkaHtml)
+                from(tasks.dokkaHtml.flatMap { it.outputDirectory })
+                archiveClassifier.set("html-doc")
+            }
+
+
+            artifact(dokkaJavadocJar)
+            artifact(dokkaHtmlJar)
 
             // TODO, resolved dependencies versions? https://docs.gradle.org/current/userguide/publishing_maven.html#publishing_maven:resolved_dependencies
 
@@ -107,15 +145,14 @@ publishing {
 
     repositories {
         maven {
-//            name = "sonatype" TODO
-//            credentials(PasswordCredentials::class)
-//
-//            val releaseRepo = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-//            val snapshotRepo = "https://oss.sonatype.org/content/repositories/snapshots/"
-//
-//            val snapshot = rootProject.version.toString().endsWith("SNAPSHOT")
-//            url = URI(if (snapshot) snapshotRepo else releaseRepo)
-//            //            url = URI("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+            name = "scijava"
+            credentials(PasswordCredentials::class)
+
+            val releaseRepo = "https://maven.scijava.org/content/repositories/releases/"
+            val snapshotRepo = "https://maven.scijava.org/content/repositories/snapshots/"
+
+            val snapshot = rootProject.version.toString().endsWith("SNAPSHOT")
+            url = URI(if (snapshot) snapshotRepo else releaseRepo)
         }
     }
 }
@@ -127,7 +164,7 @@ publishing {
 //<package-name>sciview</package-name>
 //
 //<license.licenseName>bsd_2</license.licenseName>
-//<license.copyrightOwners>SciView developers.</license.copyrightOwners>
+//<license.copyrightOwners>sciview developers.</license.copyrightOwners>
 
 //val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
 //    dependsOn(tasks.dokkaJavadoc)

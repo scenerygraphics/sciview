@@ -2,7 +2,7 @@
  * #%L
  * Scenery-backed 3D visualization package for ImageJ.
  * %%
- * Copyright (C) 2016 - 2021 SciView developers.
+ * Copyright (C) 2016 - 2024 sciview developers.
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,61 +26,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add
+package sc.iview.commands.add
 
-import org.joml.Vector3f
 import org.scijava.command.Command
-import org.scijava.display.DisplayService
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
-import org.scijava.util.ColorRGB
 import sc.iview.SciView
-import sc.iview.commands.MenuWeights.EDIT
-import sc.iview.commands.MenuWeights.EDIT_ADD
-import sc.iview.commands.MenuWeights.EDIT_ADD_BOX
+import sc.iview.commands.MenuWeights.ADD
+import sc.iview.commands.MenuWeights.EDIT_ADD_POINTLIGHT
 
 /**
- * Command to add a box to the scene
+ * Command to add a point light to the scene
  *
  * @author Kyle Harrington
  */
 @Plugin(
     type = Command::class,
     menuRoot = "SciView",
-    menu = [Menu(label = "Edit", weight = EDIT), Menu(label = "Add", weight = EDIT_ADD), Menu(
-        label = "Box...",
-        weight = EDIT_ADD_BOX
+    menu = [Menu(label = "Add", weight = ADD), Menu(
+        label = "Point Light",
+        weight = EDIT_ADD_POINTLIGHT
     )]
 )
-class AddBox : Command {
-    @Parameter
-    private lateinit var displayService: DisplayService
-
+class AddPointLight : Command {
     @Parameter
     private lateinit var sciView: SciView
 
-    // FIXME
-    //    @Parameter
-    //    private String position = "0; 0; 0";
-    @Parameter
-    private var size = 1.0f
-
-    @Parameter(required = false)
-    private lateinit var color: ColorRGB
-
-    @Parameter
-    private var inside = false
-
     override fun run() {
-        //final Vector3 pos = ClearGLVector3.parse( position );
-        val pos = Vector3f(0f, 0f, 0f)
-        val vSize = Vector3f(size, size, size)
-
-        if( !this::color.isInitialized ) {
-            color = SciView.DEFAULT_COLOR
-        }
-
-        sciView.addBox(pos, vSize, color, inside)
+        sciView.addPointLight()
     }
 }

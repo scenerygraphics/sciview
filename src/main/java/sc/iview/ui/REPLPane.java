@@ -2,7 +2,7 @@
  * #%L
  * Scenery-backed 3D visualization package for ImageJ.
  * %%
- * Copyright (C) 2016 - 2021 SciView developers.
+ * Copyright (C) 2016 - 2024 sciview developers.
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -75,7 +75,7 @@ public class REPLPane implements UIComponent<JComponent> {
     final JScrollPane outputScroll = new JScrollPane(output);
     outputScroll.setPreferredSize(new Dimension(440, 400));
 
-    repl = new ScriptREPL(context, output.getOutputStream());
+    repl = new ScriptREPL(context, "Python (Jython)", output.getOutputStream());
     repl.initialize();
 
     final Writer writer = output.getOutputWriter();
@@ -89,7 +89,7 @@ public class REPLPane implements UIComponent<JComponent> {
     //prompt = new REPLEditor(repl, vars, output);
     prompt = new REPLEditor(repl, null, output);
     context.inject(prompt);
-    prompt.setREPLLanguage("Python");
+
     final JScrollPane promptScroll = new JScrollPane(prompt);
 
     final JPanel bottomPane = new JPanel();

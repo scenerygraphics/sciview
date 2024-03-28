@@ -2,7 +2,7 @@
  * #%L
  * Scenery-backed 3D visualization package for ImageJ.
  * %%
- * Copyright (C) 2016 - 2021 SciView developers.
+ * Copyright (C) 2016 - 2024 sciview developers.
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,6 +41,7 @@ import bvv.core.VolumeViewerOptions
 import dev.dirs.ProjectDirectories
 import graphics.scenery.*
 import graphics.scenery.Scene.RaycastResult
+import graphics.scenery.attribute.material.Material
 import graphics.scenery.backends.Renderer
 import graphics.scenery.backends.vulkan.VulkanRenderer
 import graphics.scenery.controls.InputHandler
@@ -85,6 +86,8 @@ import net.imglib2.type.numeric.NumericType
 import net.imglib2.type.numeric.RealType
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import net.imglib2.view.Views
+import org.janelia.saalfeldlab.n5.N5FSReader
+import org.janelia.saalfeldlab.n5.imglib2.N5Utils
 import org.joml.Quaternionf
 import org.joml.Vector3f
 import org.joml.Vector4f
@@ -317,7 +320,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         // Remove everything except camera
         val toRemove = getSceneNodes { n: Node? -> n !is Camera }
         for (n in toRemove) {
-            deleteNode(n, false)
+            // activePublish is true to update the inspector's tree view
+            // it used to be false for fear of slowdowns when resetting a large scene
+            deleteNode(n, true)
         }
 
         imageToVolumeMap = HashMap<Any, Volume>()
@@ -591,7 +596,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * This is automatically called and should not be used directly
      */
     override fun inputSetup() {
-        log.info("Running InputSetup")
+        log.debug("Running InputSetup")
         controls.inputSetup()
     }
 
@@ -665,6 +670,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             ambient = Vector3f(1.0f, 0.0f, 0.0f)
             diffuse = Utils.convertToVector3f(color)
             specular = Vector3f(1.0f, 1.0f, 1.0f)
+            cullingMode = Material.CullingMode.None
         }
         cyl.name = generateUniqueName("Cylinder")
         return addNode(cyl, block = block)
@@ -685,6 +691,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             ambient = Vector3f(1.0f, 0.0f, 0.0f)
             diffuse = Utils.convertToVector3f(color)
             specular = Vector3f(1.0f, 1.0f, 1.0f)
+            cullingMode = Material.CullingMode.None
         }
         cone.name = generateUniqueName("Cone")
         return addNode(cone, block = block)
@@ -895,59 +902,77 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @Suppress("UNCHECKED_CAST")
     @Throws(IOException::class)
     fun open(source: String) {
-        var name = source.split("/").last()
+        val name = source.split("/").last()//
+        //
+        // NB: For now, we assume all elements will be RealLocalizable.
+        // Highly likely to be the case, barring antagonistic importers.
 
-        if (source.endsWith(".xml", ignoreCase = true)) {
-            val openedNode = fromXML(source, hub, VolumeViewerOptions())
-            openedNode.name = generateUniqueName(name)
-            addNode(openedNode)
-            return
-        } else if (source.takeLast(4).equals(".pdb", true)) {
-            val protein = Protein.fromFile(source)
-            val ribbon = RibbonDiagram(protein)
-            ribbon.spatial().position = Vector3f(0f, 0f, 0f)
-            ribbon.name = generateUniqueName(name)
-            addNode(ribbon)
-            return
-        } else if (source.endsWith(".stl", ignoreCase = true)) {
-            val stlReader = STLMeshIO()
-            addMesh(stlReader.open(source), name=name)
-            return
-        } else if (source.endsWith(".ply", ignoreCase = true)) {
-            val plyReader = PLYMeshIO()
-            addMesh(plyReader.open(source), name=name)
-            return
-        }
-
-        val data = io.open(source)
-        when (data) {
-            is Mesh -> addMesh(data, name=name)
-            is PointCloud -> addPointCloud(data, name)
-            is graphics.scenery.Mesh -> addMesh(data, name=name)
-            is Dataset -> addVolume(data, floatArrayOf(1.0f, 1.0f, 1.0f))
-//            is RandomAccessibleInterval<*> -> {
+        //            is RandomAccessibleInterval<*> -> {
 //                val t = data.randomAccess().get()
 //                addVolume(data, source, floatArrayOf(1.0f, 1.0f, 1.0f))
 //            }
-            is List<*> -> {
-                val list = data
-                require(!list.isEmpty()) { "Data source '$source' appears empty." }
-                val element = list[0]
-                if (element is RealLocalizable) {
-                    // NB: For now, we assume all elements will be RealLocalizable.
-                    // Highly likely to be the case, barring antagonistic importers.
-                    val points = list as List<RealLocalizable>
-                    addPointCloud(points, name)
-                } else {
-                    val type = if (element == null) "<null>" else element.javaClass.name
-                    throw IllegalArgumentException("Data source '" + source +  //
-                            "' contains elements of unknown type '" + type + "'")
-                }
+        when {
+            source.endsWith(".xml", ignoreCase = true) -> {
+                val openedNode = fromXML(source, hub, VolumeViewerOptions())
+                openedNode.name = generateUniqueName(name)
+                addNode(openedNode)
+                return
+            }
+            source.endsWith(".pdb", ignoreCase = true) -> {
+                val protein = Protein.fromFile(source)
+                val ribbon = RibbonDiagram(protein)
+                ribbon.spatial().position = Vector3f(0f, 0f, 0f)
+                ribbon.name = generateUniqueName(name)
+                addNode(ribbon)
+                return
+            }
+            source.endsWith(".stl", ignoreCase = true) -> {
+                val stlReader = STLMeshIO()
+                addMesh(stlReader.open(source), name=name)
+                return
+            }
+            source.endsWith(".ply", ignoreCase = true) -> {
+                val plyReader = PLYMeshIO()
+                addMesh(plyReader.open(source), name=name)
+                return
             }
             else -> {
-                val type = if (data == null) "<null>" else data.javaClass.name
-                throw IllegalArgumentException("Data source '" + source +  //
-                        "' contains data of unknown type '" + type + "'")
+                val data = io.open(source)
+                when(data) {
+                    is Mesh -> addMesh(data, name = name)
+                    is PointCloud -> addPointCloud(data, name)
+                    is graphics.scenery.Mesh -> addMesh(data, name = name)
+                    is Dataset -> addVolume(data, floatArrayOf(1.0f, 1.0f, 1.0f))
+                    //            is RandomAccessibleInterval<*> -> {
+                    //                val t = data.randomAccess().get()
+                    //                addVolume(data, source, floatArrayOf(1.0f, 1.0f, 1.0f))
+                    //            }
+                    is List<*> -> {
+                        val list = data
+                        require(!list.isEmpty()) { "Data source '$source' appears empty." }
+                        val element = list[0]
+                        if(element is RealLocalizable) {
+                            // NB: For now, we assume all elements will be RealLocalizable.
+                            // Highly likely to be the case, barring antagonistic importers.
+                            val points = list as List<RealLocalizable>
+                            addPointCloud(points, name)
+                        } else {
+                            val type = if(element == null) "<null>" else element.javaClass.name
+                            throw IllegalArgumentException(
+                                "Data source '" + source +  //
+                                        "' contains elements of unknown type '" + type + "'"
+                            )
+                        }
+                    }
+
+                    else -> {
+                        val type = if(data == null) "<null>" else data.javaClass.name
+                        throw IllegalArgumentException(
+                            "Data source '" + source +  //
+                                    "' contains data of unknown type '" + type + "'"
+                        )
+                    }
+                }
             }
         }
     }
@@ -1020,13 +1045,14 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                 Utils.blockWhile({ this.find(n.name) == null }, 20)
                 //System.out.println("find(name) " + find(n.getName()) );
             }
-            // Set new node as active and centered?
-            setActiveNode(n)
-            if (centerOnNewNodes) {
-                centerOnNode(n)
-            }
+
             if (activePublish) {
                 eventService.publish(NodeAddedEvent(n))
+                setActiveNode(n)
+                // Set new node as centered
+                if (centerOnNewNodes) {
+                    centerOnNode(n)
+                }
             }
         }
         return n
@@ -1124,7 +1150,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return the currently active node
      */
     fun setActiveNode(n: Node?): Node? {
-        if (activeNode === n) return activeNode
         activeNode = n
         targetArcball.target = { n?.getMaximumBoundingBox()?.getBoundingSphere()?.origin ?: Vector3f(0.0f, 0.0f, 0.0f) }
         mainWindow.selectNode(activeNode)
@@ -1287,7 +1312,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     /**
      * Delete the current active node
      */
-    fun deleteActiveNode(askUser: Boolean = false) {
+    fun deleteActiveNode(askUser: Boolean = false, runRecursive: Boolean = false) {
         if(askUser && activeNode != null){
             val options = arrayOf("Cancel", "Delete ${activeNode!!.name}")
             val x = JOptionPane.showOptionDialog(
@@ -1299,7 +1324,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                 return
             }
         }
-        deleteNode(activeNode)
+        if (runRecursive) {
+            activeNode?.runRecursive( { node: Node -> this.deleteNode(node) })
+        } else {
+            deleteNode(activeNode)
+        }
     }
 
     /**
@@ -1308,7 +1337,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @param activePublish whether the deletion should be published
      */
     @JvmOverloads
-fun deleteNode(node: Node?, activePublish: Boolean = true) {
+    fun deleteNode(node: Node?, activePublish: Boolean = true) {
         if(node is Volume) {
             node.volumeManager.remove(node)
             val toRemove = ArrayList<Any>()
@@ -1342,7 +1371,7 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
     fun dispose() {
         val objs: List<Node> = objectService.getObjects(Node::class.java)
         for (obj in objs) {
-            objectService.removeObject(obj)
+            deleteNode(obj, activePublish = false)
         }
         scijavaContext!!.service(SciViewService::class.java).close(this)
         close()
@@ -1410,29 +1439,33 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
      * @param n node to apply colortable to
      * @param colorTable ColorTable to use
      */
-    fun setColormap(n: Node, colorTable: ColorTable) {
-        val copies = 16
-        val byteBuffer = ByteBuffer.allocateDirect(
-                4 * colorTable.length * copies) // Num bytes * num components * color map length * height of color map texture
-        val tmp = ByteArray(4 * colorTable.length)
-        for (k in 0 until colorTable.length) {
-            for (c in 0 until colorTable.componentCount) {
-                // TODO this assumes numBits is 8, could be 16
-                tmp[4 * k + c] = colorTable[c, k].toByte()
+    fun setColormap(n: Node, colorTable: ColorTable, runRecursive: Boolean = false) {
+        if (runRecursive) {
+            n.runRecursive( {node -> this.setColormap(node, colorTable) })
+        } else {
+            val copies = 16
+            val byteBuffer = ByteBuffer.allocateDirect(
+                    4 * colorTable.length * copies) // Num bytes * num components * color map length * height of color map texture
+            val tmp = ByteArray(4 * colorTable.length)
+            for (k in 0 until colorTable.length) {
+                for (c in 0 until colorTable.componentCount) {
+                    // TODO this assumes numBits is 8, could be 16
+                    tmp[4 * k + c] = colorTable[c, k].toByte()
+                }
+                if (colorTable.componentCount == 3) {
+                    tmp[4 * k + 3] = 255.toByte()
+                }
             }
-            if (colorTable.componentCount == 3) {
-                tmp[4 * k + 3] = 255.toByte()
+            for (i in 0 until copies) {
+                byteBuffer.put(tmp)
             }
-        }
-        for (i in 0 until copies) {
-            byteBuffer.put(tmp)
-        }
-        byteBuffer.flip()
-        n.metadata["sciviewColormap"] = colorTable
-        if (n is Volume) {
-            n.colormap = Colormap.fromColorTable(colorTable)
-            n.geometryOrNull()?.dirty = true
-            n.spatial().needsUpdate = true
+            byteBuffer.flip()
+            n.metadata["sciviewColormap"] = colorTable
+            if (n is Volume) {
+                n.colormap = Colormap.fromColorTable(colorTable)
+                n.geometryOrNull()?.dirty = true
+                n.spatial().needsUpdate = true
+            }
         }
     }
 
@@ -1587,19 +1620,16 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
     </T> */
     @JvmOverloads
     @Suppress("UNCHECKED_CAST")
-    fun <T : NumericType<T>> addVolume(sources: List<SourceAndConverter<T>>,
-                                       converterSetups: ArrayList<ConverterSetup>,
-                                       numTimepoints: Int,
-                                       name: String = "Volume",
-                                       vararg voxelDimensions: Float,
-                                       block: Volume.() -> Unit = {},
-                                       colormapName: String = "Fire.lut"): Volume {
+    fun <T : RealType<T>> addVolume(sources: List<SourceAndConverter<T>>,
+                                    converterSetups: ArrayList<ConverterSetup>,
+                                    numTimepoints: Int,
+                                    name: String = "Volume",
+                                    voxelDimensions: FloatArray,
+                                    block: Volume.() -> Unit = {},
+                                    colormapName: String = "Fire.lut"): Volume {
         var timepoints = numTimepoints
         var cacheControl: CacheControl? = null
 
-//        RandomAccessibleInterval<T> image =
-//                ((RandomAccessibleIntervalSource4D) sources.get(0).getSpimSource()).
-//                .getSource(0, 0);
         val image = sources[0].spimSource.getSource(0, 0)
         if (image is VolatileView<*, *>) {
             val viewData = (image as VolatileView<T, Volatile<T>>).volatileViewData
@@ -1620,7 +1650,18 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
         if (image.numDimensions() > 3) {
             timepoints = image.dimension(3).toInt()
         }
-        val ds = RAISource<T>(voxelType, sources, converterSetups, timepoints, cacheControl)
+
+        val ds = if(converterSetups != null) {
+            RAISource<T>(voxelType, sources, converterSetups, timepoints, cacheControl)
+        } else {
+            val cs = ArrayList<ConverterSetup>()
+            for ((setupId, source) in sources.withIndex()) {
+                cs.add(BigDataViewer.createConverterSetup(source, setupId))
+            }
+
+            RAISource<T>(voxelType, sources, cs, timepoints, cacheControl)
+        }
+
         val options = VolumeViewerOptions()
         val v: Volume = RAIVolume(ds, options, hub)
         // Note we override scenery's default scale of mm
@@ -1667,7 +1708,7 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
         for (source in sources) {
             converterSetups.add(BigDataViewer.createConverterSetup(source, setupId++))
         }
-        val v = addVolume(sources, converterSetups, numTimepoints, name, *voxelDimensions, block = block)
+        val v = addVolume(sources, converterSetups, numTimepoints, name, voxelDimensions, block = block)
         imageToVolumeMap[sources] = v
         return v
     }
@@ -1984,7 +2025,7 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
         const val MOUSESPEED_MINBOUND = 0.1f
         const val MOUSESPEED_MAXBOUND = 3.0f
         const val MOUSESCROLL_MINBOUND = 0.3f
-        const val MOUSESCROLL_MAXBOUND = 10.0f
+        const val MOUSESCROLL_MAXBOUND = 100.0f
 
         @JvmField
         val DEFAULT_COLOR: ColorRGB = Colors.LIGHTGRAY
@@ -1998,11 +2039,8 @@ fun deleteNode(node: Node?, activePublish: Boolean = true) {
         @Throws(Exception::class)
         fun create(): SciView {
             xinitThreads()
-            val context = Context(ImageJService::class.java, SciJavaService::class.java, SCIFIOService::class.java,
-                ThreadService::class.java, ObjectService::class.java, LogService::class.java, MenuService::class.java,
-                IOService::class.java, EventService::class.java, LUTService::class.java, UnitService::class.java,
-                DatasetIOService::class.java)
-            val objectService = context.getService(ObjectService::class.java)
+            val context = Context(ImageJService::class.java, SciJavaService::class.java, SCIFIOService::class.java)
+            val objectService = context.service(ObjectService::class.java)
             objectService.addObject(Utils.SciviewStandalone())
             val sciViewService = context.service(SciViewService::class.java)
             return sciViewService.orCreateActiveSciView

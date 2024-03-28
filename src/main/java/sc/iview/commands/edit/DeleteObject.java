@@ -2,7 +2,7 @@
  * #%L
  * Scenery-backed 3D visualization package for ImageJ.
  * %%
- * Copyright (C) 2016 - 2021 SciView developers.
+ * Copyright (C) 2016 - 2024 sciview developers.
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -52,6 +52,9 @@ public class DeleteObject implements Command {
     @Parameter
     private SciView sciView;
 
+    @Parameter(label = "Delete children?")
+    private boolean runRecursive = false;
+
 // TODO it would be good if this could continue to use active node but also use an @Parameter by using a callback or sth
 //    @Parameter
 //    private Node node;
@@ -59,7 +62,7 @@ public class DeleteObject implements Command {
     @Override
     public void run() {
         if( sciView.getActiveNode() != null ) {
-            sciView.deleteActiveNode(false);
+            sciView.deleteActiveNode(false, runRecursive);
         }
     }
 

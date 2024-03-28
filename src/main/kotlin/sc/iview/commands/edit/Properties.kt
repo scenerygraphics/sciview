@@ -2,7 +2,7 @@
  * #%L
  * Scenery-backed 3D visualization package for ImageJ.
  * %%
- * Copyright (C) 2016 - 2021 SciView developers.
+ * Copyright (C) 2016 - 2024 sciview developers.
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,6 +41,7 @@ import net.imglib2.display.ColorTable
 import org.joml.Quaternionf
 import org.joml.Vector3f
 import org.joml.Vector4f
+import org.scijava.ItemVisibility
 import org.scijava.command.Command
 import org.scijava.command.InteractiveCommand
 import org.scijava.event.EventService
@@ -57,7 +58,6 @@ import org.scijava.widget.NumberWidget
 import sc.iview.SciView
 import sc.iview.event.NodeChangedEvent
 import java.io.IOException
-import java.net.URL
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -145,19 +145,25 @@ class Properties : InteractiveCommand() {
     private var max = 255
 
     @Parameter(label = "Color map", choices = [], callback = "updateNodeProperties", style = "group:Volume")
-    private var colormapName: String = "Red"
+    private var colormapName: String = "Fire.lut"
 
     @Parameter(label = " ", style = "group:Volume")
     private var colormap = dummyColorTable
-
-    @Parameter(label = "Mode", style = ChoiceWidget.LIST_BOX_STYLE+"group:Volume", callback = "updateNodeProperties")
-    private var renderingMode: String = Volume.RenderingMethod.AlphaBlending.name
 
     @Parameter(label = "AO steps", style = NumberWidget.SPINNER_STYLE+"group:Volume", callback = "updateNodeProperties")
     private val occlusionSteps = 0
 
     @Parameter(label = "Volume slicing mode", callback = "updateNodeProperties", style = ChoiceWidget.LIST_BOX_STYLE+"group:Volume")
     private var slicingMode: String = Volume.SlicingMode.Slicing.name
+
+    @Parameter(label = "Width", callback = "updateNodeProperties", visibility = ItemVisibility.MESSAGE, style = "group:Volume")
+    private var width: Int = 0
+
+    @Parameter(label = "Height", callback = "updateNodeProperties", visibility = ItemVisibility.MESSAGE, style = "group:Volume")
+    private var height: Int = 0
+
+    @Parameter(label = "Depth", callback = "updateNodeProperties", visibility = ItemVisibility.MESSAGE, style = "group:Volume")
+    private var depth: Int = 0
 
     /* Light properties */
 
@@ -214,7 +220,6 @@ class Properties : InteractiveCommand() {
     @Parameter(label = "Edge width", callback = "updateNodeProperties", style = "group:Line")
     private var edgeWidth = 0
 
-    private val renderingModeChoices = Volume.RenderingMethod.values().toMutableList()
     private val slicingModeChoices = Volume.SlicingMode.values().toMutableList()
 
     var fieldsUpdating = true
@@ -280,6 +285,7 @@ class Properties : InteractiveCommand() {
         }
 
         // update property fields according to scene node properties
+        sciView.setActiveNode(currentSceneNode)
         updateCommandFields()
         if (sceneNodeChoices.size != sciView.getSceneNodes { _: Node? -> true }.size) {
             rebuildSceneObjectChoiceList()
@@ -373,11 +379,6 @@ class Properties : InteractiveCommand() {
         scaleZ = scale.z()
         if (node is Volume) {
 
-            val renderingModeInput = info.getMutableInput("renderingMode", String::class.java)
-            val methods = Volume.RenderingMethod.values().map { method: Volume.RenderingMethod -> method.toString() }.toList()
-            renderingModeInput.choices = methods
-            renderingMode = renderingModeChoices[Volume.RenderingMethod.values().indexOf(node.renderingMethod)].toString()
-
             val slicingModeInput = info.getMutableInput("slicingMode", String::class.java)
             val slicingMethods = Volume.SlicingMode.values().map { mode: Volume.SlicingMode -> mode.toString() }.toList()
             slicingModeInput.setChoices(slicingMethods)
@@ -402,6 +403,10 @@ class Properties : InteractiveCommand() {
                 log.error("Could not load LUT $colormapName")
             }
 
+            width = node.getDimensions().x
+            height = node.getDimensions().y
+            depth = node.getDimensions().z
+
             min = node.converterSetups[0].displayRangeMin.toInt()
             max = node.converterSetups[0].displayRangeMax.toInt()
 
@@ -419,7 +424,6 @@ class Properties : InteractiveCommand() {
 
             maybeRemoveInput("colour", ColorRGB::class.java)
         } else {
-            maybeRemoveInput("renderingMode", String::class.java)
             maybeRemoveInput("slicingMode", String::class.java)
             maybeRemoveInput("min", java.lang.Integer::class.java)
             maybeRemoveInput("max", java.lang.Integer::class.java)
@@ -428,6 +432,9 @@ class Properties : InteractiveCommand() {
             maybeRemoveInput("colormapName", String::class.java)
             maybeRemoveInput("playPauseButton", Button::class.java)
             maybeRemoveInput("playSpeed", java.lang.Integer::class.java)
+            maybeRemoveInput("width", java.lang.Integer::class.java)
+            maybeRemoveInput("height", java.lang.Integer::class.java)
+            maybeRemoveInput("depth", java.lang.Integer::class.java)
         }
 
         if (node is PointLight) {
@@ -533,10 +540,6 @@ class Properties : InteractiveCommand() {
             node.intensity = intensity
         }
         if (node is Volume) {
-            val mode = renderingModeChoices.indexOf(Volume.RenderingMethod.valueOf(renderingMode))
-            if (mode != -1) {
-                node.renderingMethod = Volume.RenderingMethod.values()[mode]
-            }
             try {
                 val cm = sciView.getLUT(colormapName)
                 node.colormap = fromColorTable(cm!!)
@@ -622,7 +625,7 @@ class Properties : InteractiveCommand() {
 
     fun getCustomModuleForModuleItem(moduleInfo: ModuleItem<*>): Module? {
         val custom = inputModuleMaps[moduleInfo]
-        log.info("Custom module found: $custom")
+        log.debug("Custom module found: $custom")
         return custom
     }
 

@@ -2,17 +2,17 @@
  * #%L
  * Scenery-backed 3D visualization package for ImageJ.
  * %%
- * Copyright (C) 2016 - 2021 SciView developers.
+ * Copyright (C) 2016 - 2024 sciview developers.
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -26,53 +26,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.file;
+package sc.iview.commands.add
 
-import org.scijava.command.Command;
-import org.scijava.io.IOService;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import sc.iview.SciView;
-
-import java.io.File;
-import java.io.IOException;
-
-import static sc.iview.commands.MenuWeights.FILE;
-import static sc.iview.commands.MenuWeights.FILE_OPEN;
+import graphics.scenery.proteins.Protein
+import graphics.scenery.proteins.RibbonDiagram
+import org.joml.Vector3f
+import org.scijava.command.Command
+import org.scijava.command.DynamicCommand
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights
 
 /**
- * Command to open a file in SciView
+ * Command to add a protein model to the scene
  *
  * @author Kyle Harrington
- *
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "File", weight = FILE), //
-                 @Menu(label = "Open N5...", weight = FILE_OPEN) })
-public class OpenN5 implements Command {
+@Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Add", weight = MenuWeights.ADD), Menu(label = "Protein from PDB  ID ...", weight = MenuWeights.EDIT_ADD_PROTEIN)])
+class AddProtein : DynamicCommand() {
 
     @Parameter
-    private IOService io;
+    private lateinit var sciView: SciView
 
-    @Parameter
-    private LogService log;
+    @Parameter(label = "Protein ID", persist = false)
+    private var protein: String = "2rnm"
 
-    @Parameter
-    private SciView sciView;
+    @Parameter(label = "Scale")
+    private var scale: Float = 0.1f
 
-    // TODO: Find a more extensible way than hard-coding the extensions.
-    @Parameter(style = "directory")
-    private File file;
-
-    @Override
-    public void run() {
-        try {
-            sciView.open( file.getAbsolutePath() );
-        }
-        catch (final IOException | IllegalArgumentException exc) {
-            log.error( exc );
-        }
+    override fun run() {
+        val ribbon = RibbonDiagram(Protein.fromID(protein))
+        ribbon.name = protein
+        ribbon.spatial().scale = Vector3f(scale)
+        sciView.addNode(ribbon, true)
     }
 }

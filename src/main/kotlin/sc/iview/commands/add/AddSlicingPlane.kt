@@ -2,7 +2,7 @@
  * #%L
  * Scenery-backed 3D visualization package for ImageJ.
  * %%
- * Copyright (C) 2016 - 2021 SciView developers.
+ * Copyright (C) 2016 - 2024 sciview developers.
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,22 +26,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add
+package sc.iview.commands.add
 
 import graphics.scenery.Box
+import graphics.scenery.numerics.Random
 import graphics.scenery.volumes.SlicingPlane
 import graphics.scenery.volumes.VolumeManager
 import org.joml.Vector3f
 import org.scijava.command.Command
-import org.scijava.display.DisplayService
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
-import org.scijava.util.ColorRGB
 import sc.iview.SciView
-import sc.iview.commands.MenuWeights.EDIT
-import sc.iview.commands.MenuWeights.EDIT_ADD
-import sc.iview.commands.MenuWeights.EDIT_ADD_BOX
+import sc.iview.commands.MenuWeights.ADD
 import sc.iview.commands.MenuWeights.EDIT_ADD_SLICING_PLANE
 
 /**
@@ -52,19 +49,16 @@ import sc.iview.commands.MenuWeights.EDIT_ADD_SLICING_PLANE
 @Plugin(
     type = Command::class,
     menuRoot = "SciView",
-    menu = [Menu(label = "Edit", weight = EDIT), Menu(label = "Add", weight = EDIT_ADD), Menu(
+    menu = [Menu(label = "Add", weight = ADD), Menu(
         label = "Slicing Plane...",
         weight = EDIT_ADD_SLICING_PLANE
     )]
 )
 class AddSlicingPlane : Command {
     @Parameter
-    private lateinit var displayService: DisplayService
-
-    @Parameter
     private lateinit var sciView: SciView
 
-    @Parameter
+    @Parameter(label = "Slice all volumes")
     private var targetAllVolumes = true
 
     override fun run() {
@@ -77,6 +71,7 @@ class AddSlicingPlane : Command {
 
         val handle = Box(Vector3f(1f,0.1f,1f))
         handle.name = "Slicing Plane Handle"
+        handle.material().diffuse = Random.random3DVectorFromRange(0.5f, 1.0f)
         handle.addChild(plane)
 
         sciView.addNode(handle)

@@ -2,7 +2,7 @@
  * #%L
  * Scenery-backed 3D visualization package for ImageJ.
  * %%
- * Copyright (C) 2016 - 2021 SciView developers.
+ * Copyright (C) 2016 - 2024 sciview developers.
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,47 +26,47 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add;
+package sc.iview.commands.add
 
-import org.joml.Vector3f;
-import org.scijava.command.Command;
-import org.scijava.plugin.Menu;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import org.scijava.util.ColorRGB;
-
-import sc.iview.SciView;
-
-import static sc.iview.commands.MenuWeights.*;
+import org.joml.Vector3f
+import org.scijava.command.Command
+import org.scijava.plugin.Menu
+import org.scijava.plugin.Parameter
+import org.scijava.plugin.Plugin
+import org.scijava.util.ColorRGB
+import sc.iview.SciView
+import sc.iview.commands.MenuWeights.ADD
+import sc.iview.commands.MenuWeights.EDIT_ADD_CYLINDER
 
 /**
- * Command to add a sphere in the scene
+ * Command to add a cylinder to the scene
  *
- * @author Kyle Harrington
- *
+ * @author Jan Tiemann
  */
-@Plugin(type = Command.class, menuRoot = "SciView", //
-        menu = { @Menu(label = "Edit", weight = EDIT), //
-                 @Menu(label = "Add", weight = EDIT_ADD), //
-                 @Menu(label = "Sphere...", weight = EDIT_ADD_SPHERE) })
-public class AddSphere implements Command {
+@Plugin(
+    type = Command::class,
+    menuRoot = "SciView",
+    menu = [Menu(label = "Add", weight = ADD), Menu(
+        label = "Cylinder...",
+        weight = EDIT_ADD_CYLINDER
+    )]
+)
+class AddCylinder : Command {
+    @Parameter
+    private lateinit var sciView: SciView
 
     @Parameter
-    private SciView sciView;
-
-//    @Parameter
-//    private String position = "0; 0; 0";
+    private var height = 1.0f
 
     @Parameter
-    private float radius = 1.0f;
+    private var radius = 1.0f
 
-    @Parameter(required = false)
-    private ColorRGB color = SciView.DEFAULT_COLOR;
+    @Parameter
+    private var color: ColorRGB = SciView.DEFAULT_COLOR;
 
-    @Override
-    public void run() {
-        //final Vector3 pos = ClearGLVector3.parse( position );
-        final Vector3f pos = new Vector3f(0, 0, 0);
-        sciView.addSphere( pos, radius, color );
+    override fun run() {
+        val pos = Vector3f(0f, 0f, 0f)
+
+        sciView.addCylinder(pos,radius,height,color,20)
     }
 }

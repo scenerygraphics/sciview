@@ -2,7 +2,7 @@
  * #%L
  * Scenery-backed 3D visualization package for ImageJ.
  * %%
- * Copyright (C) 2016 - 2021 SciView developers.
+ * Copyright (C) 2016 - 2024 sciview developers.
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,9 +28,10 @@
  */
 package sc.iview;
 
-import cleargl.GLVector;
-import graphics.scenery.*;
-import graphics.scenery.attribute.material.Material;
+import graphics.scenery.Group;
+import graphics.scenery.Node;
+import graphics.scenery.SceneryBase;
+import graphics.scenery.Sphere;
 import io.scif.SCIFIOService;
 import net.imagej.ImageJService;
 import org.joml.Vector3f;
@@ -38,8 +39,6 @@ import org.junit.Assert;
 import org.scijava.Context;
 import org.scijava.service.SciJavaService;
 import org.scijava.thread.ThreadService;
-import sc.iview.SciView;
-import sc.iview.SciViewService;
 
 public class SciViewTest {
 
@@ -77,7 +76,7 @@ public class SciViewTest {
         Group group = new Group();
 
 
-        final Sphere sphere = new Sphere( 1, 20 );
+        final Sphere sphere = new Sphere( 1, 20, false );
         sphere.ifMaterial( material -> {
             material.setAmbient( new Vector3f( 1.0f, 0.0f, 0.0f ) );
             material.setDiffuse( new Vector3f( 1.0f, 0.0f, 0.0f ) );

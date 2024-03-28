@@ -2,7 +2,7 @@
  * #%L
  * Scenery-backed 3D visualization package for ImageJ.
  * %%
- * Copyright (C) 2016 - 2021 SciView developers.
+ * Copyright (C) 2016 - 2024 sciview developers.
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,55 +26,62 @@
  * POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-package sc.iview.commands.edit.add
+package sc.iview.commands.add
 
+import graphics.scenery.DetachedHeadCamera
 import org.joml.Vector3f
 import org.scijava.command.Command
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
-import org.scijava.util.ColorRGB
 import sc.iview.SciView
-import sc.iview.Utils
-import sc.iview.commands.MenuWeights.EDIT
-import sc.iview.commands.MenuWeights.EDIT_ADD
-import sc.iview.commands.MenuWeights.EDIT_ADD_CYLINDER
+import sc.iview.commands.MenuWeights.ADD
+import sc.iview.commands.MenuWeights.EDIT_ADD_CAMERA
+import kotlin.math.max
+import kotlin.math.min
 
 /**
- * Command to add a box to the scene
+ * Command to add a camera to the scene
  *
- * @author Jan Tiemann
+ * @author Kyle Harrington
  */
 @Plugin(
     type = Command::class,
     menuRoot = "SciView",
-    menu = [Menu(label = "Edit", weight = EDIT), Menu(label = "Add", weight = EDIT_ADD), Menu(
-        label = "Cylinder...",
-        weight = EDIT_ADD_CYLINDER
+    menu = [Menu(label = "Add", weight = ADD),Menu(
+        label = "Camera...",
+        weight = EDIT_ADD_CAMERA
     )]
 )
-class AddCylinder : Command {
-
+class AddCamera : Command {
     @Parameter
     private lateinit var sciView: SciView
 
     // FIXME
-    //    @Parameter
-    //    private String position = "0; 0; 0";
+    //	@Parameter
+    //	private String position = "0; 0; 0";
+    @Parameter(label = "Field of View")
+    private var fov = 50.0f
 
-    @Parameter
-    private var height = 1.0f
+    @Parameter(label = "Near plane")
+    private var nearPlane = 0.1f
 
-    @Parameter
-    private var radius = 1.0f
-
-    @Parameter
-    private var color: ColorRGB = SciView.DEFAULT_COLOR;
-
+    @Parameter(label = "farPlane")
+    private var farPlane = 500.0f
     override fun run() {
         //final Vector3 pos = ClearGLVector3.parse( position );
-        val pos = Vector3f(0f, 0f, 0f)
-
-        sciView.addCylinder(pos,radius,height,color,20)
+        val pos = Vector3f(0.0f)
+        val cam = DetachedHeadCamera()
+        cam.perspectiveCamera(
+            fov,
+            sciView!!.windowWidth,
+            sciView.windowHeight,
+            min(nearPlane, farPlane),
+            max(nearPlane, farPlane)
+        )
+        cam.ifSpatial {
+            position = pos
+        }
+        sciView.addNode(cam)
     }
 }
