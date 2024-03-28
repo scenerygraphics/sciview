@@ -1,4 +1,5 @@
 import org.gradle.kotlin.dsl.implementation
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URL
 import sciview.*
@@ -133,16 +134,29 @@ dependencies {
 //    }
 //}
 
+kotlin {
+    jvmToolchain(21)
+//    compilerOptions {
+//        jvmTarget = JvmTarget.JVM_21
+//        freeCompilerArgs = listOf("-Xinline-classes", "-opt-in=kotlin.RequiresOptIn")
+//    }
+}
+
+java {
+    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_21
+}
+
 tasks {
-    withType<KotlinCompile>().all {
-        val version = System.getProperty("java.version").substringBefore('.').toInt()
-        val default = if (version == 1) "11" else "$version"
-        kotlinOptions {
-            jvmTarget = project.properties["jvmTarget"]?.toString() ?: default
-            freeCompilerArgs += listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
-        }
-//        sourceCompatibility = project.properties["sourceCompatibility"]?.toString() ?: default
-    }
+//    withType<KotlinCompile>().all {
+//        val version = System.getProperty("java.version").substringBefore('.').toInt()
+//        val default = if (version == 1) "21" else "$version"
+//        kotlinOptions {
+//            jvmTarget = project.properties["jvmTarget"]?.toString() ?: default
+//            freeCompilerArgs += listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
+//        }
+////        sourceCompatibility = project.properties["sourceCompatibility"]?.toString() ?: default
+//    }
     test {
         finalizedBy(jacocoTestReport) // report is always generated after tests run
     }
