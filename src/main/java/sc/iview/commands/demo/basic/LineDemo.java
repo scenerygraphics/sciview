@@ -41,6 +41,15 @@ import java.util.HashMap;
 
 import static sc.iview.commands.MenuWeights.*;
 
+/*
+NOTE: if you get some crash such as:
+
+Caused by: org.gradle.process.internal.ExecException: Process 'command '/home/elect/.jdks/openjdk-21.0.2/bin/java'' finished with non-zero exit value 1
+
+You may want to try selecting, in the Idea settings, the following:
+"Build, Execution, Deployment" -> "Build Tools" -> "Gradle" -> "Build and run using:" -> "IntelliJ IDEA"
+ */
+
 /**
  * A demo of lines.
  *
