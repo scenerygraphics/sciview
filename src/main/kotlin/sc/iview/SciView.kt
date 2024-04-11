@@ -41,6 +41,7 @@ import bvv.core.VolumeViewerOptions
 import dev.dirs.ProjectDirectories
 import graphics.scenery.*
 import graphics.scenery.Scene.RaycastResult
+import graphics.scenery.attribute.material.Material
 import graphics.scenery.backends.Renderer
 import graphics.scenery.backends.vulkan.VulkanRenderer
 import graphics.scenery.controls.InputHandler
@@ -663,6 +664,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             ambient = Vector3f(1.0f, 0.0f, 0.0f)
             diffuse = Utils.convertToVector3f(color)
             specular = Vector3f(1.0f, 1.0f, 1.0f)
+            cullingMode = Material.CullingMode.None
         }
         cyl.name = generateUniqueName("Cylinder")
         return addNode(cyl, block = block)
@@ -683,6 +685,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             ambient = Vector3f(1.0f, 0.0f, 0.0f)
             diffuse = Utils.convertToVector3f(color)
             specular = Vector3f(1.0f, 1.0f, 1.0f)
+            cullingMode = Material.CullingMode.None
         }
         cone.name = generateUniqueName("Cone")
         return addNode(cone, block = block)

@@ -20,7 +20,7 @@ rootProject.name = "sciview"
 
 gradle.rootProject {
     group = "sc.iview"
-    version = "0.2.0"
+    version = "0.3.0"
     description = "Scenery-backed 3D visualization package for ImageJ."
 }
 

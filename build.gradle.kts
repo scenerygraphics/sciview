@@ -45,7 +45,7 @@ dependencies {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "0.9.3"
+    val sceneryVersion = "0.10.1"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
@@ -87,7 +87,6 @@ dependencies {
     implementation("net.imagej:imagej-ops")
 //    implementation("net.imagej:imagej-launcher")
     implementation("net.imagej:imagej-ui-swing")
-//    implementation("net.imagej:imagej-legacy")
     implementation("io.scif:scifio")
     implementation("io.scif:scifio-bf-compat")
 
