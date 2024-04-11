@@ -225,11 +225,17 @@ class Properties : InteractiveCommand() {
 
     /* Atmosphere properties*/
 
-    @Parameter(label = "Latitude", style = NumberWidget.SPINNER_STYLE+"group:Atmosphere"+",format:0", min = "-90", max = "90", stepSize = "1", callback = "updateNodeProperties")
+    @Parameter(label = "Latitude", style = NumberWidget.SPINNER_STYLE+"group:Atmosphere"+",format:0.0", min = "-90", max = "90", stepSize = "1", callback = "updateNodeProperties")
     private var atmosphereLatitude = 50f
 
     @Parameter(label = "Enable keybindings and manual control", style = "group:Atmosphere", callback = "updateNodeProperties", description = "Use key bindings for controlling the sun.\nCtrl + Arrow Keys = large increments.\nCtrl + Shift + Arrow keys = small increments.")
-    private var attachSunControls = false
+    private var isSunManual = false
+
+    @Parameter(label = "Sun Azimuth", style = "group:Atmosphere" + ",format:0.0", callback = "updateNodeProperties", description = "Azimuth value of the sun in degrees", min = "0", max = "360", stepSize = "1")
+    private var sunAzimuth = 180f
+
+    @Parameter(label = "Sun Elevation", style = "group:Atmosphere" + ",format:0.0", callback = "updateNodeProperties", description = "Elevation value of the sun in degrees", min = "-90", max = "90", stepSize = "1")
+    private var sunElevation = 45f
 
     @Parameter(label = "Emission Strength", style = NumberWidget.SPINNER_STYLE+"group:Atmosphere"+",format:0.00", min = "0", max="10", stepSize = "0.1", callback = "updateNodeProperties")
     private var atmosphereStrength = 1f
@@ -515,13 +521,17 @@ class Properties : InteractiveCommand() {
         }
 
         if (node is Atmosphere) {
-            attachSunControls = node.hasControls
+            isSunManual = !node.isSunAnimated
             atmosphereLatitude = node.latitude
             atmosphereStrength = node.emissionStrength
+            sunAzimuth = node.azimuth
+            sunElevation = node.elevation
         } else {
-            maybeRemoveInput("attachSunControls", java.lang.Boolean::class.java)
+            maybeRemoveInput("isSunManual", java.lang.Boolean::class.java)
             maybeRemoveInput("atmosphereLatitude", java.lang.Float::class.java)
             maybeRemoveInput("atmosphereStrength", java.lang.Float::class.java)
+            maybeRemoveInput("sunAzimuth", java.lang.Float::class.java)
+            maybeRemoveInput("sunElevation", java.lang.Float::class.java)
         }
 
         name = node.name
@@ -636,9 +646,12 @@ class Properties : InteractiveCommand() {
         if (node is Atmosphere) {
             node.latitude = atmosphereLatitude
             node.emissionStrength = atmosphereStrength
+            node.azimuth = sunAzimuth
+            node.elevation = sunElevation
             // attach/detach methods also handle the update of node.updateControls
-            if (attachSunControls) {
+            if (isSunManual) {
                 sciView.sceneryInputHandler?.let { node.attachBehaviors(it) }
+                node.setSunDirectionFromAngles(sunElevation, sunAzimuth)
             } else {
                 sciView.sceneryInputHandler?.let { node.detachBehaviors(it) }
                 // Update the sun position immediately
