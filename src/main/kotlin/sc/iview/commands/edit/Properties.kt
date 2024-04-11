@@ -156,14 +156,8 @@ class Properties : InteractiveCommand() {
     @Parameter(label = "Volume slicing mode", callback = "updateNodeProperties", style = ChoiceWidget.LIST_BOX_STYLE+"group:Volume")
     private var slicingMode: String = Volume.SlicingMode.Slicing.name
 
-    @Parameter(label = "Width", callback = "updateNodeProperties", visibility = ItemVisibility.MESSAGE, style = "group:Volume")
-    private var width: Int = 0
-
-    @Parameter(label = "Height", callback = "updateNodeProperties", visibility = ItemVisibility.MESSAGE, style = "group:Volume")
-    private var height: Int = 0
-
-    @Parameter(label = "Depth", callback = "updateNodeProperties", visibility = ItemVisibility.MESSAGE, style = "group:Volume")
-    private var depth: Int = 0
+    @Parameter(label = "Dimensions", callback = "updateNodeProperties", visibility = ItemVisibility.MESSAGE, style = "group:Volume")
+    private var dimensions: String = ""
 
     /* Light properties */
 
@@ -403,9 +397,7 @@ class Properties : InteractiveCommand() {
                 log.error("Could not load LUT $colormapName")
             }
 
-            width = node.getDimensions().x
-            height = node.getDimensions().y
-            depth = node.getDimensions().z
+            dimensions = "${node.getDimensions().x}x${node.getDimensions().y}x${node.getDimensions().z}"
 
             min = node.converterSetups[0].displayRangeMin.toInt()
             max = node.converterSetups[0].displayRangeMax.toInt()
@@ -432,9 +424,7 @@ class Properties : InteractiveCommand() {
             maybeRemoveInput("colormapName", String::class.java)
             maybeRemoveInput("playPauseButton", Button::class.java)
             maybeRemoveInput("playSpeed", java.lang.Integer::class.java)
-            maybeRemoveInput("width", java.lang.Integer::class.java)
-            maybeRemoveInput("height", java.lang.Integer::class.java)
-            maybeRemoveInput("depth", java.lang.Integer::class.java)
+            maybeRemoveInput("dimensions", java.lang.String::class.java)
         }
 
         if (node is PointLight) {
