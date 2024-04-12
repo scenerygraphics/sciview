@@ -58,6 +58,7 @@ dependencies {
     }
 
     implementation("net.java.dev.jna:jna-platform:5.11.0")
+    implementation("net.clearvolume:cleargl")
     implementation("org.janelia.saalfeldlab:n5")
     implementation("org.janelia.saalfeldlab:n5-imglib2")
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
@@ -152,16 +153,29 @@ dependencies {
 val isRelease: Boolean
     get() = System.getProperty("release") == "true"
 
+kotlin {
+    jvmToolchain(21)
+//    compilerOptions {
+//        jvmTarget = JvmTarget.JVM_21
+//        freeCompilerArgs = listOf("-Xinline-classes", "-opt-in=kotlin.RequiresOptIn")
+//    }
+}
+
+java {
+    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_21
+}
+
 tasks {
-    withType<KotlinCompile>().all {
-        val version = System.getProperty("java.version").substringBefore('.').toInt()
-        val default = if (version == 1) "21" else "$version"
-        kotlinOptions {
-            jvmTarget = project.properties["jvmTarget"]?.toString() ?: default
-            freeCompilerArgs += listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
-        }
-//        sourceCompatibility = project.properties["sourceCompatibility"]?.toString() ?: default
-    }
+//    withType<KotlinCompile>().all {
+//        val version = System.getProperty("java.version").substringBefore('.').toInt()
+//        val default = if (version == 1) "21" else "$version"
+//        kotlinOptions {
+//            jvmTarget = project.properties["jvmTarget"]?.toString() ?: default
+//            freeCompilerArgs += listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
+//        }
+////        sourceCompatibility = project.properties["sourceCompatibility"]?.toString() ?: default
+//    }
     test {
         finalizedBy(jacocoTestReport) // report is always generated after tests run
     }
