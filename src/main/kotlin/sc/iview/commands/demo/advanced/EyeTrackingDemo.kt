@@ -41,6 +41,7 @@ import graphics.scenery.attribute.material.Material
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
 import graphics.scenery.volumes.RAIVolume
+import kotlin.reflect.KClass
 
 @Plugin(type = Command::class,
         menuRoot = "SciView",
@@ -124,7 +125,7 @@ class EyeTrackingDemo: Command{
         sciview.addChild(shell)
 
 //        volume = sciview.find("volume") as Volume
-        val volnodes = sciview.findNodes { node -> node.nodeType.equals(RAIVolume::class.java) }
+        val volnodes = sciview.findNodes { node -> Volume::class.java.isAssignableFrom(node.javaClass) }
         log.info("found ${volnodes.size} volume nodes. Using the first one: ${volnodes.first()}")
         volume = volnodes.first() as Volume
         volume.visible = false
