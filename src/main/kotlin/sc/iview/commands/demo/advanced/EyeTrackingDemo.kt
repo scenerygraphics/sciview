@@ -40,6 +40,8 @@ import org.scijava.log.LogService
 import graphics.scenery.attribute.material.Material
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
+import graphics.scenery.volumes.RAIVolume
+import kotlin.reflect.KClass
 
 @Plugin(type = Command::class,
         menuRoot = "SciView",
@@ -90,6 +92,7 @@ class EyeTrackingDemo: Command{
     override fun run() {
 
         sciview.toggleVRRendering()
+        log.info("VR mode has been toggled")
         hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
         sessionId = "BionicTracking-generated-${SystemHelpers.formatDateTime()}"
         sessionDirectory = Files.createDirectory(Paths.get(System.getProperty("user.home"), "Desktop", sessionId))
@@ -121,7 +124,10 @@ class EyeTrackingDemo: Command{
         shell.spatial().position = Vector3f(0.0f, 0.0f, 0.0f)
         sciview.addChild(shell)
 
-        volume = sciview.find("volume") as Volume
+//        volume = sciview.find("volume") as Volume
+        val volnodes = sciview.findNodes { node -> Volume::class.java.isAssignableFrom(node.javaClass) }
+        log.info("found ${volnodes.size} volume nodes. Using the first one: ${volnodes.first()}")
+        volume = volnodes.first() as Volume
         volume.visible = false
 
         val bb = BoundingGrid()
@@ -191,6 +197,7 @@ class EyeTrackingDemo: Command{
             }
         }
         thread{
+            log.info("started thread for inputSetup")
             inputSetup()
         }
         thread {
@@ -403,7 +410,7 @@ class EyeTrackingDemo: Command{
         hmd.addKeyBinding("cell_division", "T")
 
         hmd.allowRepeats += OpenVRHMD.OpenVRButton.Trigger to TrackerRole.LeftHand
-
+        log.info("calibration should start now")
         setupCalibration()
 
     }
@@ -415,6 +422,7 @@ class EyeTrackingDemo: Command{
                 val cam = sciview.camera as? DetachedHeadCamera ?: return@thread
                 pupilTracker.gazeConfidenceThreshold = confidenceThreshold
                 if (!pupilTracker.isCalibrated) {
+                    log.info("pupil is currently uncalibrated")
                     pupilTracker.onCalibrationInProgress = {
                         cam.showMessage("Crunching equations ...",distance = 1.2f, size = 0.2f, messageColor = Vector4f(1.0f, 0.8f, 0.0f, 1.0f), duration = 15000)
                     }
