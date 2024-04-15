@@ -167,6 +167,7 @@ tasks {
     }
     jar {
         archiveVersion.set(rootProject.version.toString())
+        manifest.attributes["Implementation-Version"] = project.version
     }
 
     withType<GenerateMavenPom>().configureEach {
