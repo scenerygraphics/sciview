@@ -109,6 +109,7 @@ import sc.iview.ui.CustomPropertyUI
 import sc.iview.ui.MainWindow
 import sc.iview.ui.SwingMainWindow
 import sc.iview.ui.TaskManager
+import ucar.units.ConversionException
 import java.awt.event.WindowListener
 import java.io.IOException
 import java.net.URL
@@ -1379,18 +1380,24 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         val voxelDims = FloatArray(3)
         val axisNames = arrayOf("X", "Y", "Z")
         for (axisIdx in voxelDims.indices) {
-            val d = (0 until image.numDimensions()).filter { idx -> image.axis(idx).type().label == axisNames[axisIdx] }.first()
+            val d = (0 until image.numDimensions()).first { idx -> image.axis(idx).type().label == axisNames[axisIdx] }
             val inValue = image.axis(d).averageScale(0.0, 1.0)
             if (image.axis(d).unit() == null || d >= axes.size) {
-                logger.debug("Dim for axis $d is ${inValue.toFloat()}")
                 voxelDims[axisIdx] = inValue.toFloat()
             } else {
-                val imageAxisUnit = image.axis(d).unit().replace("µ", "u")
-                val sciviewAxisUnit = axis(axisIdx)!!.unit().replace("µ", "u")
+                try {
+                    val imageAxisUnit = image.axis(d).unit().replace("µ", "u")
+                    val sciviewAxisUnit = axis(axisIdx)!!.unit().replace("µ", "u")
 
-                voxelDims[axisIdx] = unitService.value(inValue, imageAxisUnit, sciviewAxisUnit).toFloat()
-                logger.debug("Dim for axis $d is ${voxelDims[axisIdx]}")
+                    voxelDims[axisIdx] = unitService.value(inValue, imageAxisUnit, sciviewAxisUnit).toFloat()
+                } catch(e: IllegalArgumentException) {
+                    logger.warn(e.message + " - setting voxel scale for dimension $axisIdx to 1.0")
+                    voxelDims[axisIdx] = 1.0f
+                }
+
             }
+
+            logger.debug("Dim for axis $d is ${voxelDims[axisIdx]}")
         }
         return voxelDims
     }
