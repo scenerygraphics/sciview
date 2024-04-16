@@ -63,7 +63,6 @@ import graphics.scenery.volumes.Volume.Companion.fromXML
 import graphics.scenery.volumes.Volume.Companion.setupId
 import graphics.scenery.volumes.Volume.VolumeDataSource.RAISource
 import io.scif.SCIFIOService
-import io.scif.services.DatasetIOService
 import net.imagej.Dataset
 import net.imagej.ImageJService
 import net.imagej.axis.CalibratedAxis
@@ -81,12 +80,9 @@ import net.imglib2.img.Img
 import net.imglib2.img.array.ArrayImgs
 import net.imglib2.realtransform.AffineTransform3D
 import net.imglib2.type.numeric.ARGBType
-import net.imglib2.type.numeric.NumericType
 import net.imglib2.type.numeric.RealType
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import net.imglib2.view.Views
-import org.janelia.saalfeldlab.n5.N5FSReader
-import org.janelia.saalfeldlab.n5.imglib2.N5Utils
 import org.joml.Quaternionf
 import org.joml.Vector3f
 import org.scijava.Context
@@ -811,19 +807,14 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                     is Mesh -> addMesh(data, name = name)
                     is PointCloud -> addPointCloud(data, name)
                     is graphics.scenery.Mesh -> addMesh(data, name = name)
-                    is Dataset -> addVolume(data, floatArrayOf(1.0f, 1.0f, 1.0f))
-                    //            is RandomAccessibleInterval<*> -> {
-                    //                val t = data.randomAccess().get()
-                    //                addVolume(data, source, floatArrayOf(1.0f, 1.0f, 1.0f))
-                    //            }
+                    is Dataset -> addVolume(data)
                     is List<*> -> {
-                        val list = data
-                        require(!list.isEmpty()) { "Data source '$source' appears empty." }
-                        val element = list[0]
+                        require(data.isNotEmpty()) { "Data source '$source' appears empty." }
+                        val element = data[0]
                         if(element is RealLocalizable) {
                             // NB: For now, we assume all elements will be RealLocalizable.
                             // Highly likely to be the case, barring antagonistic importers.
-                            val points = list as List<RealLocalizable>
+                            val points = data as List<RealLocalizable>
                             addPointCloud(points, name)
                         } else {
                             val type = if(element == null) "<null>" else element.javaClass.name
@@ -1386,17 +1377,19 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     fun getSciviewScale(image: Dataset): FloatArray {
         val voxelDims = FloatArray(3)
-        var axisNames = arrayOf("X", "Y", "Z")
+        val axisNames = arrayOf("X", "Y", "Z")
         for (axisIdx in voxelDims.indices) {
-            var d = (0 until image.numDimensions()).filter { idx -> image.axis(idx).type().label == axisNames[axisIdx] }.first()
+            val d = (0 until image.numDimensions()).filter { idx -> image.axis(idx).type().label == axisNames[axisIdx] }.first()
             val inValue = image.axis(d).averageScale(0.0, 1.0)
             if (image.axis(d).unit() == null || d >= axes.size) {
+                logger.debug("Dim for axis $d is ${inValue.toFloat()}")
                 voxelDims[axisIdx] = inValue.toFloat()
             } else {
                 val imageAxisUnit = image.axis(d).unit().replace("µ", "u")
                 val sciviewAxisUnit = axis(axisIdx)!!.unit().replace("µ", "u")
 
                 voxelDims[axisIdx] = unitService.value(inValue, imageAxisUnit, sciviewAxisUnit).toFloat()
+                logger.debug("Dim for axis $d is ${voxelDims[axisIdx]}")
             }
         }
         return voxelDims
@@ -1513,7 +1506,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         image.min(minPt)
         imageRA.setPosition(minPt)
         val voxelType = imageRA.get()!!.createVariable() as T
-        println("addVolume " + image.numDimensions() + " interval " + image as Interval)
+        logger.info("Adding ${image.numDimensions()}-dimensional volume with type ${voxelType.javaClass.simpleName} (${image as Interval}) with voxel dimensions ${voxelDimensions.joinToString("/")}")
 
         //int numTimepoints = 1;
         if (image.numDimensions() > 3) {
@@ -1534,11 +1527,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         val options = VolumeViewerOptions()
         val v: Volume = RAIVolume(ds, options, hub)
         // Note we override scenery's default scale of mm
-        // v.pixelToWorldRatio = 0.1f
+//        v.pixelToWorldRatio = 0.01f
         v.name = name
         v.metadata["sources"] = sources
         v.metadata["VoxelDimensions"] = voxelDimensions
-        v.spatial().scale = Vector3f(voxelDimensions[0], voxelDimensions[1], voxelDimensions[2]) * v.pixelToWorldRatio
+        v.spatial().scale = Vector3f(voxelDimensions[0], voxelDimensions[1], voxelDimensions[2])
         val tf = v.transferFunction
         val rampMin = 0f
         val rampMax = 0.1f
