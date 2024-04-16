@@ -32,6 +32,7 @@ import graphics.scenery.*
 import graphics.scenery.attribute.material.HasMaterial
 import graphics.scenery.primitives.Line
 import graphics.scenery.primitives.TextBoard
+import graphics.scenery.volumes.Colormap
 import graphics.scenery.volumes.Colormap.Companion.fromColorTable
 import graphics.scenery.volumes.SlicingPlane
 import graphics.scenery.volumes.Volume
@@ -141,12 +142,6 @@ class Properties : InteractiveCommand() {
     @Parameter(label = "Pixel-to-world ratio", min = "0.00001f", max = "1000000.0f", style = NumberWidget.SPINNER_STYLE + ",group:Volume", persist = false, callback = "updateNodeProperties")
     private var pixelToWorldRatio: Float = 0.001f
 
-    @Parameter(label = "Color map", choices = [], callback = "updateNodeProperties", style = "group:Volume")
-    private var colormapName: String = "Fire.lut"
-
-    @Parameter(label = " ", style = "group:Volume")
-    private var colormap = dummyColorTable
-
     @Parameter(label = "AO steps", style = NumberWidget.SPINNER_STYLE+"group:Volume", callback = "updateNodeProperties")
     private val occlusionSteps = 0
 
@@ -231,6 +226,8 @@ class Properties : InteractiveCommand() {
      */
     override fun run() {}
     fun setSceneNode(node: Node?) {
+        Colormap.Companion.lutService = sciView.scijavaContext?.getService(LUTService::class.java)
+
         currentSceneNode = node
         updateCommandFields()
     }
@@ -375,25 +372,6 @@ class Properties : InteractiveCommand() {
             slicingModeInput.setChoices(slicingMethods)
             slicingMode = slicingModeChoices[Volume.SlicingMode.values().indexOf(node .slicingMode)].toString()
 
-            val lutNameItem = info.getMutableInput("colormapName", String::class.java)
-            lutNameItem.choices = sciView.getAvailableLUTs()
-            val cachedColormapName = node.metadata["sciview.colormapName"] as? String
-
-            if(cachedColormapName != null && sciView.getLUT(cachedColormapName) != null) {
-                colormapName = cachedColormapName
-            }
-
-            try {
-                val cm = sciView.getLUT(colormapName)
-                // Ensure the node matches
-                node.colormap = fromColorTable(cm)
-                node.metadata["sciview.colormapName"] = colormapName
-
-                colormap = cm
-            } catch (ioe: IOException) {
-                log.error("Could not load LUT $colormapName")
-            }
-
             pixelToWorldRatio = node.pixelToWorldRatio
             dimensions = "${node.getDimensions().x}x${node.getDimensions().y}x${node.getDimensions().z}"
 
@@ -530,16 +508,6 @@ class Properties : InteractiveCommand() {
             node.intensity = intensity
         }
         if (node is Volume) {
-            try {
-                val cm = sciView.getLUT(colormapName)
-                node.colormap = fromColorTable(cm!!)
-                node.metadata["sciview.colormapName"] = colormapName
-                log.info("Setting new colormap to $colormapName / $cm")
-
-                colormap = cm
-            } catch (ioe: IOException) {
-                log.error("Could not load LUT $colormapName")
-            }
             node.goToTimepoint(timepoint)
             val slicingModeIndex = slicingModeChoices.indexOf(Volume.SlicingMode.valueOf(slicingMode))
             if (slicingModeIndex != -1) {
@@ -625,32 +593,7 @@ class Properties : InteractiveCommand() {
     companion object {
         private const val PI_NEG = "-3.142"
         private const val PI_POS = "3.142"
-        private var dummyColorTable: ColorTable? = null
 
         private val inputModuleMaps = ConcurrentHashMap<ModuleItem<*>, Module>()
-
-        init {
-            dummyColorTable = object : ColorTable {
-                override fun lookupARGB(v: Double, v1: Double, v2: Double): Int {
-                    return 0
-                }
-
-                override fun getComponentCount(): Int {
-                    return 0
-                }
-
-                override fun getLength(): Int {
-                    return 0
-                }
-
-                override fun get(i: Int, i1: Int): Int {
-                    return 0
-                }
-
-                override fun getResampled(i: Int, i1: Int, i2: Int): Int {
-                    return 0
-                }
-            }
-        }
     }
 }
