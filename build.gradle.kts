@@ -45,7 +45,7 @@ dependencies {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "0.11.0"
+    val sceneryVersion = "4e8f7ed"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
