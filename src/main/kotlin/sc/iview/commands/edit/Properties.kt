@@ -404,20 +404,26 @@ class Properties : InteractiveCommand() {
                 timepointInput.minimumValue = Integer.valueOf(0) as Integer
                 timepointInput.maximumValue = Integer.valueOf(maxTimepoint) as Integer
             } else {
-                maybeRemoveInput("timepoint", Integer::class.java)
+                // Warning! The java.lang prefix needs to be here, otherwise the compiler
+                // reverts to the Kotlin types and you'll end up with interesting error messages
+                // like "float does not match type float" ;-)
+                maybeRemoveInput("timepoint", java.lang.Integer::class.java)
                 maybeRemoveInput("playPauseButton", Button::class.java)
-                maybeRemoveInput("playSpeed", Integer::class.java)
+                maybeRemoveInput("playSpeed", java.lang.Integer::class.java)
             }
 
             maybeRemoveInput("colour", ColorRGB::class.java)
         } else {
-            maybeRemoveInput("pixelToWorldRatio", Float::class.java)
+            // Warning! The java.lang prefix needs to be here, otherwise the compiler
+            // reverts to the Kotlin types and you'll end up with interesting error messages
+            // like "float does not match type float" ;-)
+            maybeRemoveInput("pixelToWorldRatio", java.lang.Float::class.java)
             maybeRemoveInput("slicingMode", String::class.java)
-            maybeRemoveInput("timepoint", Integer::class.java)
+            maybeRemoveInput("timepoint", java.lang.Integer::class.java)
             maybeRemoveInput("colormap", ColorTable::class.java)
             maybeRemoveInput("colormapName", String::class.java)
             maybeRemoveInput("playPauseButton", Button::class.java)
-            maybeRemoveInput("playSpeed", Integer::class.java)
+            maybeRemoveInput("playSpeed", java.lang.Integer::class.java)
             maybeRemoveInput("dimensions", java.lang.String::class.java)
         }
 
