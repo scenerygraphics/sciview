@@ -138,11 +138,8 @@ class Properties : InteractiveCommand() {
     @Parameter(label = "Speed", min = "1", max = "10", style = NumberWidget.SCROLL_BAR_STYLE + ",group:Volume", persist = false)
     private var playSpeed = 4
 
-    @Parameter(label = "Min", callback = "updateNodeProperties", style = "group:Volume")
-    private var min = 0
-
-    @Parameter(label = "Max", callback = "updateNodeProperties", style = "group:Volume")
-    private var max = 255
+    @Parameter(label = "Pixel-to-world ratio", min = "0.00001f", max = "1000000.0f", style = NumberWidget.SPINNER_STYLE + ",group:Volume", persist = false, callback = "updateNodeProperties")
+    private var pixelToWorldRatio: Float = 0.001f
 
     @Parameter(label = "Color map", choices = [], callback = "updateNodeProperties", style = "group:Volume")
     private var colormapName: String = "Fire.lut"
@@ -397,33 +394,30 @@ class Properties : InteractiveCommand() {
                 log.error("Could not load LUT $colormapName")
             }
 
+            pixelToWorldRatio = node.pixelToWorldRatio
             dimensions = "${node.getDimensions().x}x${node.getDimensions().y}x${node.getDimensions().z}"
-
-            min = node.converterSetups[0].displayRangeMin.toInt()
-            max = node.converterSetups[0].displayRangeMax.toInt()
 
             val maxTimepoint = node.timepointCount - 1
             if(maxTimepoint > 0) {
                 timepoint = node.currentTimepoint
-                val timepointInput = info.getMutableInput("timepoint", java.lang.Integer::class.java)
-                timepointInput.minimumValue = java.lang.Integer.valueOf(0) as java.lang.Integer
-                timepointInput.maximumValue = java.lang.Integer.valueOf(maxTimepoint) as java.lang.Integer
+                val timepointInput = info.getMutableInput("timepoint", Integer::class.java)
+                timepointInput.minimumValue = Integer.valueOf(0) as Integer
+                timepointInput.maximumValue = Integer.valueOf(maxTimepoint) as Integer
             } else {
-                maybeRemoveInput("timepoint", java.lang.Integer::class.java)
+                maybeRemoveInput("timepoint", Integer::class.java)
                 maybeRemoveInput("playPauseButton", Button::class.java)
-                maybeRemoveInput("playSpeed", java.lang.Integer::class.java)
+                maybeRemoveInput("playSpeed", Integer::class.java)
             }
 
             maybeRemoveInput("colour", ColorRGB::class.java)
         } else {
+            maybeRemoveInput("pixelToWorldRatio", Float::class.java)
             maybeRemoveInput("slicingMode", String::class.java)
-            maybeRemoveInput("min", java.lang.Integer::class.java)
-            maybeRemoveInput("max", java.lang.Integer::class.java)
-            maybeRemoveInput("timepoint", java.lang.Integer::class.java)
+            maybeRemoveInput("timepoint", Integer::class.java)
             maybeRemoveInput("colormap", ColorTable::class.java)
             maybeRemoveInput("colormapName", String::class.java)
             maybeRemoveInput("playPauseButton", Button::class.java)
-            maybeRemoveInput("playSpeed", java.lang.Integer::class.java)
+            maybeRemoveInput("playSpeed", Integer::class.java)
             maybeRemoveInput("dimensions", java.lang.String::class.java)
         }
 
@@ -489,7 +483,7 @@ class Properties : InteractiveCommand() {
         if (node is Line){
             edgeWidth = node.edgeWidth.toInt()
         } else {
-            maybeRemoveInput("edgeWidth", java.lang.Integer::class.java)
+            maybeRemoveInput("edgeWidth", Integer::class.java)
         }
 
         name = node.name
@@ -541,11 +535,12 @@ class Properties : InteractiveCommand() {
                 log.error("Could not load LUT $colormapName")
             }
             node.goToTimepoint(timepoint)
-            node.converterSetups[0].setDisplayRange(min.toDouble(), max.toDouble())
             val slicingModeIndex = slicingModeChoices.indexOf(Volume.SlicingMode.valueOf(slicingMode))
             if (slicingModeIndex != -1) {
                 node.slicingMode = Volume.SlicingMode.values()[slicingModeIndex]
             }
+            node.pixelToWorldRatio = pixelToWorldRatio
+            node.spatial().needsUpdateWorld = true
         }
         if (node is Camera) {
             val scene = node.getScene()
