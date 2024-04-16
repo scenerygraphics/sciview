@@ -262,7 +262,6 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
                         logger.debug("Waiting for renderer initialisation")
                         Thread.sleep(300)
                     }
-                    Thread.sleep(200)
                 } catch (e: InterruptedException) {
                     logger.error("Renderer construction interrupted.")
                 }
@@ -282,18 +281,13 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
 
                 // Enable push rendering by default
                 renderer.pushMode = true
-                sciview.camera!!.setPosition(1.65, 1)
                 glassPane.isVisible = false
 
                 sceneryJPanel.minimumSize = Dimension(256, 256)
             }
         }
 
-        if(SwingUtilities.isEventDispatchThread()) {
-            initializer.run()
-        } else {
-            SwingUtilities.invokeAndWait(initializer)
-        }
+        initializer.run()
     }
 
     fun JPanel.toggleSidebarComponent(component: Component, toolbar: JToolBar, button: JToggleButton, event: ActionEvent?) {
