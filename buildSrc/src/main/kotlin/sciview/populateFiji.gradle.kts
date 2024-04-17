@@ -21,9 +21,9 @@ tasks {
         dependsOn("jar")
         doLast {
             // Discern the path to the Fiji.app folder we are going to populate.
-            val fijiPath = System.getProperty("fiji.dir") ?: "Fiji.app"
-            logger.lifecycle("Populating ${fijiPath}...")
-            val fijiDir = File(fijiPath)
+            val fijiDir = System.getProperty("fiji.dir")?.let(::File)
+                ?: layout.buildDirectory.dir("Fiji.app").get().asFile
+            logger.lifecycle("Populating $fijiDir...")
             if (!fijiDir.isDirectory()) {
                 error("No such directory: ${fijiDir.absolutePath}")
             }
@@ -108,18 +108,54 @@ tasks {
             else {
                 logger.info("Launcher executable = $launcher")
 
+                // NB: Use the same Java as the Gradle build.
+                val javaHome = File(System.getProperty("java.home"))
+                val binJava = listOf("java", "java.exe")
+                    .map { javaHome.resolve("bin").resolve(it) }
+                    .firstOrNull { it.exists() }
+                    ?: "No Java executable found! O_O"
+
+                // Find the imagej-launcher-x.y.z.jar, needed on the classpath.
+                val launcherJar = fijiDir.resolve("jars").listFiles()
+                    .firstOrNull { f -> f.name.startsWith("imagej-launcher-") }
+                    ?: error("Where is your $fijiDir/jars/imagej-launcher.jar?!")
+
+                // Launch sciview's About command headlessly. If sciview is correctly installed,
+                // we will see some output regarding authorship emitted to stdout.
                 val baos = ByteArrayOutputStream()
-                exec {
-                    commandLine = listOf(
-                        "$fijiDir/$launcher",
-                        "--add-opens=java.base/java.lang=ALL-UNNAMED",
-                        "--add-opens=java.base/java.util=ALL-UNNAMED",
-                        "--",
-                        "--headless",
-                        "--run",
-                        "sc.iview.commands.help.About"
-                    )
-                    standardOutput = baos
+                try {
+                    exec {
+                        workingDir = fijiDir
+                        // NB: Avoid using the ImageJ Launcher, because it does not support Java >8 well.
+                        // Also, Gradle forcibly unsets the executable bit from it on every build on Linux. >_<
+                        commandLine = listOf(
+                            "$binJava",
+                            "-Dpython.cachedir.skip=true",
+                            "-Dplugins.dir=$fijiDir",
+                            //"-Xmx...m",
+                            "-Djava.awt.headless=true",
+                            "-Dapple.awt.UIElement=true",
+                            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+                            "--add-opens=java.base/java.util=ALL-UNNAMED",
+                            "-Djava.class.path=$launcherJar",
+                            "-Dimagej.dir=$fijiDir",
+                            "-Dij.dir=$fijiDir",
+                            "-Dfiji.dir=$fijiDir",
+                            //"-Dfiji.defaultLibPath=lib/amd64/server/libjvm.so",
+                            //"-Dfiji.executable=./ImageJ-linux64",
+                            //"-Dij.executable=./ImageJ-linux64",
+                            //"-Djava.library.path=$fijiDir/lib/linux64:$fijiDir/mm/linux64",
+                            "net.imagej.launcher.ClassLauncher",
+                            "-ijjarpath", "jars",
+                            "-ijjarpath", "plugins",
+                            "net.imagej.Main",
+                            "--run", "sc.iview.commands.help.About"
+                        )
+                        standardOutput = baos
+                    }
+                }
+                catch (exc: Exception) {
+                    logger.error(exc.toString())
                 }
                 val stdout = baos.toString().trim()
                 logger.info(stdout)
