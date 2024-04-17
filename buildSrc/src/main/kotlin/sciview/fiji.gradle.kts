@@ -1,5 +1,6 @@
 package sciview
 
+import de.undercouch.gradle.tasks.download.Download
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.NodeList
@@ -7,164 +8,263 @@ import org.xml.sax.InputSource
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStreamReader
-import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 import java.util.zip.GZIPInputStream
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.xpath.XPathConstants
 import javax.xml.xpath.XPathFactory
 
+plugins {
+    id("de.undercouch.download")
+}
+
+// Discern the path to the Fiji.app folder we are working with.
+val fijiDir: File = properties["fiji.dir"]?.toString()?.let(::File)
+    ?: layout.buildDirectory.dir("fiji/Fiji.app").get().asFile
+
+// For really shaky connections, we retry as much as possible
+val maxRetries = Int.MAX_VALUE
+
 tasks {
-    register("populateFiji") {
-        dependsOn("jar")
+    val fijiDownload by tasks.creating(Download::class) {
+        val zipFile = layout.buildDirectory.file("fiji-nojre.zip")
+        src("https://downloads.imagej.net/fiji/latest/fiji-nojre.zip")
+        dest(zipFile)
+        retries(maxRetries)
+        overwrite(false)
+    }
+
+    register<Copy>("fijiUnpack") {
+        onlyIf {
+            fijiDir.listFiles()?.isEmpty() == true || !fijiDir.exists()
+        }
+        doFirst {
+            logger.lifecycle("Unpacking Fiji into $fijiDir")
+            fijiDir.mkdirs()
+        }
+        dependsOn(fijiDownload)
+        from(zipTree(fijiDownload.dest))
+        into(fijiDir.parentFile)
+    }
+
+    register("fijiUpdate") {
+        dependsOn("fijiUnpack")
+        doLast { update() }
+    }
+
+    register("fijiPopulate") {
+        dependsOn("jar", "fijiUpdate")
+        mustRunAfter("jar")
+        doLast { populate() }
+    }
+
+    register("fijiUpload") {
+        dependsOn("fijiPopulate")
+        doLast { upload() }
+    }
+
+    register("fijiClean") {
         doLast {
-            // Discern the path to the Fiji.app folder we are going to populate.
-            val fijiDir = System.getProperty("fiji.dir")?.let(::File)
-                ?: layout.buildDirectory.dir("Fiji.app").get().asFile
-            logger.lifecycle("Populating $fijiDir...")
-            if (!fijiDir.isDirectory()) {
-                error("No such directory: ${fijiDir.absolutePath}")
-            }
-
-            // Parse relevant update site databases. This information is useful
-            // for deciding which JAR files to copy, and which ones to leave alone.
-            val info = Info(
-                db("ImageJ", "https://update.imagej.net"),
-                db("Fiji", "https://update.fiji.sc"),
-                db("Java-8", "https://sites.imagej.net/Java-8"),
-                db("sciview", "https://sites.imagej.net/sciview"),
-                mutableMapOf()
-            )
-
-            // Gather details of existing JAR files in the Fiji installation.
-            val jarsDir = fijiDir.resolve("jars")
-            project.fileTree(jarsDir).files.forEach {
-                if (it.extension == "jar") {
-                    val relPath = it.path.substring(fijiDir.path.length)
-                    info.localFiles.getOrPut(relPath.davce.acKey) { mutableListOf() } += it
-                }
-            }
-
-            logger.info("--> Copying files into Fiji installation")
-
-            // Copy sciview main artifact.
-            val mainJar = project.tasks.getByName("jar").outputs.files.singleFile
-            copy {
-                from(mainJar)
-                into(jarsDir)
-                eachFile { prepareToCopyFile(file, jarsDir, "jars", info) ?: exclude() }
-            }
-
-            // Copy platform-independent JAR files.
-            copy {
-                from(configurations.named("runtimeClasspath"))
-                into(jarsDir)
-                eachFile { prepareToCopyFile(file, jarsDir, "jars", info) ?: exclude() }
-            }
-
-            // Copy platform-specific JAR files.
-            for (platform in listOf("linux64", "macosx-arm64", "macosx", "win64")) {
-                val platformDir = jarsDir.resolve(platform)
-                copy {
-                    from(configurations.named("runtimeClasspath"))
-                    into(platformDir)
-                    eachFile { prepareToCopyFile(file, platformDir, "jars/$platform", info) ?: exclude() }
-                }
-            }
-
-            // HACK: Fix the naming of Fiji's renamed artifacts.
-            // This map is the inverse of the one called "renamedArtifacts" elsewhere.
-            val artifactsToFix = mapOf(
-                "jocl" to "org.jocl.jocl"
-            )
-            for (file in project.fileTree(jarsDir).files) {
-                if (file.extension != "jar") continue
-                val relPath = file.path.substring(fijiDir.path.length)
-                val davce = relPath.davce
-                if (davce.classifier.isNotEmpty()) continue // DOUBLE HACK OMG
-                val badArtifactId = davce.artifactId
-                val goodArtifactId = artifactsToFix[badArtifactId]
-                if (goodArtifactId != null) {
-                    val goodFile = File(file.path.replaceFirst(badArtifactId, goodArtifactId))
-                    logger.info("Renaming: $file -> $goodFile")
-                    file.renameTo(goodFile)
-                }
-            }
-
-            // Now that we populated Fiji, let's verify that it works.
-            logger.info("--> Testing installation")
-            val osName = System.getProperty("os.name")
-            val osArch = System.getProperty("os.arch")
-            val bits = if (osArch.contains("64")) "64" else "32"
-            val launcher = when {
-                osName == "Linux" -> "ImageJ-linux$bits"
-                osName == "Darwin" -> "Contents/MacOS/ImageJ-macosx"
-                osName.startsWith("Windows") -> "ImageJ-win$bits.exe"
-                else -> null
-            }
-            if (launcher == null) warn("Skipping test for unknown platform: $osName-$osArch")
-            else {
-                logger.info("Launcher executable = $launcher")
-
-                // NB: Use the same Java as the Gradle build.
-                val javaHome = File(System.getProperty("java.home"))
-                val binJava = listOf("java", "java.exe")
-                    .map { javaHome.resolve("bin").resolve(it) }
-                    .firstOrNull { it.exists() }
-                    ?: "No Java executable found! O_O"
-
-                // Find the imagej-launcher-x.y.z.jar, needed on the classpath.
-                val launcherJar = fijiDir.resolve("jars").listFiles()
-                    .firstOrNull { f -> f.name.startsWith("imagej-launcher-") }
-                    ?: error("Where is your $fijiDir/jars/imagej-launcher.jar?!")
-
-                // Launch sciview's About command headlessly. If sciview is correctly installed,
-                // we will see some output regarding authorship emitted to stdout.
-                val baos = ByteArrayOutputStream()
-                try {
-                    exec {
-                        workingDir = fijiDir
-                        // NB: Avoid using the ImageJ Launcher, because it does not support Java >8 well.
-                        // Also, Gradle forcibly unsets the executable bit from it on every build on Linux. >_<
-                        commandLine = listOf(
-                            "$binJava",
-                            "-Dpython.cachedir.skip=true",
-                            "-Dplugins.dir=$fijiDir",
-                            //"-Xmx...m",
-                            "-Djava.awt.headless=true",
-                            "-Dapple.awt.UIElement=true",
-                            "--add-opens=java.base/java.lang=ALL-UNNAMED",
-                            "--add-opens=java.base/java.util=ALL-UNNAMED",
-                            "-Djava.class.path=$launcherJar",
-                            "-Dimagej.dir=$fijiDir",
-                            "-Dij.dir=$fijiDir",
-                            "-Dfiji.dir=$fijiDir",
-                            //"-Dfiji.defaultLibPath=lib/amd64/server/libjvm.so",
-                            //"-Dfiji.executable=./ImageJ-linux64",
-                            //"-Dij.executable=./ImageJ-linux64",
-                            //"-Djava.library.path=$fijiDir/lib/linux64:$fijiDir/mm/linux64",
-                            "net.imagej.launcher.ClassLauncher",
-                            "-ijjarpath", "jars",
-                            "-ijjarpath", "plugins",
-                            "net.imagej.Main",
-                            "--run", "sc.iview.commands.help.About"
-                        )
-                        standardOutput = baos
-                    }
-                }
-                catch (exc: Exception) {
-                    logger.error(exc.toString())
-                }
-                val stdout = baos.toString().trim()
-                logger.info(stdout)
-                val success = stdout.startsWith("[INFO] SciView was created by Kyle Harrington")
-                if (!success) error("Test failed.")
-                logger.info("Test passed.")
-            }
+            logger.lifecycle("Removing Fiji.app directory $fijiDir")
+            fijiDir.deleteRecursively()
         }
     }
+
+    register("fijiDistClean") {
+        doLast {
+            logger.lifecycle("Removing Fiji.app directory")
+            fijiDir.deleteRecursively()
+            logger.lifecycle("Removing fiji-nojre.zip")
+            fijiDir.parentFile.resolve("fiji-nojre.zip").delete()
+        }
+    }
+
+}
+
+private fun update() {
+    validateFijiDir()
+
+    try {
+        runUpdater("add-update-site", "sciview", "https://sites.imagej.net/sciview")
+        runUpdater("update-force-pristine")
+    }
+    catch (_: Exception) {
+        error("Failed to update Fiji")
+    }
+}
+
+private fun populate() {
+    validateFijiDir()
+
+    // Parse relevant update site databases. This information is useful
+    // for deciding which JAR files to copy, and which ones to leave alone.
+    val info = Info(
+        db("ImageJ", "https://update.imagej.net"),
+        db("Fiji", "https://update.fiji.sc"),
+        db("Java-8", "https://sites.imagej.net/Java-8"),
+        db("sciview", "https://sites.imagej.net/sciview"),
+        mutableMapOf()
+    )
+
+    // Gather details of existing JAR files in the Fiji installation.
+    val jarsDir = fijiDir.resolve("jars")
+    project.fileTree(jarsDir).files.forEach {
+        if (it.extension == "jar") {
+            val relPath = it.path.substring(fijiDir.path.length)
+            info.localFiles.getOrPut(relPath.davce.acKey) { mutableListOf() } += it
+        }
+    }
+
+    logger.info("--> Copying files into Fiji installation")
+
+    // Copy sciview main artifact.
+    val mainJar = project.tasks.getByName("jar").outputs.files.singleFile
+    copy {
+        from(mainJar)
+        into(jarsDir)
+        eachFile { prepareToCopyFile(file, jarsDir, "jars", info) ?: exclude() }
+    }
+
+    // Copy platform-independent JAR files.
+    copy {
+        from(configurations.named("runtimeClasspath"))
+        into(jarsDir)
+        eachFile { prepareToCopyFile(file, jarsDir, "jars", info) ?: exclude() }
+    }
+
+    // Copy platform-specific JAR files.
+    for (platform in listOf("linux64", "macosx-arm64", "macosx", "win64")) {
+        val platformDir = jarsDir.resolve(platform)
+        copy {
+            from(configurations.named("runtimeClasspath"))
+            into(platformDir)
+            eachFile { prepareToCopyFile(file, platformDir, "jars/$platform", info) ?: exclude() }
+        }
+    }
+
+    // HACK: Fix the naming of Fiji's renamed artifacts.
+    // This map is the inverse of the one called "renamedArtifacts" elsewhere.
+    val artifactsToFix = mapOf(
+        "jocl" to "org.jocl.jocl"
+    )
+    for (file in project.fileTree(jarsDir).files) {
+        if (file.extension != "jar") continue
+        val relPath = file.path.substring(fijiDir.path.length)
+        val davce = relPath.davce
+        if (davce.classifier.isNotEmpty()) continue // DOUBLE HACK OMG
+        val badArtifactId = davce.artifactId
+        val goodArtifactId = artifactsToFix[badArtifactId]
+        if (goodArtifactId != null) {
+            val goodFile = File(file.path.replaceFirst(badArtifactId, goodArtifactId))
+            logger.info("Renaming: $file -> $goodFile")
+            file.renameTo(goodFile)
+        }
+    }
+
+    // Now that we populated Fiji, let's verify that it works.
+    // We launch sciview's About command headlessly. If sciview is correctly installed,
+    // we will see some output regarding authorship emitted to stdout.
+    logger.info("--> Testing installation")
+
+    val stdout = runFiji("--run", "sc.iview.commands.help.About")
+    logger.info(stdout)
+    val success = stdout.startsWith("[INFO] SciView was created by Kyle Harrington")
+    if (!success) {
+        throw GradleException("Testing sciview About command failed.")
+    }
+    logger.lifecycle("Testing sciview About command successful.")
+}
+
+private fun upload() {
+    val updateSite = "sciview"
+    val url = "https://sites.imagej.net/sciview"
+    val user = "TODO" // grab from somewhere
+    val pass = "TODO" // grab from somewhere
+    runUpdater("edit-update-site", updateSite, url, "webdav:$user:$pass", ".")
+    runUpdater("upload-complete-site", "--force", "--force-shadow", updateSite)
+}
+
+private fun validateFijiDir() {
+    logger.lifecycle("Populating $fijiDir...")
+    if (!fijiDir.isDirectory()) {
+        error("No such directory: ${fijiDir.absolutePath}")
+    }
+}
+
+/** Runs Fiji with the given arguments. */
+private fun runFiji(vararg args: String): String {
+    return runLauncher(emptyList(), emptyList(), "net.imagej.Main", args.toList())
+}
+
+/** Runs the ImageJ Updater with the given arguments. */
+private fun runUpdater(vararg args: String): String {
+    val jvmArgs = listOf("-Dpatch.ij1=false")
+    val launcherArgs = listOf("-classpath", ".")
+    return runLauncher(jvmArgs, launcherArgs, "net.imagej.updater.CommandLine", args.toList())
+}
+
+/**
+ * Runs a Java program via the ImageJ Launcher's ClassLauncher, with the given arguments.
+ *
+ * Avoids using the ImageJ Launcher native binary, because it does not support Java 9+ well.
+ */
+private fun runLauncher(jvmArgs: List<String>, launcherArgs: List<String>, mainClass: String, mainArgs: List<String>): String {
+    // Find the imagej-launcher-x.y.z.jar, needed on the classpath.
+    val launcherJar = fijiDir.resolve("jars").listFiles()
+        .firstOrNull { f -> f.name.startsWith("imagej-launcher-") }
+        ?: error("Where is your $fijiDir/jars/imagej-launcher.jar?!")
+
+    val jvmArgsForJava = listOf(
+        "-Dpython.cachedir.skip=true",
+        "-Dplugins.dir=$fijiDir",
+        //"-Xmx...m",
+        "-Djava.awt.headless=true",
+        "-Dapple.awt.UIElement=true",
+        "--add-opens=java.base/java.lang=ALL-UNNAMED",
+        "--add-opens=java.base/java.util=ALL-UNNAMED",
+        "-Djava.class.path=$launcherJar",
+        "-Dimagej.dir=$fijiDir",
+        "-Dij.dir=$fijiDir",
+        "-Dfiji.dir=$fijiDir",
+        //"-Dfiji.defaultLibPath=lib/amd64/server/libjvm.so",
+        //"-Dfiji.executable=./ImageJ-linux64",
+        //"-Dij.executable=./ImageJ-linux64",
+        //"-Djava.library.path=$fijiDir/lib/$platform:$fijiDir/mm/$platform",
+    ) + jvmArgs
+
+    val mainClassForJava = "net.imagej.launcher.ClassLauncher"
+
+    // Yes: the original main class is passed to the ClassLauncher as a main argument.
+    // It's confusing. But thanks to the magic of ClassLoaders, we can and we will.
+    val mainArgsForJava = launcherArgs + listOf(
+        "-ijjarpath", "jars",
+        "-ijjarpath", "plugins",
+    ) + mainClass + mainArgs
+
+    return runJava(jvmArgsForJava, mainClassForJava, mainArgsForJava)
+}
+
+private fun runJava(jvmArgs: List<String>, mainClass: String, mainArgs: List<String>): String {
+    // Find the Java binary. We use the same Java installation as the Gradle build.
+    val javaHome = File(System.getProperty("java.home"))
+    val binJava = listOf("java", "java.exe")
+        .map { javaHome.resolve("bin").resolve(it) }
+        .firstOrNull { it.exists() }
+        ?: "No Java executable found! O_O"
+
+    val stdoutStream = ByteArrayOutputStream()
+    try {
+        exec {
+            workingDir = fijiDir
+            commandLine = listOf(binJava.toString()) + jvmArgs + mainClass + mainArgs
+            standardOutput = stdoutStream
+        }
+    }
+    catch (exc: Exception) {
+        logger.error(exc.toString())
+    }
+    return stdoutStream.toString().trim()
 }
 
 val String.dirname: String
@@ -253,8 +353,17 @@ fun db(siteName: String, siteURL: String): Map<AC, Element> {
     Files.createDirectories(dbCacheDir.toPath())
     val dbXml = dbCacheDir.resolve("$siteName.xml.gz")
     val url = "$siteURL/db.xml.gz"
-    if (!dbXml.exists()) download(url, dbXml)
-    if (!dbXml.exists()) error("Download failed: $url")
+    if (!dbXml.exists()) {
+        download.run {
+            src(url)
+            dest(dbXml)
+            overwrite(true)
+            retries(maxRetries)
+        }
+    }
+    if (!dbXml.exists()) {
+        error("Download failed: $url")
+    }
 
     logger.info("--> Parsing ${dbXml.name}")
     val db = parseGzippedXml(dbXml.readBytes())
@@ -275,13 +384,6 @@ fun db(siteName: String, siteURL: String): Map<AC, Element> {
         pluginMap[ac] = plugin
     }
     return pluginMap
-}
-
-fun download(url: String, dest: File) {
-    logger.info("--> Downloading $url to $dest")
-    URL(url).openStream().use { inputStream ->
-        Files.copy(inputStream, dest.toPath(), StandardCopyOption.REPLACE_EXISTING)
-    }
 }
 
 fun parseGzippedXml(gzippedXml: ByteArray): Document {
