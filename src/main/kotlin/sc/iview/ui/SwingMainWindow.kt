@@ -32,9 +32,11 @@ import com.formdev.flatlaf.FlatLightLaf
 import graphics.scenery.Node
 import graphics.scenery.SceneryElement
 import graphics.scenery.backends.Renderer
+import graphics.scenery.primitives.TextBoard
 import graphics.scenery.utils.SceneryJPanel
 import graphics.scenery.utils.lazyLogger
 import org.joml.Vector2f
+import org.joml.Vector4f
 import org.scijava.menu.MenuService
 import org.scijava.ui.swing.menu.SwingJMenuBarCreator
 import sc.iview.SciView
@@ -43,9 +45,7 @@ import sc.iview.SplashLabel
 import sc.iview.Utils
 import java.awt.*
 import java.awt.datatransfer.DataFlavor
-import java.awt.dnd.DnDConstants
-import java.awt.dnd.DropTarget
-import java.awt.dnd.DropTargetDropEvent
+import java.awt.dnd.*
 import java.awt.event.*
 import java.io.File
 import java.util.*
@@ -251,6 +251,16 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
 
             // attach drag-and-drop handler to enable dropping of e.g. volume files onto the viewport
             sceneryJPanel.dropTarget = object: DropTarget() {
+                var dropMessage: TextBoard? = null
+
+                override fun dragEnter(dtde: DropTargetDragEvent?) {
+                    dropMessage = sciview.camera?.showMessage("Drop to add", duration = 5000, messageColor = Vector4f(0.0f, 0.0f, 0.0f, 1.0f), backgroundColor = Vector4f(10.0f))
+                }
+
+                override fun dragExit(dte: DropTargetEvent?) {
+                    dropMessage?.let { sciview.camera?.removeMessage(it) }
+                }
+
                 override fun drop(evt: DropTargetDropEvent?) {
                     if(evt == null) {
                         return
@@ -267,6 +277,7 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
                         }
 
                         evt.dropComplete(true)
+                        dropMessage?.let { sciview.camera?.removeMessage(it) }
                     } catch(ex: Exception) {
                         ex.printStackTrace()
                     }
