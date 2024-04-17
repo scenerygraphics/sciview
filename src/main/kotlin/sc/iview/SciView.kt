@@ -129,6 +129,7 @@ import java.util.stream.Collectors
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap
+import kotlin.concurrent.thread
 import javax.swing.JOptionPane
 import kotlin.math.cos
 import kotlin.math.sin
@@ -1246,7 +1247,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         // if scijavaContext was not created by ImageJ, then system exit
         if( objectService.getObjects(Utils.SciviewStandalone::class.java).size > 0 ) {
             log.info("Was running as sciview standalone, shutting down JVM")
-            System.exit(0)
+            thread { System.exit(0) }
         }
     }
 
