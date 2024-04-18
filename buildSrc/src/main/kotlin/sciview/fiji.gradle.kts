@@ -155,6 +155,7 @@ private fun update() {
 
 private fun populate() {
     validateFijiDir()
+    logger.lifecycle("Populating $fijiDir...")
 
     // Parse relevant update site databases. This information is useful
     // for deciding which JAR files to copy, and which ones to leave alone.
@@ -265,7 +266,6 @@ private fun upload() {
 }
 
 private fun validateFijiDir() {
-    logger.lifecycle("Populating $fijiDir...")
     if (!fijiDir.isDirectory) {
         error("No such directory: ${fijiDir.absolutePath}")
     }
