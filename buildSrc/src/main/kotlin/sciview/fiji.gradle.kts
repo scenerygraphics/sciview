@@ -138,6 +138,12 @@ private fun checksum() {
 private fun update() {
     validateFijiDir()
 
+    val skip = project.properties["fijiUpdateSkip"]?.toString()?.toBoolean() ?: false
+    if (skip) {
+        logger.lifecycle("Skipping Fiji update due to fijiUpdateSkip=true")
+        return
+    }
+
     try {
         runUpdater("add-update-site", updateSite, updateSiteURL)
         runUpdater("update")
