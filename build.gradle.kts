@@ -10,7 +10,7 @@ plugins {
     kotlin("kapt")
     sciview.publish
     sciview.sign
-    sciview.populateFiji
+    sciview.fiji
     id("org.jetbrains.dokka")
     jacoco
     `maven-publish`
