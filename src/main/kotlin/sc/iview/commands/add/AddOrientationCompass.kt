@@ -80,7 +80,8 @@ class AddOrientationCompass : Command {
         axisNode.spatial().rotation = Quaternionf().rotateXYZ(angleX, angleY, angleZ)
         axisNode.ifMaterial {
             diffuse.set(color)
-            depthTest = DepthTest.Always
+            depthTest = true
+            depthOp = DepthTest.Always
             blending.transparent = true
         }
         val axisCap = Icosphere(AXESBARRADIUS, 2)
@@ -88,7 +89,8 @@ class AddOrientationCompass : Command {
             position = Vector3f(0.0f, axisLength, 0.0f)
         }
         axisCap.material().diffuse.set(color)
-        axisCap.material().depthTest = DepthTest.Always
+        axisCap.material().depthTest = true
+        axisCap.material().depthOp = DepthTest.Always
         axisCap.material().blending.transparent = true
         axisNode.addChild(axisCap)
         return axisNode
