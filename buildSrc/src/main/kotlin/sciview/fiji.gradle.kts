@@ -36,6 +36,8 @@ tasks {
     }
 
     register<Copy>("fijiUnpack") {
+        group = "Fiji"
+        description = "Unpacks the fiji-nojre.zip archive into $fijiDir, downloading it as needed."
         onlyIf {
             fijiDir.listFiles()?.isEmpty() == true || !fijiDir.exists()
         }
@@ -49,22 +51,30 @@ tasks {
     }
 
     register("fijiUpdate") {
+        group = "Fiji"
+        description = "Updates the Fiji installation at $fijiDir."
         dependsOn("fijiUnpack")
         doLast { update() }
     }
 
     register("fijiPopulate") {
+        group = "Fiji"
+        description = "Installs sciview into the Fiji installation at $fijiDir."
         dependsOn("jar", "fijiUpdate")
         mustRunAfter("jar")
         doLast { populate() }
     }
 
     register("fijiUpload") {
+        group = "Fiji"
+        description = "Uploads sciview + dependencies from $fijiDir to the sciview update site."
         dependsOn("fijiPopulate")
         doLast { upload() }
     }
 
     register("fijiClean") {
+        group = "Fiji"
+        description = "Deletes the Fiji installation at $fijiDir."
         doLast {
             logger.lifecycle("Removing Fiji.app directory $fijiDir")
             fijiDir.deleteRecursively()
@@ -72,6 +82,8 @@ tasks {
     }
 
     register("fijiDistClean") {
+        group = "Fiji"
+        description = "Deletes the Fiji installation at $fijiDir, as well as the downloaded fiji-nojre.zip archive."
         doLast {
             logger.lifecycle("Removing Fiji.app directory")
             fijiDir.deleteRecursively()
