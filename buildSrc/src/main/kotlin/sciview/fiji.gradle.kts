@@ -429,7 +429,7 @@ val Element.isObsolete: Boolean
 fun warn(message: String) { logger.warn("[WARNING] $message") }
 
 fun db(siteName: String, siteURL: String): Map<AC, Element> {
-    val dbCacheDir = project.buildDir.resolve("tmp")
+    val dbCacheDir = layout.buildDirectory.dir("tmp").get().asFile
     Files.createDirectories(dbCacheDir.toPath())
     val dbXml = dbCacheDir.resolve("$siteName.xml.gz")
     val url = "$siteURL/db.xml.gz"
