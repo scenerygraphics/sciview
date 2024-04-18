@@ -250,7 +250,7 @@ private fun upload() {
 
 private fun validateFijiDir() {
     logger.lifecycle("Populating $fijiDir...")
-    if (!fijiDir.isDirectory()) {
+    if (!fijiDir.isDirectory) {
         error("No such directory: ${fijiDir.absolutePath}")
     }
 }
@@ -292,7 +292,7 @@ private fun String.runCommand(workingDir: File): String? {
 private fun runLauncher(jvmArgs: List<String>, launcherArgs: List<String>, mainClass: String, mainArgs: List<String>): String {
     // Find the imagej-launcher-x.y.z.jar, needed on the classpath.
     val launcherJar = fijiDir.resolve("jars").listFiles()
-        .firstOrNull { f -> f.name.startsWith("imagej-launcher-") }
+        ?.firstOrNull { f -> f.name.startsWith("imagej-launcher-") }
         ?: error("Where is your $fijiDir/jars/imagej-launcher.jar?!")
 
     val jvmArgsForJava = listOf(
