@@ -140,7 +140,7 @@ private fun update() {
 
     try {
         runUpdater("add-update-site", updateSite, updateSiteURL)
-        runUpdater("update-force-pristine")
+        runUpdater("update")
     }
     catch (_: Exception) {
         error("Failed to update Fiji")
