@@ -398,7 +398,7 @@ tasks {
             val exampleName = className.substringAfterLast(".")
             val exampleType = className.substringBeforeLast(".").substringAfterLast(".")
 
-            logger.quiet("Registering $exampleName of $exampleType from $className")
+            logger.info("Registering $exampleName of $exampleType from $className")
             register<JavaExec>(name = className.substringAfterLast(".")) {
                 classpath = sourceSets.test.get().runtimeClasspath
                 mainClass.set(className)

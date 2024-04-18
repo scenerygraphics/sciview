@@ -26,13 +26,46 @@ val fijiDir: File = properties["fiji.dir"]?.toString()?.let(::File)
 // For really shaky connections, we retry as much as possible
 val maxRetries = Int.MAX_VALUE
 
+// Properties for the update site. Can be set in the local gradle.properties,
+// in the one in ~/.gradle, or on the command line via -P
+val updateSite = project.properties["fijiUpdateSite"] as String
+val updateSiteURL = project.properties["fijiUpdateSiteURL"] as String
+val user = project.properties["fijiUpdateSiteUsername"]
+val pass = project.properties["fijiUpdateSitePassword"]
+
+val fijiDownloadURL = "https://downloads.imagej.net/fiji/latest/fiji-nojre.zip"
+val fijiZipFile = layout.buildDirectory.file("fiji-nojre.zip")
+val fijiChecksumDisable = (project.properties["fijiChecksumDisable"] as? String)?.toBoolean() ?: false
+
 tasks {
     val fijiDownload by tasks.creating(Download::class) {
-        val zipFile = layout.buildDirectory.file("fiji-nojre.zip")
-        src("https://downloads.imagej.net/fiji/latest/fiji-nojre.zip")
-        dest(zipFile)
+        src(fijiDownloadURL)
+        dest(fijiZipFile)
         retries(maxRetries)
         overwrite(false)
+        useETag(true)
+
+        finalizedBy("fijiChecksum")
+    }
+
+    register("fijiChecksum") {
+        onlyIf { !fijiChecksumDisable }
+        val checksumFile = fijiZipFile.get().asFile.resolveSibling("fiji-nojre.zip.sha256")
+
+        logger.lifecycle("Checking SHA256 checksum of fiji-nojre.zip")
+        download.run {
+            src("$fijiDownloadURL.sha256")
+            dest(checksumFile)
+            overwrite(true)
+            retries(maxRetries)
+            useETag(true)
+        }
+
+        verifyChecksum.run {
+            src(fijiZipFile)
+            algorithm("SHA256")
+            checksum(checksumFile.readText().trim())
+        }
     }
 
     register<Copy>("fijiUnpack") {
@@ -59,7 +92,7 @@ tasks {
 
     register("fijiPopulate") {
         group = "Fiji"
-        description = "Installs sciview into the Fiji installation at $fijiDir."
+        description = "Installs $updateSite into the Fiji installation at $fijiDir."
         dependsOn("jar", "fijiUpdate")
         mustRunAfter("jar")
         doLast { populate() }
@@ -67,7 +100,7 @@ tasks {
 
     register("fijiUpload") {
         group = "Fiji"
-        description = "Uploads sciview + dependencies from $fijiDir to the sciview update site."
+        description = "Uploads $updateSite + dependencies from $fijiDir to the $updateSite update site."
         dependsOn("fijiPopulate")
         doLast { upload() }
     }
@@ -98,7 +131,7 @@ private fun update() {
     validateFijiDir()
 
     try {
-        runUpdater("add-update-site", "sciview", "https://sites.imagej.net/sciview")
+        runUpdater("add-update-site", updateSite, updateSiteURL)
         runUpdater("update-force-pristine")
     }
     catch (_: Exception) {
@@ -115,7 +148,7 @@ private fun populate() {
         db("ImageJ", "https://update.imagej.net"),
         db("Fiji", "https://update.fiji.sc"),
         db("Java-8", "https://sites.imagej.net/Java-8"),
-        db("sciview", "https://sites.imagej.net/sciview"),
+        db(updateSite, updateSiteURL),
         mutableMapOf()
     )
 
@@ -189,12 +222,17 @@ private fun populate() {
 }
 
 private fun upload() {
-    val updateSite = "sciview"
-    val url = "https://sites.imagej.net/sciview"
-    val user = "TODO" // grab from somewhere
-    val pass = "TODO" // grab from somewhere
-    runUpdater("edit-update-site", updateSite, url, "webdav:$user:$pass", ".")
-    runUpdater("upload-complete-site", "--force", "--force-shadow", updateSite)
+
+    val dryRun = project.properties["fijiUploadDryRun"]?.toString()?.toBoolean() ?: false
+
+    logger.lifecycle("Uploading to Fiji update site $updateSite at $updateSiteURL ${if(dryRun) { " (dry run)" } else { "" }}")
+    runUpdater("edit-update-site", updateSite, updateSiteURL, "webdav:$user:$pass", ".")
+
+    if(dryRun) {
+        runUpdater("upload-complete-site", "--force", "--force-shadow", "--simulate", updateSite)
+    } else {
+        runUpdater("upload-complete-site", "--force", "--force-shadow", updateSite)
+    }
 }
 
 private fun validateFijiDir() {
