@@ -239,7 +239,13 @@ private fun populate() {
 }
 
 private fun upload() {
-
+    if (user == null || pass == null) {
+        error("""
+            No credentials available to upload to the update site.
+            Please configure the fijiUpdateSiteUsername and fijiUpdateSitePassword
+            properties in your ~/.gradle/gradle.properties file.
+        """.trimIndent())
+    }
     val dryRun = project.properties["fijiUploadDryRun"]?.toString()?.toBoolean() ?: false
 
     logger.lifecycle("Uploading to Fiji update site $updateSite at $updateSiteURL ${if(dryRun) { " (dry run)" } else { "" }}")
