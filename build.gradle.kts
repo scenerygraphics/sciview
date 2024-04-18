@@ -132,10 +132,6 @@ dependencies {
         exclude("org.jogamp.gluegen", "gluegen-rt")
     }
 
-    // TODO hacks for testing
-    runtimeOnly("org.jogamp.jogl:jogl-all:2.4.0:natives-macosx-universal")
-    runtimeOnly("com.metsci.ext.org.jogamp.gluegen:gluegen-rt:2.4.0-rc-20200202:natives-macosx-universal")
-
     // OME
     implementation("ome:formats-bsd")
     implementation("ome:formats-gpl")
