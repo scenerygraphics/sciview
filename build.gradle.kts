@@ -10,7 +10,7 @@ plugins {
     kotlin("kapt")
     sciview.publish
     sciview.sign
-    sciview.populateFiji
+    sciview.fiji
     id("org.jetbrains.dokka")
     jacoco
     `maven-publish`
@@ -398,7 +398,7 @@ tasks {
             val exampleName = className.substringAfterLast(".")
             val exampleType = className.substringBeforeLast(".").substringAfterLast(".")
 
-            logger.quiet("Registering $exampleName of $exampleType from $className")
+            logger.info("Registering $exampleName of $exampleType from $className")
             register<JavaExec>(name = className.substringAfterLast(".")) {
                 classpath = sourceSets.test.get().runtimeClasspath
                 mainClass.set(className)

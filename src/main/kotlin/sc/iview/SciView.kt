@@ -111,7 +111,9 @@ import sc.iview.ui.SwingMainWindow
 import sc.iview.ui.TaskManager
 import ucar.units.ConversionException
 import java.awt.event.WindowListener
+import java.io.File
 import java.io.IOException
+import java.net.JarURLConnection
 import java.net.URL
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
@@ -119,6 +121,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import java.util.function.Function
 import java.util.function.Predicate
@@ -1925,6 +1928,58 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         @Throws(Exception::class)
         fun createSciView(): SciView {
             return create()
+        }
+
+        private fun getGitHashFor(clazz: Class<*>): String? {
+            val sciviewBaseClassName = clazz.simpleName + ".class"
+            val sciviewClassPath = clazz.getResource(sciviewBaseClassName).toString()
+            var gitHash: String? = null
+            if (!sciviewClassPath.startsWith("jar")) {
+                return gitHash
+            }
+            gitHash = try {
+                val url = URL(sciviewClassPath)
+                val jarConnection = url.openConnection() as JarURLConnection
+                val manifest = jarConnection.manifest
+                val attributes = manifest.mainAttributes
+                attributes.getValue("Implementation-Build")
+            } catch (ioe: IOException) {
+                null
+            } catch (npe: NullPointerException) {
+                null
+            }
+            return gitHash
+        }
+
+        fun String.runCommand(workingDir: File): String? {
+            try {
+                val parts = this.split("\\s".toRegex())
+                val proc = ProcessBuilder(*parts.toTypedArray())
+                    .directory(workingDir)
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
+
+                proc.waitFor(60, TimeUnit.MINUTES)
+                return proc.inputStream.bufferedReader().readText()
+            } catch(e: IOException) {
+                e.printStackTrace()
+                return null
+            }
+        }
+
+        /**
+         * Returns the currently-used sciview and scenery version strings, including Git hashes.
+         */
+        @JvmStatic
+        fun fullVersionString(): String {
+            val sceneryGitHash = getGitHashFor(SceneryBase::class.java)
+            val sciviewGitHash = getGitHashFor(SciView::class.java) ?: "git rev-parse --short HEAD".runCommand(File("."))?.trim()
+
+            val sceneryVersion: String? = SceneryBase::class.java.getPackage().implementationVersion
+            val sciviewVersion: String? = SciView::class.java.getPackage().implementationVersion
+
+            return "sciview ${sciviewVersion ?: ""} ($sciviewGitHash) / scenery $sceneryVersion ($sceneryGitHash)"
         }
     }
 }

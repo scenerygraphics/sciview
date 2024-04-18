@@ -53,9 +53,7 @@ import kotlin.math.roundToInt
 class SplashLabel : JPanel(), ItemListener {
     private val logger = LoggerFactory.getLogger("SciView")
     private var splashImage: BufferedImage
-    val sceneryVersion: String? = SceneryBase::class.java.getPackage().implementationVersion
-    val sciviewVersion: String? = SciView::class.java.getPackage().implementationVersion
-    var versionString: String = ""
+    var versionString: String = SciView.fullVersionString()
         private set
     @Volatile var alpha = 1.0f
 
@@ -81,46 +79,11 @@ class SplashLabel : JPanel(), ItemListener {
         g2d.drawString("made with \u2665 at CASUS Görlitz, MDC Berlin, University of Idaho, & MPI-CBG Dresden", x, height - 30)
     }
 
-    private fun getGitHashFor(clazz: Class<*>): String {
-        val sciviewBaseClassName = clazz.simpleName + ".class"
-        val sciviewClassPath = clazz.getResource(sciviewBaseClassName).toString()
-        var gitHash = ""
-        if (!sciviewClassPath.startsWith("jar")) {
-            return gitHash
-        }
-        gitHash = try {
-            val url = URL(sciviewClassPath)
-            val jarConnection = url.openConnection() as JarURLConnection
-            val manifest = jarConnection.manifest
-            val attributes = manifest.mainAttributes
-            attributes.getValue("Implementation-Build")
-        } catch (ioe: IOException) {
-            ""
-        } catch (npe: NullPointerException) {
-            ""
-        }
-        return gitHash
-    }
+
 
     init {
         isOpaque = false
-        var sceneryGitHash = getGitHashFor(SceneryBase::class.java)
-        var sciviewGitHash = getGitHashFor(SciView::class.java)
-
-        if (sceneryGitHash.isNotEmpty()) {
-            sceneryGitHash = " ($sceneryGitHash)"
-        }
-
-        if (sciviewGitHash.isNotEmpty()) {
-            sciviewGitHash = " ($sciviewGitHash) "
-        }
-
-        versionString = if (sceneryVersion == null || sciviewVersion == null) {
-            "sciview / scenery, development version"
-        } else {
-            "sciview $sciviewVersion$sciviewGitHash) / scenery $sceneryVersion$sceneryGitHash"
-        }
-        logger.info("This is $versionString ($sciviewGitHash / $sceneryGitHash)")
+        logger.info("This is $versionString.")
 
         splashImage = try {
             ImageIO.read(this.javaClass.getResourceAsStream("sciview-logo.png"))
