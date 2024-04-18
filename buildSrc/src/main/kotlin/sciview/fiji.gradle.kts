@@ -54,22 +54,7 @@ tasks {
 
     register("fijiChecksum") {
         onlyIf { !fijiChecksumDisable }
-        val checksumFile = fijiZipFile.get().asFile.resolveSibling("fiji-nojre.zip.sha256")
-
-        logger.lifecycle("Checking SHA256 checksum of fiji-nojre.zip")
-        download.run {
-            src("$fijiDownloadURL.sha256")
-            dest(checksumFile)
-            overwrite(true)
-            retries(maxRetries)
-            useETag(true)
-        }
-
-        verifyChecksum.run {
-            src(fijiZipFile)
-            algorithm("SHA256")
-            checksum(checksumFile.readText().trim())
-        }
+        doLast { checksum() }
     }
 
     register<Copy>("fijiUnpack") {
@@ -129,6 +114,25 @@ tasks {
         }
     }
 
+}
+
+private fun checksum() {
+    val checksumFile = fijiZipFile.get().asFile.resolveSibling("fiji-nojre.zip.sha256")
+
+    logger.lifecycle("Checking SHA256 checksum of fiji-nojre.zip")
+    download.run {
+        src("$fijiDownloadURL.sha256")
+        dest(checksumFile)
+        overwrite(true)
+        retries(maxRetries)
+        useETag(true)
+    }
+
+    verifyChecksum.run {
+        src(fijiZipFile)
+        algorithm("SHA256")
+        checksum(checksumFile.readText().trim())
+    }
 }
 
 private fun update() {
