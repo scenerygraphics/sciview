@@ -57,7 +57,7 @@ dependencies {
         exclude("org.jogamp.jogl","jogl-all")
     }
 
-    implementation("net.java.dev.jna:jna-platform:5.11.0")
+    implementation("net.java.dev.jna:jna-platform:5.14.0")
     implementation("org.janelia.saalfeldlab:n5")
     implementation("org.janelia.saalfeldlab:n5-imglib2")
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
