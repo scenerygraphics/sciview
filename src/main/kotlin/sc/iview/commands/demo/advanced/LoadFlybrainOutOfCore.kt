@@ -87,9 +87,10 @@ class LoadFlybrainOutOfCore : Command {
         log.info("Done.")
 
         val transform = AffineTransform3D()
-        val sx = imp.calibration.pixelWidth
-        val sy = imp.calibration.pixelHeight
-        val sz = imp.calibration.pixelDepth  * 10
+        val scaleFactor = 40
+        val sx = imp.calibration.pixelWidth * 40
+        val sy = imp.calibration.pixelHeight * 40
+        val sz = imp.calibration.pixelDepth * 40
         transform[sx, 0.0, 0.0, 0.0, 0.0, sy, 0.0, 0.0, 0.0, 0.0, sz] = 0.0
         val type = UnsignedShortType()
 

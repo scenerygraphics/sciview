@@ -33,6 +33,7 @@ import graphics.scenery.attribute.material.HasMaterial
 import graphics.scenery.primitives.Atmosphere
 import graphics.scenery.primitives.Line
 import graphics.scenery.primitives.TextBoard
+import graphics.scenery.volumes.Colormap
 import graphics.scenery.volumes.Colormap.Companion.fromColorTable
 import graphics.scenery.volumes.SlicingPlane
 import graphics.scenery.volumes.Volume
@@ -139,17 +140,8 @@ class Properties : InteractiveCommand() {
     @Parameter(label = "Speed", min = "1", max = "10", style = NumberWidget.SCROLL_BAR_STYLE + ",group:Volume", persist = false)
     private var playSpeed = 4
 
-    @Parameter(label = "Min", callback = "updateNodeProperties", style = "group:Volume")
-    private var min = 0
-
-    @Parameter(label = "Max", callback = "updateNodeProperties", style = "group:Volume")
-    private var max = 255
-
-    @Parameter(label = "Color map", choices = [], callback = "updateNodeProperties", style = "group:Volume")
-    private var colormapName: String = "Fire.lut"
-
-    @Parameter(label = " ", style = "group:Volume")
-    private var colormap = dummyColorTable
+    @Parameter(label = "Pixel-to-world ratio", min = "0.00001f", max = "1000000.0f", style = NumberWidget.SPINNER_STYLE + ",group:Volume", persist = false, callback = "updateNodeProperties")
+    private var pixelToWorldRatio: Float = 0.001f
 
     @Parameter(label = "AO steps", style = NumberWidget.SPINNER_STYLE+"group:Volume", callback = "updateNodeProperties")
     private val occlusionSteps = 0
@@ -157,14 +149,8 @@ class Properties : InteractiveCommand() {
     @Parameter(label = "Volume slicing mode", callback = "updateNodeProperties", style = ChoiceWidget.LIST_BOX_STYLE+"group:Volume")
     private var slicingMode: String = Volume.SlicingMode.Slicing.name
 
-    @Parameter(label = "Width", callback = "updateNodeProperties", visibility = ItemVisibility.MESSAGE, style = "group:Volume")
-    private var width: Int = 0
-
-    @Parameter(label = "Height", callback = "updateNodeProperties", visibility = ItemVisibility.MESSAGE, style = "group:Volume")
-    private var height: Int = 0
-
-    @Parameter(label = "Depth", callback = "updateNodeProperties", visibility = ItemVisibility.MESSAGE, style = "group:Volume")
-    private var depth: Int = 0
+    @Parameter(label = "Dimensions", callback = "updateNodeProperties", visibility = ItemVisibility.MESSAGE, style = "group:Volume")
+    private var dimensions: String = ""
 
     /* Light properties */
 
@@ -258,6 +244,8 @@ class Properties : InteractiveCommand() {
      */
     override fun run() {}
     fun setSceneNode(node: Node?) {
+        Colormap.Companion.lutService = sciView.scijavaContext?.getService(LUTService::class.java)
+
         currentSceneNode = node
         updateCommandFields()
     }
@@ -402,39 +390,19 @@ class Properties : InteractiveCommand() {
             slicingModeInput.setChoices(slicingMethods)
             slicingMode = slicingModeChoices[Volume.SlicingMode.values().indexOf(node .slicingMode)].toString()
 
-            val lutNameItem = info.getMutableInput("colormapName", String::class.java)
-            lutNameItem.choices = sciView.getAvailableLUTs()
-            val cachedColormapName = node.metadata["sciview.colormapName"] as? String
-
-            if(cachedColormapName != null && sciView.getLUT(cachedColormapName) != null) {
-                colormapName = cachedColormapName
-            }
-
-            try {
-                val cm = sciView.getLUT(colormapName)
-                // Ensure the node matches
-                node.colormap = fromColorTable(cm)
-                node.metadata["sciview.colormapName"] = colormapName
-
-                colormap = cm
-            } catch (ioe: IOException) {
-                log.error("Could not load LUT $colormapName")
-            }
-
-            width = node.getDimensions().x
-            height = node.getDimensions().y
-            depth = node.getDimensions().z
-
-            min = node.converterSetups[0].displayRangeMin.toInt()
-            max = node.converterSetups[0].displayRangeMax.toInt()
+            pixelToWorldRatio = node.pixelToWorldRatio
+            dimensions = "${node.getDimensions().x}x${node.getDimensions().y}x${node.getDimensions().z}"
 
             val maxTimepoint = node.timepointCount - 1
             if(maxTimepoint > 0) {
                 timepoint = node.currentTimepoint
-                val timepointInput = info.getMutableInput("timepoint", java.lang.Integer::class.java)
-                timepointInput.minimumValue = java.lang.Integer.valueOf(0) as java.lang.Integer
-                timepointInput.maximumValue = java.lang.Integer.valueOf(maxTimepoint) as java.lang.Integer
+                val timepointInput = info.getMutableInput("timepoint", Integer::class.java)
+                timepointInput.minimumValue = Integer.valueOf(0) as Integer
+                timepointInput.maximumValue = Integer.valueOf(maxTimepoint) as Integer
             } else {
+                // Warning! The java.lang prefix needs to be here, otherwise the compiler
+                // reverts to the Kotlin types and you'll end up with interesting error messages
+                // like "float does not match type float" ;-)
                 maybeRemoveInput("timepoint", java.lang.Integer::class.java)
                 maybeRemoveInput("playPauseButton", Button::class.java)
                 maybeRemoveInput("playSpeed", java.lang.Integer::class.java)
@@ -442,17 +410,17 @@ class Properties : InteractiveCommand() {
 
             maybeRemoveInput("colour", ColorRGB::class.java)
         } else {
+            // Warning! The java.lang prefix needs to be here, otherwise the compiler
+            // reverts to the Kotlin types and you'll end up with interesting error messages
+            // like "float does not match type float" ;-)
+            maybeRemoveInput("pixelToWorldRatio", java.lang.Float::class.java)
             maybeRemoveInput("slicingMode", String::class.java)
-            maybeRemoveInput("min", java.lang.Integer::class.java)
-            maybeRemoveInput("max", java.lang.Integer::class.java)
             maybeRemoveInput("timepoint", java.lang.Integer::class.java)
             maybeRemoveInput("colormap", ColorTable::class.java)
             maybeRemoveInput("colormapName", String::class.java)
             maybeRemoveInput("playPauseButton", Button::class.java)
             maybeRemoveInput("playSpeed", java.lang.Integer::class.java)
-            maybeRemoveInput("width", java.lang.Integer::class.java)
-            maybeRemoveInput("height", java.lang.Integer::class.java)
-            maybeRemoveInput("depth", java.lang.Integer::class.java)
+            maybeRemoveInput("dimensions", java.lang.String::class.java)
         }
 
         if (node is PointLight) {
@@ -517,7 +485,7 @@ class Properties : InteractiveCommand() {
         if (node is Line){
             edgeWidth = node.edgeWidth.toInt()
         } else {
-            maybeRemoveInput("edgeWidth", java.lang.Integer::class.java)
+            maybeRemoveInput("edgeWidth", Integer::class.java)
         }
 
         if (node is Atmosphere) {
@@ -572,22 +540,13 @@ class Properties : InteractiveCommand() {
             node.intensity = intensity
         }
         if (node is Volume) {
-            try {
-                val cm = sciView.getLUT(colormapName)
-                node.colormap = fromColorTable(cm!!)
-                node.metadata["sciview.colormapName"] = colormapName
-                log.info("Setting new colormap to $colormapName / $cm")
-
-                colormap = cm
-            } catch (ioe: IOException) {
-                log.error("Could not load LUT $colormapName")
-            }
             node.goToTimepoint(timepoint)
-            node.converterSetups[0].setDisplayRange(min.toDouble(), max.toDouble())
             val slicingModeIndex = slicingModeChoices.indexOf(Volume.SlicingMode.valueOf(slicingMode))
             if (slicingModeIndex != -1) {
                 node.slicingMode = Volume.SlicingMode.values()[slicingModeIndex]
             }
+            node.pixelToWorldRatio = pixelToWorldRatio
+            node.spatial().needsUpdateWorld = true
         }
         if (node is Camera) {
             val scene = node.getScene()
@@ -681,32 +640,7 @@ class Properties : InteractiveCommand() {
     companion object {
         private const val PI_NEG = "-3.142"
         private const val PI_POS = "3.142"
-        private var dummyColorTable: ColorTable? = null
 
         private val inputModuleMaps = ConcurrentHashMap<ModuleItem<*>, Module>()
-
-        init {
-            dummyColorTable = object : ColorTable {
-                override fun lookupARGB(v: Double, v1: Double, v2: Double): Int {
-                    return 0
-                }
-
-                override fun getComponentCount(): Int {
-                    return 0
-                }
-
-                override fun getLength(): Int {
-                    return 0
-                }
-
-                override fun get(i: Int, i1: Int): Int {
-                    return 0
-                }
-
-                override fun getResampled(i: Int, i1: Int, i2: Int): Int {
-                    return 0
-                }
-            }
-        }
     }
 }

@@ -163,7 +163,7 @@ class LoadCremiDatasetAndNeurons : Command {
 
         val v = sciview.addVolume(nai.third, file.name) {
             origin = Origin.FrontBottomLeft
-            this.spatialOrNull()?.scale = Vector3f(0.08f, 0.08f, 5.0f)
+            this.spatialOrNull()?.scale = Vector3f(8f, 8f, 8f)
             transferFunction = TransferFunction.ramp(0.3f, 0.1f, 0.1f)
             // min 20, max 180, color map fire
 
