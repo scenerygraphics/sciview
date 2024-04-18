@@ -7,6 +7,7 @@ import org.w3c.dom.NodeList
 import org.xml.sax.InputSource
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -23,8 +24,8 @@ plugins {
 val fijiDir: File = properties["fiji.dir"]?.toString()?.let(::File)
     ?: layout.buildDirectory.dir("fiji/Fiji.app").get().asFile
 
-// For really shaky connections, we retry as much as possible
-val maxRetries = Int.MAX_VALUE
+// For really shaky connections, we retry a few times by default.
+val maxRetries = 16
 
 // Properties for the update site. Can be set in the local gradle.properties,
 // in the one in ~/.gradle, or on the command line via -P
@@ -32,6 +33,9 @@ val updateSite = project.properties["fijiUpdateSite"] as String
 val updateSiteURL = project.properties["fijiUpdateSiteURL"] as String
 val user = project.properties["fijiUpdateSiteUsername"]
 val pass = project.properties["fijiUpdateSitePassword"]
+
+val fijiTestClass = project.properties["fijiTestClass"] as String
+val fijiTestClassExpectedOutput = project.properties["fijiTestClassExpectedOutput"] as String
 
 val fijiDownloadURL = "https://downloads.imagej.net/fiji/latest/fiji-nojre.zip"
 val fijiZipFile = layout.buildDirectory.file("fiji-nojre.zip")
@@ -163,7 +167,7 @@ private fun populate() {
 
     logger.info("--> Copying files into Fiji installation")
 
-    // Copy sciview main artifact.
+    // Copy main artifact.
     val mainJar = project.tasks.getByName("jar").outputs.files.singleFile
     copy {
         from(mainJar)
@@ -208,17 +212,26 @@ private fun populate() {
     }
 
     // Now that we populated Fiji, let's verify that it works.
-    // We launch sciview's About command headlessly. If sciview is correctly installed,
-    // we will see some output regarding authorship emitted to stdout.
+    // We launch the class given in fijiTestClass to check whether the update site was correctly installed.
+    // Finally, the strings given in fijiTestClassExpectedOutput are tested against this command's output.
     logger.info("--> Testing installation")
-
-    val stdout = runFiji("--run", "sc.iview.commands.help.About")
+    val stdout = runFiji("--run", fijiTestClass)
     logger.info(stdout)
-    val success = stdout.startsWith("[INFO] SciView was created by Kyle Harrington")
-    if (!success) {
-        throw GradleException("Testing sciview About command failed.")
+    val gitHash: String = project.properties["gitHash"] as? String ?: "git rev-parse HEAD".runCommand(File("."))?.trim()?.substring(0, 7) ?: ""
+    val expectedContents = fijiTestClassExpectedOutput
+        .replace("[GIT_HASH]", gitHash)
+        .replace("[VERSION_NUMBER]", project.version.toString())
+        .split("|")
+
+    expectedContents.forEach {
+        logger.lifecycle("Output is expected to contain $it (${stdout.contains(it)})")
     }
-    logger.lifecycle("Testing sciview About command successful.")
+
+    val success = expectedContents.map { stdout.contains(it) }.all { it == true }
+    if (!success) {
+        throw GradleException("Testing $updateSite command $fijiTestClass failed.")
+    }
+    logger.lifecycle("Testing $updateSite $fijiTestClass command successful.")
 }
 
 private fun upload() {
@@ -252,6 +265,23 @@ private fun runUpdater(vararg args: String): String {
     val jvmArgs = listOf("-Dpatch.ij1=false")
     val launcherArgs = listOf("-classpath", ".")
     return runLauncher(jvmArgs, launcherArgs, "net.imagej.updater.CommandLine", args.toList())
+}
+
+private fun String.runCommand(workingDir: File): String? {
+    try {
+        val parts = this.split("\\s".toRegex())
+        val proc = ProcessBuilder(*parts.toTypedArray())
+            .directory(workingDir)
+            .redirectOutput(ProcessBuilder.Redirect.PIPE)
+            .redirectError(ProcessBuilder.Redirect.PIPE)
+            .start()
+
+        proc.waitFor(60, TimeUnit.MINUTES)
+        return proc.inputStream.bufferedReader().readText()
+    } catch(e: IOException) {
+        e.printStackTrace()
+        return null
+    }
 }
 
 /**
@@ -482,7 +512,7 @@ data class Info(
     val imagej: Map<AC, Element>,
     val fiji: Map<AC, Element>,
     val java8: Map<AC, Element>,
-    val sciview: Map<AC, Element>,
+    val updateSite: Map<AC, Element>,
     val localFiles: MutableMap<AC, MutableList<File>>
 )
 
@@ -497,19 +527,19 @@ fun prepareToCopyFile(file: File, destDir: File, pathPrefix: String, info: Info)
     val davce = file.name.davce
     val ac = davce.acKey
     val corePlugin = info.java8[ac] ?: info.fiji[ac] ?: info.imagej[ac]
-    val sciviewPlugin = info.sciview[ac]
-    val plugin = sciviewPlugin ?: corePlugin
+    val updateSiteContents = info.updateSite[ac]
+    val plugin = updateSiteContents ?: corePlugin
     val pluginPath = plugin?.filename?.dirname ?: ac.pathGuess
     if (pluginPath != pathPrefix) return null
 
     // FOUR CASES:
     // * core only -- skip but do sanity checks
-    // * sciview only -- overwrite
-    // * core AND sciview -- overwrite but warn
+    // * update site only -- overwrite
+    // * core AND update site -- overwrite but warn
     // * neither -- overwrite but warn
 
-    if (corePlugin != null && sciviewPlugin == null) {
-        // This file is provided by the core update site, not the sciview update site.
+    if (corePlugin != null && updateSiteContents == null) {
+        // This file is provided by the core update site, not the current update site.
         // We don't want to shadow any core files (which we aren't already shadowing).
         logger.info("Skipping core file: ${file.name}")
         // But if the version on the core update site is older, let's point that out.
@@ -531,7 +561,7 @@ fun prepareToCopyFile(file: File, destDir: File, pathPrefix: String, info: Info)
         // Log the impending copy operation, and warn of any weird situations.
         logger.info("Copying: ${file.name} -> ${destDir.resolve(file.name)}")
         if (corePlugin != null) warn("${file.name} SHADOWS the core update site!")
-        if (sciviewPlugin == null) warn("${file.name} is NEW to the sciview update site!")
+        if (updateSiteContents == null) warn("${file.name} is NEW to the $updateSite update site!")
     }
     return true
 }
