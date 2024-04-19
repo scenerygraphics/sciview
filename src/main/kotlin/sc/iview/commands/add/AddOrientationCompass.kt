@@ -82,6 +82,7 @@ class AddOrientationCompass : Command {
             diffuse.set(color)
             depthTest = true
             depthOp = DepthTest.Always
+            depthWrite = true
             blending.transparent = true
         }
         val axisCap = Icosphere(AXESBARRADIUS, 2)
@@ -91,6 +92,7 @@ class AddOrientationCompass : Command {
         axisCap.material().diffuse.set(color)
         axisCap.material().depthTest = true
         axisCap.material().depthOp = DepthTest.Always
+        axisCap.material().depthWrite = true
         axisCap.material().blending.transparent = true
         axisNode.addChild(axisCap)
         return axisNode

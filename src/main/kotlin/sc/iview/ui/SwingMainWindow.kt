@@ -32,8 +32,8 @@ import com.formdev.flatlaf.FlatLightLaf
 import graphics.scenery.Node
 import graphics.scenery.SceneryElement
 import graphics.scenery.backends.Renderer
-import graphics.scenery.utils.lazyLogger
 import graphics.scenery.utils.SceneryJPanel
+import graphics.scenery.utils.lazyLogger
 import org.joml.Vector2f
 import org.scijava.menu.MenuService
 import org.scijava.ui.swing.menu.SwingJMenuBarCreator
@@ -42,13 +42,18 @@ import sc.iview.SciViewService
 import sc.iview.SplashLabel
 import sc.iview.Utils
 import java.awt.*
+import java.awt.datatransfer.DataFlavor
+import java.awt.dnd.DnDConstants
+import java.awt.dnd.DropTarget
+import java.awt.dnd.DropTargetDropEvent
 import java.awt.event.*
+import java.io.File
 import java.util.*
 import javax.script.ScriptException
 import javax.swing.*
-import javax.swing.Timer
 import kotlin.concurrent.thread
 import kotlin.math.roundToInt
+
 
 /**
  * Class for Swing-based main window.
@@ -243,6 +248,31 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
             glassPane.repaint()
 
             sciview.sceneryPanel[0] = sceneryJPanel
+
+            // attach drag-and-drop handler to enable dropping of e.g. volume files onto the viewport
+            sceneryJPanel.dropTarget = object: DropTarget() {
+                override fun drop(evt: DropTargetDropEvent?) {
+                    if(evt == null) {
+                        return
+                    }
+
+                    try {
+                        evt.acceptDrop(DnDConstants.ACTION_COPY)
+                        val files = evt.transferable.getTransferData(DataFlavor.javaFileListFlavor) as? List<File>
+                            ?: return
+
+                        files.forEach { file ->
+                            logger.info("$file dropped onto sciview, trying to open 👍")
+                            sciview.open(file.absolutePath)
+                        }
+
+                        evt.dropComplete(true)
+                    } catch(ex: Exception) {
+                        ex.printStackTrace()
+                    }
+                }
+            }
+
             val renderer = Renderer.createRenderer(
                     sciview.hub,
                     sciview.applicationName,
@@ -262,7 +292,6 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
                         logger.debug("Waiting for renderer initialisation")
                         Thread.sleep(300)
                     }
-                    Thread.sleep(200)
                 } catch (e: InterruptedException) {
                     logger.error("Renderer construction interrupted.")
                 }
@@ -282,18 +311,13 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
 
                 // Enable push rendering by default
                 renderer.pushMode = true
-                sciview.camera!!.setPosition(1.65, 1)
                 glassPane.isVisible = false
 
                 sceneryJPanel.minimumSize = Dimension(256, 256)
             }
         }
 
-        if(SwingUtilities.isEventDispatchThread()) {
-            initializer.run()
-        } else {
-            SwingUtilities.invokeAndWait(initializer)
-        }
+        initializer.run()
     }
 
     fun JPanel.toggleSidebarComponent(component: Component, toolbar: JToolBar, button: JToggleButton, event: ActionEvent?) {

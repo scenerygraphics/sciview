@@ -10,7 +10,7 @@ plugins {
     kotlin("kapt")
     sciview.publish
     sciview.sign
-    sciview.populateFiji
+    sciview.fiji
     id("org.jetbrains.dokka")
     jacoco
     `maven-publish`
@@ -39,13 +39,13 @@ dependencies {
     // Graphics dependencies
 
     // Attention! Manual version increment necessary here!
-    val scijavaCommonVersion = "2.97.1"
+    val scijavaCommonVersion = "2.98.0"
     annotationProcessor("org.scijava:scijava-common:$scijavaCommonVersion")
     kapt("org.scijava:scijava-common:$scijavaCommonVersion") {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "0.11.2"
+    val sceneryVersion = "0.11.1"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
@@ -167,6 +167,23 @@ tasks {
     }
     jar {
         archiveVersion.set(rootProject.version.toString())
+
+        manifest.attributes["Implementation-Build"] = run { // retrieve the git commit hash
+            val gitFolder = "$projectDir/.git/"
+            val digit = 7
+            /*  '.git/HEAD' contains either
+             *      in case of detached head: the currently checked out commit hash
+             *      otherwise: a reference to a file containing the current commit hash     */
+            val head = file(gitFolder + "HEAD").readText().split(":") // .git/HEAD
+            val isCommit = head.size == 1 // e5a7c79edabbf7dd39888442df081b1c9d8e88fd
+            // def isRef = head.length > 1     // ref: refs/heads/main
+            when {
+                isCommit -> head[0] // e5a7c79edabb
+                else -> file(gitFolder + head[1].trim()) // .git/refs/heads/main
+                    .readText()
+            }.trim().take(digit)
+        }
+        manifest.attributes["Implementation-Version"] = project.version
     }
 
     withType<GenerateMavenPom>().configureEach {
@@ -381,7 +398,7 @@ tasks {
             val exampleName = className.substringAfterLast(".")
             val exampleType = className.substringBeforeLast(".").substringAfterLast(".")
 
-            logger.quiet("Registering $exampleName of $exampleType from $className")
+            logger.info("Registering $exampleName of $exampleType from $className")
             register<JavaExec>(name = className.substringAfterLast(".")) {
                 classpath = sourceSets.test.get().runtimeClasspath
                 mainClass.set(className)
