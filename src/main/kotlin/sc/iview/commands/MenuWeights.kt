@@ -120,6 +120,7 @@ object MenuWeights {
     const val DEMO_ADVANCED_FLYBRAIN = 1.5
     const val DEMO_ADVANCED_BDVSLICING = 2.0
     const val DEMO_ADVANCED_MESHTEXTURE = 3.0
+    const val DEMO_ADVANCED_INSTANCE_BENCHMARK = 4.0
     // Help
     const val HELP_HELP = 0.0
     const val HELP_ABOUT = 200.0
