@@ -20,6 +20,14 @@ import sc.iview.commands.demo.animation.ParticleDemo
 import java.util.*
 import kotlin.streams.asStream
 
+/**
+ * A benchmark that compares the conventional node publishing method with instanced geometry.
+ * Nodes can either be published separately or cumulatively at the end.
+ * Creating the instanced geometry can be run sequentially or in parallel (using a stream over an array).
+ *
+ * @author Samuel Pantze
+ */
+
 @Plugin(
     type = Command::class,
     label = "Instancing Benchmark",
