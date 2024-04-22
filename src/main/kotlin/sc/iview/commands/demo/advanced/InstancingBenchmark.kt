@@ -45,21 +45,21 @@ class InstancingBenchmark : Command {
     @Parameter
     private lateinit var sciview: SciView
 
-    @Parameter(label = "Number of instances", min = "1", max = "100000000", stepSize = "1")
-    private var numAgents = 1000
+    @Parameter(persist = false, label = "Number of instances", min = "1", max = "100000000", stepSize = "1")
+    private var numParticles = System.getProperty("sciview.benchmark.numParticles")?.toInt() ?: 1_000
 
     @Parameter(visibility = ItemVisibility.MESSAGE)
     private var message = "<html> <body>" +
             "    <div> The following execution times can be expected for each</div>" +
             "    <div> run type for 1000 instances: </div>" +
-            "    <div> - addNode publish all:  ~ 20 seconds </div>" +
-            "    <div> - addNode publish once: ~ 1 second </div>" +
-            "    <div> - instance sequential:  ~ 0.1 seconds </div>" +
-            "    <div> - instance parallel:    &lt; 0.1 seconds </div>" +
+            "    <div> - publishAll:  ~ 20 seconds </div>" +
+            "    <div> - publishOnce: ~ 1 second </div>" +
+            "    <div> - instanceSequential:  ~ 0.1 seconds </div>" +
+            "    <div> - instanceParallel:    &lt; 0.1 seconds </div>" +
             "</body> </html>"
 
-    @Parameter(choices = ["addNode publish all", "addNode publish once", "instanced sequential", "instanced parallel"], label = "Type of benchmark")
-    private var benchmarkType = "addNode publish all"
+    @Parameter(persist = false, choices = ["publishAll", "publishOnce", "instanceSequential", "instanceParallel"], label = "Type of benchmark")
+    private var benchmarkType = System.getProperty("sciview.benchmark.type") ?: "publishAll"
 
     val rng = Random(17)
     @Parameter(label = "X range", min = "0.1", max = "1000", style = "format:0.0", stepSize = "0.1")
@@ -72,16 +72,23 @@ class InstancingBenchmark : Command {
 
     override fun run() {
 
-        log.info("Running instancing benchmark with $numAgents agents and type \"$benchmarkType\".")
+        var ranSuccessfully = true;
+        log.info("Running instancing benchmark with $numParticles agents and type \"$benchmarkType\".")
         val startTime = System.currentTimeMillis()
         when (benchmarkType) {
-            "addNode publish all" -> {runAddNodePublishAll()}
-            "addNode publish once" -> {runAddNodePublishOnce()}
-            "instanced sequential" -> {runInstancedSequential()}
-            "instanced parallel" -> {runInstancedParallel()}
+            "publishAll" -> {runAddNodePublishAll()}
+            "publishOnce" -> {runAddNodePublishOnce()}
+            "instanceSequential" -> {runInstancedSequential()}
+            "instanceParallel" -> {runInstancedParallel()}
+            else -> {
+                log.info("Could not find benchmark type specified.\n" +
+                        "Choose from: [publishAll, publishOnce, instanceSequential, instanceParallel].")
+                ranSuccessfully = false }
         }
         val endTime = System.currentTimeMillis()
-        log.info("Execution time: ${endTime - startTime} milliseconds")
+        if (ranSuccessfully) {
+            log.info("Execution time: ${endTime - startTime} milliseconds")
+        }
     }
 
     /** This runs the benchmark using [SciView.addNode] with `activePublish = true`.*/
@@ -89,14 +96,14 @@ class InstancingBenchmark : Command {
 
         val parent = Group()
         sciview.addNode(parent)
-        for (i in 0 until numAgents) {
+        for (i in 0 until numParticles) {
             val n = Icosphere(0.1f, 2)
             n.name = "agent_$i"
             val x = rng.nextFloat() * maxX - maxX/2
             val y = rng.nextFloat() * maxY - maxY/2
             val z = rng.nextFloat() * maxZ - maxZ/2
             n.material {
-                diffuse = Vector3f(rng.nextFloat(), rng.nextFloat(), i.toFloat() / numAgents.toFloat())
+                diffuse = Vector3f(rng.nextFloat(), rng.nextFloat(), i.toFloat() / numParticles.toFloat())
             }
             n.spatial().position = Vector3f(x, y, z)
             sciview.addNode(n, activePublish = true, parent = parent)
@@ -108,15 +115,14 @@ class InstancingBenchmark : Command {
     private fun runAddNodePublishOnce() {
 
         val parent = Group()
-        sciview.addNode(parent)
-        for (i in 0 until numAgents) {
+        for (i in 0 until numParticles) {
             val n = Icosphere(0.1f, 2)
             n.name = "agent_$i"
             val x = rng.nextFloat() * maxX - maxX/2
             val y = rng.nextFloat() * maxY - maxY/2
             val z = rng.nextFloat() * maxZ - maxZ/2
             n.material {
-                diffuse = Vector3f(rng.nextFloat(), rng.nextFloat(), i.toFloat() / numAgents.toFloat())
+                diffuse = Vector3f(rng.nextFloat(), rng.nextFloat(), i.toFloat() / numParticles.toFloat())
             }
             n.spatial().position = Vector3f(x, y, z)
             sciview.addNode(n, activePublish = false, parent = parent)
@@ -151,14 +157,14 @@ class InstancingBenchmark : Command {
         sphere.instancedProperties["Color"] = { Vector4f(1.0f) }
         sciview.addNode(sphere)
 
-        (0 until numAgents).forEach {
+        (0 until numParticles).forEach {
             val n = sphere.addInstance()
             n.name = "agent_$it"
             // This sets up the initial positions of the agents
             val x = rng.nextFloat() * maxX - maxX/2
             val y = rng.nextFloat() * maxY - maxY/2
             val z = rng.nextFloat() * maxZ - maxZ/2
-            val col = Vector4f(rng.nextFloat(), rng.nextFloat(), it.toFloat() / numAgents.toFloat(), 1.0f)
+            val col = Vector4f(rng.nextFloat(), rng.nextFloat(), it.toFloat() / numParticles.toFloat(), 1.0f)
             n.instancedProperties["Color"] = { col }
             n.spatial().position = Vector3f(x, y, z)
         }
@@ -183,7 +189,7 @@ class InstancingBenchmark : Command {
         parent.instancedProperties["Color"] = { Vector4f(1.0f) }
         sciview.addNode(parent)
 
-        (0 until numAgents).asSequence().asStream().parallel().forEach {
+        (0 until numParticles).asSequence().asStream().parallel().forEach {
             val n = parent.addInstance()
             n.name = "agent_$it"
 
@@ -191,7 +197,7 @@ class InstancingBenchmark : Command {
             val y = rng.nextFloat() * maxY - maxY/2
             val z = rng.nextFloat() * maxZ - maxZ/2
             val vel = Vector3f(rng.nextFloat(), rng.nextFloat(), rng.nextFloat()) * 0.5f
-            val col = Vector4f(rng.nextFloat(), rng.nextFloat(), it.toFloat() / numAgents.toFloat(), 1.0f)
+            val col = Vector4f(rng.nextFloat(), rng.nextFloat(), it.toFloat() / numParticles.toFloat(), 1.0f)
             n.instancedProperties["Color"] = { col }
             n.spatial().position = Vector3f(x, y, z)
         }
@@ -204,7 +210,7 @@ class InstancingBenchmark : Command {
             val sv = create()
             val command = sv.scijavaContext!!.getService(CommandService::class.java)
             val argmap = HashMap<String, Any>()
-            command.run(ParticleDemo::class.java, true, argmap)
+            command.run(InstancingBenchmark::class.java, true, argmap)
         }
     }
 
