@@ -350,50 +350,30 @@ tasks {
         dependsOn(test) // tests are required to run before generating the report
     }
 
-    register("runMain", JavaExec::class.java) {
-        classpath = sourceSets.main.get().runtimeClasspath
+    fun registerTask(name: String, className: String, propertyPrefix: String) {
 
-        mainClass.set("sc.iview.Main")
+        register(name, JavaExec::class.java) {
+            classpath = sourceSets.main.get().runtimeClasspath
 
-        val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
+            mainClass.set(className)
 
-        val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
-        allJvmArgs = if (additionalArgs != null) {
-            allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
-        } else {
-            allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
+            val props = System.getProperties().filter { (k, _) -> k.toString().startsWith(propertyPrefix) }
+
+            val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
+            allJvmArgs = if (additionalArgs != null) {
+                allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
+            } else {
+                allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
+            }
         }
     }
 
-    register("runImageJMain", JavaExec::class.java) {
-        classpath = sourceSets.main.get().runtimeClasspath
+    registerTask("runMain", "sc.iview.Main", "scenery.")
 
-        mainClass.set("sc.iview.ImageJMain")
+    registerTask("runImageJMain", "sc.iview.ImageJMain", "scenery.")
 
-        val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
+    registerTask("runInstancingBenchmark", "sc.iview.commands.demo.advanced.InstancingBenchmark", "sciview.benchmark.")
 
-        val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
-        allJvmArgs = if (additionalArgs != null) {
-            allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
-        } else {
-            allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
-        }
-    }
-
-    register("runInstancingBenchmark", JavaExec::class.java) {
-        classpath = sourceSets.main.get().runtimeClasspath
-
-        mainClass.set("sc.iview.commands.demo.advanced.InstancingBenchmark")
-
-        val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("sciview.benchmark.") }
-
-        val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
-        allJvmArgs = if (additionalArgs != null) {
-            allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
-        } else {
-            allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
-        }
-    }
 
     sourceSets.main.get().allSource.files
         .filter { it.path.contains("demo") && (it.name.endsWith(".kt") || it.name.endsWith(".java")) }
