@@ -7,6 +7,7 @@ import graphics.scenery.ShaderMaterial
 import graphics.scenery.utils.extensions.times
 import org.joml.Vector3f
 import org.joml.Vector4f
+import org.scijava.ItemVisibility
 import org.scijava.command.Command
 import org.scijava.command.CommandService
 import org.scijava.log.LogService
@@ -46,6 +47,16 @@ class InstancingBenchmark : Command {
 
     @Parameter(label = "Number of instances", min = "1", max = "100000000", stepSize = "1")
     private var numAgents = 1000
+
+    @Parameter(visibility = ItemVisibility.MESSAGE)
+    private var message = "<html> <body>" +
+            "    <div> The following execution times can be expected for each</div>" +
+            "    <div> run type for 1000 instances: </div>" +
+            "    <div> - addNode publish all:  ~ 20 seconds </div>" +
+            "    <div> - addNode publish once: ~ 1 second </div>" +
+            "    <div> - instance sequential:  ~ 0.1 seconds </div>" +
+            "    <div> - instance parallel:    &lt; 0.1 seconds </div>" +
+            "</body> </html>"
 
     @Parameter(choices = ["addNode publish all", "addNode publish once", "instanced sequential", "instanced parallel"], label = "Type of benchmark")
     private var benchmarkType = "addNode publish all"
