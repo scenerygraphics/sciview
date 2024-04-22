@@ -380,6 +380,21 @@ tasks {
         }
     }
 
+    register("runInstancingBenchmark", JavaExec::class.java) {
+        classpath = sourceSets.main.get().runtimeClasspath
+
+        mainClass.set("sc.iview.commands.demo.advanced.InstancingBenchmark")
+
+        val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("sciview.benchmark.") }
+
+        val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
+        allJvmArgs = if (additionalArgs != null) {
+            allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
+        } else {
+            allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
+        }
+    }
+
     sourceSets.main.get().allSource.files
         .filter { it.path.contains("demo") && (it.name.endsWith(".kt") || it.name.endsWith(".java")) }
         .map {
@@ -395,20 +410,22 @@ tasks {
             val exampleType = className.substringBeforeLast(".").substringAfterLast(".")
 
             logger.info("Registering $exampleName of $exampleType from $className")
-            register<JavaExec>(name = className.substringAfterLast(".")) {
-                classpath = sourceSets.test.get().runtimeClasspath
-                mainClass.set(className)
-                group = "demos.$exampleType"
+            val name = className.substringAfterLast(".")
+            if (name != "InstancingBenchmark")
+                register<JavaExec>(name = className.substringAfterLast(".")) {
+                    classpath = sourceSets.test.get().runtimeClasspath
+                    mainClass.set(className)
+                    group = "demos.$exampleType"
 
-                val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
+                    val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
 
-                val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
-                allJvmArgs = if (additionalArgs != null) {
-                    allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
-                } else {
-                    allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
+                    val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
+                    allJvmArgs = if (additionalArgs != null) {
+                        allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
+                    } else {
+                        allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
+                    }
                 }
-            }
         }
 
     register<JavaExec>(name = "run") {
