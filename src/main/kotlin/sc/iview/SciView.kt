@@ -1189,7 +1189,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             }
         }
         if (runRecursive) {
-            activeNode?.runRecursive( { node: Node -> this.deleteNode(node) })
+            activeNode?.runRecursive { node: Node -> this.deleteNode(node, activePublish = false) }
         } else {
             deleteNode(activeNode)
         }
@@ -1216,7 +1216,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         }
 
         for (child in node!!.children) {
-            deleteNode(child, activePublish)
+            // child node deletions should not be published actively
+            deleteNode(child, false)
         }
         objectService.removeObject(node)
         node.parent?.removeChild(node)
