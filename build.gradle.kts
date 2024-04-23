@@ -350,9 +350,10 @@ tasks {
         dependsOn(test) // tests are required to run before generating the report
     }
 
-    fun registerTask(name: String, className: String, propertyPrefix: String) {
+    fun registerTask(name: String, className: String, propertyPrefix: String, taskGroup: String = "other") {
 
         register(name, JavaExec::class.java) {
+            group = taskGroup
             classpath = sourceSets.main.get().runtimeClasspath
 
             mainClass.set(className)
@@ -372,7 +373,10 @@ tasks {
 
     registerTask("runImageJMain", "sc.iview.ImageJMain", "scenery.")
 
-    registerTask("runInstancingBenchmark", "sc.iview.commands.demo.advanced.InstancingBenchmark", "sciview.benchmark.")
+    registerTask("runInstancingBenchmark",
+        "sc.iview.commands.demo.advanced.InstancingBenchmark",
+        "sciview.benchmark.",
+        "demos.advanced")
 
 
     sourceSets.main.get().allSource.files
