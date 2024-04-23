@@ -1814,7 +1814,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Convenience function for getting a string of info about a Node
      */
     fun nodeInfoString(n: Node): String {
-        return "Node name: " + n.name + " Node type: " + n.nodeType + " To String: " + n
+        return "Node name: " + n.name + " Node type: " + n.javaClass + " To String: " + n
     }
 
     /**
