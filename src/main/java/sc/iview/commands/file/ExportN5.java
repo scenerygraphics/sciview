@@ -91,7 +91,7 @@ public class ExportN5 implements Command {
             }
 
         } else {
-            logService.warn("Node is " + sciView.getActiveNode().getNodeType() + " cannot export to N5.");
+            logService.warn("Node is " + sciView.getActiveNode().getClass() + " cannot export to N5.");
         }
     }
 
