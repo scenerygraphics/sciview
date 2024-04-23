@@ -20,6 +20,7 @@ import sc.iview.commands.MenuWeights
 import sc.iview.commands.demo.animation.ParticleDemo
 import java.util.*
 import kotlin.streams.asStream
+import kotlin.time.TimeSource
 
 /**
  * A benchmark that compares the conventional node publishing method with instanced geometry.
@@ -70,24 +71,27 @@ class InstancingBenchmark : Command {
     private var maxZ = 10f
 
 
+    /** Executes the benchmark with parameters stored in [numParticles] and [benchmarkType].
+     * The elapsed time is tracked and logged to the console. */
     override fun run() {
 
         var ranSuccessfully = true;
         log.info("Running instancing benchmark with $numParticles agents and type \"$benchmarkType\".")
-        val startTime = System.currentTimeMillis()
+        val timeSource = TimeSource.Monotonic
+        val start = timeSource.markNow()
         when (benchmarkType) {
-            "publishAll" -> {runAddNodePublishAll()}
-            "publishOnce" -> {runAddNodePublishOnce()}
-            "instanceSequential" -> {runInstancedSequential()}
-            "instanceParallel" -> {runInstancedParallel()}
+            "publishAll" -> runAddNodePublishAll()
+            "publishOnce" -> runAddNodePublishOnce()
+            "instanceSequential" -> runInstancedSequential()
+            "instanceParallel" -> runInstancedParallel()
             else -> {
                 log.info("Could not find benchmark type specified.\n" +
                         "Choose from: [publishAll, publishOnce, instanceSequential, instanceParallel].")
                 ranSuccessfully = false }
         }
-        val endTime = System.currentTimeMillis()
+        val end = timeSource.markNow()
         if (ranSuccessfully) {
-            log.info("Execution time: ${endTime - startTime} milliseconds")
+            log.info("Execution time: ${end - start}")
         }
     }
 
@@ -131,14 +135,14 @@ class InstancingBenchmark : Command {
 
     }
 
-    /** This runs the benchmark using instanced geometry with a sequential scene population loop. */
+    /** This runs the benchmark using instanced geometry with a sequential scene population loop.
+     * It creates a sphere with 5cm radius and 10cm height as our parent.
+     * It's important to use the custom shaders provided by this class in the material,
+     * as the default instanced material does not include color as property. The actual
+     * shader types do not need to be given, as Vertex Shader and Fragment Shader are the
+     * default shader types scenery is looking for.*/
     private fun runInstancedSequential() {
 
-        // This creates a sphere with 5cm radius and 10cm height as our parent.
-        // It's important to use the custom shaders provided by this class in the material,
-        // as the default instanced material does not include color as property. The actual
-        // shader types do not need to be given, as Vertex Shader and Fragment Shader are the
-        // default shader types scenery is looking for.
         val parent = Icosphere(0.1f, 2)
         parent.setMaterial(ShaderMaterial.fromClass(ParticleDemo::class.java))
         parent.ifMaterial {
