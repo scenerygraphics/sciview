@@ -104,7 +104,7 @@ dependencies {
     // Kotlin dependencies
     implementation("org.jetbrains.kotlin:kotlin-stdlib-common:$ktVersion")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:$ktVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 
     // Test scope
 
