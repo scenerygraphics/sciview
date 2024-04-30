@@ -35,6 +35,6 @@ import javax.swing.JPopupMenu
 class ContextPopUp(n: Node) : JPopupMenu() {
     init {
         add(JMenuItem("Name: " + n.name))
-        add(JMenuItem("Type: " + n.javaClass))
+        add(JMenuItem("Type: ${n.javaClass.simpleName}"))
     }
 }
