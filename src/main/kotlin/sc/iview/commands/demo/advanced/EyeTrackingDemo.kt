@@ -126,8 +126,15 @@ class EyeTrackingDemo: Command{
 
 //        volume = sciview.find("volume") as Volume
         val volnodes = sciview.findNodes { node -> Volume::class.java.isAssignableFrom(node.javaClass) }
-        log.info("found ${volnodes.size} volume nodes. Using the first one: ${volnodes.first()}")
-        volume = volnodes.first() as Volume
+
+        val v = (volnodes.firstOrNull() as? Volume)
+        if(v == null) {
+            log.warn("No volume found, bailing")
+            return
+        } else {
+            log.info("found ${volnodes.size} volume nodes. Using the first one: ${volnodes.first()}")
+            volume = v
+        }
         volume.visible = false
 
         val bb = BoundingGrid()
@@ -165,7 +172,8 @@ class EyeTrackingDemo: Command{
             val image = ImageIO.read(stream)
             val data = (image.raster.dataBuffer as DataBufferByte).data
 
-            node.ifMaterial {textures["diffuse"] = Texture(
+            node.ifMaterial {
+                textures["diffuse"] = Texture(
                     Vector3i(image.width, image.height, 1),
                     3,
                     UnsignedByteType(),
@@ -175,6 +183,7 @@ class EyeTrackingDemo: Command{
             lastFrame = System.nanoTime()
         }
 
+        // TODO: Replace with cam.showMessage()
         val debugBoard = TextBoard()
         debugBoard.name = "debugBoard"
         debugBoard.scale = Vector3f(0.05f, 0.05f, 0.05f)
@@ -529,7 +538,8 @@ class EyeTrackingDemo: Command{
             // get local entry and exit coordinates, and convert to UV coords
             val localEntry = (intersection.relativeEntry) //.add(Vector3f(1.0f)) ) .mul (1.0f / 2.0f)
             val localExit = (intersection.relativeExit) //.add (Vector3f(1.0f)) ).mul  (1.0f / 2.0f)
-            val (samples, localDirection) = volume.sampleRay(localEntry, localExit) ?: null to null
+            // TODO: Allow for sampling a given time point of a volume
+            val (samples, localDirection) = volume.sampleRay(localEntry, localExit) ?: (null to null)
 
             if (samples != null && localDirection != null) {
                 val metadata = SpineMetadata(
@@ -550,6 +560,7 @@ class EyeTrackingDemo: Command{
 
                 spine.metadata["spine"] = metadata
                 spine.instancedProperties["ModelMatrix"] = { spine.spatial().world }
+                // TODO: Show confidence as color for the spine
                 spine.instancedProperties["Metadata"] = { Vector4f(confidence, timepoint.toFloat()/volume.timepointCount, count.toFloat(), 0.0f) }
             }
         }
