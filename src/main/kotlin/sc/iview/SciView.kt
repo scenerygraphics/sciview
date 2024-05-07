@@ -1795,6 +1795,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Enable VR rendering
      */
     fun toggleVRRendering() {
+        var renderer = renderer ?: return
+
         vrActive = !vrActive
         val cam = scene.activeObserver as? DetachedHeadCamera ?: return
         var ti: TrackerInput? = null
@@ -1817,25 +1819,29 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         }
         if (vrActive && ti != null) {
             cam.tracker = ti
+            logger.info("tracker set")
         } else {
             cam.tracker = null
         }
-        renderer!!.pushMode = false
+        renderer.pushMode = false
+
         // we need to force reloading the renderer as the HMD might require device or instance extensions
         if (renderer is VulkanRenderer && hmdAdded) {
-            replaceRenderer((renderer as VulkanRenderer).javaClass.simpleName, true, true)
-            (renderer as VulkanRenderer).toggleVR()
-            while (!(renderer as VulkanRenderer).initialized /* || !getRenderer().getFirstImageReady()*/) {
-                logger.debug("Waiting for renderer reinitialisation")
+            replaceRenderer(renderer.javaClass.simpleName, true, true)
+
+            logger.info("renderer replaced")
+            while (renderer.initialized == false || renderer.firstImageReady == false) {
+                renderer = this.renderer!!
+                logger.info("Waiting for renderer reinitialisation (init: ${renderer.initialized} ready: ${renderer.firstImageReady}")
                 try {
                     Thread.sleep(200)
                 } catch (e: InterruptedException) {
                     e.printStackTrace()
                 }
             }
-        } else {
-            renderer!!.toggleVR()
         }
+
+        renderer.toggleVR()
     }
 
     /**
