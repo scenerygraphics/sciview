@@ -50,6 +50,10 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		avgConfidence /= totalSampleCount
 	}
 
+	/**
+	 * From a [list] of Floats, return both the index of local maxima, and their value,
+	 * packaged nicely as a Pair<Int, Float>
+	 */
 	private fun localMaxima(list: List<Float>): List<Pair<Int, Float>> =
 			list.windowed(3, 1).mapIndexed { index, l ->
 				val left = l[0]
@@ -104,6 +108,8 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		return Quaternionf(q.x/(2.0f * x), q.y/(2.0f * x), q.z/(2.0f * x), x)
 	}
 
+	data class VertexWithDistance(val vertex: SpineGraphVertex, val distance: Float)
+
 	fun run(): Track? {
 
 		val startingThreshold = 0.002f
@@ -123,6 +129,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 
 		logger.info("Starting point is ${startingPoint.key}/${timepoints.size} (threshold=$startingThreshold)")
 
+		// filter timepoints, remove all before the starting point
 		timepoints.filter { it.key > startingPoint.key }
 				.forEach { timepoints.remove(it.key) }
 
@@ -130,16 +137,22 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 
 
 		//step2: find the maxIndices along the spine
-		val candidates = timepoints.map { tp ->
+		// yo dawg, this will be a list of lists, where each entry in the first-level list
+		// corresponds to a time point, which then contains a list of vertices within that timepoint.
+		val candidates: List<List<SpineGraphVertex>> = timepoints.map { tp ->
 			val vs = tp.value.mapIndexedNotNull { i, spine ->
+				// determine local maxima (and their indices) along the spine, aka, actual things the user might have
+				// seen when looking into the direction of the spine
 				val maxIndices = localMaxima(spine.samples.filterNotNull())
-//				logger.info("Local maxima at ${tp.key}/$i are: ${maxIndices.joinToString(",")}")
+				logger.info("Local maxima at ${tp.key}/$i are: ${maxIndices.joinToString(",")}")
 
+				// if there actually are local maxima, generate a graph vertex for them with all the necessary metadata
 				if(maxIndices.isNotEmpty()) {
-					maxIndices.
+					//maxIndices.
 //                  filter the maxIndices which are too far away, which can be removed
-					filter { it.first <1200}.
-					map { index ->
+					//filter { it.first <1200}.
+					maxIndices.map { index ->
+						logger.info("Generating vertex at index $index")
 						val position = Vector3f(spine.localEntry).add((Vector3f(spine.localDirection).mul(index.first.toFloat())))
 						val worldPosition = localToWorld.transform((Vector3f(position)).xyzw()).xyz()
 						SpineGraphVertex(tp.key,
@@ -157,33 +170,38 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 			vs
 		}.flatten()
 
+		logger.info("SpineGraphVertices extracted")
 
-		//step3: connect localMaximal points between 2 candidate spines according to the shortest path principle
-		// get the initial vertex, this one is assumed to always be in front, and have a local max
-		val initial = candidates.first().filter{it.value>startingThreshold}.first()
+		// step3: connect localMaximal points between 2 candidate spines according to the shortest path principle
+		// get the initial vertex, this one is assumed to always be in front, and have a local maximum - aka, what
+		// the user looks at first is assumed to be the actual cell they want to track
+		val initial = candidates.first().filter { it.value>startingThreshold }.first()
 		var current = initial
 		var shortestPath = candidates.drop(1).mapIndexedNotNull { time, vs ->
-			val distances = vs
+			// calculate world-space distances between current point, and all candidate
+			// vertices, sorting them by distance
+			val vertices = vs
 					.filter { it.value > localMaxThreshold }
 					.map { vertex ->
 						val t = current.worldPosition - vertex.worldPosition
 						val distance = t.length()
-						vertex to distance
+						VertexWithDistance(vertex, distance)
 					}
-					.sortedBy { it.second }
+					.sortedBy { it.distance }
 
-			val closest = distances.firstOrNull()?.first
-			if(closest != null && distances.firstOrNull()?.second!! >0) {
-				current.next = closest
-				closest.previous = current
-				current = closest
+			val closest = vertices.firstOrNull()
+			if(closest != null && closest.distance > 0) {
+				// create a linked list between current and closest vertices
+				current.next = closest.vertex
+				closest.vertex.previous = current
+				current = closest.vertex
 				current
 			} else {
 				null
 			}
 		}.toMutableList()
 
-
+		// calculate average path lengths over all
 		val beforeCount = shortestPath.size
 		var avgPathLength = shortestPath.map { it.distance() }.average().toFloat()
 		var stdDevPathLength = shortestPath.map { it.distance() }.stddev().toFloat()
@@ -195,6 +213,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		while (shortestPath.any { it.distance() >= removeTooFarThreshold * avgPathLength }) {
 			shortestPath = shortestPath.filter { it.distance() < removeTooFarThreshold * avgPathLength }.toMutableList()
 			shortestPath.windowed(3, 1, partialWindows = true).forEach {
+				// this reconnects the neighbors after the offending vertex has been removed
 				it.getOrNull(0)?.next = it.getOrNull(1)
 				it.getOrNull(1)?.previous = it.getOrNull(0)
 				it.getOrNull(1)?.next = it.getOrNull(2)
@@ -203,10 +222,11 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 
 		}
 
+		// recalculate statistics after offending vertex removal
 		avgPathLength = shortestPath.map { it.distance() }.average().toFloat()
 		stdDevPathLength = shortestPath.map { it.distance() }.stddev().toFloat()
 
-		//step5: remove some edges according to zscoreThreshold
+		//step5: remove some vertices according to zscoreThreshold
 		var remaining = shortestPath.count { zScore(it.distance(), avgPathLength, stdDevPathLength) > zscoreThreshold }
 		logger.info("Iterating: ${shortestPath.size} vertices remaining, with $remaining failing z-score criterion")
 		while(remaining > 0) {
