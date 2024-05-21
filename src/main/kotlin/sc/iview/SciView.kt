@@ -1692,7 +1692,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         }
         if (vrActive && ti != null) {
             cam.tracker = ti
-            logger.info("tracker set")
         } else {
             cam.tracker = null
         }
@@ -1701,8 +1700,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         // we need to force reloading the renderer as the HMD might require device or instance extensions
         if (renderer is VulkanRenderer && hmdAdded) {
             replaceRenderer(renderer.javaClass.simpleName, true, true)
-
-            logger.info("renderer replaced")
             while (renderer.initialized == false || renderer.firstImageReady == false) {
                 renderer = this.renderer!!
                 logger.info("Waiting for renderer reinitialisation (init: ${renderer.initialized} ready: ${renderer.firstImageReady}")
@@ -1712,9 +1709,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                     e.printStackTrace()
                 }
             }
-        }
 
-        renderer.toggleVR()
+            renderer.toggleVR()
+        }
     }
 
     /**
