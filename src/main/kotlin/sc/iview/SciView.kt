@@ -623,6 +623,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * @return a unique name based on [candidateName]
      */
     fun generateUniqueName(candidateName: String): String {
+        println("generating a unique name $candidateName")
         var uniqueName = candidateName
         var counter = 1
         val names = allSceneNodes.map { el -> el.name }
@@ -902,7 +903,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         n?.let {
             it.block()
             // Ensure name is unique
-            n.name = generateUniqueName(n.name)
+            if(n.name.isEmpty()) {
+                n.name = generateUniqueName(n.name)
+            }
             parent.addChild(it)
             objectService.addObject(n)
             if (blockOnNewNodes) {
