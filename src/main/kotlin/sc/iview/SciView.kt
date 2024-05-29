@@ -1046,7 +1046,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @Suppress("UNUSED_PARAMETER")
     @EventHandler
     protected fun onNodeAdded(event: NodeAddedEvent?) {
-        mainWindow.rebuildSceneTree()
+        needSceneUpdate = true
     }
 
     @Suppress("UNUSED_PARAMETER")
