@@ -214,16 +214,20 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     private var animating = false
 
     /**
+     * Track whether the scene changed and needs an update in the next tick
+     */
+    public var needSceneUpdate: Boolean = false
+
+    /**
      * This tracks the actively selected Node in the scene
      */
     var activeNode: Node? = null
         private set
 
-    /*
-     * Return the SciJava Display that contains SciView
-     *//*
-     * Set the SciJava Display
-     */  var display: Display<*>? = null
+    /**
+     * The SciJava Display that contains SciView
+     */
+    var display: Display<*>? = null
 
     /**
      * List of available LUTs for caching
@@ -410,6 +414,22 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         controls = Controls(this)
 
         imageToVolumeMap = HashMap<Any, Volume>()
+
+        // Create a hook for running after each frame is rendered
+        renderer?.runAfterRendering?.add { this.updateAferRendering() }
+    }
+
+    /**
+     * A method that is run after the scene is rendered
+     */
+    private fun updateAferRendering() {
+        if(needSceneUpdate) {
+            mainWindow.rebuildSceneTree()
+            if (activeNode == null){
+                (mainWindow as SwingMainWindow).nodePropertyEditor.updateProperties(null)
+            }
+            needSceneUpdate = false
+        }
     }
 
     fun toggleSidebar(): Boolean {
@@ -1032,7 +1052,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @Suppress("UNUSED_PARAMETER")
     @EventHandler
     protected fun onNodeRemoved(event: NodeRemovedEvent?) {
-        mainWindow.rebuildSceneTree()
+        needSceneUpdate = true
     }
 
     @Suppress("UNUSED_PARAMETER")

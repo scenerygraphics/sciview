@@ -149,10 +149,7 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
     private fun onEvent(evt: NodeRemovedEvent) {
         val node = evt.node ?: return
         log.trace("Node removed: $node");
-        rebuildTree()
-        if (sciView.activeNode == null){
-            updateProperties(null)
-        }
+        sciView.needSceneUpdate = true
     }
 
     @EventHandler
