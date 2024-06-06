@@ -1,3 +1,4 @@
+import groovy.xml.XmlSlurper
 import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URL
@@ -60,6 +61,9 @@ dependencies {
     implementation("net.java.dev.jna:jna-platform:5.11.0")
     implementation("org.janelia.saalfeldlab:n5")
     implementation("org.janelia.saalfeldlab:n5-imglib2")
+    implementation("org.janelia.saalfeldlab:n5-blosc")
+    implementation("org.janelia.saalfeldlab:n5-universe:1.3.2")
+    implementation("org.janelia.saalfeldlab:n5-viewer_fiji:6.0.1")
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
     implementation("org.apache.logging.log4j:log4j-1.2-api:2.20.0")
 
@@ -67,9 +71,7 @@ dependencies {
 
     // SciJava dependencies
 
-    implementation("org.yaml:snakeyaml") {
-        version { strictly("1.33") }
-    }
+    implementation("org.yaml:snakeyaml")
     implementation("org.scijava:scijava-common")
     implementation("org.scijava:ui-behaviour")
     implementation("org.scijava:script-editor")
