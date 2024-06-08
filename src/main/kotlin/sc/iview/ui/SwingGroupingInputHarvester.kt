@@ -40,7 +40,7 @@ import org.scijava.plugin.Plugin
 import org.scijava.ui.swing.widget.SwingInputHarvester
 import org.scijava.ui.swing.widget.SwingInputPanel
 import org.scijava.widget.*
-import sc.iview.commands.edit.Properties
+import sc.iview.commands.edit.BasicProperties
 import sc.iview.ui.SwingNodePropertyEditor.Companion.maybeActivateDebug
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
@@ -83,104 +83,118 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
      */
     @Throws(ModuleException::class)
     fun buildPanel(inputPanel: InputPanel<JPanel, JPanel>, module: Module, uiDebug: Boolean) {
-        val inputs = module.info.inputs()
-        val models = ArrayList<WidgetModel>()
-        val sortedInputs = inputs.groupBy {
-            val sortKey = it.widgetStyle.substringAfter("group:").substringBefore(",")
-            sortKey
-        }
+        buildPanel(inputPanel, listOf(module), uiDebug)
+    }
 
-        sortedInputs.forEach { group ->
-            // no empty groups, and skip resolved inputs, aka services
-            if(group.value.isEmpty() || group.value.all { module.isInputResolved(it.name) }) {
-                return@forEach
+    /**
+     * Builds the Swing panel, with groups defined by the "group:" string in the widget style.
+     * If [uiDebug] is set to true, MigLayout's debug drawing will be activated.
+     */
+    @Throws(ModuleException::class)
+    fun buildPanel(inputPanel: InputPanel<JPanel, JPanel>, modules: List<Module>, uiDebug: Boolean) {
+        modules.forEach { module ->
+            val inputs = module.info.inputs()
+            val models = ArrayList<WidgetModel>()
+            val sortedInputs = inputs.groupBy {
+                val sortKey = it.widgetStyle.substringAfter("group:").substringBefore(",")
+                sortKey
             }
 
-            val panel = SwingInputPanel()
-            val labelPanel = SwingInputPanel()
-            val label = JLabel("<html><strong>▼ ${group.key}</strong></html>")
+            sortedInputs.forEach { group ->
+                // no empty groups, and skip resolved inputs, aka services
+                if(group.value.isEmpty() || group.value.all { module.isInputResolved(it.name) }) {
+                    return@forEach
+                }
 
-            panel.component.name = "group:${group.key}"
-            panel.component.layout = MigLayout("fillx,wrap 2, gap 2 2, ins 4 4".maybeActivateDebug(uiDebug), "[right]5[fill,grow]")
-            labelPanel.component.layout = MigLayout("fillx,wrap 2, gap 2 2, ins 4 4".maybeActivateDebug(uiDebug), "[right]5[fill,grow]")
+                val panel = SwingInputPanel()
+                val labelPanel = SwingInputPanel()
+                val label = JLabel("<html><strong>▼ ${group.key}</strong></html>")
 
-            label.addMouseListener(object: MouseListener {
-                /**
-                 * Invoked when the mouse button has been clicked (pressed
-                 * and released) on a component.
-                 * @param e the event to be processed
-                 */
-                override fun mouseClicked(e: MouseEvent?) {
-                    if(e?.clickCount == 1) {
-                        panel.component.isVisible = !panel.component.isVisible
+                panel.component.name = "group:${group.key}"
+                panel.component.layout =
+                    MigLayout("fillx,wrap 2, gap 2 2, ins 4 4".maybeActivateDebug(uiDebug), "[right]5[fill,grow]")
+                labelPanel.component.layout =
+                    MigLayout("fillx,wrap 2, gap 2 2, ins 4 4".maybeActivateDebug(uiDebug), "[right]5[fill,grow]")
 
-                        if(panel.component.isVisible) {
-                            label.text = "<html><strong>▼ ${group.key}</strong></html>"
-                        } else {
-                            label.text = """<html><strong><span style="color: gray;">▶</span> ${group.key}</strong></html>"""
+                label.addMouseListener(object : MouseListener {
+                    /**
+                     * Invoked when the mouse button has been clicked (pressed
+                     * and released) on a component.
+                     * @param e the event to be processed
+                     */
+                    override fun mouseClicked(e: MouseEvent?) {
+                        if(e?.clickCount == 1) {
+                            panel.component.isVisible = !panel.component.isVisible
+
+                            if(panel.component.isVisible) {
+                                label.text = "<html><strong>▼ ${group.key}</strong></html>"
+                            } else {
+                                label.text =
+                                    """<html><strong><span style="color: gray;">▶</span> ${group.key}</strong></html>"""
+                            }
+                            inputPanel.component.revalidate()
                         }
-                        inputPanel.component.revalidate()
+                    }
+
+                    /**
+                     * Invoked when a mouse button has been pressed on a component.
+                     * @param e the event to be processed
+                     */
+                    override fun mousePressed(e: MouseEvent?) {
+                    }
+
+                    /**
+                     * Invoked when a mouse button has been released on a component.
+                     * @param e the event to be processed
+                     */
+                    override fun mouseReleased(e: MouseEvent?) {
+                    }
+
+                    /**
+                     * Invoked when the mouse enters a component.
+                     * @param e the event to be processed
+                     */
+                    override fun mouseEntered(e: MouseEvent?) {
+                    }
+
+                    /**
+                     * Invoked when the mouse exits a component.
+                     * @param e the event to be processed
+                     */
+                    override fun mouseExited(e: MouseEvent?) {
+                    }
+
+                })
+
+                labelPanel.component.add(label)
+                inputPanel.component.add(labelPanel.component, "wrap")
+                // hidemode 3 ignores the space taken up by components when rendered
+                inputPanel.component.add(panel.component, "wrap,hidemode 3")
+
+                for(item in group.value) {
+                    val model = addInput(panel, module, item)
+                    if(model != null) {
+                        log.debug("Adding input ${item.name}/${item.label}")
+                        models.add(model)
+                    } else {
+                        log.error("Model for ${item.name}/${item.label} is null!")
                     }
                 }
-
-                /**
-                 * Invoked when a mouse button has been pressed on a component.
-                 * @param e the event to be processed
-                 */
-                override fun mousePressed(e: MouseEvent?) {
-                }
-
-                /**
-                 * Invoked when a mouse button has been released on a component.
-                 * @param e the event to be processed
-                 */
-                override fun mouseReleased(e: MouseEvent?) {
-                }
-
-                /**
-                 * Invoked when the mouse enters a component.
-                 * @param e the event to be processed
-                 */
-                override fun mouseEntered(e: MouseEvent?) {
-                }
-
-                /**
-                 * Invoked when the mouse exits a component.
-                 * @param e the event to be processed
-                 */
-                override fun mouseExited(e: MouseEvent?) {
-                }
-
-            })
-
-            labelPanel.component.add(label)
-            inputPanel.component.add(labelPanel.component, "wrap")
-            // hidemode 3 ignores the space taken up by components when rendered
-            inputPanel.component.add(panel.component, "wrap,hidemode 3")
-
-            for (item in group.value) {
-                val model = addInput(panel, module, item)
-                if (model != null) {
-                    log.debug("Adding input ${item.name}/${item.label}")
-                    models.add(model)
-                } else {
-                    log.error("Model for ${item.name}/${item.label} is null!")
-                }
             }
+
+            // mark all models as initialized
+            for(model in models) model.isInitialized = true
+
+            // compute initial preview
+            module.preview()
         }
-
-        // mark all models as initialized
-        for (model in models) model.isInitialized = true
-
-        // compute initial preview
-        module.preview()
     }
 
     // -- Helper methods --
     @Throws(ModuleException::class)
     private fun <T, P, W> addInput(inputPanel: InputPanel<P, W>,
                                    m: Module, item: ModuleItem<T>): WidgetModel? {
-        val module = if(m is Properties) {
+        val module = if(m is BasicProperties) {
             m.getCustomModuleForModuleItem(item) ?: m
         } else {
             m

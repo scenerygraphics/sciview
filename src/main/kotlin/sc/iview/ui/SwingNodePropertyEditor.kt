@@ -29,14 +29,13 @@
 package sc.iview.ui
 
 import com.intellij.ui.components.JBPanel
-import graphics.scenery.Camera
-import graphics.scenery.Node
-import graphics.scenery.Scene
-import graphics.scenery.Settings
-import graphics.scenery.volumes.TransferFunctionEditor
+import graphics.scenery.*
+import graphics.scenery.primitives.Atmosphere
+import graphics.scenery.primitives.Line
+import graphics.scenery.primitives.TextBoard
+import graphics.scenery.volumes.SlicingPlane
 import graphics.scenery.volumes.Volume
 import net.miginfocom.swing.MigLayout
-import org.jfree.chart.ChartPanel
 import org.joml.Quaternionf
 import org.joml.Vector3f
 import org.scijava.Context
@@ -51,7 +50,7 @@ import org.scijava.ui.swing.widget.SwingInputPanel
 import org.scijava.util.DebugUtils
 import org.scijava.widget.UIComponent
 import sc.iview.SciView
-import sc.iview.commands.edit.Properties
+import sc.iview.commands.edit.*
 import sc.iview.commands.help.Help
 import sc.iview.event.NodeActivatedEvent
 import sc.iview.event.NodeAddedEvent
@@ -281,9 +280,20 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
 
     var currentNode: Node? = null
         private set
-    private var currentProperties: Properties? = null
+    private var currentProperties: ArrayList<InspectorInteractiveCommand>? = null
     private lateinit var inputPanel: SwingInputPanel
     private val updateLock = ReentrantLock()
+
+    val usageConditions: MutableMap<Class<out Node>, Class<out InspectorInteractiveCommand>> = hashMapOf(
+        PointLight::class.java to LightProperties::class.java,
+        Camera::class.java to CameraProperties::class.java,
+        BoundingGrid::class.java to BoundingGridProperties::class.java,
+        Line::class.java to LineProperties::class.java,
+        SlicingPlane::class.java to SlicingPlaneProperties::class.java,
+        TextBoard::class.java to TextBoardProperties::class.java,
+        Atmosphere::class.java to AtmosphereProperties::class.java,
+        Volume::class.java to VolumeProperties::class.java,
+    )
 
     /** Generates a properties panel for the given node.  */
     fun updateProperties(sceneNode: Node?, rebuild: Boolean = false) {
@@ -301,37 +311,46 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
         try {
             if (updateLock.tryLock() || updateLock.tryLock(200, TimeUnit.MILLISECONDS)) {
                 if (!rebuild && currentNode === sceneNode && currentProperties != null) {
-                    currentProperties!!.updateCommandFields()
+                    currentProperties!!.forEach { it.updateCommandFields() }
                     inputPanel.refresh()
                     updateLock.unlock()
                     return
                 }
                 currentNode = sceneNode
                 // Prepare the Properties command module instance.
-                val info = commandService.getCommand(Properties::class.java)
-                val module = moduleService.createModule(info)
-                resolveInjectedInputs(module)
-                module.setInput("sciView", sciView)
-                module.setInput("sceneNode", sceneNode)
-                module.resolveInput("sciView")
-                module.resolveInput("sceneNode")
-                val p = module.delegateObject as Properties
-                currentProperties = p
-                p.setSceneNode(sceneNode)
+                val classes = usageConditions
+                    .filter { (type, _) -> type.isAssignableFrom(sceneNode::class.java) }
+                    .values + BasicProperties::class.java
 
-                val additionalUIs = sceneNode.metadata
-                    .filter { it.key.startsWith("sciview-inspector-") }
-                    .filter { it.value as? CustomPropertyUI != null }
+                // we reverse here, so BasicProperties appears first
+                val modules = classes.reversed().map { clz ->
+                    val info = commandService.getCommand(clz) ?: throw RuntimeException("Unknown command: ${clz.simpleName}")
+                    val module = moduleService.createModule(info)
+                    resolveInjectedInputs(module)
+                    module.setInput("sciView", sciView)
+                    module.setInput("sceneNode", sceneNode)
+                    module.resolveInput("sciView")
+                    module.resolveInput("sceneNode")
+                    val p = module.delegateObject as InspectorInteractiveCommand
+                    currentProperties?.add(p)
+                    p.setSceneNode(sceneNode)
 
-                @Suppress("UNCHECKED_CAST")
-                additionalUIs.forEach { (name, value) ->
-                    val ui = value as CustomPropertyUI
-                    log.info("Additional UI requested by $name, module ${ui.module.info.name}")
+                    val additionalUIs = sceneNode.metadata
+                        .filter { it.key.startsWith("sciview-inspector-") }
+                        .filter { it.value as? CustomPropertyUI != null }
 
-                    for (moduleItem in ui.getMutableInputs()) {
-                        log.info("${moduleItem.name}/${moduleItem.label} added, based on ${ui.module}")
-                        p.addInput(moduleItem, ui.module)
+                    @Suppress("UNCHECKED_CAST")
+                    additionalUIs.forEach { (name, value) ->
+                        val ui = value as CustomPropertyUI
+                        log.info("Additional UI requested by $name, module ${ui.module.info.name}")
+
+                        for(moduleItem in ui.getMutableInputs()) {
+                            log.info("${moduleItem.name}/${moduleItem.label} added, based on ${ui.module}")
+                            p.addInput(moduleItem, ui.module)
+                        }
                     }
+
+                    module
                 }
 
                 // Prepare the SwingInputHarvester.
@@ -356,21 +375,42 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
 
                 // Build the panel.
                 try {
-                    harvester.buildPanel(inputPanel, module, uiDebug)
+                    harvester.buildPanel(inputPanel, modules, uiDebug)
                     updatePropertiesPanel(inputPanel.component)
 
-                    // TODO: This needs to move to a widget and be included in Properties
-                    if(sceneNode is Volume) {
-                        // This will find the group that corresponds to the expandable label. If the type of
-                        // the node is indeed Volume, this must exist.
-                        val parent = inputPanel.component.components.find { it.name == "group:Volume" } as? JPanel
-                        val tfe = TransferFunctionEditor(sceneNode)
-                        tfe.preferredSize = Dimension(300, 300)
-                        tfe.components.find { it is ChartPanel }?.minimumSize = Dimension(100, 200)
+//                    val extensions = classes.map {
+//                        try {
+//                            Class.forName("Swing" + it.simpleName)
+//                        } catch(e: ClassNotFoundException) {
+//                            null
+//                        }
+//                    }.filter { it != null && it.interfaces.contains(SwingInspectorInteractiveCommandExtension::class.java) }.map {
+//                        it!!.getDeclaredConstructor().newInstance() as SwingInspectorInteractiveCommandExtension
+//                    }
+                    val extensions = modules.mapNotNull { it.delegateObject as? InspectorInteractiveCommand }
+                        .map {
+                            it.hasExtensions.filter { (k, _) -> k.startsWith("Swing") }.values.firstOrNull()
+                        }.mapNotNull {
+                            it?.getDeclaredConstructor()?.newInstance() as? SwingInspectorInteractiveCommandExtension
+                        }
 
-                        tfe.layout = MigLayout("fillx,flowy,insets 0 0 0 0".maybeActivateDebug(uiDebug), "[right,fill,grow]")
-                        parent?.add(tfe, "span 2, growx")
+                    extensions.forEach {
+                        log.info("Running extension ${it.javaClass.simpleName}")
+                        it.create(inputPanel, sceneNode, uiDebug)
                     }
+
+//                    // TODO: This needs to move to a widget and be included in Properties
+//                    if(sceneNode is Volume) {
+//                        // This will find the group that corresponds to the expandable label. If the type of
+//                        // the node is indeed Volume, this must exist.
+//                        val parent = inputPanel.component.components.find { it.name == "group:Volume" } as? JPanel
+//                        val tfe = TransferFunctionEditor(sceneNode)
+//                        tfe.preferredSize = Dimension(300, 300)
+//                        tfe.components.find { it is ChartPanel }?.minimumSize = Dimension(100, 200)
+//
+//                        tfe.layout = MigLayout("fillx,flowy,insets 0 0 0 0".maybeActivateDebug(uiDebug), "[right,fill,grow]")
+//                        parent?.add(tfe, "span 2, growx")
+//                    }
                 } catch (exc: ModuleException) {
                     log.error(exc)
                     val stackTrace = DebugUtils.getStackTrace(exc)
