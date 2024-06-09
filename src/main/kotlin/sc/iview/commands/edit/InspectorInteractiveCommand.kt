@@ -73,4 +73,8 @@ abstract class InspectorInteractiveCommand : InteractiveCommand() {
         private val inputModuleMaps = ConcurrentHashMap<ModuleItem<*>, Module>()
     }
 
+    data class UsageCondition(
+        val condition: (Node) -> Boolean,
+        val commandClass: Class<out InspectorInteractiveCommand>
+    )
 }

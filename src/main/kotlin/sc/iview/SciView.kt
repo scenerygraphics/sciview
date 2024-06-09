@@ -100,6 +100,7 @@ import org.scijava.thread.ThreadService
 import org.scijava.util.ColorRGB
 import org.scijava.util.Colors
 import org.scijava.util.VersionUtils
+import sc.iview.commands.edit.InspectorInteractiveCommand
 import sc.iview.event.NodeActivatedEvent
 import sc.iview.event.NodeAddedEvent
 import sc.iview.event.NodeChangedEvent
@@ -1889,6 +1890,14 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     fun getProjectDirectories(): ProjectDirectories {
         return ProjectDirectories.from("sc", "iview", "sciview")
+    }
+
+    /**
+     * Adds a new custom panel to the inspector, with a usage [condition] given (e.g., checking for a
+     * specific Node type, and the [panelClass] that represents the custom panel.
+     */
+    fun addNodeSpecificInspectorPanel(condition: (Node) -> Boolean, panelClass: Class<out InspectorInteractiveCommand>) {
+        mainWindow.addNodeSpecificInspectorPanel(condition, panelClass)
     }
 
     companion object {
