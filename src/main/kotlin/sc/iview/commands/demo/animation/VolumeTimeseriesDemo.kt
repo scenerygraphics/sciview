@@ -69,7 +69,7 @@ class VolumeTimeseriesDemo : Command {
         val dataset = makeDataset()
 
         val bdv = BdvFunctions.show(dataset, "test")
-        sciView.addVolume(dataset, "Volume Render Demo", floatArrayOf(1f, 1f, 1f)) {
+        sciView.addVolume(dataset, "Volume Render Demo", floatArrayOf(0.01f, 0.01f, 0.01f)) {
             pixelToWorldRatio = 10f
             this.geometryOrNull()?.dirty = true
             this.spatialOrNull()?.needsUpdate = true
