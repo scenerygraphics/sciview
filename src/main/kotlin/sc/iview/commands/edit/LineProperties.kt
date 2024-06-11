@@ -1,6 +1,7 @@
 package sc.iview.commands.edit
 
 import graphics.scenery.primitives.Line
+import okio.withLock
 import org.scijava.command.Command
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
@@ -15,18 +16,17 @@ class LineProperties : InspectorInteractiveCommand() {
     override fun updateCommandFields() {
         val node = currentSceneNode as? Line ?: return
 
-        fieldsUpdating = true
-        edgeWidth = node.edgeWidth.toInt()
-        fieldsUpdating = false
+        fieldsUpdating.withLock {
+            edgeWidth = node.edgeWidth.toInt()
+        }
     }
 
     /** Updates current scene node properties to match command fields.  */
     override fun updateNodeProperties() {
         val node = currentSceneNode as? Line ?: return
-        if(fieldsUpdating) {
-            return
+        fieldsUpdating.withLock {
+            node.edgeWidth = edgeWidth.toFloat()
         }
-        node.edgeWidth = edgeWidth.toFloat()
     }
 
 }

@@ -3,6 +3,7 @@ package sc.iview.commands.edit
 import graphics.scenery.volumes.SlicingPlane
 import graphics.scenery.volumes.VolumeManager
 import net.imagej.lut.LUTService
+import okio.withLock
 import org.scijava.command.Command
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
@@ -23,29 +24,28 @@ class SlicingPlaneProperties : InspectorInteractiveCommand() {
     override fun updateCommandFields() {
         val node = currentSceneNode as? SlicingPlane ?: return
 
-        fieldsUpdating = true
+        fieldsUpdating.withLock {
 
-        sciView.hub.get<VolumeManager>()?.let {
-            slicedVolumes.availableVolumes = it.nodes
+            sciView.hub.get<VolumeManager>()?.let {
+                slicedVolumes.availableVolumes = it.nodes
+            }
+            slicedVolumes.clear()
+            slicedVolumes.addAll(node.slicedVolumes)
         }
-        slicedVolumes.clear()
-        slicedVolumes.addAll(node.slicedVolumes)
-        fieldsUpdating = false
     }
 
     /** Updates current scene node properties to match command fields.  */
     override fun updateNodeProperties() {
         val node = currentSceneNode as? SlicingPlane ?: return
-        if(fieldsUpdating) {
-            return
-        }
 
-        val old = node.slicedVolumes
-        val new = slicedVolumes
-        val removed = old.filter { !new.contains(it) }
-        val added = new.filter{!old.contains(it)}
-        removed.forEach { node.removeTargetVolume(it) }
-        added.forEach{node.addTargetVolume(it)}
+        fieldsUpdating.withLock {
+            val old = node.slicedVolumes
+            val new = slicedVolumes
+            val removed = old.filter { !new.contains(it) }
+            val added = new.filter { !old.contains(it) }
+            removed.forEach { node.removeTargetVolume(it) }
+            added.forEach { node.addTargetVolume(it) }
+        }
     }
 
 

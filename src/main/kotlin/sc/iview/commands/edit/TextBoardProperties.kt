@@ -1,6 +1,7 @@
 package sc.iview.commands.edit
 
 import graphics.scenery.primitives.TextBoard
+import okio.withLock
 import org.joml.Vector4f
 import org.scijava.command.Command
 import org.scijava.plugin.Parameter
@@ -25,48 +26,46 @@ class TextBoardProperties : InspectorInteractiveCommand() {
     override fun updateCommandFields() {
         val node = currentSceneNode as? TextBoard ?: return
 
-        fieldsUpdating = true
-        text = node.text
-        fontColor = ColorRGB(
-            node.fontColor.x().toInt() * 255,
-            node.fontColor.y().toInt() * 255,
-            node.fontColor.z().toInt() * 255
-        )
-        backgroundColor = ColorRGB(
-            node.backgroundColor.x().toInt() * 255,
-            node.backgroundColor.y().toInt() * 255,
-            node.backgroundColor.z().toInt() * 255
-        )
-        transparentBackground = node.transparent > 0
-
-        fieldsUpdating = false
+        fieldsUpdating.withLock {
+            text = node.text
+            fontColor = ColorRGB(
+                node.fontColor.x().toInt() * 255,
+                node.fontColor.y().toInt() * 255,
+                node.fontColor.z().toInt() * 255
+            )
+            backgroundColor = ColorRGB(
+                node.backgroundColor.x().toInt() * 255,
+                node.backgroundColor.y().toInt() * 255,
+                node.backgroundColor.z().toInt() * 255
+            )
+            transparentBackground = node.transparent > 0
+        }
     }
 
     /** Updates current scene node properties to match command fields.  */
     override fun updateNodeProperties() {
         val node = currentSceneNode as? TextBoard ?: return
-        if(fieldsUpdating) {
-            return
-        }
 
-        val transparent = if (transparentBackground) {
-            1
-        } else {
-            0
+        fieldsUpdating.withLock {
+            val transparent = if(transparentBackground) {
+                1
+            } else {
+                0
+            }
+            node.transparent = transparent
+            node.text = text!!
+            node.fontColor = Vector4f(
+                fontColor!!.red / 255.0f,
+                fontColor!!.green / 255.0f,
+                fontColor!!.blue / 255.0f,
+                1f
+            )
+            node.backgroundColor = Vector4f(
+                backgroundColor!!.red / 255.0f,
+                backgroundColor!!.green / 255.0f,
+                backgroundColor!!.blue / 255.0f,
+                1f
+            )
         }
-        node.transparent = transparent
-        node.text = text!!
-        node.fontColor = Vector4f(
-            fontColor!!.red / 255.0f,
-            fontColor!!.green / 255.0f,
-            fontColor!!.blue / 255.0f,
-            1f
-        )
-        node.backgroundColor = Vector4f(
-            backgroundColor!!.red / 255.0f,
-            backgroundColor!!.green / 255.0f,
-            backgroundColor!!.blue / 255.0f,
-            1f
-        )
     }
 }

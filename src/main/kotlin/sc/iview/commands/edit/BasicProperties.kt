@@ -31,6 +31,7 @@ package sc.iview.commands.edit
 import graphics.scenery.*
 import graphics.scenery.attribute.material.HasMaterial
 import net.imagej.lut.LUTService
+import okio.withLock
 import org.joml.Quaternionf
 import org.joml.Vector3f
 import org.scijava.command.Command
@@ -125,21 +126,21 @@ class BasicProperties : InspectorInteractiveCommand() {
     override fun cancel() {}
 
     private fun rebuildSceneObjectChoiceList() {
-        fieldsUpdating = true
-        sceneNodeChoices = ArrayList()
-        var count = 0
-        // here, we want all nodes of the scene, not excluding PointLights and Cameras
-        for (node in sciView.getSceneNodes { _: Node? -> true }) {
-            sceneNodeChoices.add(makeIdentifier(node, count))
-            count++
-        }
-        val sceneNodeSelector = info.getMutableInput("sceneNode", String::class.java)
-        sceneNodeSelector.choices = sceneNodeChoices
+        fieldsUpdating.withLock {
+            sceneNodeChoices = ArrayList()
+            var count = 0
+            // here, we want all nodes of the scene, not excluding PointLights and Cameras
+            for(node in sciView.getSceneNodes { _: Node? -> true }) {
+                sceneNodeChoices.add(makeIdentifier(node, count))
+                count++
+            }
+            val sceneNodeSelector = info.getMutableInput("sceneNode", String::class.java)
+            sceneNodeSelector.choices = sceneNodeChoices
 
-        //todo: if currentSceneNode is set, put it here as current item
-        sceneNodeSelector.setValue(this, sceneNodeChoices[sceneNodeChoices.size - 1])
-        refreshSceneNodeInDialog()
-        fieldsUpdating = false
+            //todo: if currentSceneNode is set, put it here as current item
+            sceneNodeSelector.setValue(this, sceneNodeChoices[sceneNodeChoices.size - 1])
+            refreshSceneNodeInDialog()
+        }
     }
 
     /**
@@ -171,75 +172,78 @@ class BasicProperties : InspectorInteractiveCommand() {
     override fun updateCommandFields() {
         val node = currentSceneNode ?: return
 
-        fieldsUpdating = true
+        fieldsUpdating.withLock {
 
-        // update colour
-        val colourVector = when {
-            node is PointLight -> node.emissionColor
-            node is HasMaterial -> node.material().diffuse
-            else -> Vector3f(0.5f)
-        }
+            // update colour
+            val colourVector = when {
+                node is PointLight -> node.emissionColor
+                node is HasMaterial -> node.material().diffuse
+                else -> Vector3f(0.5f)
+            }
 
-        colour = ColorRGB((colourVector[0] * 255).toInt(),  //
+            colour = ColorRGB(
+                (colourVector[0] * 255).toInt(),  //
                 (colourVector[1] * 255).toInt(),  //
-                (colourVector[2] * 255).toInt())
+                (colourVector[2] * 255).toInt()
+            )
 
-        // update visibility
-        visible = node.visible
+            // update visibility
+            visible = node.visible
 
-        // update position
-        val position = node.spatialOrNull()?.position ?: Vector3f(0.0f)
-        positionX = position[0]
-        positionY = position[1]
-        positionZ = position[2]
+            // update position
+            val position = node.spatialOrNull()?.position ?: Vector3f(0.0f)
+            positionX = position[0]
+            positionY = position[1]
+            positionZ = position[2]
 
-        // update rotation
-        val eulerAngles = node.spatialOrNull()?.rotation?.getEulerAnglesXYZ(Vector3f()) ?: Vector3f(0.0f)
-        rotationPhi = eulerAngles.x()
-        rotationTheta = eulerAngles.y()
-        rotationPsi = eulerAngles.z()
+            // update rotation
+            val eulerAngles = node.spatialOrNull()?.rotation?.getEulerAnglesXYZ(Vector3f()) ?: Vector3f(0.0f)
+            rotationPhi = eulerAngles.x()
+            rotationTheta = eulerAngles.y()
+            rotationPsi = eulerAngles.z()
 
-        // update scale
-        val scale = node.spatialOrNull()?.scale ?: Vector3f(1.0f)
-        scaleX = scale.x()
-        scaleY = scale.y()
-        scaleZ = scale.z()
+            // update scale
+            val scale = node.spatialOrNull()?.scale ?: Vector3f(1.0f)
+            scaleX = scale.x()
+            scaleY = scale.y()
+            scaleZ = scale.z()
 
-        name = node.name
-        fieldsUpdating = false
+            name = node.name
+        }
     }
 
     /** Updates current scene node properties to match command fields.  */
     override fun updateNodeProperties() {
         val node = currentSceneNode ?: return
-        if (fieldsUpdating) {
-            return
-        }
+        fieldsUpdating.withLock {
 
-        // update visibility
-        node.visible = visible
+            // update visibility
+            node.visible = visible
 
-        // update colour
-        val cVector = Vector3f(colour!!.red / 255f,
+            // update colour
+            val cVector = Vector3f(
+                colour!!.red / 255f,
                 colour!!.green / 255f,
-                colour!!.blue / 255f)
-        if (node is PointLight) {
-            node.emissionColor = cVector
-        } else {
-            node.ifMaterial {
-                diffuse = cVector
+                colour!!.blue / 255f
+            )
+            if(node is PointLight) {
+                node.emissionColor = cVector
+            } else {
+                node.ifMaterial {
+                    diffuse = cVector
+                }
             }
-        }
 
-        // update spatial properties
-        node.ifSpatial {
-            position = Vector3f(positionX, positionY, positionZ)
-            scale = Vector3f(scaleX, scaleY, scaleZ)
-            rotation = Quaternionf().rotateXYZ(rotationPhi, rotationTheta, rotationPsi)
-        }
-        node.name = name
+            // update spatial properties
+            node.ifSpatial {
+                position = Vector3f(positionX, positionY, positionZ)
+                scale = Vector3f(scaleX, scaleY, scaleZ)
+                rotation = Quaternionf().rotateXYZ(rotationPhi, rotationTheta, rotationPsi)
+            }
+            node.name = name
 
-        events.publish(NodeChangedEvent(node))
+            events.publish(NodeChangedEvent(node))
+        }
     }
 
     private fun makeIdentifier(node: Node, count: Int): String {

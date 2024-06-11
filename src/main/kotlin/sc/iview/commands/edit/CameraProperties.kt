@@ -1,6 +1,7 @@
 package sc.iview.commands.edit
 
 import graphics.scenery.Camera
+import okio.withLock
 import org.scijava.command.Command
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
@@ -12,28 +13,26 @@ class CameraProperties : InspectorInteractiveCommand() {
 
     override fun updateCommandFields() {
         val node = currentSceneNode as? Camera ?: return
-        fieldsUpdating = true
 
-        val scene = node.getScene()
-        active = if (scene != null) {
-            scene.findObserver() === node
-        } else {
-            false
+        fieldsUpdating.withLock {
+            val scene = node.getScene()
+            active = if(scene != null) {
+                scene.findObserver() === node
+            } else {
+                false
+            }
         }
-
-        fieldsUpdating = false
     }
 
     /** Updates current scene node properties to match command fields.  */
     override fun updateNodeProperties() {
         val node = currentSceneNode as? Camera ?: return
-        if(fieldsUpdating) {
-            return
-        }
+        fieldsUpdating.withLock {
 
-        val scene = node.getScene()
-        if (active && scene != null) {
-            scene.activeObserver = node
+            val scene = node.getScene()
+            if(active && scene != null) {
+                scene.activeObserver = node
+            }
         }
     }
 

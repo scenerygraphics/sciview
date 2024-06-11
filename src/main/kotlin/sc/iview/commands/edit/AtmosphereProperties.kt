@@ -1,6 +1,7 @@
 package sc.iview.commands.edit
 
 import graphics.scenery.primitives.Atmosphere
+import okio.withLock
 import org.scijava.command.Command
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
@@ -28,34 +29,32 @@ class AtmosphereProperties : InspectorInteractiveCommand() {
     override fun updateCommandFields() {
         val node = currentSceneNode as? Atmosphere ?: return
 
-        fieldsUpdating = true
+        fieldsUpdating.withLock {
 
-        isSunManual = !node.isSunAnimated
-        atmosphereLatitude = node.latitude
-        atmosphereStrength = node.emissionStrength
-        sunAzimuth = node.azimuth
-        sunElevation = node.elevation
-
-        fieldsUpdating = false
+            isSunManual = !node.isSunAnimated
+            atmosphereLatitude = node.latitude
+            atmosphereStrength = node.emissionStrength
+            sunAzimuth = node.azimuth
+            sunElevation = node.elevation
+        }
     }
 
     /** Updates current scene node properties to match command fields.  */
     override fun updateNodeProperties() {
         val node = currentSceneNode as? Atmosphere ?: return
-        if(fieldsUpdating) {
-            return
-        }
 
-        node.latitude = atmosphereLatitude
-        node.emissionStrength = atmosphereStrength
-        // attach/detach methods also handle the update of node.updateControls
-        if (isSunManual) {
-            sciView.sceneryInputHandler?.let { node.attachBehaviors(it) }
-            node.setSunPosition(sunElevation, sunAzimuth)
-        } else {
-            sciView.sceneryInputHandler?.let { node.detachBehaviors(it) }
-            // Update the sun position immediately
-            node.setSunPositionFromTime()
+        fieldsUpdating.withLock {
+            node.latitude = atmosphereLatitude
+            node.emissionStrength = atmosphereStrength
+            // attach/detach methods also handle the update of node.updateControls
+            if(isSunManual) {
+                sciView.sceneryInputHandler?.let { node.attachBehaviors(it) }
+                node.setSunPosition(sunElevation, sunAzimuth)
+            } else {
+                sciView.sceneryInputHandler?.let { node.detachBehaviors(it) }
+                // Update the sun position immediately
+                node.setSunPositionFromTime()
+            }
         }
     }
 

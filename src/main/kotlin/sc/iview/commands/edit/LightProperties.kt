@@ -1,6 +1,7 @@
 package sc.iview.commands.edit
 
 import graphics.scenery.PointLight
+import okio.withLock
 import org.scijava.command.Command
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
@@ -16,19 +17,17 @@ class LightProperties : InspectorInteractiveCommand() {
     override fun updateCommandFields() {
         val node = currentSceneNode as? PointLight ?: return
 
-        fieldsUpdating = true
-        intensity = node.intensity
-        fieldsUpdating = false
+        fieldsUpdating.withLock {
+            intensity = node.intensity
+        }
     }
 
     /** Updates current scene node properties to match command fields.  */
     override fun updateNodeProperties() {
         val node = currentSceneNode as? PointLight ?: return
-        if(fieldsUpdating) {
-            return
+        fieldsUpdating.withLock {
+            node.intensity = intensity
         }
-
-        node.intensity = intensity
     }
 
 }

@@ -11,6 +11,7 @@ import org.scijava.module.ModuleItem
 import org.scijava.plugin.Parameter
 import sc.iview.SciView
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.locks.ReentrantLock
 
 abstract class InspectorInteractiveCommand : InteractiveCommand() {
     @Parameter
@@ -22,7 +23,7 @@ abstract class InspectorInteractiveCommand : InteractiveCommand() {
     @Parameter
     protected lateinit var log: LogService
 
-    var fieldsUpdating = true
+    var fieldsUpdating = ReentrantLock()
         protected set
     var currentSceneNode: Node? = null
         protected set

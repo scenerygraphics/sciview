@@ -2,6 +2,7 @@ package sc.iview.commands.edit
 
 import graphics.scenery.volumes.Volume
 import net.imagej.lut.LUTService
+import okio.withLock
 import org.scijava.ItemVisibility
 import org.scijava.command.Command
 import org.scijava.plugin.Parameter
@@ -93,51 +94,51 @@ class VolumeProperties : InspectorInteractiveCommand() {
     }
 
 
+    @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
     override fun updateCommandFields() {
         val node = currentSceneNode as? Volume ?: return
 
-        fieldsUpdating = true
+        fieldsUpdating.withLock {
 
-        val slicingModeInput = info.getMutableInput("slicingMode", String::class.java)
-        val slicingMethods = Volume.SlicingMode.values().map { mode: Volume.SlicingMode -> mode.toString() }.toList()
-        slicingModeInput.setChoices(slicingMethods)
-        slicingMode = slicingModeChoices[Volume.SlicingMode.values().indexOf(node .slicingMode)].toString()
+            val slicingModeInput = info.getMutableInput("slicingMode", String::class.java)
+            val slicingMethods =
+                Volume.SlicingMode.entries.map { mode: Volume.SlicingMode -> mode.toString() }.toList()
+            slicingModeInput.choices = slicingMethods
+            slicingMode = slicingModeChoices[Volume.SlicingMode.values().indexOf(node.slicingMode)].toString()
 
-        pixelToWorldRatio = node.pixelToWorldRatio
-        dimensions = "${node.getDimensions().x}x${node.getDimensions().y}x${node.getDimensions().z}"
+            pixelToWorldRatio = node.pixelToWorldRatio
+            dimensions = "${node.getDimensions().x}x${node.getDimensions().y}x${node.getDimensions().z}"
 
-        val maxTimepoint = node.timepointCount - 1
-        if(maxTimepoint > 0) {
-            timepoint = node.currentTimepoint
-            val timepointInput = info.getMutableInput("timepoint", Integer::class.java)
-            timepointInput.minimumValue = Integer.valueOf(0) as Integer
-            timepointInput.maximumValue = Integer.valueOf(maxTimepoint) as Integer
-        } else {
-            // Warning! The java.lang prefix needs to be here, otherwise the compiler
-            // reverts to the Kotlin types and you'll end up with interesting error messages
-            // like "float does not match type float" ;-)
+            val maxTimepoint = node.timepointCount - 1
+            if(maxTimepoint > 0) {
+                timepoint = node.currentTimepoint
+                val timepointInput = info.getMutableInput("timepoint", Integer::class.java)
+                timepointInput.minimumValue = Integer.valueOf(0) as Integer
+                timepointInput.maximumValue = Integer.valueOf(maxTimepoint) as Integer
+            } else {
+                // Warning! The java.lang prefix needs to be here, otherwise the compiler
+                // reverts to the Kotlin types and you'll end up with interesting error messages
+                // like "float does not match type float" ;-)
 //            maybeRemoveInput("timepoint", java.lang.Integer::class.java)
 //            maybeRemoveInput("playPauseButton", Button::class.java)
 //            maybeRemoveInput("playSpeed", java.lang.Integer::class.java)
+            }
         }
-
-        fieldsUpdating = false
     }
 
     /** Updates current scene node properties to match command fields.  */
     override fun updateNodeProperties() {
         val node = currentSceneNode as? Volume ?: return
-        if(fieldsUpdating) {
-            return
-        }
 
-        node.goToTimepoint(timepoint)
-        val slicingModeIndex = slicingModeChoices.indexOf(Volume.SlicingMode.valueOf(slicingMode))
-        if (slicingModeIndex != -1) {
-            node.slicingMode = Volume.SlicingMode.values()[slicingModeIndex]
+        fieldsUpdating.withLock {
+            node.goToTimepoint(timepoint)
+            val slicingModeIndex = slicingModeChoices.indexOf(Volume.SlicingMode.valueOf(slicingMode))
+            if(slicingModeIndex != -1) {
+                node.slicingMode = Volume.SlicingMode.entries.toTypedArray()[slicingModeIndex]
+            }
+            node.pixelToWorldRatio = pixelToWorldRatio
+            node.spatial().needsUpdateWorld = true
         }
-        node.pixelToWorldRatio = pixelToWorldRatio
-        node.spatial().needsUpdateWorld = true
     }
 
 }
