@@ -275,7 +275,7 @@ class SwingNodePropertyEditor(private val sciView: SciView, val nodeSpecificProp
 
     var currentNode: Node? = null
         private set
-    private var currentProperties: ArrayList<InspectorInteractiveCommand>? = null
+    private var currentProperties = ArrayList<InspectorInteractiveCommand>()
     private lateinit var inputPanel: SwingInputPanel
     private val updateLock = ReentrantLock()
 
@@ -295,13 +295,14 @@ class SwingNodePropertyEditor(private val sciView: SciView, val nodeSpecificProp
         }
         try {
             if (updateLock.tryLock() || updateLock.tryLock(200, TimeUnit.MILLISECONDS)) {
-                if (!rebuild && currentNode === sceneNode && currentProperties != null) {
-                    currentProperties!!.forEach { it.updateCommandFields() }
+                if (!rebuild && currentNode === sceneNode && currentProperties.isNotEmpty()) {
+                    currentProperties.forEach { it.updateCommandFields() }
                     inputPanel.refresh()
                     updateLock.unlock()
                     return
                 }
                 currentNode = sceneNode
+                currentProperties.clear()
                 // Prepare the Properties command module instance.
                 val classes = nodeSpecificPropertyPanels
                     .filter { c -> c.condition.invoke(sceneNode) == true }
@@ -317,7 +318,7 @@ class SwingNodePropertyEditor(private val sciView: SciView, val nodeSpecificProp
                     module.resolveInput("sciView")
                     module.resolveInput("sceneNode")
                     val p = module.delegateObject as InspectorInteractiveCommand
-                    currentProperties?.add(p)
+                    currentProperties.add(p)
                     p.setSceneNode(sceneNode)
 
                     val additionalUIs = sceneNode.metadata
