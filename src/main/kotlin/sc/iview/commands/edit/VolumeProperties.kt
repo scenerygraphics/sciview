@@ -12,6 +12,9 @@ import org.scijava.widget.Button
 import org.scijava.widget.ChoiceWidget
 import org.scijava.widget.NumberWidget
 
+/**
+ * Inspector panel for [Volume] nodes.
+ */
 @Plugin(type = Command::class, initializer = "initValues", visible = false)
 class VolumeProperties : InspectorInteractiveCommand() {
     @Parameter
@@ -54,9 +57,11 @@ class VolumeProperties : InspectorInteractiveCommand() {
     private var timeSeriesPlayer: Thread? = null
 
     init {
+        // For Swing, we have a special extension containing the TransferFunctionEditor.
         hasExtensions["Swing"] = SwingVolumeProperties::class.java
     }
 
+    /** Plays a volume time series, if the volume has more than one timepoint. */
     fun playTimeSeries() {
         if (currentSceneNode !is Volume) {
             return
@@ -94,6 +99,7 @@ class VolumeProperties : InspectorInteractiveCommand() {
     }
 
 
+    /** Updates this command fields with the node's current properties. */
     @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
     override fun updateCommandFields() {
         val node = currentSceneNode as? Volume ?: return

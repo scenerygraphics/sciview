@@ -11,9 +11,15 @@ import sc.iview.ui.SwingNodePropertyEditor.Companion.maybeActivateDebug
 import java.awt.Dimension
 import javax.swing.JPanel
 
+/**
+ * Inspector extension that provides a [TransferFunctionEditor] for [Volume] nodes.
+ */
 class SwingVolumeProperties : SwingInspectorInteractiveCommandExtension {
     val logger by lazyLogger()
 
+    /**
+     * Creates a [TransferFunctionEditor] panel as child of the [inputPanel]'s Volume group.
+     */
     override fun create(inputPanel: SwingInputPanel, sceneNode: Node, uiDebug: Boolean) {
         if(sceneNode !is Volume) {
             logger.error("Wrong node type for SwingVolumeProperties")

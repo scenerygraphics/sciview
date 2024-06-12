@@ -7,6 +7,12 @@ import java.awt.event.MouseListener
 import javax.swing.JLabel
 import javax.swing.JPanel
 
+/**
+ * A [MouseListener] for opening and closing groups of the [SwingGroupingInputHarvester].
+ * This particular instance will be responsible for a given [groupName], attached to a [panel]
+ * and [inputPanel]. A [label] needs to be handed over, the text of which changes depending
+ * on the open/closed state of the group.
+ */
 open class SwingGroupingLabelListener(
     protected val groupName: String,
     protected val panel: SwingInputPanel,

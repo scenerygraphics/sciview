@@ -8,14 +8,20 @@ import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import org.scijava.util.ColorRGB
 
+/**
+ * Inspector panel for inspecting a [BoundingGrid]'s properties.
+ */
 @Plugin(type = Command::class, initializer = "initValues", visible = false)
 class BoundingGridProperties : InspectorInteractiveCommand() {
+    /** Parameter for the [BoundingGrid.gridColor] */
     @Parameter(label = "Grid Color", callback = "updateNodeProperties", style = "group:Grid")
     private var gridColor: ColorRGB? = null
 
+    /** Parameter for the [BoundingGrid.ticksOnly], determining whether to show a box or only ticks. */
     @Parameter(label = "Ticks only", callback = "updateNodeProperties", style = "group:Grid")
     private var ticksOnly = false
 
+    /** Updates this command fields with the node's current properties. */
     override fun updateCommandFields() {
         val node = currentSceneNode as? BoundingGrid ?: return
 

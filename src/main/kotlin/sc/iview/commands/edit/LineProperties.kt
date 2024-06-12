@@ -6,6 +6,9 @@ import org.scijava.command.Command
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 
+/**
+ * Inspector panel for [Line] nodes.
+ */
 @Plugin(type = Command::class, initializer = "initValues", visible = false)
 class LineProperties : InspectorInteractiveCommand() {
     /* Line properties */
@@ -13,6 +16,7 @@ class LineProperties : InspectorInteractiveCommand() {
     @Parameter(label = "Edge width", callback = "updateNodeProperties", style = "group:Line")
     private var edgeWidth = 0
 
+    /** Updates this command fields with the node's current properties. */
     override fun updateCommandFields() {
         val node = currentSceneNode as? Line ?: return
 

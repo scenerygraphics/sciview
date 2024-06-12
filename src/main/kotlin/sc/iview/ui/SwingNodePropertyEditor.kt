@@ -310,7 +310,7 @@ class SwingNodePropertyEditor(private val sciView: SciView, val nodeSpecificProp
 
                 // we reverse here, so BasicProperties appears first
                 val modules = classes.reversed().map { clz ->
-                    val info = commandService.getCommand(clz) ?: throw RuntimeException("Unknown command: ${clz.simpleName}")
+                    val info = commandService.getCommand(clz) ?: throw IllegalStateException("Unknown command: ${clz.simpleName}")
                     val module = moduleService.createModule(info)
                     resolveInjectedInputs(module)
                     module.setInput("sciView", sciView)

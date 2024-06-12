@@ -7,13 +7,15 @@ import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import org.scijava.widget.NumberWidget
 
+/**
+ * Inspector panel for [PointLight]s.
+ */
 @Plugin(type = Command::class, initializer = "initValues", visible = false)
 class LightProperties : InspectorInteractiveCommand() {
-    /* Light properties */
-
     @Parameter(label = "Intensity", style = NumberWidget.SPINNER_STYLE+ ",group:Lighting", stepSize = "0.1", callback = "updateNodeProperties")
     private var intensity = 0f
 
+    /** Updates this command fields with the node's current properties. */
     override fun updateCommandFields() {
         val node = currentSceneNode as? PointLight ?: return
 

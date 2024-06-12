@@ -8,6 +8,9 @@ import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import org.scijava.util.ColorRGB
 
+/**
+ * Inspector panel for [TextBoard] nodes.
+ */
 @Plugin(type = Command::class, initializer = "initValues", visible = false)
 class TextBoardProperties : InspectorInteractiveCommand() {
     /* TextBoard properties */
@@ -23,6 +26,7 @@ class TextBoardProperties : InspectorInteractiveCommand() {
     @Parameter(label = "Transparent Background", callback = "updateNodeProperties", style = "group:Text")
     private var transparentBackground = false
 
+    /** Updates this command fields with the node's current properties. */
     override fun updateCommandFields() {
         val node = currentSceneNode as? TextBoard ?: return
 

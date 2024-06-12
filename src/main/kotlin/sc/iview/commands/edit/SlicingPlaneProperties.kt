@@ -9,6 +9,9 @@ import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import org.scijava.ui.UIService
 
+/**
+ * Inspector panel for [SlicingPlane] nodes.
+ */
 @Plugin(type = Command::class, initializer = "initValues", visible = false)
 class SlicingPlaneProperties : InspectorInteractiveCommand() {
     @Parameter
@@ -21,6 +24,7 @@ class SlicingPlaneProperties : InspectorInteractiveCommand() {
     @Parameter(label = "Sliced volumes", callback = "updateNodeProperties", style = "group:Targets")
     private var slicedVolumes: VolumeSelectorWidget.VolumeSelection = VolumeSelectorWidget.VolumeSelection()
 
+    /** Updates this command fields with the node's current properties. */
     override fun updateCommandFields() {
         val node = currentSceneNode as? SlicingPlane ?: return
 

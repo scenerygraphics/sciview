@@ -47,21 +47,6 @@ import java.util.*
 /**
  * A command for interactively editing a node's properties.
  *
- *  * TODO: If the list of sceneNode changes while this dialog is open, it may
- * not be notified and thus, may cause strange behaviours. Furthermore,
- * refreshing the list of choises does not work. :(
- *  * Todo: Change the order of the property items. Scene node must be on top,
- * as the user selects here which object to manipulate.
- *  * Todo: As soon as object selection in Scenery itself works, the node
- * pulldown may be removed entirely.
- *
- * To add new properties you need to do a few things:
- * 1. Create a @Parameter for the variable and ensure the style has an appropriate group
- * Note: I believe the group relates to the class name, but I'm confused about where that happens.
- * 2. Add code to get the value from the node to updateCommandFields
- * 3. Add code to set the value of the node to updateNodeProperties
- *
- *
  * @author Robert Haase, Scientific Computing Facility, MPI-CBG Dresden
  * @author Curtis Rueden
  * @author Kyle Harrington
@@ -123,7 +108,9 @@ class BasicProperties : InspectorInteractiveCommand() {
     /**
      * Nothing happens here, as cancelling the dialog is not possible.
      */
-    override fun cancel() {}
+    override fun cancel() {
+        // noop
+    }
 
     private fun rebuildSceneObjectChoiceList() {
         fieldsUpdating.withLock {
