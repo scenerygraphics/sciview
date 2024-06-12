@@ -116,55 +116,7 @@ class SwingGroupingInputHarvester : SwingInputHarvester() {
                 labelPanel.component.layout =
                     MigLayout("fillx,wrap 2, gap 2 2, ins 4 4".maybeActivateDebug(uiDebug), "[right]5[fill,grow]")
 
-                label.addMouseListener(object : MouseListener {
-                    /**
-                     * Invoked when the mouse button has been clicked (pressed
-                     * and released) on a component.
-                     * @param e the event to be processed
-                     */
-                    override fun mouseClicked(e: MouseEvent?) {
-                        if(e?.clickCount == 1) {
-                            panel.component.isVisible = !panel.component.isVisible
-
-                            if(panel.component.isVisible) {
-                                label.text = "<html><strong>▼ ${group.key}</strong></html>"
-                            } else {
-                                label.text =
-                                    """<html><strong><span style="color: gray;">▶</span> ${group.key}</strong></html>"""
-                            }
-                            inputPanel.component.revalidate()
-                        }
-                    }
-
-                    /**
-                     * Invoked when a mouse button has been pressed on a component.
-                     * @param e the event to be processed
-                     */
-                    override fun mousePressed(e: MouseEvent?) {
-                    }
-
-                    /**
-                     * Invoked when a mouse button has been released on a component.
-                     * @param e the event to be processed
-                     */
-                    override fun mouseReleased(e: MouseEvent?) {
-                    }
-
-                    /**
-                     * Invoked when the mouse enters a component.
-                     * @param e the event to be processed
-                     */
-                    override fun mouseEntered(e: MouseEvent?) {
-                    }
-
-                    /**
-                     * Invoked when the mouse exits a component.
-                     * @param e the event to be processed
-                     */
-                    override fun mouseExited(e: MouseEvent?) {
-                    }
-
-                })
+                label.addMouseListener(SwingGroupingLabelListener(group.key, panel, inputPanel, label))
 
                 labelPanel.component.add(label)
                 inputPanel.component.add(labelPanel.component, "wrap")
