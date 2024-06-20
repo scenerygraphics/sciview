@@ -6,11 +6,6 @@ import bdv.spimdata.SpimDataMinimal;
 import bdv.spimdata.WrapBasicImgLoader;
 import bdv.tools.brightness.ConverterSetup;
 import bdv.viewer.SourceAndConverter;
-import bvv.core.VolumeViewerPanel;
-import bvv.vistools.BvvFunctions;
-import bvv.vistools.BvvOptions;
-import bvv.vistools.BvvStackSource;
-import ij.process.LUT;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
@@ -33,10 +28,10 @@ public class MultiResolutionMandelbulb {
 
     public static void main(String[] args) throws Exception {
         // Define max scale level
-        int maxScale = 18; // Example maxScale value
+        int maxScale = 4; // Adjust this value to test rendering at different scales
 
         // Desired grid size at the finest resolution level
-        final int desiredFinestGridSize = 2; // Define as per your requirement
+        final int desiredFinestGridSize = 8; // Define as per your requirement
 
         // Compute the base grid size
         final int baseGridSize = desiredFinestGridSize * (int) Math.pow(2, maxScale - 1);
@@ -44,13 +39,19 @@ public class MultiResolutionMandelbulb {
         // Generate resolutions and corresponding grid sizes
         final double[][] resolutions = new double[maxScale][3];
         final int[] gridSizes = new int[maxScale];
+
         for (int i = 0; i < maxScale; i++) {
             double scaleFactor = Math.pow(2, i);
-            resolutions[i][0] = scaleFactor;
-            resolutions[i][1] = scaleFactor;
-            resolutions[i][2] = scaleFactor;
+
+            // Ensure resolution stays above a minimum value (0.5) to avoid zero scales
+            resolutions[i][0] = Math.max(1.0 / scaleFactor, 0.5);
+            resolutions[i][1] = Math.max(1.0 / scaleFactor, 0.5);
+            resolutions[i][2] = Math.max(1.0 / scaleFactor, 0.5);
+
             gridSizes[i] = baseGridSize / (int) scaleFactor;
-            System.out.println("Grid size for " + i + " grid size: " + gridSizes[i]);
+
+            System.out.println("Grid size for level " + i + ": " + gridSizes[i]);
+            System.out.println("Resolution for level " + i + ": " + resolutions[i][0] + " / " + resolutions[i][1] + " / " + resolutions[i][2]);
         }
 
         MandelbulbCacheArrayLoader.gridSizes = gridSizes;
@@ -84,10 +85,8 @@ public class MultiResolutionMandelbulb {
                 final int timepointId = timepoint.getId();
                 for (int level = 0; level < resolutions.length; level++) {
                     AffineTransform3D transform = new AffineTransform3D();
-                    transform.set(
-                            voxelSize[0] * resolutions[level][0], 0, 0, 0,
-                            0, voxelSize[1] * resolutions[level][1], 0, 0,
-                            0, 0, voxelSize[2] * resolutions[level][2], 0);
+                    // Apply level-specific resolutions
+                    transform.scale(1 / resolutions[level][0], 1 / resolutions[level][1], 1 / resolutions[level][2]);
                     registrations.put(new ViewId(timepointId, setupId), new ViewRegistration(timepointId, setupId, transform));
                 }
             }
@@ -101,15 +100,14 @@ public class MultiResolutionMandelbulb {
         ArrayList<ConverterSetup> converterSetups = getConverterSetups(sources);
 
         // Define voxel dimensions as a float array
-        float[] voxelDimensions = {1.0f, 1.0f, 1.0f};
+        float[] voxelDimensions = {10000.0f, 10000.0f, 10000.0f};
 
         @SuppressWarnings("unchecked")
         List<SourceAndConverter<RealType<?>>> typedSources = (List<SourceAndConverter<RealType<?>>>) (List<?>) sources;
 
-
         // Create and add volume to SciView
         SciView sciview = SciView.create();
-        sciview.addSpimVolume(typedSources, converterSetups, timepoints.size(), "Mandelbulb Volume", voxelDimensions);
+        sciview.addSpimVolume(spimData, "test", voxelDimensions);
     }
 
     private static List<SourceAndConverter<?>> getSourceAndConverters(SpimDataMinimal spimData) {
@@ -132,7 +130,6 @@ public class MultiResolutionMandelbulb {
 
                 @Override
                 public void setColor(ARGBType color) {
-
                 }
 
                 @Override
@@ -155,7 +152,6 @@ public class MultiResolutionMandelbulb {
                     return null;
                 }
 
-
                 @Override
                 public Listeners<SetupChangeListener> setupChangeListeners() {
                     return null;
@@ -165,9 +161,9 @@ public class MultiResolutionMandelbulb {
                 public int getSetupId() {
                     return 0; // Implement unique ID retrieval logic
                 }
-
             });
         }
         return converterSetups;
     }
+
 }

@@ -1491,10 +1491,13 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     fun addSpimVolume(
             spimData: SpimDataMinimal,
             name: String,
-            voxelDimensions: FloatArray,
-            block: Volume.() -> Unit = {},
-            colormapName: String = "Fire.lut"
+            voxelDimensions: FloatArray
     ): Volume? {
+
+        val block: Volume.() -> Unit = {}
+
+        val colormapName = "Fire.lut"
+
         // Create the volume using the companion object's fromSpimData method
         val volume = Volume.fromSpimData(spimData, hub, VolumeViewerOptions())
 

@@ -23,8 +23,7 @@ import net.imglib2.util.Intervals;
 
 import java.util.HashMap;
 
-public class MandelbulbImgLoader implements ViewerImgLoader
-{
+public class MandelbulbImgLoader implements ViewerImgLoader {
     private final int[] gridSizes;
     private final int maxIter;
     private final int order;
@@ -35,8 +34,7 @@ public class MandelbulbImgLoader implements ViewerImgLoader
     private CacheArrayLoader<VolatileShortArray> loader;
     private final HashMap<Integer, SetupImgLoader> setupImgLoaders;
 
-    public MandelbulbImgLoader(int[] gridSizes, int maxIter, int order)
-    {
+    public MandelbulbImgLoader(int[] gridSizes, int maxIter, int order) {
         this.gridSizes = gridSizes;
         this.maxIter = maxIter;
         this.order = order;
@@ -44,20 +42,26 @@ public class MandelbulbImgLoader implements ViewerImgLoader
         initialize();
     }
 
-    private void initialize()
-    {
+    private void initialize() {
         // Set up mipmap dimensions and info
         mipmapDimensions = new long[gridSizes.length][];
         final double[][] resolutions = new double[gridSizes.length][];
         final int[][] subdivisions = new int[gridSizes.length][];
         final AffineTransform3D[] transforms = new AffineTransform3D[gridSizes.length];
 
-        for (int level = 0; level < gridSizes.length; level++)
-        {
+        for (int level = 0; level < gridSizes.length; level++) {
             int gridSize = gridSizes[level];
             mipmapDimensions[level] = new long[]{gridSize, gridSize, gridSize};
-            resolutions[level] = new double[]{1.0 / (1 << level), 1.0 / (1 << level), 1.0 / (1 << level)};
+
+            // Ensure resolution stays above a minimum value (0.5) to avoid zero scales
+            resolutions[level] = new double[]{
+                    Math.max(1.0 / (1 << level), 0.5),
+                    Math.max(1.0 / (1 << level), 0.5),
+                    Math.max(1.0 / (1 << level), 0.5)
+            };
+
             subdivisions[level] = new int[]{16, 16, 16}; // arbitrary cell size
+
             transforms[level] = new AffineTransform3D();
             transforms[level].scale(resolutions[level][0], resolutions[level][1], resolutions[level][2]);
         }
@@ -66,14 +70,12 @@ public class MandelbulbImgLoader implements ViewerImgLoader
         loader = new MandelbulbCacheArrayLoader(maxIter, order);
         cache = new VolatileGlobalCellCache(gridSizes.length, 1);
 
-        for (int setupId = 0; setupId < 1; setupId++)
-        {
+        for (int setupId = 0; setupId < 1; setupId++) {
             setupImgLoaders.put(setupId, new SetupImgLoader(setupId));
         }
     }
 
-    protected <T extends NativeType<T>> VolatileCachedCellImg<T, VolatileShortArray> prepareCachedImage(final ViewLevelId id, final LoadingStrategy loadingStrategy, final T type)
-    {
+    protected <T extends NativeType<T>> VolatileCachedCellImg<T, VolatileShortArray> prepareCachedImage(final ViewLevelId id, final LoadingStrategy loadingStrategy, final T type) {
         final int level = id.getLevel();
         final long[] dimensions = mipmapDimensions[level];
         final int[] cellDimensions = mipmapInfo.getSubdivisions()[level];
@@ -85,62 +87,52 @@ public class MandelbulbImgLoader implements ViewerImgLoader
     }
 
     @Override
-    public CacheControl getCacheControl()
-    {
+    public CacheControl getCacheControl() {
         return cache;
     }
 
     @Override
-    public SetupImgLoader getSetupImgLoader(final int setupId)
-    {
+    public SetupImgLoader getSetupImgLoader(final int setupId) {
         return setupImgLoaders.get(setupId);
     }
 
-    public class SetupImgLoader extends AbstractViewerSetupImgLoader<UnsignedShortType, VolatileUnsignedShortType>
-    {
+    public class SetupImgLoader extends AbstractViewerSetupImgLoader<UnsignedShortType, VolatileUnsignedShortType> {
         private final int setupId;
 
-        protected SetupImgLoader(final int setupId)
-        {
+        protected SetupImgLoader(final int setupId) {
             super(new UnsignedShortType(), new VolatileUnsignedShortType());
             this.setupId = setupId;
         }
 
         @Override
-        public RandomAccessibleInterval<UnsignedShortType> getImage(final int timepointId, final int level, final ImgLoaderHint... hints)
-        {
+        public RandomAccessibleInterval<UnsignedShortType> getImage(final int timepointId, final int level, final ImgLoaderHint... hints) {
             final ViewLevelId id = new ViewLevelId(timepointId, setupId, level);
             return prepareCachedImage(id, LoadingStrategy.BLOCKING, new UnsignedShortType());
         }
 
         @Override
-        public RandomAccessibleInterval<VolatileUnsignedShortType> getVolatileImage(final int timepointId, final int level, final ImgLoaderHint... hints)
-        {
+        public RandomAccessibleInterval<VolatileUnsignedShortType> getVolatileImage(final int timepointId, final int level, final ImgLoaderHint... hints) {
             final ViewLevelId id = new ViewLevelId(timepointId, setupId, level);
             return prepareCachedImage(id, LoadingStrategy.BUDGETED, new VolatileUnsignedShortType());
         }
 
         @Override
-        public double[][] getMipmapResolutions()
-        {
+        public double[][] getMipmapResolutions() {
             return mipmapInfo.getResolutions();
         }
 
         @Override
-        public AffineTransform3D[] getMipmapTransforms()
-        {
+        public AffineTransform3D[] getMipmapTransforms() {
             return mipmapInfo.getTransforms();
         }
 
         @Override
-        public int numMipmapLevels()
-        {
+        public int numMipmapLevels() {
             return mipmapInfo.getNumLevels();
         }
     }
 
-    public Dimensions dimensions()
-    {
+    public Dimensions dimensions() {
         // Return dimensions of the highest resolution
         return Intervals.createMinSize(mipmapDimensions[0][0], mipmapDimensions[0][1], mipmapDimensions[0][2]);
     }
