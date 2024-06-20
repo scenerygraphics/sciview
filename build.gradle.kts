@@ -123,6 +123,11 @@ dependencies {
     implementation("sc.fiji:spim_data")
     implementation("org.slf4j:slf4j-simple")
 
+    implementation("software.amazon.awssdk:s3:2.20.1")
+    implementation("org.apache.commons:commons-compress:1.21")
+    // implementation("com.scalableminds:blosc-java:0.1-1.21.4")
+    implementation("org.lasersonlab:jblosc:1.0.1")
+
     implementation(platform(kotlin("bom")))
     implementation(kotlin("stdlib-jdk8"))
     testImplementation(kotlin("test-junit"))
