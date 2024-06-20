@@ -28,7 +28,7 @@ public class MultiResolutionMandelbulb {
 
     public static void main(String[] args) throws Exception {
         // Define max scale level
-        int maxScale = 4; // Adjust this value to test rendering at different scales
+        int maxScale = 6; // Adjust this value to test rendering at different scales
 
         // Desired grid size at the finest resolution level
         final int desiredFinestGridSize = 8; // Define as per your requirement
@@ -44,9 +44,9 @@ public class MultiResolutionMandelbulb {
             double scaleFactor = Math.pow(2, i);
 
             // Ensure resolution stays above a minimum value (0.5) to avoid zero scales
-            resolutions[i][0] = Math.max(1.0 / scaleFactor, 0.5);
-            resolutions[i][1] = Math.max(1.0 / scaleFactor, 0.5);
-            resolutions[i][2] = Math.max(1.0 / scaleFactor, 0.5);
+            resolutions[i][0] = 1.0 / scaleFactor;
+            resolutions[i][1] = 1.0 / scaleFactor;
+            resolutions[i][2] = 1.0 / scaleFactor;
 
             gridSizes[i] = baseGridSize / (int) scaleFactor;
 
@@ -100,7 +100,7 @@ public class MultiResolutionMandelbulb {
         ArrayList<ConverterSetup> converterSetups = getConverterSetups(sources);
 
         // Define voxel dimensions as a float array
-        float[] voxelDimensions = {10000.0f, 10000.0f, 10000.0f};
+        float[] voxelDimensions = {1000.0f, 1000.0f, 1000.0f};
 
         @SuppressWarnings("unchecked")
         List<SourceAndConverter<RealType<?>>> typedSources = (List<SourceAndConverter<RealType<?>>>) (List<?>) sources;

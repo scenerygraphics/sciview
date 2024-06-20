@@ -51,8 +51,9 @@ import sc.iview.commands.MenuWeights.EDIT_ADD_POINTLIGHT
 )
 class AddPointLight : Command {
     @Parameter
-    private val sciView: SciView? = null
+    private lateinit var sciView: SciView
+
     override fun run() {
-        sciView!!.addPointLight()
+        sciView.addPointLight()
     }
 }

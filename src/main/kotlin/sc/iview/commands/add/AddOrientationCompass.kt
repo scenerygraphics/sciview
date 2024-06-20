@@ -64,26 +64,25 @@ class AddOrientationCompass : Command {
     private lateinit var sciView: SciView
 
     @Parameter
-    private val axisLength = 0.1f
+    private var axisLength = 0.1f
 
     @Parameter
-    private val AXESBARRADIUS = 0.001f
+    private var AXESBARRADIUS = 0.001f
 
-    @Parameter
-    private val xColor = Vector3f(1f, 0f, 0f)
+    private var xColor = Vector3f(1f, 0f, 0f)
 
-    @Parameter
-    private val yColor = Vector3f(0f, 1f, 0f)
-
-    @Parameter
-    private val zColor = Vector3f(0f, 0f, 1f)
+    private var yColor = Vector3f(0f, 1f, 0f)
+    
+    private var zColor = Vector3f(0f, 0f, 1f)
     private fun makeAxis(axisLength: Float, angleX: Float, angleY: Float, angleZ: Float, color: Vector3f): Node {
         val axisNode = Cylinder(AXESBARRADIUS, axisLength, 4)
         axisNode.name = "compass axis: X"
         axisNode.spatial().rotation = Quaternionf().rotateXYZ(angleX, angleY, angleZ)
         axisNode.ifMaterial {
             diffuse.set(color)
-            depthTest = DepthTest.Always
+            depthTest = true
+            depthOp = DepthTest.Always
+            depthWrite = true
             blending.transparent = true
         }
         val axisCap = Icosphere(AXESBARRADIUS, 2)
@@ -91,7 +90,9 @@ class AddOrientationCompass : Command {
             position = Vector3f(0.0f, axisLength, 0.0f)
         }
         axisCap.material().diffuse.set(color)
-        axisCap.material().depthTest = DepthTest.Always
+        axisCap.material().depthTest = true
+        axisCap.material().depthOp = DepthTest.Always
+        axisCap.material().depthWrite = true
         axisCap.material().blending.transparent = true
         axisNode.addChild(axisCap)
         return axisNode
