@@ -230,7 +230,21 @@ class SwingNodePropertyEditor(private val sciView: SciView, val nodeSpecificProp
                     } else {
                         hideShow.text = "Show"
                     }
-                    hideShow.addActionListener { _: ActionEvent? -> obj.node.visible = !obj.node.visible }
+                    hideShow.addActionListener { _: ActionEvent? ->
+                        val newVisibility = !obj.node.visible
+                        obj.node.visible = newVisibility
+
+                        // Notify SciView about the visibility change
+                        sciView.requestPropEditorRefresh(obj.node)
+
+                        // Publish a NodeChangedEvent
+                        sciView.eventService.publish(NodeChangedEvent(obj.node))
+
+                        // If the node is now invisible, deselect it
+                        if (!newVisibility) {
+                            sciView.setActiveNode(null)
+                        }
+                    }
                     popup.add(hideShow)
                     val removeItem = JMenuItem("Remove")
                     removeItem.foreground = Color.RED
@@ -244,7 +258,20 @@ class SwingNodePropertyEditor(private val sciView: SciView, val nodeSpecificProp
                         if (n != null) {
                             val node = n.node
                             if (node != null && node !is Camera && node !is Scene) {
-                                node.visible = !node.visible
+                                val newVisibility = !node.visible
+                                node.visible = newVisibility
+
+                                // Notify SciView about the visibility change
+                                sciView.requestPropEditorRefresh(node)
+
+                                // Publish a NodeChangedEvent
+                                sciView.eventService.publish(NodeChangedEvent(node))
+
+                                // If the node is now invisible, deselect it
+                                if (!newVisibility) {
+                                    sciView.setActiveNode(null)
+                                }
+
                                 tree.repaint()
                             }
                         }
@@ -279,7 +306,7 @@ class SwingNodePropertyEditor(private val sciView: SciView, val nodeSpecificProp
 
     /** Generates a properties panel for the given node.  */
     fun updateProperties(sceneNode: Node?, rebuild: Boolean = false) {
-        if (sceneNode == null) {
+        if (sceneNode == null || !sceneNode.visible) {
             try {
                 if (updateLock.tryLock() || updateLock.tryLock(200, TimeUnit.MILLISECONDS)) {
                     updatePropertiesPanel(null)
