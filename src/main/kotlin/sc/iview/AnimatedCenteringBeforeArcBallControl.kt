@@ -82,7 +82,13 @@ class AnimatedCenteringBeforeArcBallControl(val initAction: (Int, Int) -> Any, v
             node.ifSpatial {
                 distance = (target.invoke() - position).length()
                 node.target = target.invoke()
-                rotation = pitchQ.mul(rotation).mul(yawQ).normalize()
+                val currentRotation = rotation
+
+                // Rotate pitch first, then yaw to ensure proper axis alignment
+                rotation = pitchQ.mul(currentRotation).normalize()
+                rotation = yawQ.mul(rotation).normalize()
+
+                // Update position based on new rotation
                 position = target.invoke() + node.forward * distance * (-1.0f)
             }
 
