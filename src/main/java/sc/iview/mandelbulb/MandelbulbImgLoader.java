@@ -11,6 +11,7 @@ import bdv.img.hdf5.ViewLevelId;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHint;
 import net.imglib2.Dimensions;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.cache.img.ReadOnlyCachedCellImgFactory;
 import net.imglib2.cache.volatiles.CacheHints;
 import net.imglib2.cache.volatiles.LoadingStrategy;
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileShortArray;
@@ -22,6 +23,8 @@ import net.imglib2.type.volatiles.VolatileUnsignedShortType;
 import net.imglib2.util.Intervals;
 
 import java.util.HashMap;
+
+import static sc.iview.mandelbulb.MandelbulbCacheArrayLoader.baseGridSize;
 
 public class MandelbulbImgLoader implements ViewerImgLoader {
     private final int[] gridSizes;

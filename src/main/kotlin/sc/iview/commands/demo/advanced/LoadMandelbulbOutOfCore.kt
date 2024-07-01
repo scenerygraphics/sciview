@@ -28,19 +28,13 @@
  */
 package sc.iview.commands.demo.advanced
 
-import bdv.util.AxisOrder
 import bdv.util.volatiles.VolatileViews
-import graphics.scenery.*
-import graphics.scenery.volumes.*
-import net.imglib2.*
-import net.imglib2.img.array.ArrayImgs
-import net.imglib2.type.numeric.integer.UnsignedShortType
+import graphics.scenery.PointLight
+import graphics.scenery.volumes.TransferFunction
+import graphics.scenery.volumes.Volume
+import net.imglib2.RandomAccessibleInterval
 import net.imglib2.type.volatiles.VolatileUnsignedShortType
 import net.imglib2.view.Views
-import org.janelia.saalfeldlab.n5.GzipCompression
-import org.janelia.saalfeldlab.n5.N5FSReader
-import org.janelia.saalfeldlab.n5.N5FSWriter
-import org.janelia.saalfeldlab.n5.imglib2.N5Utils
 import org.joml.Vector3f
 import org.scijava.command.Command
 import org.scijava.command.CommandService
@@ -50,8 +44,8 @@ import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
-import sc.iview.mandelbulb.MandelbulbCacheArrayLoader.*
-import java.nio.file.Files
+import sc.iview.mandelbulb.MandelbulbCacheArrayLoader
+import sc.iview.mandelbulb.MandelbulbImgLoader
 
 @Plugin(type = Command::class,
         label = "Load Mandelbulb Out-of-Core demo",
@@ -67,34 +61,66 @@ class LoadMandelbulbOutOfCore : Command {
     private lateinit var log: LogService
 
     override fun run() {
-        gridSizes = intArrayOf(64, 128, 256, 512) // Example grid sizes for different levels
-        baseGridSize = 64 // Example base grid size
-        desiredFinestGridSize = 512 // Example desired finest grid size
-
-        val level = 2 // Example level
         val maxIter = 32 // Example maximum iterations
         val order = 8 // Example Mandelbulb order
 
+
+        // Define max scale level
+        val maxScale = 7 // Adjust this value to test rendering at different scales
+
+
+        // Desired grid size at the finest resolution level
+
+        // Desired grid size at the finest resolution level
+        val desiredFinestGridSize = 8 // Define as per your requirement
+
+
+        // Compute the base grid size
+
+        // Compute the base grid size
+        val baseGridSize = desiredFinestGridSize * Math.pow(2.0, (maxScale - 1).toDouble()).toInt()
+
+        // Generate resolutions and corresponding grid sizes
+
+        // Generate resolutions and corresponding grid sizes
+        val resolutions = Array(maxScale) { DoubleArray(3) }
+        val gridSizes = IntArray(maxScale)
+
+        for (i in 0 until maxScale) {
+            val scaleFactor = Math.pow(2.0, i.toDouble())
+
+            // Ensure resolution stays above a minimum value (0.5) to avoid zero scales
+            resolutions[i][0] = 1.0 / scaleFactor
+            resolutions[i][1] = 1.0 / scaleFactor
+            resolutions[i][2] = 1.0 / scaleFactor
+            gridSizes[i] = baseGridSize / scaleFactor.toInt()
+            println("Grid size for level " + i + ": " + gridSizes[i])
+            println("Resolution for level " + i + ": " + resolutions[i][0] + " / " + resolutions[i][1] + " / " + resolutions[i][2])
+        }
+
+        MandelbulbCacheArrayLoader.gridSizes = gridSizes
+        MandelbulbCacheArrayLoader.baseGridSize = baseGridSize
+        MandelbulbCacheArrayLoader.desiredFinestGridSize = desiredFinestGridSize
+
         log.info("Generating mandelbulb")
-        val img = generateFullMandelbulb(level, maxIter, order)
+
+        val imgLoader = MandelbulbImgLoader(gridSizes, maxIter, order)
+
+        // val img = imgLoader.getSetupImgLoader(0).getImage(0, maxScale - 1)
+        val img = imgLoader.getSetupImgLoader(0).getVolatileImage(0, 0)
+
         log.info("Generated")
 
-        val datasetName = "mandelbulbDataset"
-        val n5path = Files.createTempDirectory("scenery-mandelbulb-n5")
-        val n5 = N5FSWriter(n5path.toString())
-        N5Utils.save(img, n5, datasetName, intArrayOf(img.dimension(0).toInt(), img.dimension(1).toInt(), img.dimension(2).toInt()), GzipCompression())
-        log.info("Dataset saved as N5")
-
-        val ooc: RandomAccessibleInterval<UnsignedShortType> = N5Utils.openVolatile(N5FSReader(n5path.toString()), datasetName)
-        val wrapped = VolatileViews.wrapAsVolatile(ooc)
+        // val wrapped = VolatileViews.wrapAsVolatile(img)
+        // val wrapped = VolatileViews.wrapAsVolatile(Views.extendZero(img))
+        val wrapped = img
 
         @Suppress("UNCHECKED_CAST")
         val volume = Volume.fromRAI(
                 wrapped as RandomAccessibleInterval<VolatileUnsignedShortType>,
                 VolatileUnsignedShortType(),
-                AxisOrder.DEFAULT,
-                "Mandelbulb OOC",
-                sciview.hub
+                name ="Mandelbulb OOC",
+                hub = sciview.hub
         )
         volume.converterSetups.first().setDisplayRange(25.0, 512.0)
         volume.transferFunction = TransferFunction.ramp(0.01f, 0.03f)

@@ -192,7 +192,7 @@ class OpenN5 : DynamicCommand() {
                     )
                 )
             } else {
-                N5Opener.openN5(sciView, file.absolutePath)
+                //N5Opener.openN5(sciView, file.absolutePath)
             }
         } catch(exc: IOException) {
             log.error(exc)
