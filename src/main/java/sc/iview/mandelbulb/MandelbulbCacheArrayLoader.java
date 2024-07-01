@@ -1,9 +1,16 @@
 package sc.iview.mandelbulb;
 
 import bdv.img.cache.CacheArrayLoader;
+import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.Img;
+import net.imglib2.img.array.ArrayImg;
+import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileShortArray;
+import net.imglib2.img.cell.CellGrid;
+import net.imglib2.img.cell.CellImg;
+import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.view.Views;
 
@@ -99,5 +106,31 @@ public class MandelbulbCacheArrayLoader implements CacheArrayLoader<VolatileShor
             iter++;
         }
         return iter;
+    }
+
+    public static ArrayImg<UnsignedShortType, ?> generateFullMandelbulb(int level, int maxIter, int order)
+    {
+        long[] dimensions = { (long) gridSizes[level], (long) gridSizes[level], (long) gridSizes[level] };
+
+        ArrayImgFactory<UnsignedShortType> factory = new ArrayImgFactory<>(new UnsignedShortType());
+        ArrayImg<UnsignedShortType, ?> img = factory.create(dimensions);
+
+        RandomAccess<UnsignedShortType> imgRA = img.randomAccess();
+        for (long z = 0; z < dimensions[2]; z++) {
+            for (long y = 0; y < dimensions[1]; y++) {
+                for (long x = 0; x < dimensions[0]; x++) {
+                    double[] coordinates = new double[]{
+                            ((double)x / dimensions[0] * 2 - 1),
+                            ((double)y / dimensions[1] * 2 - 1),
+                            ((double)z / dimensions[2] * 2 - 1)
+                    };
+                    int iterations = mandelbulbIter(coordinates, maxIter, order);
+                    imgRA.setPosition(new long[]{x, y, z});
+                    imgRA.get().set((int) (iterations * 65535.0 / maxIter));
+                }
+            }
+        }
+
+        return img;
     }
 }
