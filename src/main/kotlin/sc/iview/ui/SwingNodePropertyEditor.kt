@@ -29,14 +29,8 @@
 package sc.iview.ui
 
 import com.intellij.ui.components.JBPanel
-import graphics.scenery.Camera
-import graphics.scenery.Node
-import graphics.scenery.Scene
-import graphics.scenery.Settings
-import graphics.scenery.volumes.TransferFunctionEditor
-import graphics.scenery.volumes.Volume
+import graphics.scenery.*
 import net.miginfocom.swing.MigLayout
-import org.jfree.chart.ChartPanel
 import org.joml.Quaternionf
 import org.joml.Vector3f
 import org.scijava.Context
@@ -51,7 +45,7 @@ import org.scijava.ui.swing.widget.SwingInputPanel
 import org.scijava.util.DebugUtils
 import org.scijava.widget.UIComponent
 import sc.iview.SciView
-import sc.iview.commands.edit.Properties
+import sc.iview.commands.edit.*
 import sc.iview.commands.help.Help
 import sc.iview.event.NodeActivatedEvent
 import sc.iview.event.NodeAddedEvent
@@ -92,7 +86,7 @@ import kotlin.concurrent.thread
  * @author Curtis Rueden
  * @author Ulrik Guenther
  */
-class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel> {
+class SwingNodePropertyEditor(private val sciView: SciView, val nodeSpecificPropertyPanels: ArrayList<InspectorInteractiveCommand.UsageCondition>) : UIComponent<JPanel> {
     @Parameter
     private lateinit var pluginService: PluginService
 
@@ -236,7 +230,21 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                     } else {
                         hideShow.text = "Show"
                     }
-                    hideShow.addActionListener { _: ActionEvent? -> obj.node.visible = !obj.node.visible }
+                    hideShow.addActionListener { _: ActionEvent? ->
+                        val newVisibility = !obj.node.visible
+                        obj.node.visible = newVisibility
+
+                        // Notify SciView about the visibility change
+                        sciView.requestPropEditorRefresh(obj.node)
+
+                        // Publish a NodeChangedEvent
+                        sciView.eventService.publish(NodeChangedEvent(obj.node))
+
+                        // If the node is now invisible, deselect it
+                        if (!newVisibility) {
+                            sciView.setActiveNode(null)
+                        }
+                    }
                     popup.add(hideShow)
                     val removeItem = JMenuItem("Remove")
                     removeItem.foreground = Color.RED
@@ -250,7 +258,20 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
                         if (n != null) {
                             val node = n.node
                             if (node != null && node !is Camera && node !is Scene) {
-                                node.visible = !node.visible
+                                val newVisibility = !node.visible
+                                node.visible = newVisibility
+
+                                // Notify SciView about the visibility change
+                                sciView.requestPropEditorRefresh(node)
+
+                                // Publish a NodeChangedEvent
+                                sciView.eventService.publish(NodeChangedEvent(node))
+
+                                // If the node is now invisible, deselect it
+                                if (!newVisibility) {
+                                    sciView.setActiveNode(null)
+                                }
+
                                 tree.repaint()
                             }
                         }
@@ -278,13 +299,14 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
 
     var currentNode: Node? = null
         private set
-    private var currentProperties: Properties? = null
+    private var currentProperties = ArrayList<InspectorInteractiveCommand>()
     private lateinit var inputPanel: SwingInputPanel
     private val updateLock = ReentrantLock()
 
+
     /** Generates a properties panel for the given node.  */
     fun updateProperties(sceneNode: Node?, rebuild: Boolean = false) {
-        if (sceneNode == null) {
+        if (sceneNode == null || !sceneNode.visible) {
             try {
                 if (updateLock.tryLock() || updateLock.tryLock(200, TimeUnit.MILLISECONDS)) {
                     updatePropertiesPanel(null)
@@ -297,38 +319,48 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
         }
         try {
             if (updateLock.tryLock() || updateLock.tryLock(200, TimeUnit.MILLISECONDS)) {
-                if (!rebuild && currentNode === sceneNode && currentProperties != null) {
-                    currentProperties!!.updateCommandFields()
+                if (!rebuild && currentNode === sceneNode && currentProperties.isNotEmpty()) {
+                    currentProperties.forEach { it.updateCommandFields() }
                     inputPanel.refresh()
                     updateLock.unlock()
                     return
                 }
                 currentNode = sceneNode
+                currentProperties.clear()
                 // Prepare the Properties command module instance.
-                val info = commandService.getCommand(Properties::class.java)
-                val module = moduleService.createModule(info)
-                resolveInjectedInputs(module)
-                module.setInput("sciView", sciView)
-                module.setInput("sceneNode", sceneNode)
-                module.resolveInput("sciView")
-                module.resolveInput("sceneNode")
-                val p = module.delegateObject as Properties
-                currentProperties = p
-                p.setSceneNode(sceneNode)
+                val classes = nodeSpecificPropertyPanels
+                    .filter { c -> c.condition.invoke(sceneNode) == true }
+                    .map { it.commandClass } + BasicProperties::class.java
 
-                val additionalUIs = sceneNode.metadata
-                    .filter { it.key.startsWith("sciview-inspector-") }
-                    .filter { it.value as? CustomPropertyUI != null }
+                // we reverse here, so BasicProperties appears first
+                val modules = classes.reversed().map { clz ->
+                    val info = commandService.getCommand(clz) ?: throw IllegalStateException("Unknown command: ${clz.simpleName}")
+                    val module = moduleService.createModule(info)
+                    resolveInjectedInputs(module)
+                    module.setInput("sciView", sciView)
+                    module.setInput("sceneNode", sceneNode)
+                    module.resolveInput("sciView")
+                    module.resolveInput("sceneNode")
+                    val p = module.delegateObject as InspectorInteractiveCommand
+                    currentProperties.add(p)
+                    p.setSceneNode(sceneNode)
 
-                @Suppress("UNCHECKED_CAST")
-                additionalUIs.forEach { (name, value) ->
-                    val ui = value as CustomPropertyUI
-                    log.info("Additional UI requested by $name, module ${ui.module.info.name}")
+                    val additionalUIs = sceneNode.metadata
+                        .filter { it.key.startsWith("sciview-inspector-") }
+                        .filter { it.value as? CustomPropertyUI != null }
 
-                    for (moduleItem in ui.getMutableInputs()) {
-                        log.info("${moduleItem.name}/${moduleItem.label} added, based on ${ui.module}")
-                        p.addInput(moduleItem, ui.module)
+                    @Suppress("UNCHECKED_CAST")
+                    additionalUIs.forEach { (name, value) ->
+                        val ui = value as CustomPropertyUI
+                        log.info("Additional UI requested by $name, module ${ui.module.info.name}")
+
+                        for(moduleItem in ui.getMutableInputs()) {
+                            log.info("${moduleItem.name}/${moduleItem.label} added, based on ${ui.module}")
+                            p.addInput(moduleItem, ui.module)
+                        }
                     }
+
+                    module
                 }
 
                 // Prepare the SwingInputHarvester.
@@ -353,20 +385,22 @@ class SwingNodePropertyEditor(private val sciView: SciView) : UIComponent<JPanel
 
                 // Build the panel.
                 try {
-                    harvester.buildPanel(inputPanel, module, uiDebug)
+                    harvester.buildPanel(inputPanel, modules, uiDebug)
                     updatePropertiesPanel(inputPanel.component)
 
-                    // TODO: This needs to move to a widget and be included in Properties
-                    if(sceneNode is Volume) {
-                        // This will find the group that corresponds to the expandable label. If the type of
-                        // the node is indeed Volume, this must exist.
-                        val parent = inputPanel.component.components.find { it.name == "group:Volume" } as? JPanel
-                        val tfe = TransferFunctionEditor(sceneNode)
-                        tfe.preferredSize = Dimension(300, 300)
-                        tfe.components.find { it is ChartPanel }?.minimumSize = Dimension(100, 200)
+                    // This checks all modules if they declare UI toolkit-specific extensions,
+                    // and invokes the Swing-related ones
+                    val extensions = modules
+                        .mapNotNull { it.delegateObject as? InspectorInteractiveCommand }
+                        .map {
+                            it.hasExtensions.filter { (k, _) -> k.startsWith("Swing") }.values.firstOrNull()
+                        }.mapNotNull {
+                            it?.getDeclaredConstructor()?.newInstance() as? SwingInspectorInteractiveCommandExtension
+                        }
 
-                        tfe.layout = MigLayout("fillx,flowy,insets 0 0 0 0".maybeActivateDebug(uiDebug), "[right,fill,grow]")
-                        parent?.add(tfe, "span 2, growx")
+                    extensions.forEach {
+                        log.info("Running extension ${it.javaClass.simpleName}")
+                        it.create(inputPanel, sceneNode, uiDebug)
                     }
                 } catch (exc: ModuleException) {
                     log.error(exc)

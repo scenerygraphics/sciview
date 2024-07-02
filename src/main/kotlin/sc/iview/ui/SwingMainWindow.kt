@@ -61,7 +61,7 @@ import kotlin.math.roundToInt
  * @author Kyle Harrington
  * @author Ulrik Guenther
  */
-class SwingMainWindow(val sciview: SciView) : MainWindow {
+class SwingMainWindow(val sciview: SciView) : MainWindow() {
     private val logger by lazyLogger()
     private var previousSidebarPosition = 0
 
@@ -118,7 +118,7 @@ class SwingMainWindow(val sciview: SciView) : MainWindow {
             glassPane.revalidate()
 
             frame.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
-            nodePropertyEditor = SwingNodePropertyEditor(sciview)
+            nodePropertyEditor = SwingNodePropertyEditor(sciview, nodeSpecificPropertyPanels)
 
             sceneryJPanel = SceneryJPanel()
             JPopupMenu.setDefaultLightWeightPopupEnabled(false)
