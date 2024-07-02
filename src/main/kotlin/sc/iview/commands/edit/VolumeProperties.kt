@@ -1,28 +1,21 @@
 package sc.iview.commands.edit
 
 import graphics.scenery.volumes.Volume
-import net.imagej.lut.LUTService
 import okio.withLock
 import org.scijava.ItemVisibility
 import org.scijava.command.Command
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
-import org.scijava.ui.UIService
 import org.scijava.widget.Button
 import org.scijava.widget.ChoiceWidget
 import org.scijava.widget.NumberWidget
 
+const val PLAY_PAUSE_BUTTON_NAME = "playPauseButton"
 /**
  * Inspector panel for [Volume] nodes.
  */
 @Plugin(type = Command::class, initializer = "updateCommandFields", visible = false)
 class VolumeProperties : InspectorInteractiveCommand() {
-    @Parameter
-    private lateinit var uiSrv: UIService
-
-    @Parameter
-    private lateinit var lutService: LUTService
-
     /* Basic properties */
 
     @Parameter(required = false, style = ChoiceWidget.LIST_BOX_STYLE, callback = "refreshSceneNodeInDialog")
@@ -62,6 +55,7 @@ class VolumeProperties : InspectorInteractiveCommand() {
     }
 
     /** Plays a volume time series, if the volume has more than one timepoint. */
+    @Suppress("unused")
     fun playTimeSeries() {
         if (currentSceneNode !is Volume) {
             return
@@ -85,7 +79,7 @@ class VolumeProperties : InspectorInteractiveCommand() {
                     }
                 }
             }
-            info.getMutableInput("playPauseButton", Button::class.java).label = "Pause"
+            info.getMutableInput(PLAY_PAUSE_BUTTON_NAME, Button::class.java).label = "Pause"
             timeSeriesPlayer!!.start()
         } else {
             try {
@@ -94,7 +88,7 @@ class VolumeProperties : InspectorInteractiveCommand() {
                 e.printStackTrace()
             }
             timeSeriesPlayer = null
-            info.getMutableInput("playPauseButton", Button::class.java).setLabel("Play")
+            info.getMutableInput(PLAY_PAUSE_BUTTON_NAME, Button::class.java).setLabel("Play")
         }
     }
 
@@ -126,7 +120,7 @@ class VolumeProperties : InspectorInteractiveCommand() {
                 // reverts to the Kotlin types and you'll end up with interesting error messages
                 // like "float does not match type float" ;-)
                 maybeRemoveInput("timepoint", java.lang.Integer::class.java)
-                maybeRemoveInput("playPauseButton", Button::class.java)
+                maybeRemoveInput(PLAY_PAUSE_BUTTON_NAME, Button::class.java)
                 maybeRemoveInput("playSpeed", java.lang.Integer::class.java)
             }
         }

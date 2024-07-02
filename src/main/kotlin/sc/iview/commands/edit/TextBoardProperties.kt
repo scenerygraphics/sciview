@@ -43,6 +43,8 @@ class TextBoardProperties : InspectorInteractiveCommand() {
                 node.backgroundColor.z().toInt() * 255
             )
             transparentBackground = node.transparent > 0
+
+            maybeRemoveInput("color", ColorRGB::class.java)
         }
     }
 

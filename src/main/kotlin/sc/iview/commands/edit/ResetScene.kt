@@ -45,9 +45,6 @@ import sc.iview.commands.MenuWeights.EDIT_RESET_SCENE
 @Plugin(type = Command::class, menuRoot = "SciView", menu = [Menu(label = "Edit", weight = EDIT), Menu(label = "Reset Scene", weight = EDIT_RESET_SCENE)])
 class ResetScene : Command {
     @Parameter
-    private lateinit var logService: LogService
-
-    @Parameter
     private lateinit var sciView: SciView
 
     override fun run() {

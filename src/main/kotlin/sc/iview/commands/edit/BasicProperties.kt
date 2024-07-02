@@ -30,19 +30,20 @@ package sc.iview.commands.edit
 
 import graphics.scenery.*
 import graphics.scenery.attribute.material.HasMaterial
-import net.imagej.lut.LUTService
 import okio.withLock
 import org.joml.Quaternionf
 import org.joml.Vector3f
 import org.scijava.command.Command
 import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
-import org.scijava.ui.UIService
 import org.scijava.util.ColorRGB
 import org.scijava.widget.ChoiceWidget
 import org.scijava.widget.NumberWidget
 import sc.iview.event.NodeChangedEvent
 import java.util.*
+
+const val GROUP_NAME_BASIC = "group:Basic Properties"
+const val GROUP_NAME_ROTATION = "group:Rotation & Scaling"
 
 /**
  * A command for interactively editing a node's properties.
@@ -54,52 +55,45 @@ import java.util.*
  */
 @Plugin(type = Command::class, initializer = "updateCommandFields", visible = false)
 class BasicProperties : InspectorInteractiveCommand() {
-    @Parameter
-    private lateinit var uiSrv: UIService
-
-    @Parameter
-    private lateinit var lutService: LUTService
-
     /* Basic properties */
 
     @Parameter(required = false, style = ChoiceWidget.LIST_BOX_STYLE, callback = "refreshSceneNodeInDialog")
     private val sceneNode: String? = null
 
-    @Parameter(label = "Visible", callback = "updateNodeProperties", style = "group:Basic")
+    @Parameter(label = "Visible", callback = "updateNodeProperties", style = GROUP_NAME_BASIC)
     private var visible = false
 
-    @Parameter(label = "Color", required = false, callback = "updateNodeProperties", style = "group:Basic")
-    private var colour: ColorRGB? = null
+    @Parameter(label = "Color", required = false, callback = "updateNodeProperties", style = GROUP_NAME_BASIC)
+    private var color: ColorRGB? = null
 
-    @Parameter(label = "Name", callback = "updateNodeProperties", style = "group:Basic")
+    @Parameter(label = "Name", callback = "updateNodeProperties", style = GROUP_NAME_BASIC)
     private var name: String = ""
 
-    @Parameter(label = "Position X", style = NumberWidget.SPINNER_STYLE+ ",group:Basic" + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "Position X", style = NumberWidget.SPINNER_STYLE + "," + GROUP_NAME_BASIC + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
     private var positionX = 0f
 
-    @Parameter(label = "Position Y", style = NumberWidget.SPINNER_STYLE+ ",group:Basic" + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "Position Y", style = NumberWidget.SPINNER_STYLE + "," + GROUP_NAME_BASIC + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
     private var positionY = 0f
 
-    @Parameter(label = "Position Z", style = NumberWidget.SPINNER_STYLE+ ",group:Basic" + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "Position Z", style = NumberWidget.SPINNER_STYLE + "," + GROUP_NAME_BASIC + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
     private var positionZ = 0f
 
-
-    @Parameter(label = "[Rotation & Scaling]Scale X", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling" + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "Scale X", style = NumberWidget.SPINNER_STYLE + GROUP_NAME_ROTATION + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
     private var scaleX = 1f
 
-    @Parameter(label = "[Rotation & Scaling]Scale Y", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling" + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "Scale Y", style = NumberWidget.SPINNER_STYLE + GROUP_NAME_ROTATION + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
     private var scaleY = 1f
 
-    @Parameter(label = "[Rotation & Scaling]Scale Z", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling" + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
+    @Parameter(label = "Scale Z", style = NumberWidget.SPINNER_STYLE + GROUP_NAME_ROTATION + ",format:0.000", stepSize = "0.1", callback = "updateNodeProperties")
     private var scaleZ = 1f
 
-    @Parameter(label = "[Rotation & Scaling]Rotation Phi", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling" + ",format:0.000", min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
+    @Parameter(label = "Rotation Phi", style = NumberWidget.SPINNER_STYLE + GROUP_NAME_ROTATION + ",format:0.000", min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
     private var rotationPhi = 0f
 
-    @Parameter(label = "[Rotation & Scaling]Rotation Theta", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling" + ",format:0.000", min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
+    @Parameter(label = "Rotation Theta", style = NumberWidget.SPINNER_STYLE + GROUP_NAME_ROTATION + ",format:0.000", min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
     private var rotationTheta = 0f
 
-    @Parameter(label = "[Rotation & Scaling]Rotation Psi", style = NumberWidget.SPINNER_STYLE+"group:Rotation & Scaling" + ",format:0.000", min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
+    @Parameter(label = "Rotation Psi", style = NumberWidget.SPINNER_STYLE + GROUP_NAME_ROTATION + ",format:0.000", min = PI_NEG, max = PI_POS, stepSize = "0.01", callback = "updateNodeProperties")
     private var rotationPsi = 0f
 
 
@@ -168,7 +162,7 @@ class BasicProperties : InspectorInteractiveCommand() {
                 else -> Vector3f(0.5f)
             }
 
-            colour = ColorRGB(
+            color = ColorRGB(
                 (colourVector[0] * 255).toInt(),  //
                 (colourVector[1] * 255).toInt(),  //
                 (colourVector[2] * 255).toInt()
@@ -209,9 +203,9 @@ class BasicProperties : InspectorInteractiveCommand() {
 
             // update colour
             val cVector = Vector3f(
-                colour!!.red / 255f,
-                colour!!.green / 255f,
-                colour!!.blue / 255f
+                color!!.red / 255f,
+                color!!.green / 255f,
+                color!!.blue / 255f
             )
             if(node is PointLight) {
                 node.emissionColor = cVector

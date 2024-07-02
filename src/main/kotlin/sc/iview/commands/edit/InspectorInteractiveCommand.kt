@@ -59,7 +59,7 @@ abstract class InspectorInteractiveCommand : InteractiveCommand() {
             val item = info.getMutableInput(name, type) ?: return
             info.removeInput(item)
         } catch (npe: NullPointerException) {
-            log.info("Input field $name of type ${type.simpleName} not found, therefore it can't be removed.")
+            log.debug("Input field $name of type ${type.simpleName} not found, therefore it can't be removed. This is normal if the panel is collapsed.")
             return
         }
     }

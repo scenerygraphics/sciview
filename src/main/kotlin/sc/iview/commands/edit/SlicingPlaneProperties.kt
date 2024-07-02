@@ -14,12 +14,6 @@ import org.scijava.ui.UIService
  */
 @Plugin(type = Command::class, initializer = "updateCommandFields", visible = false)
 class SlicingPlaneProperties : InspectorInteractiveCommand() {
-    @Parameter
-    private lateinit var uiSrv: UIService
-
-    @Parameter
-    private lateinit var lutService: LUTService
-
     /* Targets properties */
     @Parameter(label = "Sliced volumes", callback = "updateNodeProperties", style = "group:Targets")
     private var slicedVolumes: VolumeSelectorWidget.VolumeSelection = VolumeSelectorWidget.VolumeSelection()
