@@ -41,7 +41,7 @@ import sc.iview.commands.MenuWeights.VIEW_RENDER_TO_OPENVR
  *
  * @author Ulrik Guenther
  */
-@Plugin(type = Command::class, initializer = "initValues", menuRoot = "SciView", selectable = true, menu = [Menu(label = "View", weight = VIEW), Menu(label = "Render to OpenVR Headset", weight = VIEW_RENDER_TO_OPENVR)])
+@Plugin(type = Command::class, menuRoot = "SciView", selectable = true, menu = [Menu(label = "View", weight = VIEW), Menu(label = "Render to OpenVR Headset", weight = VIEW_RENDER_TO_OPENVR)])
 class RenderToOpenVRHMD : Command {
     @Parameter
     private lateinit var sciView: SciView
