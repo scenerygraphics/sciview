@@ -116,7 +116,7 @@ public class TextDemo implements Command {
         board.setName("TextBoard");
         board.setTransparent(0);
         board.setFontColor(new Vector4f(0, 0, 0, 0));
-        board.setBackgroundColor(new Vector4f(100, 100, 0, 0));
+        board.setBackgroundColor(new Vector4f(1.0f, 1.0f, 0.0f, 1.0f));
         board.spatial().setPosition(msh.spatialOrNull().getPosition().add(new Vector3f(0, 10, 0)));
         board.spatial().setScale(new Vector3f(10.0f, 10.0f, 10.0f));
 
