@@ -64,23 +64,14 @@ class LoadMandelbulbOutOfCore : Command {
         val maxIter = 32 // Example maximum iterations
         val order = 8 // Example Mandelbulb order
 
-
         // Define max scale level
-        val maxScale = 7 // Adjust this value to test rendering at different scales
-
-
-        // Desired grid size at the finest resolution level
+        val maxScale = 8 // Adjust this value to test rendering at different scales
 
         // Desired grid size at the finest resolution level
-        val desiredFinestGridSize = 8 // Define as per your requirement
-
-
-        // Compute the base grid size
+        val desiredFinestGridSize = 8
 
         // Compute the base grid size
         val baseGridSize = desiredFinestGridSize * Math.pow(2.0, (maxScale - 1).toDouble()).toInt()
-
-        // Generate resolutions and corresponding grid sizes
 
         // Generate resolutions and corresponding grid sizes
         val resolutions = Array(maxScale) { DoubleArray(3) }
