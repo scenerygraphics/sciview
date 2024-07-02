@@ -125,9 +125,9 @@ class VolumeProperties : InspectorInteractiveCommand() {
                 // Warning! The java.lang prefix needs to be here, otherwise the compiler
                 // reverts to the Kotlin types and you'll end up with interesting error messages
                 // like "float does not match type float" ;-)
-//            maybeRemoveInput("timepoint", java.lang.Integer::class.java)
-//            maybeRemoveInput("playPauseButton", Button::class.java)
-//            maybeRemoveInput("playSpeed", java.lang.Integer::class.java)
+                maybeRemoveInput("timepoint", java.lang.Integer::class.java)
+                maybeRemoveInput("playPauseButton", Button::class.java)
+                maybeRemoveInput("playSpeed", java.lang.Integer::class.java)
             }
         }
     }
