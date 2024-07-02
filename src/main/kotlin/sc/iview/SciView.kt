@@ -188,7 +188,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     private lateinit var io: IOService
 
     @Parameter
-    private lateinit var eventService: EventService
+    internal lateinit var eventService: EventService
 
     @Parameter
     private lateinit var lutService: LUTService
