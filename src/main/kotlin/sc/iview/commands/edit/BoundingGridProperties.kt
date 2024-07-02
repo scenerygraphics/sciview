@@ -11,7 +11,7 @@ import org.scijava.util.ColorRGB
 /**
  * Inspector panel for inspecting a [BoundingGrid]'s properties.
  */
-@Plugin(type = Command::class, initializer = "initValues", visible = false)
+@Plugin(type = Command::class, initializer = "updateCommandFields", visible = false)
 class BoundingGridProperties : InspectorInteractiveCommand() {
     /** Parameter for the [BoundingGrid.gridColor] */
     @Parameter(label = "Grid Color", callback = "updateNodeProperties", style = "group:Grid")

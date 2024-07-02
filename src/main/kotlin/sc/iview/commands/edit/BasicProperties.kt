@@ -52,7 +52,7 @@ import java.util.*
  * @author Kyle Harrington
  * @author Ulrik Guenther
  */
-@Plugin(type = Command::class, initializer = "initValues", visible = false)
+@Plugin(type = Command::class, initializer = "updateCommandFields", visible = false)
 class BasicProperties : InspectorInteractiveCommand() {
     @Parameter
     private lateinit var uiSrv: UIService

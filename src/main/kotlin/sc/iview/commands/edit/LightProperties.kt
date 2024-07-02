@@ -10,7 +10,7 @@ import org.scijava.widget.NumberWidget
 /**
  * Inspector panel for [PointLight]s.
  */
-@Plugin(type = Command::class, initializer = "initValues", visible = false)
+@Plugin(type = Command::class, initializer = "updateCommandFields", visible = false)
 class LightProperties : InspectorInteractiveCommand() {
     @Parameter(label = "Intensity", style = NumberWidget.SPINNER_STYLE+ ",group:Lighting", stepSize = "0.1", callback = "updateNodeProperties")
     private var intensity = 0f

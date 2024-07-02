@@ -10,7 +10,7 @@ import org.scijava.widget.NumberWidget
 /**
  * Inspector panel for adjusting the properties of an [Atmosphere] [graphics.scenery.Node].
  */
-@Plugin(type = Command::class, initializer = "initValues", visible = false)
+@Plugin(type = Command::class, initializer = "updateCommandFields", visible = false)
 class AtmosphereProperties : InspectorInteractiveCommand() {
     /** Field for [Atmosphere.latitude]. */
     @Parameter(label = "Latitude", style = NumberWidget.SPINNER_STYLE+"group:Atmosphere"+",format:0.0", min = "-90", max = "90", stepSize = "1", callback = "updateNodeProperties")

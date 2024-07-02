@@ -12,7 +12,7 @@ import org.scijava.ui.UIService
 /**
  * Inspector panel for [SlicingPlane] nodes.
  */
-@Plugin(type = Command::class, initializer = "initValues", visible = false)
+@Plugin(type = Command::class, initializer = "updateCommandFields", visible = false)
 class SlicingPlaneProperties : InspectorInteractiveCommand() {
     @Parameter
     private lateinit var uiSrv: UIService

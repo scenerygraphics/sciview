@@ -9,7 +9,7 @@ import org.scijava.plugin.Plugin
 /**
  * Inspector panel for [Camera] nodes.
  */
-@Plugin(type = Command::class, initializer = "initValues", visible = false)
+@Plugin(type = Command::class, initializer = "updateCommandFields", visible = false)
 class CameraProperties : InspectorInteractiveCommand() {
     @Parameter(label = "Active", required = false, callback = "updateNodeProperties", style = "group:Camera")
     private var active = false

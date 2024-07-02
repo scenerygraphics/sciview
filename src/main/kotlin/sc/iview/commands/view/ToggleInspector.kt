@@ -41,7 +41,7 @@ import sc.iview.commands.MenuWeights.VIEW_TOGGLE_INSPECTOR
  *
  * @author Curtis Rueden
  */
-@Plugin(type = Command::class, initializer = "initValues", menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Toggle Inspector", weight = VIEW_TOGGLE_INSPECTOR)])
+@Plugin(type = Command::class, initializer = "updateCommandFields", menuRoot = "SciView", menu = [Menu(label = "View", weight = VIEW), Menu(label = "Toggle Inspector", weight = VIEW_TOGGLE_INSPECTOR)])
 class ToggleInspector : Command {
     @Parameter
     private lateinit var sciView: SciView

@@ -11,7 +11,7 @@ import org.scijava.util.ColorRGB
 /**
  * Inspector panel for [TextBoard] nodes.
  */
-@Plugin(type = Command::class, initializer = "initValues", visible = false)
+@Plugin(type = Command::class, initializer = "updateCommandFields", visible = false)
 class TextBoardProperties : InspectorInteractiveCommand() {
     /* TextBoard properties */
     @Parameter(label = "Text", callback = "updateNodeProperties", style = "group:Text")

@@ -9,7 +9,7 @@ import org.scijava.plugin.Plugin
 /**
  * Inspector panel for [Line] nodes.
  */
-@Plugin(type = Command::class, initializer = "initValues", visible = false)
+@Plugin(type = Command::class, initializer = "updateCommandFields", visible = false)
 class LineProperties : InspectorInteractiveCommand() {
     /* Line properties */
 

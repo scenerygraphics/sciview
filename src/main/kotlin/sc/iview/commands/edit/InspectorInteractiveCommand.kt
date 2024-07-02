@@ -52,13 +52,6 @@ abstract class InspectorInteractiveCommand : InteractiveCommand() {
     }
 
     /**
-     * Initializes the command's fields from a node's properties.
-     */
-    protected fun initValues() {
-        updateCommandFields()
-    }
-
-    /**
      * Remove an input given by [name] of a certain [type].
      */
     protected fun <T> maybeRemoveInput(name: String, type: Class<T>) {
@@ -66,6 +59,7 @@ abstract class InspectorInteractiveCommand : InteractiveCommand() {
             val item = info.getMutableInput(name, type) ?: return
             info.removeInput(item)
         } catch (npe: NullPointerException) {
+            log.info("Input field $name of type ${type.simpleName} not found, therefore it can't be removed.")
             return
         }
     }

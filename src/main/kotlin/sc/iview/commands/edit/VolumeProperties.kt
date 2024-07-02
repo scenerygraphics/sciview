@@ -15,7 +15,7 @@ import org.scijava.widget.NumberWidget
 /**
  * Inspector panel for [Volume] nodes.
  */
-@Plugin(type = Command::class, initializer = "initValues", visible = false)
+@Plugin(type = Command::class, initializer = "updateCommandFields", visible = false)
 class VolumeProperties : InspectorInteractiveCommand() {
     @Parameter
     private lateinit var uiSrv: UIService
