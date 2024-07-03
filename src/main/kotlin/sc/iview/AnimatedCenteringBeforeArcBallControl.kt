@@ -72,21 +72,22 @@ class AnimatedCenteringBeforeArcBallControl(val initAction: (Int, Int) -> Any, v
             lastX = x
             lastY = y
 
-            val frameYaw = (xoffset) / 180.0f * Math.PI.toFloat()
+            val frameYaw = xoffset / 180.0f * Math.PI.toFloat()
             val framePitch = yoffset / 180.0f * Math.PI.toFloat() * -1f
 
-            // first calculate the total rotation quaternion to be applied to the camera
-            val yawQ = Quaternionf().rotateXYZ(0.0f, frameYaw, 0.0f).normalize()
-            val pitchQ = Quaternionf().rotateXYZ(framePitch, 0.0f, 0.0f).normalize()
+            // First calculate the total rotation quaternion to be applied to the camera
+            val yawQ = Quaternionf().rotateY(frameYaw).normalize()
+            val pitchQ = Quaternionf().rotateX(framePitch).normalize()
 
             node.ifSpatial {
                 distance = (target.invoke() - position).length()
-                node.target = target.invoke()
                 val currentRotation = rotation
 
-                // Rotate pitch first, then yaw to ensure proper axis alignment
-                rotation = pitchQ.mul(currentRotation).normalize()
-                rotation = yawQ.mul(rotation).normalize()
+                // Combine the rotations in a way that pitch is applied first, then yaw
+                val newRotation = yawQ.mul(pitchQ.mul(currentRotation, Quaternionf()), Quaternionf()).normalize()
+
+                // Update the camera rotation
+                rotation = newRotation
 
                 // Update position based on new rotation
                 position = target.invoke() + node.forward * distance * (-1.0f)
@@ -95,6 +96,7 @@ class AnimatedCenteringBeforeArcBallControl(val initAction: (Int, Int) -> Any, v
             node.lock.unlock()
         }
     }
+
 
     override fun scroll(wheelRotation: Double, isHorizontal: Boolean, x: Int, y: Int) {
         scrollAction.invoke(wheelRotation, isHorizontal, x, y)
