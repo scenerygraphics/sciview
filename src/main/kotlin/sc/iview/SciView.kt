@@ -70,9 +70,9 @@ import net.imagej.axis.DefaultAxisType
 import net.imagej.axis.DefaultLinearAxis
 import net.imagej.interval.CalibratedRealInterval
 import net.imagej.lut.LUTService
-import net.imagej.mesh.Mesh
-import net.imagej.mesh.io.ply.PLYMeshIO
-import net.imagej.mesh.io.stl.STLMeshIO
+import net.imglib2.mesh.Mesh
+import net.imglib2.mesh.io.ply.PLYMeshIO
+import net.imglib2.mesh.io.stl.STLMeshIO
 import net.imagej.units.UnitService
 import net.imglib2.*
 import net.imglib2.display.ColorTable
@@ -817,13 +817,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                 return
             }
             source.endsWith(".stl", ignoreCase = true) -> {
-                val stlReader = STLMeshIO()
-                addMesh(stlReader.open(source), name=name)
+                addMesh(STLMeshIO.open(source), name=name)
                 return
             }
             source.endsWith(".ply", ignoreCase = true) -> {
-                val plyReader = PLYMeshIO()
-                addMesh(plyReader.open(source), name=name)
+                addMesh(PLYMeshIO.open(source), name=name)
                 return
             }
             else -> {
@@ -1003,7 +1001,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
     /**
      * Add an ImageJ mesh to the scene
-     * @param mesh net.imagej.mesh to add to scene
+     * @param mesh net.imglib2.mesh to add to scene
      * @param name the name of the mesh
      * @return a Node corresponding to the mesh
      */
@@ -1014,7 +1012,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
     /**
      * Add an ImageJ mesh to the scene
-     * @param mesh net.imagej.mesh to add to scene
+     * @param mesh net.imglib2.mesh to add to scene
      * @return a Node corresponding to the mesh
      */
     fun addMesh(mesh: Mesh): graphics.scenery.Mesh {

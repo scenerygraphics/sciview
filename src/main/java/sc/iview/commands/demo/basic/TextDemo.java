@@ -30,8 +30,8 @@ package sc.iview.commands.demo.basic;
 
 import graphics.scenery.Node;
 import graphics.scenery.primitives.TextBoard;
-import net.imagej.mesh.Mesh;
-import net.imagej.mesh.io.stl.STLMeshIO;
+import net.imglib2.mesh.Mesh;
+import net.imglib2.mesh.io.stl.STLMeshIO;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.scijava.command.Command;
@@ -79,8 +79,7 @@ public class TextDemo implements Command {
         String filePath = "/WieseRobert_simplified_Cip1.stl";
         try {
             File meshFile = ResourceLoader.createFile(getClass(), filePath);
-            STLMeshIO stlReader = new STLMeshIO();
-            m = stlReader.open(meshFile.getAbsolutePath());
+            m = STLMeshIO.open(meshFile.getAbsolutePath());
         } catch (IOException exc) {
             log.error(exc);
             return;

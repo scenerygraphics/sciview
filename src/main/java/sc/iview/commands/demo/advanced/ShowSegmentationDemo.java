@@ -31,8 +31,8 @@ package sc.iview.commands.demo.advanced;
 import graphics.scenery.attribute.material.Material;
 import graphics.scenery.volumes.Volume;
 import io.scif.services.DatasetIOService;
-import net.imagej.mesh.Mesh;
-import net.imagej.mesh.Meshes;
+import net.imglib2.mesh.Mesh;
+import net.imglib2.mesh.Meshes;
 import net.imagej.ops.OpService;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
@@ -104,7 +104,7 @@ public class ShowSegmentationDemo implements Command {
         LabelRegions<Integer> regions = new LabelRegions<>(labeling);
 
         for( LabelRegion region : regions ) {
-            // Generate the mesh with imagej-ops
+            // Generate the mesh with imglib2-mesh
             Mesh m = Meshes.marchingCubes(region);
 
             // Convert the mesh into a scenery mesh for visualization

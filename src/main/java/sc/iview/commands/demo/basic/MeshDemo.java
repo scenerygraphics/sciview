@@ -33,9 +33,9 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import graphics.scenery.attribute.material.Material;
-import net.imagej.mesh.Mesh;
+import net.imglib2.mesh.Mesh;
 
-import net.imagej.mesh.io.stl.STLMeshIO;
+import net.imglib2.mesh.io.stl.STLMeshIO;
 import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;
@@ -81,8 +81,7 @@ public class MeshDemo implements Command {
         final Mesh m;
         try {
             File meshFile = ResourceLoader.createFile( getClass(), "/WieseRobert_simplified_Cip1.stl" );
-            STLMeshIO stlReader = new STLMeshIO();
-            m = stlReader.open(meshFile.getAbsolutePath());
+            m = STLMeshIO.open(meshFile.getAbsolutePath());
         }
         catch (IOException exc) {
             log.error( exc );

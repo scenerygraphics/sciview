@@ -64,7 +64,7 @@ class DisplayVertices : Command {
     override fun run() {
         if (sciView.activeNode is Mesh) {
             val scMesh = sciView.activeNode as Mesh
-            val mesh = MeshConverter.toImageJ(scMesh)
+            val mesh = MeshConverter.toImgLib(scMesh)
             table = DefaultGenericTable()
 
             // we create two columns

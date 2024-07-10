@@ -29,10 +29,8 @@
 package sc.iview.commands.process;
 
 import graphics.scenery.Node;
-import net.imagej.mesh.Mesh;
-import net.imagej.mesh.naive.NaiveDoubleMesh;
-import net.imagej.ops.OpService;
-import net.imagej.ops.geom.geom3d.DefaultConvexHull3D;
+import net.imglib2.mesh.Mesh;
+import net.imglib2.mesh.impl.naive.NaiveDoubleMesh;
 import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.InteractiveCommand;
@@ -57,9 +55,6 @@ import static sc.iview.commands.MenuWeights.PROCESS_INTERACTIVE_CONVEX_MESH;
         menu = { @Menu(label = "Process", weight = PROCESS), //
                  @Menu(label = "Interactively Create Convex Mesh", weight = PROCESS_INTERACTIVE_CONVEX_MESH) })
 public class InteractiveConvexMesh extends InteractiveCommand {
-
-    @Parameter
-    private OpService opService;
 
     @Parameter
     private SciView sciView;
@@ -87,8 +82,7 @@ public class InteractiveConvexMesh extends InteractiveCommand {
             mesh.vertices().add(v.x(), v.y(), v.z());
         }
 
-        final List<?> result = (List<?>) opService.run(DefaultConvexHull3D.class, mesh );
-        Mesh hull = (Mesh) result.get(0);
+        Mesh hull = net.imglib2.mesh.alg.hull.ConvexHull.calculate(mesh);
 
         sciView.addMesh(hull);
 

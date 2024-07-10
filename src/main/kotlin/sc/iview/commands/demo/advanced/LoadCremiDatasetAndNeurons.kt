@@ -38,8 +38,8 @@ import graphics.scenery.volumes.Colormap
 import graphics.scenery.volumes.TransferFunction
 import graphics.scenery.volumes.Volume
 import net.imagej.lut.LUTService
-import net.imagej.mesh.Mesh
-import net.imagej.mesh.Meshes
+import net.imglib2.mesh.Mesh
+import net.imglib2.mesh.Meshes
 import net.imagej.ops.OpService
 import net.imglib2.RandomAccessibleInterval
 import net.imglib2.img.array.ArrayImgs
@@ -197,7 +197,7 @@ class LoadCremiDatasetAndNeurons : Command {
             task.status = "Meshing neuron ${i + 1}/${largestNeuronLabels.size}"
 
             // ui.show(region)
-            // Generate the mesh with imagej-ops
+            // Generate the mesh with imglib2-mesh
             val m: Mesh = Meshes.marchingCubes(region);
 
             log.info("Converting neuron ${i + 1}/${largestNeuronLabels.size} to scenery format...")

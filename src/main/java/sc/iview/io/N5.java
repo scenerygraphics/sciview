@@ -28,8 +28,8 @@
  */
 package sc.iview.io;
 
-import net.imagej.mesh.Mesh;
-import net.imagej.mesh.naive.NaiveDoubleMesh;
+import net.imglib2.mesh.Mesh;
+import net.imglib2.mesh.impl.naive.NaiveDoubleMesh;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealLocalizable;

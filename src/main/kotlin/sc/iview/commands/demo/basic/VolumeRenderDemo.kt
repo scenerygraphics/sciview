@@ -31,8 +31,8 @@ package sc.iview.commands.demo.basic
 import io.scif.services.DatasetIOService
 import net.imagej.Dataset
 import net.imagej.ops.OpService
-import net.imagej.ops.geom.geom3d.mesh.BitTypeVertexInterpolator
 import net.imglib2.img.Img
+import net.imglib2.mesh.Meshes
 import net.imglib2.type.logic.BitType
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import org.scijava.command.Command
@@ -99,7 +99,7 @@ class VolumeRenderDemo : Command {
             @Suppress("UNCHECKED_CAST")
             val cubeImg = cube.imgPlus.img as Img<UnsignedByteType>
             val bitImg = ops.threshold().apply(cubeImg, UnsignedByteType(isoLevel)) as Img<BitType>
-            val m = ops.geom().marchingCubes(bitImg, isoLevel.toDouble(), BitTypeVertexInterpolator())
+            val m = Meshes.marchingCubes(bitImg, isoLevel.toDouble())
             val isoSurfaceMesh = MeshConverter.toScenery(m, false, flipWindingOrder = true)
             v.addChild(isoSurfaceMesh)
             isoSurfaceMesh.name = "Volume Render Demo Isosurface"

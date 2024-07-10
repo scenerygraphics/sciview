@@ -28,7 +28,7 @@
  */
 package sc.iview.commands.view
 
-import net.imagej.mesh.Mesh
+import net.imglib2.mesh.Mesh
 import org.scijava.command.Command
 import org.scijava.plugin.Menu
 import org.scijava.plugin.Parameter

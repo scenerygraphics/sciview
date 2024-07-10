@@ -29,7 +29,7 @@
 package sc.iview.commands.demo.basic;
 
 import graphics.scenery.Node;
-import net.imagej.mesh.Mesh;
+import net.imglib2.mesh.Mesh;
 import org.joml.Vector3f;
 import org.scijava.command.Command;
 import org.scijava.command.CommandService;

@@ -29,10 +29,10 @@
 package sc.iview.commands.add
 
 import net.imagej.Dataset
-import net.imagej.ops.OpService
 import net.imglib2.Dimensions
 import net.imglib2.RandomAccessibleInterval
 import net.imglib2.img.Img
+import net.imglib2.mesh.Meshes
 import net.imglib2.roi.labeling.ImgLabeling
 import net.imglib2.roi.labeling.LabelRegions
 import net.imglib2.type.numeric.RealType
@@ -62,9 +62,6 @@ import sc.iview.commands.MenuWeights.EDIT_ADD_LABELIMAGE
 )
 class AddLabelImage<T : RealType<T>?> : Command {
     @Parameter
-    private lateinit var ops: OpService
-
-    @Parameter
     private lateinit var sciView: SciView
 
     @Parameter
@@ -90,7 +87,7 @@ class AddLabelImage<T : RealType<T>?> : Command {
         val regionsArr: Array<Any> = labelRegions.existingLabels.toTypedArray()
         for (i in labelRegions.existingLabels.indices) {
             val lr = labelRegions.getLabelRegion(regionsArr[i] as Int)
-            val mesh = ops.geom().marchingCubes(lr)
+            val mesh = Meshes.marchingCubes(lr)
             sciView.addMesh(mesh)
         }
     }

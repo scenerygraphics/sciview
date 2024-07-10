@@ -84,7 +84,7 @@ public class ExportN5 implements Command {
                         throw new IOException("N5 path does not exist");
                     N5Writer n5 = new N5FSWriter(n5File.getAbsolutePath());
 
-                    N5.save(MeshConverter.toImageJ(mesh), n5, dataset );
+                    N5.save(MeshConverter.toImgLib(mesh), n5, dataset );
                 } catch( final Exception e ) {
                     logService.trace( e );
                 }

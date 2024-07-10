@@ -82,8 +82,7 @@ dependencies {
     // ImageJ dependencies
 
     implementation("net.imagej:imagej-common")
-    api("net.imagej:imagej-mesh:0.8.1")
-    implementation("net.imagej:imagej-mesh-io")
+    api("net.imglib2:imglib2-mesh:1.0.0")
     implementation("net.imagej:imagej-ops")
 //    implementation("net.imagej:imagej-launcher")
     implementation("net.imagej:imagej-ui-swing")

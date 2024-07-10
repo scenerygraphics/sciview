@@ -28,10 +28,10 @@
  */
 package sc.iview;
 
-import net.imagej.mesh.Mesh;
-import net.imagej.mesh.Triangle;
-import net.imagej.mesh.io.stl.STLMeshIO;
-import net.imagej.ops.geom.geom3d.DefaultMarchingCubes;
+import net.imglib2.mesh.Mesh;
+import net.imglib2.mesh.Meshes;
+import net.imglib2.mesh.Triangle;
+import net.imglib2.mesh.io.stl.STLMeshIO;
 import net.imglib2.RandomAccess;
 import net.imglib2.RealLocalizable;
 import net.imglib2.RealPoint;
@@ -81,17 +81,13 @@ public class N5Test {
         imgAccess.get().set(true);
 
         // Run marching cubes
-        //return imagej.op().geom().marchingCubes(img);
-
-
-        return (new DefaultMarchingCubes()).calculate(img);
+        return Meshes.marchingCubes(img);
     }
 
     private static Mesh getMesh() {
         final Mesh m;
         try {
-            m = new STLMeshIO()
-                .open(ResourceLoader.createFile(
+            m = STLMeshIO.open(ResourceLoader.createFile(
                         MeshDemo.class,
                         "/WieseRobert_simplified_Cip1.stl").getAbsolutePath());
             return m;

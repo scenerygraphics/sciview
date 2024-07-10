@@ -32,7 +32,6 @@ import static sc.iview.commands.MenuWeights.PROCESS;
 import static sc.iview.commands.MenuWeights.PROCESS_CONVEX_HULL;
 
 import graphics.scenery.Node;
-import net.imagej.ops.OpService;
 
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
@@ -56,9 +55,6 @@ menu = {@Menu(label = "Process", weight = PROCESS), //
 public class ConvexHull implements Command {
 
     @Parameter
-    private OpService ops;
-
-    @Parameter
     private LogService logService;
 
     @Parameter
@@ -70,9 +66,9 @@ public class ConvexHull implements Command {
     @Override
     public void run() {
         if( node instanceof Mesh ) {
-            net.imagej.mesh.Mesh ijMesh = MeshConverter.toImageJ((Mesh) node);
+            net.imglib2.mesh.Mesh ilMesh = MeshConverter.toImgLib((Mesh) node);
 
-            net.imagej.mesh.Mesh smoothMesh = ( net.imagej.mesh.Mesh ) ops.geom().convexHull( ijMesh ).get( 0 );
+            net.imglib2.mesh.Mesh smoothMesh = ( net.imglib2.mesh.Mesh ) net.imglib2.mesh.alg.hull.ConvexHull.calculate( ilMesh );
 
             Node convexHull = sciView.addMesh(smoothMesh);
             convexHull.ifSpatial(spatial -> {

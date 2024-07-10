@@ -29,9 +29,9 @@
 package sc.iview.process
 
 import graphics.scenery.BufferUtils.Companion.allocateFloat
-import net.imagej.mesh.Mesh
-import net.imagej.mesh.Meshes
-import net.imagej.mesh.nio.BufferMesh
+import net.imglib2.mesh.Mesh
+import net.imglib2.mesh.Meshes
+import net.imglib2.mesh.impl.nio.BufferMesh
 import java.nio.FloatBuffer
 
 /**
@@ -48,8 +48,8 @@ object MeshConverter {
      */
     @JvmOverloads @JvmStatic
     fun toScenery(mesh: Mesh, center: Boolean = false, flipWindingOrder: Boolean = false): graphics.scenery.Mesh {
-        val vCount = Int.MAX_VALUE.toLong().coerceAtMost(mesh.vertices().size()).toInt()
-        val tCount = Int.MAX_VALUE.toLong().coerceAtMost(mesh.triangles().size()).toInt()
+        val vCount = mesh.vertices().size()
+        val tCount = mesh.triangles().size()
 
         // Convert the mesh to an NIO-backed one.
         val bufferMesh = BufferMesh(vCount, tCount)
@@ -136,7 +136,7 @@ object MeshConverter {
     }
 
     @JvmStatic
-    fun toImageJ(scMesh: graphics.scenery.Mesh): Mesh {
+    fun toImgLib(scMesh: graphics.scenery.Mesh): Mesh {
         // Extract buffers from Scenery mesh.
         val verts = scMesh.geometry().vertices
         val vNormals = scMesh.geometry().normals

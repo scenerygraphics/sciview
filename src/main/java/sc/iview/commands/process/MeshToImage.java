@@ -31,7 +31,6 @@ package sc.iview.commands.process;
 import static sc.iview.commands.MenuWeights.PROCESS;
 import static sc.iview.commands.MenuWeights.PROCESS_MESH_TO_IMAGE;
 
-import net.imagej.ops.OpService;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.logic.BitType;
 
@@ -59,9 +58,6 @@ import sc.iview.process.MeshConverter;
 public class MeshToImage implements Command {
 
     @Parameter
-    private OpService ops;
-
-    @Parameter
     private LogService log;
 
     @Parameter
@@ -84,9 +80,11 @@ public class MeshToImage implements Command {
 
     @Override
     public void run() {
-        net.imagej.mesh.Mesh ijMesh = MeshConverter.toImageJ( mesh );
+        net.imglib2.mesh.Mesh ilMesh = MeshConverter.toImgLib( mesh );
 
-        img = ops.geom().voxelization( ijMesh, width, height, depth );
+        // FIXME: enable this once voxelize branch of imglib2-mesh is done.
+        //img = Voxelization.voxelize( ilMesh, width, height, depth );
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
 }
