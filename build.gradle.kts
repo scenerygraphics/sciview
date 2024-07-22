@@ -64,7 +64,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
     implementation("org.apache.logging.log4j:log4j-1.2-api:2.20.0")
 
-    implementation("com.formdev:flatlaf:3.4.1")
+    implementation("com.formdev:flatlaf:3.5")
 
     // SciJava dependencies
 
