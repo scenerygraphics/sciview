@@ -30,6 +30,7 @@ package sc.iview
 
 import bdv.BigDataViewer
 import bdv.cache.CacheControl
+import bdv.spimdata.SpimDataMinimal
 import bdv.tools.brightness.ConverterSetup
 import bdv.util.AxisOrder
 import bdv.util.RandomAccessibleIntervalSource
@@ -86,7 +87,6 @@ import net.imglib2.view.Views
 import org.joml.Quaternionf
 import org.joml.Vector3f
 import org.scijava.Context
-import org.scijava.`object`.ObjectService
 import org.scijava.display.Display
 import org.scijava.event.EventHandler
 import org.scijava.event.EventService
@@ -94,6 +94,7 @@ import org.scijava.io.IOService
 import org.scijava.log.LogLevel
 import org.scijava.log.LogService
 import org.scijava.menu.MenuService
+import org.scijava.`object`.ObjectService
 import org.scijava.plugin.Parameter
 import org.scijava.service.SciJavaService
 import org.scijava.thread.ThreadService
@@ -122,7 +123,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import java.util.function.Function
 import java.util.function.Predicate
@@ -134,6 +134,7 @@ import kotlin.concurrent.thread
 import javax.swing.JOptionPane
 import kotlin.math.cos
 import kotlin.math.sin
+
 
 /**
  * Main SciView class.
@@ -1503,6 +1504,65 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         return v
     }
 
+    fun <T : RealType<T>> addSpimVolume(
+            sources: List<SourceAndConverter<out RealType<*>>>,
+            converterSetups: ArrayList<ConverterSetup>,
+            numTimepoints: Int,
+            name: String,
+            voxelDimensions: FloatArray
+    ): Volume? {
+        // Cast sources to match the expected type for addVolume
+        @Suppress("UNCHECKED_CAST")
+        val typedSources = sources as List<SourceAndConverter<T>>
+
+        // Call addVolume with the casted list
+        return addVolume(
+                typedSources,
+                converterSetups,
+                numTimepoints,
+                name,
+                voxelDimensions
+        )
+    }
+
+    fun addSpimVolume(
+            spimData: SpimDataMinimal,
+            name: String,
+            voxelDimensions: FloatArray
+    ): Volume? {
+
+        val block: Volume.() -> Unit = {}
+
+        val colormapName = "Fire.lut"
+
+        // Create the volume using the companion object's fromSpimData method
+        val volume = Volume.fromSpimData(spimData, hub, VolumeViewerOptions())
+
+        // Set properties
+        volume.name = name
+        volume.metadata["VoxelDimensions"] = voxelDimensions
+        volume.spatial().scale = Vector3f(voxelDimensions[0], voxelDimensions[1], voxelDimensions[2]) * volume.pixelToWorldRatio
+
+        // Configure the transfer function
+        val tf = volume.transferFunction
+        val rampMin = 0f
+        val rampMax = 0.1f
+        tf.clear()
+        tf.addControlPoint(0.0f, 0.0f)
+        tf.addControlPoint(rampMin, 0.0f)
+        tf.addControlPoint(1.0f, rampMax)
+
+        // Set default colormap
+        volume.metadata["sciview.colormapName"] = colormapName
+        volume.colormap = Colormap.fromColorTable(getLUT(colormapName))
+
+        // Add the volume node
+        return addNode(volume, block = block)
+    }
+
+
+
+
     /**
      * Adds a SourceAndConverter to the scene.
      *
@@ -1995,7 +2055,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                     .redirectError(ProcessBuilder.Redirect.PIPE)
                     .start()
 
-                proc.waitFor(60, TimeUnit.MINUTES)
+                //proc.waitFor(60, TimeUnit())
+                Thread.sleep(60)
+
                 return proc.inputStream.bufferedReader().readText()
             } catch(e: IOException) {
                 e.printStackTrace()
