@@ -74,6 +74,7 @@ public class MandelbulbCacheArrayLoader implements CacheArrayLoader<VolatileShor
                             ((y + cellMin[1]) * scale - centerOffset) / centerOffset,
                             ((z + cellMin[2]) * scale - centerOffset) / centerOffset
                     };
+                    // int iterations = (int) (( x + y + z ) % 2);
                     int iterations = mandelbulbIter(coordinates, maxIter, order);
                     img.getAt(x, y, z).set((int) (iterations * 65535.0 / maxIter)); // Scale to 16-bit range
                 }

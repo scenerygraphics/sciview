@@ -63,7 +63,7 @@ public class MandelbulbImgLoader implements ViewerImgLoader {
                     Math.max(1.0 / (1 << level), 0.5)
             };
 
-            subdivisions[level] = new int[]{16, 16, 16}; // arbitrary cell size
+            subdivisions[level] = new int[]{128, 128, 128}; // arbitrary cell size
 
             transforms[level] = new AffineTransform3D();
             transforms[level].scale(resolutions[level][0], resolutions[level][1], resolutions[level][2]);

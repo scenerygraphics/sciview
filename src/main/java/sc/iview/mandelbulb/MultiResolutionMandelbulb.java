@@ -28,7 +28,7 @@ public class MultiResolutionMandelbulb {
 
     public static void main(String[] args) throws Exception {
         // Define max scale level
-        int maxScale = 6; // Adjust this value to test rendering at different scales
+        int maxScale = 3; // Adjust this value to test rendering at different scales
 
         // Desired grid size at the finest resolution level
         final int desiredFinestGridSize = 8; // Define as per your requirement
