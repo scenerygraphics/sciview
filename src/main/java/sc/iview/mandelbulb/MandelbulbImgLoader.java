@@ -45,26 +45,20 @@ public class MandelbulbImgLoader implements ViewerImgLoader {
         initialize();
     }
 
-    private void initialize() {
+    private void initialize()
+    {
         // Set up mipmap dimensions and info
         mipmapDimensions = new long[gridSizes.length][];
         final double[][] resolutions = new double[gridSizes.length][];
         final int[][] subdivisions = new int[gridSizes.length][];
         final AffineTransform3D[] transforms = new AffineTransform3D[gridSizes.length];
 
-        for (int level = 0; level < gridSizes.length; level++) {
+        for (int level = 0; level < gridSizes.length; level++)
+        {
             int gridSize = gridSizes[level];
             mipmapDimensions[level] = new long[]{gridSize, gridSize, gridSize};
-
-            // Ensure resolution stays above a minimum value (0.5) to avoid zero scales
-            resolutions[level] = new double[]{
-                    Math.max(1.0 / (1 << level), 0.5),
-                    Math.max(1.0 / (1 << level), 0.5),
-                    Math.max(1.0 / (1 << level), 0.5)
-            };
-
+            resolutions[level] = new double[]{1.0 / (1 << level), 1.0 / (1 << level), 1.0 / (1 << level)};
             subdivisions[level] = new int[]{128, 128, 128}; // arbitrary cell size
-
             transforms[level] = new AffineTransform3D();
             transforms[level].scale(resolutions[level][0], resolutions[level][1], resolutions[level][2]);
         }
@@ -73,7 +67,8 @@ public class MandelbulbImgLoader implements ViewerImgLoader {
         loader = new MandelbulbCacheArrayLoader(maxIter, order);
         cache = new VolatileGlobalCellCache(gridSizes.length, 1);
 
-        for (int setupId = 0; setupId < 1; setupId++) {
+        for (int setupId = 0; setupId < 1; setupId++)
+        {
             setupImgLoaders.put(setupId, new SetupImgLoader(setupId));
         }
     }

@@ -62,6 +62,8 @@ public class MandelbulbCacheArrayLoader implements CacheArrayLoader<VolatileShor
         // Calculate center offset for normalization
         double centerOffset = desiredFinestGridSize / 2.0;
 
+        System.out.println("Generating cell level=" + level + " at " + cellMin[0] + ", " + cellMin[1] + ", " + cellMin[2] + " scale " + scale + " centerOffset " + centerOffset);
+
         for (long z = 0; z < cellDims[2]; z++)
         {
             for (long y = 0; y < cellDims[1]; y++)
@@ -75,7 +77,8 @@ public class MandelbulbCacheArrayLoader implements CacheArrayLoader<VolatileShor
                             ((z + cellMin[2]) * scale - centerOffset) / centerOffset
                     };
                     // int iterations = (int) (( x + y + z ) % 2);
-                    int iterations = mandelbulbIter(coordinates, maxIter, order);
+                    // int iterations = mandelbulbIter(coordinates, maxIter, order);
+                    int iterations = (int) (255 * level / gridSizes.length);
                     img.getAt(x, y, z).set((int) (iterations * 65535.0 / maxIter)); // Scale to 16-bit range
                 }
             }

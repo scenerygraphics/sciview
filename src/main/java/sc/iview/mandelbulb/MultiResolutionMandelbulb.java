@@ -6,6 +6,8 @@ import bdv.spimdata.SpimDataMinimal;
 import bdv.spimdata.WrapBasicImgLoader;
 import bdv.tools.brightness.ConverterSetup;
 import bdv.viewer.SourceAndConverter;
+import graphics.scenery.volumes.Volume;
+import kotlin.Pair;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
@@ -16,6 +18,7 @@ import mpicbg.spim.data.sequence.ViewId;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.RealType;
+import org.joml.Vector3f;
 import org.scijava.listeners.Listeners;
 import sc.iview.SciView;
 
@@ -28,7 +31,7 @@ public class MultiResolutionMandelbulb {
 
     public static void main(String[] args) throws Exception {
         // Define max scale level
-        int maxScale = 3; // Adjust this value to test rendering at different scales
+        int maxScale = 6; // Adjust this value to test rendering at different scales
 
         // Desired grid size at the finest resolution level
         final int desiredFinestGridSize = 8; // Define as per your requirement
@@ -44,9 +47,9 @@ public class MultiResolutionMandelbulb {
             double scaleFactor = Math.pow(2, i);
 
             // Ensure resolution stays above a minimum value (0.5) to avoid zero scales
-            resolutions[i][0] = 1.0 / scaleFactor;
-            resolutions[i][1] = 1.0 / scaleFactor;
-            resolutions[i][2] = 1.0 / scaleFactor;
+            resolutions[i][0] = scaleFactor;
+            resolutions[i][1] = scaleFactor;
+            resolutions[i][2] = scaleFactor;
 
             gridSizes[i] = baseGridSize / (int) scaleFactor;
 
@@ -85,8 +88,10 @@ public class MultiResolutionMandelbulb {
                 final int timepointId = timepoint.getId();
                 for (int level = 0; level < resolutions.length; level++) {
                     AffineTransform3D transform = new AffineTransform3D();
-                    // Apply level-specific resolutions
-                    transform.scale(1 / resolutions[level][0], 1 / resolutions[level][1], 1 / resolutions[level][2]);
+                    transform.set(
+                            voxelSize[0] * resolutions[level][0], 0, 0, 0,
+                            0, voxelSize[1] * resolutions[level][1], 0, 0,
+                            0, 0, voxelSize[2] * resolutions[level][2], 0);
                     registrations.put(new ViewId(timepointId, setupId), new ViewRegistration(timepointId, setupId, transform));
                 }
             }
@@ -107,7 +112,10 @@ public class MultiResolutionMandelbulb {
 
         // Create and add volume to SciView
         SciView sciview = SciView.create();
-        sciview.addSpimVolume(spimData, "test", voxelDimensions);
+        sciview.getCamera().spatial().setPosition(new Vector3f(30, 30, 30));
+        Volume volume = sciview.addSpimVolume(spimData, "test", voxelDimensions);
+        volume.setMultiResolutionLevelLimits(new Pair<>(1,4));
+        volume.spatial().setScale(new Vector3f(10, 10, 10));
     }
 
     private static List<SourceAndConverter<?>> getSourceAndConverters(SpimDataMinimal spimData) {
