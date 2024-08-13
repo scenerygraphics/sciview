@@ -134,7 +134,8 @@ dependencies {
 
     implementation("sc.fiji:bigdataviewer-core")
     implementation("sc.fiji:bigdataviewer-vistools")
-    implementation("sc.fiji:bigvolumeviewer:0.3.3") {
+    //implementation("sc.fiji:bigvolumeviewer:0.3.3") {
+    implementation("com.github.kephale:bigvolumeviewer-core:1bc0f83") {
         exclude("org.jogamp.jogl","jogl-all")
         exclude("org.jogamp.gluegen", "gluegen-rt")
     }
