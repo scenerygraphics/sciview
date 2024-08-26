@@ -1867,8 +1867,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
             renderer.toggleVR()
         }
-
-        renderer.toggleVR()
     }
 
     /**
