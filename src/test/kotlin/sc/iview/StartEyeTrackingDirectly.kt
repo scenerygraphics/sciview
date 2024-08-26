@@ -1,6 +1,8 @@
+import graphics.scenery.utils.extensions.times
 import graphics.scenery.utils.lazyLogger
 import graphics.scenery.volumes.RAIVolume
 import graphics.scenery.volumes.TransferFunction
+import org.joml.Vector3f
 import org.scijava.command.CommandService
 import org.scijava.ui.UIService
 import sc.iview.SciView
@@ -17,17 +19,19 @@ fun main() {
     val uiService = context?.service(UIService::class.java)
     uiService?.showUI()
 
-    sv.open("C:/Software/datasets/MastodonTutorialDataset1/datasethdf5.xml")
-    val volumes = sv.findNodes { it.javaClass == RAIVolume::class.java }
-    volumes.first().let {
-        it as RAIVolume
-        it.minDisplayRange = 400f
-        it.maxDisplayRange = 1500f
-        val tf = TransferFunction()
-        tf.addControlPoint(0f, 0f)
-        tf.addControlPoint(1f, 1f)
-        it.transferFunction = tf
-    }
+        sv.open("C:/Software/datasets/MastodonTutorialDataset1/datasethdf5.xml")
+        val volumes = sv.findNodes { it.javaClass == RAIVolume::class.java }
+        volumes.first().let {
+            it as RAIVolume
+            it.minDisplayRange = 400f
+            it.maxDisplayRange = 1500f
+            val tf = TransferFunction()
+            tf.addControlPoint(0f, 0f)
+            tf.addControlPoint(1f, 1f)
+            it.transferFunction = tf
+            it.spatial().scale *= 20f
+            it.spatial().scale.z *= -1f
+        }
 
     val command = sv.scijavaContext!!.getService(CommandService::class.java)
     val argmap = HashMap<String, Any>()

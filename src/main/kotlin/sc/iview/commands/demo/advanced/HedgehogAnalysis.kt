@@ -7,6 +7,7 @@ import graphics.scenery.utils.extensions.*
 import graphics.scenery.utils.lazyLogger
 import org.slf4j.LoggerFactory
 import java.io.File
+import kotlin.math.log
 import kotlin.math.sqrt
 
 /**
@@ -54,19 +55,20 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 	 * From a [list] of Floats, return both the index of local maxima, and their value,
 	 * packaged nicely as a Pair<Int, Float>
 	 */
-	private fun localMaxima(list: List<Float>): List<Pair<Int, Float>> =
-			list.windowed(3, 1).mapIndexed { index, l ->
-				val left = l[0]
-				val center = l[1]
-				val right = l[2]
+	private fun localMaxima(list: List<Float>): List<Pair<Int, Float>> {
+		return list.windowed(6, 2).mapIndexed { index, l ->
+			val left = l[0]
+			val center = l[2]
+			val right = l[4]
 
-				// we have a match at center
-				if(left - center < 0 && center - right > 0) {
-					index + 1 to center
-				} else {
-					null
-				}
-			}.filterNotNull()
+			// we have a match at center
+			if (left < center && center > right) {
+				index * 2 + 2 to center
+			} else {
+				null
+			}
+		}.filterNotNull()
+	}
 
 	data class SpineGraphVertex(val timepoint: Int,
 								val position: Vector3f,
@@ -175,7 +177,8 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		// step3: connect localMaximal points between 2 candidate spines according to the shortest path principle
 		// get the initial vertex, this one is assumed to always be in front, and have a local maximum - aka, what
 		// the user looks at first is assumed to be the actual cell they want to track
-		val initial = candidates.first().filter { it.value>startingThreshold }.first()
+		logger.info("candidates are: ${candidates.joinToString { ", " }}")
+		val initial = candidates.first().first { it.value > startingThreshold }
 		var current = initial
 		var shortestPath = candidates.drop(1).mapIndexedNotNull { time, vs ->
 			// calculate world-space distances between current point, and all candidate

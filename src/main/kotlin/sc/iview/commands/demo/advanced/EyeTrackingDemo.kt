@@ -41,6 +41,7 @@ import graphics.scenery.attribute.material.Material
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
 import graphics.scenery.volumes.RAIVolume
+import sc.iview.commands.demo.animation.ParticleDemo
 import kotlin.reflect.KClass
 
 @Plugin(type = Command::class,
@@ -235,15 +236,17 @@ class EyeTrackingDemo: Command{
 
                     if(hedgehogs.visible) {
                         if(hedgehogVisibility == HedgehogVisibility.PerTimePoint) {
-                            hedgehogs.children.forEach { hedgehog->
-                                val hedgehog = hedgehog as InstancedNode
+                            hedgehogs.children.forEach { hh ->
+                                val hedgehog = hh as InstancedNode
                                 hedgehog.instances.forEach {
-                                    it.visible = (it.metadata["spine"] as SpineMetadata).timepoint == volume.viewerState.currentTimepoint
+                                    if (it.metadata.isNotEmpty()) {
+                                        it.visible = (it.metadata["spine"] as SpineMetadata).timepoint == volume.viewerState.currentTimepoint
+                                    }
                                 }
                             }
                         } else {
-                            hedgehogs.children.forEach { hedgehog ->
-                                val hedgehog = hedgehog as InstancedNode
+                            hedgehogs.children.forEach { hh ->
+                                val hedgehog = hh as InstancedNode
                                 hedgehog.instances.forEach { it.visible = true }
                             }
                         }
@@ -265,10 +268,10 @@ class EyeTrackingDemo: Command{
     }
 
     fun addHedgehog() {
+        log.info("added hedgehog")
         val hedgehog = Cylinder(0.005f, 1.0f, 16)
         hedgehog.visible = false
-//        hedgehog.material = ShaderMaterial.fromClass(BionicTracking::class.java,
-//                listOf(ShaderType.VertexShader, ShaderType.FragmentShader))
+        hedgehog.setMaterial(ShaderMaterial.fromClass(ParticleDemo::class.java))
         var hedgehogInstanced = InstancedNode(hedgehog)
         hedgehogInstanced.instancedProperties["ModelMatrix"] = { hedgehog.spatial().world}
         hedgehogInstanced.instancedProperties["Metadata"] = { Vector4f(0.0f, 0.0f, 0.0f, 0.0f) }
@@ -364,11 +367,10 @@ class EyeTrackingDemo: Command{
 
                 },
                 confirmAction = {
-                    hedgehogs.children.removeAt(hedgehogs.children.size-1)
+                    hedgehogs.children.removeLast()
                     volume.children.last { it.name.startsWith("Track-") }?.let { lastTrack ->
                         volume.removeChild(lastTrack)
                     }
-
                     val hedgehogId = hedgehogIds.get()
                     val hedgehogFile = sessionDirectory.resolve("Hedgehog_${hedgehogId}_${SystemHelpers.formatDateTime()}.csv").toFile()
                     val hedgehogFileWriter = BufferedWriter(FileWriter(hedgehogFile, true))
@@ -456,10 +458,12 @@ class EyeTrackingDemo: Command{
 
                         val toggleTracking = ClickBehaviour { _, _ ->
                             if (tracking) {
+                                log.info("deactivating tracking...")
                                 referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
                                 cam.showMessage("Tracking deactivated.",distance = 1.2f, size = 0.2f)
                                 dumpHedgehog()
                             } else {
+                                log.info("activating tracking...")
                                 addHedgehog()
                                 referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
                                 cam.showMessage("Tracking active.",distance = 1.2f, size = 0.2f)
@@ -573,7 +577,8 @@ class EyeTrackingDemo: Command{
      * If [hedgehog] is not null, the cell track will not be added to the scene.
      */
     fun dumpHedgehog() {
-        var lastHedgehog =  hedgehogs.children.last() as InstancedNode
+        log.info("dumping hedgehog...")
+        val lastHedgehog =  hedgehogs.children.last() as InstancedNode
         val hedgehogId = hedgehogIds.incrementAndGet()
 
         val hedgehogFile = sessionDirectory.resolve("Hedgehog_${hedgehogId}_${SystemHelpers.formatDateTime()}.csv").toFile()
@@ -617,21 +622,11 @@ class EyeTrackingDemo: Command{
 
 //        logger.info("---\nTrack: ${track.points.joinToString("\n")}\n---")
 
-        val master = if(lastHedgehog == null) {
-            val m = Cylinder(3f, 1.0f, 10)
-            m.ifMaterial {
-                ShaderMaterial.fromFiles("DefaultDeferredInstanced.vert", "DefaultDeferred.frag")
-                diffuse = Random.random3DVectorFromRange(0.2f, 0.8f)
-                roughness = 1.0f
-                metallic = 0.0f
-                cullingMode = Material.CullingMode.None
-            }
-            m.name = "Track-$hedgehogId"
-            val mInstanced = InstancedNode(m)
-            mInstanced
-        } else {
-            null
-        }
+        val m = Cylinder(3f, 1.0f, 10)
+        m.setMaterial(ShaderMaterial.fromClass(ParticleDemo::class.java))
+
+        m.name = "Track-$hedgehogId"
+        val master = InstancedNode(m)
 
         val parentId = 0
         val volumeDimensions = volume.getDimensions()
@@ -651,7 +646,7 @@ class EyeTrackingDemo: Command{
             trackFileWriter.write("$tp\t${p.x()}\t${p.y()}\t${p.z()}\t${hedgehogId}\t$parentId\t0\t0\n")
         }
 
-        master?.let { volume.addChild(it) }
+        master.let { volume.addChild(it) }
 
         trackFileWriter.close()
     }
