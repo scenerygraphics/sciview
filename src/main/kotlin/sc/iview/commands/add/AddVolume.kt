@@ -83,13 +83,13 @@ class AddVolume : Command {
 
     private fun <RealType> splitChannels(img: Img<RealType>, splitChannelDimension: Int): List<RandomAccessibleInterval<RealType>> {
         // Ensure we're safe in the dimension we choose
-        var splitDim = max(min(img.numDimensions() - 1, splitChannelDimension), 0)
+        val splitDim = max(min(img.numDimensions() - 1, splitChannelDimension), 0)
 
         val numChannels = img.dimension(splitDim)
         val channelIntervals = mutableListOf<RandomAccessibleInterval<RealType>>()
 
         for (channel in 0 until numChannels) {
-            val interval = Views.hyperSlice(img, splitDim, channel.toLong()) as RandomAccessibleInterval<RealType>
+            val interval = Views.hyperSlice(img, splitDim, channel) as RandomAccessibleInterval<RealType>
             channelIntervals.add(interval)
         }
 
@@ -101,13 +101,13 @@ class AddVolume : Command {
             setVoxelDimension()
 
         if (splitChannels && image.numDimensions() > 3) {
-            var splitDim = ((0 until image.numDimensions()).filter { d -> (image.imgPlus.axis(d) as CalibratedAxis).type().label == "Channel" }).first()
-            var channels = splitChannels(image, splitDim)
+            val splitDim = ((0 until image.numDimensions()).filter { d -> (image.imgPlus.axis(d) as CalibratedAxis).type().label == "Channel" }).first()
+            val channels = splitChannels(image, splitDim)
 
             for (ch in channels.indices) {
-                var channel = channels[ch]
-                var v = sciView.addVolume(channel as RandomAccessibleInterval<out RealType<*>>, name = image.name + "-ch$ch", voxelDimensions = floatArrayOf(voxelWidth, voxelHeight, voxelDepth), block = {})
-                var lut = splitChannelLuts[ch % splitChannelLuts.size]
+                val channel = channels[ch]
+                val v = sciView.addVolume(channel as RandomAccessibleInterval<out RealType<*>>, name = image.name + "-ch$ch", voxelDimensions = floatArrayOf(voxelWidth, voxelHeight, voxelDepth), block = {})
+                val lut = splitChannelLuts[ch % splitChannelLuts.size]
                 sciView.setColormap(v, lut)
             }
         } else {

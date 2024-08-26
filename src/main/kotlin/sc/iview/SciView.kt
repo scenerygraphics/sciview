@@ -64,7 +64,6 @@ import graphics.scenery.volumes.Volume.Companion.fromXML
 import graphics.scenery.volumes.Volume.Companion.setupId
 import graphics.scenery.volumes.Volume.VolumeDataSource.RAISource
 import io.scif.SCIFIOService
-import io.scif.services.DatasetIOService
 import net.imagej.Dataset
 import net.imagej.ImageJService
 import net.imagej.axis.CalibratedAxis
@@ -82,12 +81,9 @@ import net.imglib2.img.Img
 import net.imglib2.img.array.ArrayImgs
 import net.imglib2.realtransform.AffineTransform3D
 import net.imglib2.type.numeric.ARGBType
-import net.imglib2.type.numeric.NumericType
 import net.imglib2.type.numeric.RealType
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import net.imglib2.view.Views
-import org.janelia.saalfeldlab.n5.N5FSReader
-import org.janelia.saalfeldlab.n5.imglib2.N5Utils
 import org.joml.Quaternionf
 import org.joml.Vector3f
 import org.joml.Vector4f
@@ -107,6 +103,7 @@ import org.scijava.util.ColorRGB
 import org.scijava.util.Colors
 import org.scijava.util.VersionUtils
 import sc.iview.commands.demo.animation.ParticleDemo
+import sc.iview.commands.edit.InspectorInteractiveCommand
 import sc.iview.event.NodeActivatedEvent
 import sc.iview.event.NodeAddedEvent
 import sc.iview.event.NodeChangedEvent
@@ -116,9 +113,11 @@ import sc.iview.ui.CustomPropertyUI
 import sc.iview.ui.MainWindow
 import sc.iview.ui.SwingMainWindow
 import sc.iview.ui.TaskManager
+import ucar.units.ConversionException
 import java.awt.event.WindowListener
 import java.io.File
 import java.io.IOException
+import java.net.JarURLConnection
 import java.net.URL
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
@@ -127,6 +126,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import java.util.function.Function
 import java.util.function.Predicate
@@ -134,6 +134,7 @@ import java.util.stream.Collectors
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap
+import kotlin.concurrent.thread
 import javax.swing.JOptionPane
 import kotlin.math.cos
 import kotlin.math.sin
@@ -192,7 +193,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     private lateinit var io: IOService
 
     @Parameter
-    private lateinit var eventService: EventService
+    internal lateinit var eventService: EventService
 
     @Parameter
     private lateinit var lutService: LUTService
@@ -219,16 +220,20 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     private var animating = false
 
     /**
+     * Track whether the scene changed and needs an update in the next tick
+     */
+    public var needSceneUpdate: Boolean = false
+
+    /**
      * This tracks the actively selected Node in the scene
      */
     var activeNode: Node? = null
         private set
 
-    /*
-     * Return the SciJava Display that contains SciView
-     *//*
-     * Set the SciJava Display
-     */  var display: Display<*>? = null
+    /**
+     * The SciJava Display that contains SciView
+     */
+    var display: Display<*>? = null
 
     /**
      * List of available LUTs for caching
@@ -415,6 +420,22 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         controls = Controls(this)
 
         imageToVolumeMap = HashMap<Any, Volume>()
+
+        // Create a hook for running after each frame is rendered
+        renderer?.runAfterRendering?.add { this.updateAferRendering() }
+    }
+
+    /**
+     * A method that is run after the scene is rendered
+     */
+    private fun updateAferRendering() {
+        if(needSceneUpdate) {
+            mainWindow.rebuildSceneTree()
+            if (activeNode == null){
+                (mainWindow as SwingMainWindow).nodePropertyEditor.updateProperties(null)
+            }
+            needSceneUpdate = false
+        }
     }
 
     fun toggleSidebar(): Boolean {
@@ -942,19 +963,14 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                     is Mesh -> addMesh(data, name = name)
                     is PointCloud -> addPointCloud(data, name)
                     is graphics.scenery.Mesh -> addMesh(data, name = name)
-                    is Dataset -> addVolume(data, floatArrayOf(1.0f, 1.0f, 1.0f))
-                    //            is RandomAccessibleInterval<*> -> {
-                    //                val t = data.randomAccess().get()
-                    //                addVolume(data, source, floatArrayOf(1.0f, 1.0f, 1.0f))
-                    //            }
+                    is Dataset -> addVolume(data)
                     is List<*> -> {
-                        val list = data
-                        require(!list.isEmpty()) { "Data source '$source' appears empty." }
-                        val element = list[0]
+                        require(data.isNotEmpty()) { "Data source '$source' appears empty." }
+                        val element = data[0]
                         if(element is RealLocalizable) {
                             // NB: For now, we assume all elements will be RealLocalizable.
                             // Highly likely to be the case, barring antagonistic importers.
-                            val points = list as List<RealLocalizable>
+                            val points = data as List<RealLocalizable>
                             addPointCloud(points, name)
                         } else {
                             val type = if(element == null) "<null>" else element.javaClass.name
@@ -1038,7 +1054,9 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         n?.let {
             it.block()
             // Ensure name is unique
-            n.name = generateUniqueName(n.name)
+            if(n.name.isEmpty()) {
+                n.name = generateUniqueName(n.name)
+            }
             parent.addChild(it)
             objectService.addObject(n)
             if (blockOnNewNodes) {
@@ -1160,13 +1178,13 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     @Suppress("UNUSED_PARAMETER")
     @EventHandler
     protected fun onNodeAdded(event: NodeAddedEvent?) {
-        mainWindow.rebuildSceneTree()
+        needSceneUpdate = true
     }
 
     @Suppress("UNUSED_PARAMETER")
     @EventHandler
     protected fun onNodeRemoved(event: NodeRemovedEvent?) {
-        mainWindow.rebuildSceneTree()
+        needSceneUpdate = true
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -1325,7 +1343,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             }
         }
         if (runRecursive) {
-            activeNode?.runRecursive( { node: Node -> this.deleteNode(node) })
+            activeNode?.runRecursive { node: Node -> this.deleteNode(node, activePublish = false) }
         } else {
             deleteNode(activeNode)
         }
@@ -1352,7 +1370,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         }
 
         for (child in node!!.children) {
-            deleteNode(child, activePublish)
+            // child node deletions should not be published actively
+            deleteNode(child, false)
         }
         objectService.removeObject(node)
         node.parent?.removeChild(node)
@@ -1378,7 +1397,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         // if scijavaContext was not created by ImageJ, then system exit
         if( objectService.getObjects(Utils.SciviewStandalone::class.java).size > 0 ) {
             log.info("Was running as sciview standalone, shutting down JVM")
-            System.exit(0)
+            thread { System.exit(0) }
         }
     }
 
@@ -1517,18 +1536,26 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      */
     fun getSciviewScale(image: Dataset): FloatArray {
         val voxelDims = FloatArray(3)
-        var axisNames = arrayOf("X", "Y", "Z")
+        val axisNames = arrayOf("X", "Y", "Z")
         for (axisIdx in voxelDims.indices) {
-            var d = (0 until image.numDimensions()).filter { idx -> image.axis(idx).type().label == axisNames[axisIdx] }.first()
+            val d = (0 until image.numDimensions()).first { idx -> image.axis(idx).type().label == axisNames[axisIdx] }
             val inValue = image.axis(d).averageScale(0.0, 1.0)
             if (image.axis(d).unit() == null || d >= axes.size) {
                 voxelDims[axisIdx] = inValue.toFloat()
             } else {
-                val imageAxisUnit = image.axis(d).unit().replace("µ", "u")
-                val sciviewAxisUnit = axis(axisIdx)!!.unit().replace("µ", "u")
+                try {
+                    val imageAxisUnit = image.axis(d).unit().replace("µ", "u")
+                    val sciviewAxisUnit = axis(axisIdx)!!.unit().replace("µ", "u")
 
-                voxelDims[axisIdx] = unitService.value(inValue, imageAxisUnit, sciviewAxisUnit).toFloat()
+                    voxelDims[axisIdx] = unitService.value(inValue, imageAxisUnit, sciviewAxisUnit).toFloat()
+                } catch(e: IllegalArgumentException) {
+                    logger.warn(e.message + " - setting voxel scale for dimension $axisIdx to 1.0")
+                    voxelDims[axisIdx] = 1.0f
+                }
+
             }
+
+            logger.debug("Dim for axis $d is ${voxelDims[axisIdx]}")
         }
         return voxelDims
     }
@@ -1644,7 +1671,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         image.min(minPt)
         imageRA.setPosition(minPt)
         val voxelType = imageRA.get()!!.createVariable() as T
-        println("addVolume " + image.numDimensions() + " interval " + image as Interval)
+        logger.info("Adding ${image.numDimensions()}-dimensional volume with type ${voxelType.javaClass.simpleName} (${image as Interval}) with voxel dimensions ${voxelDimensions.joinToString("/")}")
 
         //int numTimepoints = 1;
         if (image.numDimensions() > 3) {
@@ -1665,11 +1692,11 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         val options = VolumeViewerOptions()
         val v: Volume = RAIVolume(ds, options, hub)
         // Note we override scenery's default scale of mm
-        // v.pixelToWorldRatio = 0.1f
+//        v.pixelToWorldRatio = 0.01f
         v.name = name
         v.metadata["sources"] = sources
         v.metadata["VoxelDimensions"] = voxelDimensions
-        v.spatial().scale = Vector3f(voxelDimensions[0], voxelDimensions[1], voxelDimensions[2]) * v.pixelToWorldRatio
+        v.spatial().scale = Vector3f(voxelDimensions[0], voxelDimensions[1], voxelDimensions[2])
         val tf = v.transferFunction
         val rampMin = 0f
         val rampMax = 0.1f
@@ -1828,8 +1855,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         // we need to force reloading the renderer as the HMD might require device or instance extensions
         if (renderer is VulkanRenderer && hmdAdded) {
             replaceRenderer(renderer.javaClass.simpleName, true, true)
-
-            logger.info("renderer replaced")
             while (renderer.initialized == false || renderer.firstImageReady == false) {
                 renderer = this.renderer!!
                 logger.info("Waiting for renderer reinitialisation (init: ${renderer.initialized} ready: ${renderer.firstImageReady}")
@@ -1839,6 +1864,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                     e.printStackTrace()
                 }
             }
+
+            renderer.toggleVR()
         }
 
         renderer.toggleVR()
@@ -1947,7 +1974,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * Convenience function for getting a string of info about a Node
      */
     fun nodeInfoString(n: Node): String {
-        return "Node name: " + n.name + " Node type: " + n.nodeType + " To String: " + n
+        return "Node name: ${n.name} Node type: ${n.javaClass.simpleName} To String: $n"
     }
 
     /**
@@ -2019,6 +2046,14 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         return ProjectDirectories.from("sc", "iview", "sciview")
     }
 
+    /**
+     * Adds a new custom panel to the inspector, with a usage [condition] given (e.g., checking for a
+     * specific Node type, and the [panelClass] that represents the custom panel.
+     */
+    fun addNodeSpecificInspectorPanel(condition: (Node) -> Boolean, panelClass: Class<out InspectorInteractiveCommand>) {
+        mainWindow.addNodeSpecificInspectorPanel(condition, panelClass)
+    }
+
     companion object {
         //bounds for the controls
         const val FPSSPEED_MINBOUND_SLOW = 0.01f
@@ -2062,6 +2097,58 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         @Throws(Exception::class)
         fun createSciView(): SciView {
             return create()
+        }
+
+        private fun getGitHashFor(clazz: Class<*>): String? {
+            val sciviewBaseClassName = clazz.simpleName + ".class"
+            val sciviewClassPath = clazz.getResource(sciviewBaseClassName).toString()
+            var gitHash: String? = null
+            if (!sciviewClassPath.startsWith("jar")) {
+                return gitHash
+            }
+            gitHash = try {
+                val url = URL(sciviewClassPath)
+                val jarConnection = url.openConnection() as JarURLConnection
+                val manifest = jarConnection.manifest
+                val attributes = manifest.mainAttributes
+                attributes.getValue("Implementation-Build")
+            } catch (ioe: IOException) {
+                null
+            } catch (npe: NullPointerException) {
+                null
+            }
+            return gitHash
+        }
+
+        fun String.runCommand(workingDir: File): String? {
+            try {
+                val parts = this.split("\\s".toRegex())
+                val proc = ProcessBuilder(*parts.toTypedArray())
+                    .directory(workingDir)
+                    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                    .redirectError(ProcessBuilder.Redirect.PIPE)
+                    .start()
+
+                proc.waitFor(60, TimeUnit.MINUTES)
+                return proc.inputStream.bufferedReader().readText()
+            } catch(e: IOException) {
+                e.printStackTrace()
+                return null
+            }
+        }
+
+        /**
+         * Returns the currently-used sciview and scenery version strings, including Git hashes.
+         */
+        @JvmStatic
+        fun fullVersionString(): String {
+            val sceneryGitHash = getGitHashFor(SceneryBase::class.java)
+            val sciviewGitHash = getGitHashFor(SciView::class.java) ?: "git rev-parse --short HEAD".runCommand(File("."))?.trim()
+
+            val sceneryVersion: String? = SceneryBase::class.java.getPackage().implementationVersion
+            val sciviewVersion: String? = SciView::class.java.getPackage().implementationVersion
+
+            return "sciview ${sciviewVersion ?: ""} ($sciviewGitHash) / scenery $sceneryVersion ($sceneryGitHash)"
         }
     }
 }

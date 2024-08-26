@@ -10,7 +10,7 @@ plugins {
     kotlin("kapt")
     sciview.publish
     sciview.sign
-    sciview.populateFiji
+    sciview.fiji
     id("org.jetbrains.dokka")
     jacoco
     `maven-publish`
@@ -45,7 +45,7 @@ dependencies {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "0.11.0"
+    val sceneryVersion = "0.11.2"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
@@ -57,14 +57,14 @@ dependencies {
         exclude("org.jogamp.jogl","jogl-all")
     }
 
-    implementation("net.java.dev.jna:jna-platform:5.11.0")
-    implementation("net.clearvolume:cleargl")
+    implementation("net.java.dev.jna:jna-platform:5.14.0")
+//    implementation("net.clearvolume:cleargl")
     implementation("org.janelia.saalfeldlab:n5")
     implementation("org.janelia.saalfeldlab:n5-imglib2")
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
     implementation("org.apache.logging.log4j:log4j-1.2-api:2.20.0")
 
-    implementation("com.formdev:flatlaf:3.3")
+    implementation("com.formdev:flatlaf:3.4.1")
 
     // SciJava dependencies
 
@@ -105,7 +105,7 @@ dependencies {
     // Kotlin dependencies
     implementation("org.jetbrains.kotlin:kotlin-stdlib-common:$ktVersion")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:$ktVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 
     // Test scope
 
@@ -132,10 +132,6 @@ dependencies {
         exclude("org.jogamp.jogl","jogl-all")
         exclude("org.jogamp.gluegen", "gluegen-rt")
     }
-
-    // TODO hacks for testing
-    runtimeOnly("org.jogamp.jogl:jogl-all:2.4.0:natives-macosx-universal")
-    runtimeOnly("com.metsci.ext.org.jogamp.gluegen:gluegen-rt:2.4.0-rc-20200202:natives-macosx-universal")
 
     // OME
     implementation("ome:formats-bsd")
@@ -181,6 +177,23 @@ tasks {
     }
     jar {
         archiveVersion.set(rootProject.version.toString())
+
+        manifest.attributes["Implementation-Build"] = run { // retrieve the git commit hash
+            val gitFolder = "$projectDir/.git/"
+            val digit = 7
+            /*  '.git/HEAD' contains either
+             *      in case of detached head: the currently checked out commit hash
+             *      otherwise: a reference to a file containing the current commit hash     */
+            val head = file(gitFolder + "HEAD").readText().split(":") // .git/HEAD
+            val isCommit = head.size == 1 // e5a7c79edabbf7dd39888442df081b1c9d8e88fd
+            // def isRef = head.length > 1     // ref: refs/heads/main
+            when {
+                isCommit -> head[0] // e5a7c79edabb
+                else -> file(gitFolder + head[1].trim()) // .git/refs/heads/main
+                    .readText()
+            }.trim().take(digit)
+        }
+        manifest.attributes["Implementation-Version"] = project.version
     }
 
     withType<GenerateMavenPom>().configureEach {
@@ -351,35 +364,34 @@ tasks {
         dependsOn(test) // tests are required to run before generating the report
     }
 
-    register("runMain", JavaExec::class.java) {
-        classpath = sourceSets.main.get().runtimeClasspath
+    fun registerTask(name: String, className: String, propertyPrefix: String, taskGroup: String = "other") {
 
-        mainClass.set("sc.iview.Main")
+        register(name, JavaExec::class.java) {
+            group = taskGroup
+            classpath = sourceSets.main.get().runtimeClasspath
 
-        val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
+            mainClass.set(className)
 
-        val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
-        allJvmArgs = if (additionalArgs != null) {
-            allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
-        } else {
-            allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
+            val props = System.getProperties().filter { (k, _) -> k.toString().startsWith(propertyPrefix) }
+
+            val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
+            allJvmArgs = if (additionalArgs != null) {
+                allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
+            } else {
+                allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
+            }
         }
     }
 
-    register("runImageJMain", JavaExec::class.java) {
-        classpath = sourceSets.main.get().runtimeClasspath
+    registerTask("runMain", "sc.iview.Main", "scenery.")
 
-        mainClass.set("sc.iview.ImageJMain")
+    registerTask("runImageJMain", "sc.iview.ImageJMain", "scenery.")
 
-        val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
+    registerTask("runInstancingBenchmark",
+        "sc.iview.commands.demo.advanced.InstancingBenchmark",
+        "sciview.benchmark.",
+        "demos.advanced")
 
-        val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
-        allJvmArgs = if (additionalArgs != null) {
-            allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
-        } else {
-            allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
-        }
-    }
 
     sourceSets.main.get().allSource.files
         .filter { it.path.contains("demo") && (it.name.endsWith(".kt") || it.name.endsWith(".java")) }
@@ -395,21 +407,23 @@ tasks {
             val exampleName = className.substringAfterLast(".")
             val exampleType = className.substringBeforeLast(".").substringAfterLast(".")
 
-            logger.quiet("Registering $exampleName of $exampleType from $className")
-            register<JavaExec>(name = className.substringAfterLast(".")) {
-                classpath = sourceSets.test.get().runtimeClasspath
-                mainClass.set(className)
-                group = "demos.$exampleType"
+            logger.info("Registering $exampleName of $exampleType from $className")
+            val name = className.substringAfterLast(".")
+            if (name != "InstancingBenchmark")
+                register<JavaExec>(name = className.substringAfterLast(".")) {
+                    classpath = sourceSets.test.get().runtimeClasspath
+                    mainClass.set(className)
+                    group = "demos.$exampleType"
 
-                val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
+                    val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
 
-                val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
-                allJvmArgs = if (additionalArgs != null) {
-                    allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
-                } else {
-                    allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
+                    val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
+                    allJvmArgs = if (additionalArgs != null) {
+                        allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
+                    } else {
+                        allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
+                    }
                 }
-            }
         }
 
     register<JavaExec>(name = "run") {

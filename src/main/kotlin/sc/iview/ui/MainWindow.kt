@@ -28,41 +28,85 @@
  */
 package sc.iview.ui
 
+import graphics.scenery.BoundingGrid
+import graphics.scenery.Camera
 import graphics.scenery.Node
+import graphics.scenery.PointLight
+import graphics.scenery.primitives.Atmosphere
+import graphics.scenery.primitives.Line
+import graphics.scenery.primitives.TextBoard
+import graphics.scenery.volumes.SlicingPlane
+import graphics.scenery.volumes.Volume
+import sc.iview.commands.edit.*
+import java.awt.Panel
 
 /**
  * Interface for sciview main windows.
  *
  * @author Ulrik Guenther
  */
-interface MainWindow {
+abstract class MainWindow {
+    var nodeSpecificPropertyPanels: ArrayList<InspectorInteractiveCommand.UsageCondition> = arrayListOf()
+        protected set
+
+    init {
+
+        val nodeSpecificPropertyMappings = hashMapOf(
+            PointLight::class.java to LightProperties::class.java,
+            Camera::class.java to CameraProperties::class.java,
+            BoundingGrid::class.java to BoundingGridProperties::class.java,
+            Line::class.java to LineProperties::class.java,
+            SlicingPlane::class.java to SlicingPlaneProperties::class.java,
+            TextBoard::class.java to TextBoardProperties::class.java,
+            Atmosphere::class.java to AtmosphereProperties::class.java,
+            Volume::class.java to VolumeProperties::class.java,
+        )
+
+        nodeSpecificPropertyMappings.forEach { (nodeClass, propertyClass) ->
+            nodeSpecificPropertyPanels += InspectorInteractiveCommand.UsageCondition(
+                { sceneNode -> nodeClass.isAssignableFrom(sceneNode.javaClass) }, propertyClass
+            )
+        }
+
+    }
+
+    /**
+     * Adds a new custom panel to the inspector, with a usage [condition] given (e.g., checking for a
+     * specific Node type, and the [panelClass] that represents the custom panel.
+     */
+    fun addNodeSpecificInspectorPanel(condition: (Node) -> Boolean, panelClass: Class<out InspectorInteractiveCommand>) {
+        nodeSpecificPropertyPanels += InspectorInteractiveCommand.UsageCondition(
+            condition, panelClass
+        )
+    }
+
     /**
      * Initializer for the REPL.
      */
-    fun initializeInterpreter()
+    abstract fun initializeInterpreter()
 
     /**
      * Toggling the sidebar for inspector, REPL, etc, returns the new state, where true means visible.
      */
-    fun toggleSidebar(): Boolean
+    abstract fun toggleSidebar(): Boolean
 
     /**
      * Shows a context menu in the rendering window at [x], [y].
      */
-    fun showContextNodeChooser(x: Int, y: Int)
+    abstract fun showContextNodeChooser(x: Int, y: Int)
 
     /**
      * Signal to select a specific [node].
      */
-    fun selectNode(node: Node?)
+    abstract fun selectNode(node: Node?)
 
     /**
      * Signal to rebuild scene tree in the UI.
      */
-    fun rebuildSceneTree()
+    abstract fun rebuildSceneTree()
 
     /**
      * Closes the main window.
      */
-    fun close()
+    abstract fun close()
 }
