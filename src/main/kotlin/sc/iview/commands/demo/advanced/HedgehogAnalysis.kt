@@ -146,7 +146,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 				// determine local maxima (and their indices) along the spine, aka, actual things the user might have
 				// seen when looking into the direction of the spine
 				val maxIndices = localMaxima(spine.samples.filterNotNull())
-				logger.info("Local maxima at ${tp.key}/$i are: ${maxIndices.joinToString(",")}")
+				logger.debug("Local maxima at ${tp.key}/$i are: ${maxIndices.joinToString(",")}")
 
 				// if there actually are local maxima, generate a graph vertex for them with all the necessary metadata
 				if(maxIndices.isNotEmpty()) {
@@ -154,7 +154,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 //                  filter the maxIndices which are too far away, which can be removed
 					//filter { it.first <1200}.
 					maxIndices.map { index ->
-						logger.info("Generating vertex at index $index")
+						logger.debug("Generating vertex at index $index")
 						val position = Vector3f(spine.localEntry).add((Vector3f(spine.localDirection).mul(index.first.toFloat())))
 						val worldPosition = localToWorld.transform((Vector3f(position)).xyzw()).xyz()
 						SpineGraphVertex(tp.key,
@@ -177,7 +177,6 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		// step3: connect localMaximal points between 2 candidate spines according to the shortest path principle
 		// get the initial vertex, this one is assumed to always be in front, and have a local maximum - aka, what
 		// the user looks at first is assumed to be the actual cell they want to track
-		logger.info("candidates are: ${candidates.joinToString { ", " }}")
 		val initial = candidates.first().first { it.value > startingThreshold }
 		var current = initial
 		var shortestPath = candidates.drop(1).mapIndexedNotNull { time, vs ->
