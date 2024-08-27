@@ -29,7 +29,7 @@ fun main() {
             tf.addControlPoint(0f, 0f)
             tf.addControlPoint(1f, 1f)
             it.transferFunction = tf
-            it.spatial().scale *= 20f
+            it.spatial().scale *= 50f
             it.spatial().scale.z *= -1f
         }
 
