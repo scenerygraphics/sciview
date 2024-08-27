@@ -6,7 +6,6 @@ import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.TrackerRole
 import graphics.scenery.controls.behaviours.ControllerDrag
 import graphics.scenery.controls.eyetracking.PupilEyeTracker
-import graphics.scenery.numerics.Random
 import graphics.scenery.textures.Texture
 import graphics.scenery.utils.MaybeIntersects
 import graphics.scenery.utils.SystemHelpers
@@ -40,9 +39,7 @@ import org.scijava.log.LogService
 import graphics.scenery.attribute.material.Material
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
-import graphics.scenery.volumes.RAIVolume
 import sc.iview.commands.demo.animation.ParticleDemo
-import kotlin.reflect.KClass
 
 @Plugin(type = Command::class,
         menuRoot = "SciView",
@@ -304,17 +301,17 @@ class EyeTrackingDemo: Command{
                 HedgehogVisibility.Hidden -> {
                     hedgehogs.visible = false
                     hedgehogs.runRecursive { it.visible = false }
-                    cam.showMessage("Hedgehogs hidden",distance = 1.2f, size = 0.2f)
+                    cam.showMessage("Hedgehogs hidden",distance = 2f, size = 0.2f, centered = true)
                 }
 
                 HedgehogVisibility.PerTimePoint -> {
                     hedgehogs.visible = true
-                    cam.showMessage("Hedgehogs shown per timepoint",distance = 1.2f, size = 0.2f)
+                    cam.showMessage("Hedgehogs shown per timepoint",distance = 2f, size = 0.2f, centered = true)
                 }
 
                 HedgehogVisibility.Visible -> {
                     hedgehogs.visible = true
-                    cam.showMessage("Hedgehogs visible",distance = 1.2f, size = 0.2f)
+                    cam.showMessage("Hedgehogs visible",distance = 2f, size = 0.2f, centered = true)
                 }
             }
         }
@@ -330,7 +327,7 @@ class EyeTrackingDemo: Command{
         val fasterOrScale = ClickBehaviour { _, _ ->
             if(playing) {
                 volumesPerSecond = maxOf(minOf(volumesPerSecond+1, 20), 1)
-                cam.showMessage("Speed: $volumesPerSecond vol/s",distance = 1.2f, size = 0.2f)
+                cam.showMessage("Speed: $volumesPerSecond vol/s",distance = 1.2f, size = 0.2f, centered = true)
             } else {
                 volumeScaleFactor = minOf(volumeScaleFactor * 1.2f, 3.0f)
                 volume.scale =Vector3f(1.0f) .mul(volumeScaleFactor)
@@ -340,7 +337,7 @@ class EyeTrackingDemo: Command{
         val slowerOrScale = ClickBehaviour { _, _ ->
             if(playing) {
                 volumesPerSecond = maxOf(minOf(volumesPerSecond-1, 20), 1)
-                cam.showMessage("Speed: $volumesPerSecond vol/s",distance = 1.2f, size = 0.2f)
+                cam.showMessage("Speed: $volumesPerSecond vol/s",distance = 2f, size = 0.2f, centered = true)
             } else {
                 volumeScaleFactor = maxOf(volumeScaleFactor / 1.2f, 0.1f)
                 volume.scale = Vector3f(1.0f) .mul(volumeScaleFactor)
@@ -350,9 +347,9 @@ class EyeTrackingDemo: Command{
         val playPause = ClickBehaviour { _, _ ->
             playing = !playing
             if(playing) {
-                cam.showMessage("Playing",distance = 1.2f, size = 0.2f)
+                cam.showMessage("Playing",distance = 2f, size = 0.2f, centered = true)
             } else {
-                cam.showMessage("Paused",distance = 1.2f, size = 0.2f)
+                cam.showMessage("Paused",distance = 2f, size = 0.2f, centered = true)
             }
         }
 
@@ -360,10 +357,11 @@ class EyeTrackingDemo: Command{
 
         val deleteLastHedgehog = ConfirmableClickBehaviour(
                 armedAction = { timeout ->
-                    cam.showMessage("Deleting last track, press again to confirm.",distance = 1.2f, size = 0.2f,
-                            messageColor = Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
-                            backgroundColor = Vector4f(1.0f, 0.2f, 0.2f, 1.0f),
-                            duration = timeout.toInt())
+                    cam.showMessage("Deleting last track, press again to confirm.",distance = 2f, size = 0.2f,
+                        messageColor = Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
+                        backgroundColor = Vector4f(1.0f, 0.2f, 0.2f, 1.0f),
+                        duration = timeout.toInt(),
+                        centered = true)
 
                 },
                 confirmAction = {
@@ -379,10 +377,12 @@ class EyeTrackingDemo: Command{
                     hedgehogFileWriter.write("# WARNING: TRACK $hedgehogId IS INVALID\n")
                     hedgehogFileWriter.close()
 
-                    cam.showMessage("Last track deleted.",distance = 1.2f, size = 0.2f,
-                            messageColor = Vector4f(1.0f, 0.2f, 0.2f, 1.0f),
-                            backgroundColor = Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
-                            duration = 1000)
+                    cam.showMessage("Last track deleted.",distance = 2f, size = 0.2f,
+                        messageColor = Vector4f(1.0f, 0.2f, 0.2f, 1.0f),
+                        backgroundColor = Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
+                        duration = 1000,
+                        centered = true
+                    )
                 })
 
         hmd.addBehaviour("playback_direction", ClickBehaviour { _, _ ->
@@ -391,11 +391,11 @@ class EyeTrackingDemo: Command{
             } else {
                 PlaybackDirection.Forward
             }
-            cam.showMessage("Playing: ${direction}")
+            cam.showMessage("Playing: ${direction}", distance = 2f, centered = true)
         })
 
         val cellDivision = ClickBehaviour { _, _ ->
-            cam.showMessage("Adding cell division", duration = 1000)
+            cam.showMessage("Adding cell division", distance = 2f, duration = 1000)
             dumpHedgehog()
             addHedgehog()
         }
@@ -435,15 +435,15 @@ class EyeTrackingDemo: Command{
                 if (!pupilTracker.isCalibrated) {
                     log.info("pupil is currently uncalibrated")
                     pupilTracker.onCalibrationInProgress = {
-                        cam.showMessage("Crunching equations ...",distance = 1.2f, size = 0.2f, messageColor = Vector4f(1.0f, 0.8f, 0.0f, 1.0f), duration = 15000)
+                        cam.showMessage("Crunching equations ...",distance = 2f, size = 0.2f, messageColor = Vector4f(1.0f, 0.8f, 0.0f, 1.0f), duration = 15000, centered = true)
                     }
 
                     pupilTracker.onCalibrationFailed = {
-                        cam.showMessage("Calibration failed.",distance = 1.2f, size = 0.2f, messageColor = Vector4f(1.0f, 0.0f, 0.0f, 1.0f))
+                        cam.showMessage("Calibration failed.",distance = 2f, size = 0.2f, messageColor = Vector4f(1.0f, 0.0f, 0.0f, 1.0f), centered = true)
                     }
 
                     pupilTracker.onCalibrationSuccess = {
-                        cam.showMessage("Calibration succeeded!", distance = 1.2f, size = 0.2f,messageColor = Vector4f(0.0f, 1.0f, 0.0f, 1.0f))
+                        cam.showMessage("Calibration succeeded!", distance = 2f, size = 0.2f, messageColor = Vector4f(0.0f, 1.0f, 0.0f, 1.0f), centered = true)
 //						cam.children.find { it.name == "debugBoard" }?.visible = true
 
                         for (i in 0 until 20) {
@@ -460,13 +460,13 @@ class EyeTrackingDemo: Command{
                             if (tracking) {
                                 log.info("deactivating tracking...")
                                 referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
-                                cam.showMessage("Tracking deactivated.",distance = 1.2f, size = 0.2f)
+                                cam.showMessage("Tracking deactivated.",distance = 2f, size = 0.2f, centered = true)
                                 dumpHedgehog()
                             } else {
                                 log.info("activating tracking...")
                                 addHedgehog()
                                 referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
-                                cam.showMessage("Tracking active.",distance = 1.2f, size = 0.2f)
+                                cam.showMessage("Tracking active.",distance = 2f, size = 0.2f, centered = true)
                             }
                             tracking = !tracking
                         }
@@ -482,7 +482,7 @@ class EyeTrackingDemo: Command{
                     sciview.deleteNode(sciview.find("eyeFrames"))
 
                     log.info("Starting eye tracker calibration")
-                    cam.showMessage("Follow the white rabbit.", distance = 1.2f, size = 0.15f,duration = 1500)
+                    cam.showMessage("Follow the white rabbit.", distance = 2f, size = 0.2f,duration = 1500, centered = true)
                     pupilTracker.calibrate(cam, hmd,
                             generateReferenceData = true,
                             calibrationTarget = calibrationTarget)
@@ -622,11 +622,16 @@ class EyeTrackingDemo: Command{
 
 //        logger.info("---\nTrack: ${track.points.joinToString("\n")}\n---")
 
-        val m = Cylinder(3f, 1.0f, 10)
-        m.setMaterial(ShaderMaterial.fromClass(ParticleDemo::class.java))
+        val cylinder = Cylinder(0.01f, 1.0f, 6)
+        cylinder.setMaterial(ShaderMaterial.fromFiles("DeferredInstancedColor.vert", "DeferredInstancedColor.frag")) {
+            diffuse = Vector3f(1f)
+            ambient = Vector3f(1f)
+            roughness = 1f
+        }
 
-        m.name = "Track-$hedgehogId"
-        val master = InstancedNode(m)
+        cylinder.name = "Track-$hedgehogId"
+        val mainTrack = InstancedNode(cylinder)
+        mainTrack.instancedProperties["Color"] = { Vector4f(1f) }
 
         val parentId = 0
         val volumeDimensions = volume.getDimensions()
@@ -635,18 +640,19 @@ class EyeTrackingDemo: Command{
         trackFileWriter.newLine()
         trackFileWriter.write("# START OF TRACK $hedgehogId, child of $parentId\n")
         track.points.windowed(2, 1).forEach { pair ->
-            if(master != null) {
-                val element = master.addInstance()
-                element.spatial().orientBetweenPoints(Vector3f(pair[0].first).mul(Vector3f(volumeDimensions)), Vector3f(pair[1].first).mul(Vector3f(volumeDimensions)), rescale = true, reposition = true)
+            if(mainTrack != null) {
+                val element = mainTrack.addInstance()
+                element.addAttribute(Material::class.java, cylinder.material())
+                element.spatial().orientBetweenPoints(Vector3f(pair[0].first), Vector3f(pair[1].first), rescale = true, reposition = true)
                 element.parent = volume
-                master.instances.add(element)
+//                mainTrack.instances.add(element)
             }
             val p = Vector3f(pair[0].first).mul(Vector3f(volumeDimensions))//direct product
             val tp = pair[0].second.timepoint
             trackFileWriter.write("$tp\t${p.x()}\t${p.y()}\t${p.z()}\t${hedgehogId}\t$parentId\t0\t0\n")
         }
 
-        master.let { volume.addChild(it) }
+        mainTrack.let { sciview.addNode(it, parent = volume) }
 
         trackFileWriter.close()
     }
