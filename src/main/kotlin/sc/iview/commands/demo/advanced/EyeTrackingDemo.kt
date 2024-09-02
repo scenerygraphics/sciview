@@ -622,7 +622,7 @@ class EyeTrackingDemo: Command{
 
 //        logger.info("---\nTrack: ${track.points.joinToString("\n")}\n---")
 
-        val cylinder = Cylinder(0.01f, 1.0f, 6)
+        val cylinder = Cylinder(0.1f, 1.0f, 6, smoothSides = true)
         cylinder.setMaterial(ShaderMaterial.fromFiles("DeferredInstancedColor.vert", "DeferredInstancedColor.frag")) {
             diffuse = Vector3f(1f)
             ambient = Vector3f(1f)
