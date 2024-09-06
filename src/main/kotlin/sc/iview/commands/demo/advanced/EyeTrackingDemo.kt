@@ -39,7 +39,6 @@ import org.scijava.log.LogService
 import graphics.scenery.attribute.material.Material
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
-import sc.iview.commands.demo.animation.ParticleDemo
 
 @Plugin(type = Command::class,
         menuRoot = "SciView",
@@ -52,6 +51,12 @@ class EyeTrackingDemo: Command{
 
     @Parameter
     private lateinit var log: LogService
+
+    @Parameter
+    private lateinit var mastodonCallbackLinkCreate: (HedgehogAnalysis.SpineGraphVertex) -> Unit
+
+    @Parameter
+    private lateinit var mastodonUpdateGraph: () -> Unit
 
     val pupilTracker = PupilEyeTracker(calibrationType = PupilEyeTracker.CalibrationType.WorldSpace, port = System.getProperty("PupilPort", "50020").toInt())
     lateinit var hmd: OpenVRHMD
@@ -622,16 +627,16 @@ class EyeTrackingDemo: Command{
 
 //        logger.info("---\nTrack: ${track.points.joinToString("\n")}\n---")
 
-        val cylinder = Cylinder(0.1f, 1.0f, 6, smoothSides = true)
-        cylinder.setMaterial(ShaderMaterial.fromFiles("DeferredInstancedColor.vert", "DeferredInstancedColor.frag")) {
-            diffuse = Vector3f(1f)
-            ambient = Vector3f(1f)
-            roughness = 1f
-        }
+//        val cylinder = Cylinder(0.1f, 1.0f, 6, smoothSides = true)
+//        cylinder.setMaterial(ShaderMaterial.fromFiles("DeferredInstancedColor.vert", "DeferredInstancedColor.frag")) {
+//            diffuse = Vector3f(1f)
+//            ambient = Vector3f(1f)
+//            roughness = 1f
+//        }
 
-        cylinder.name = "Track-$hedgehogId"
-        val mainTrack = InstancedNode(cylinder)
-        mainTrack.instancedProperties["Color"] = { Vector4f(1f) }
+//        cylinder.name = "Track-$hedgehogId"
+//        val mainTrack = InstancedNode(cylinder)
+//        mainTrack.instancedProperties["Color"] = { Vector4f(1f) }
 
         val parentId = 0
         val volumeDimensions = volume.getDimensions()
@@ -640,17 +645,19 @@ class EyeTrackingDemo: Command{
         trackFileWriter.newLine()
         trackFileWriter.write("# START OF TRACK $hedgehogId, child of $parentId\n")
         track.points.windowed(2, 1).forEach { pair ->
-            val element = mainTrack.addInstance()
-            element.addAttribute(Material::class.java, cylinder.material())
-            element.spatial().orientBetweenPoints(Vector3f(pair[0].first), Vector3f(pair[1].first), rescale = true, reposition = true)
-            element.parent = volume
+            mastodonCallbackLinkCreate(pair[0].second)
+//            val element = mainTrack.addInstance()
+//            element.addAttribute(Material::class.java, cylinder.material())
+//            element.spatial().orientBetweenPoints(Vector3f(pair[0].first), Vector3f(pair[1].first), rescale = true, reposition = true)
+//            element.parent = volume
 //                mainTrack.instances.add(element)
             val p = Vector3f(pair[0].first).mul(Vector3f(volumeDimensions))//direct product
             val tp = pair[0].second.timepoint
             trackFileWriter.write("$tp\t${p.x()}\t${p.y()}\t${p.z()}\t${hedgehogId}\t$parentId\t0\t0\n")
         }
+        mastodonUpdateGraph()
 
-        mainTrack.let { sciview.addNode(it, parent = volume) }
+//        mainTrack.let { sciview.addNode(it, parent = volume) }
 
         trackFileWriter.close()
     }
