@@ -50,7 +50,7 @@ class EyeTrackingDemo: Command{
     private lateinit var sciview: SciView
 
     @Parameter
-    private lateinit var log: LogService
+    private lateinit var logger: LogService
 
     @Parameter
     private lateinit var mastodonCallbackLinkCreate: (HedgehogAnalysis.SpineGraphVertex) -> Unit
@@ -95,7 +95,7 @@ class EyeTrackingDemo: Command{
     override fun run() {
 
         sciview.toggleVRRendering()
-        log.info("VR mode has been toggled")
+        logger.info("VR mode has been toggled")
         hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
         sessionId = "BionicTracking-generated-${SystemHelpers.formatDateTime()}"
         sessionDirectory = Files.createDirectory(Paths.get(System.getProperty("user.home"), "Desktop", sessionId))
@@ -132,10 +132,10 @@ class EyeTrackingDemo: Command{
 
         val v = (volnodes.firstOrNull() as? Volume)
         if(v == null) {
-            log.warn("No volume found, bailing")
+            logger.warn("No volume found, bailing")
             return
         } else {
-            log.info("found ${volnodes.size} volume nodes. Using the first one: ${volnodes.first()}")
+            logger.info("found ${volnodes.size} volume nodes. Using the first one: ${volnodes.first()}")
             volume = v
         }
         volume.visible = false
@@ -199,17 +199,17 @@ class EyeTrackingDemo: Command{
         lights.forEach { sciview.addNode(it) }
 
         thread {
-            log.info("Adding onDeviceConnect handlers")
+            logger.info("Adding onDeviceConnect handlers")
             hmd.events.onDeviceConnect.add { hmd, device, timestamp ->
-                log.info("onDeviceConnect called, cam=${sciview.camera}")
+                logger.info("onDeviceConnect called, cam=${sciview.camera}")
                 if(device.type == TrackedDeviceType.Controller) {
-                    log.info("Got device ${device.name} at $timestamp")
+                    logger.info("Got device ${device.name} at $timestamp")
                     device.model?.let { hmd.attachToNode(device, it, sciview.camera) }
                 }
             }
         }
         thread{
-            log.info("started thread for inputSetup")
+            logger.info("started thread for inputSetup")
             inputSetup()
         }
         thread {
@@ -270,7 +270,7 @@ class EyeTrackingDemo: Command{
     }
 
     fun addHedgehog() {
-        log.info("added hedgehog")
+        logger.info("added hedgehog")
         val hedgehog = Cylinder(0.005f, 1.0f, 16)
         hedgehog.visible = false
         hedgehog.setMaterial(ShaderMaterial.fromFiles("DeferredInstancedColor.frag", "DeferredInstancedColor.vert"))
@@ -426,7 +426,7 @@ class EyeTrackingDemo: Command{
         hmd.addKeyBinding("cell_division", "T")
 
         hmd.allowRepeats += OpenVRHMD.OpenVRButton.Trigger to TrackerRole.LeftHand
-        log.info("calibration should start now")
+        logger.info("calibration should start now")
         setupCalibration()
 
     }
@@ -437,7 +437,7 @@ class EyeTrackingDemo: Command{
                 val cam = sciview.camera as? DetachedHeadCamera ?: return@thread
                 pupilTracker.gazeConfidenceThreshold = confidenceThreshold
                 if (!pupilTracker.isCalibrated) {
-                    log.info("pupil is currently uncalibrated")
+                    logger.info("pupil is currently uncalibrated")
                     pupilTracker.onCalibrationInProgress = {
                         cam.showMessage("Crunching equations ...",distance = 2f, size = 0.2f, messageColor = Vector4f(1.0f, 0.8f, 0.0f, 1.0f), duration = 15000, centered = true)
                     }
@@ -462,12 +462,12 @@ class EyeTrackingDemo: Command{
 
                         val toggleTracking = ClickBehaviour { _, _ ->
                             if (tracking) {
-                                log.info("deactivating tracking...")
+                                logger.info("deactivating tracking...")
                                 referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
                                 cam.showMessage("Tracking deactivated.",distance = 2f, size = 0.2f, centered = true)
                                 dumpHedgehog()
                             } else {
-                                log.info("activating tracking...")
+                                logger.info("activating tracking...")
                                 addHedgehog()
                                 referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
                                 cam.showMessage("Tracking active.",distance = 2f, size = 0.2f, centered = true)
@@ -485,7 +485,7 @@ class EyeTrackingDemo: Command{
                     pupilTracker.unsubscribeFrames()
                     sciview.deleteNode(sciview.find("eyeFrames"))
 
-                    log.info("Starting eye tracker calibration")
+                    logger.info("Starting eye tracker calibration")
                     cam.showMessage("Follow the white rabbit.", distance = 2f, size = 0.2f,duration = 1500, centered = true)
                     pupilTracker.calibrate(cam, hmd,
                             generateReferenceData = true,
@@ -515,7 +515,7 @@ class EyeTrackingDemo: Command{
 //                        else -> {gaze-> }
                     }
 
-                    log.info("Calibration routine done.")
+                    logger.info("Calibration routine done.")
                 }
 
                 // bind calibration start to menu key on controller
@@ -541,8 +541,7 @@ class EyeTrackingDemo: Command{
         spine.spatial().orientBetweenPoints(p1, p2, true, true)
         spine.visible = true
 
-        val intersection = volume.intersectAABB(p1, (p2 - p1).normalize())
-//		System.out.println(intersection);
+        val intersection = volume.spatial().intersectAABB(p1, (p2 - p1).normalize())
         if(intersection is MaybeIntersects.Intersection) {
             // get local entry and exit coordinates, and convert to UV coords
             val localEntry = (intersection.relativeEntry) //.add(Vector3f(1.0f)) ) .mul (1.0f / 2.0f)
@@ -582,7 +581,7 @@ class EyeTrackingDemo: Command{
      * If [hedgehog] is not null, the cell track will not be added to the scene.
      */
     fun dumpHedgehog() {
-        log.info("dumping hedgehog...")
+        logger.info("dumping hedgehog...")
         val lastHedgehog =  hedgehogs.children.last() as InstancedNode
         val hedgehogId = hedgehogIds.incrementAndGet()
 
