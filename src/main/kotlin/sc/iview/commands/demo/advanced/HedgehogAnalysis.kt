@@ -7,7 +7,6 @@ import graphics.scenery.utils.extensions.*
 import graphics.scenery.utils.lazyLogger
 import org.slf4j.LoggerFactory
 import java.io.File
-import kotlin.math.log
 import kotlin.math.sqrt
 
 /**
@@ -56,14 +55,14 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 	 * packaged nicely as a Pair<Int, Float>
 	 */
 	private fun localMaxima(list: List<Float>): List<Pair<Int, Float>> {
-		return list.windowed(6, 2).mapIndexed { index, l ->
+		return list.windowed(3, 1).mapIndexed { index, l ->
 			val left = l[0]
-			val center = l[2]
-			val right = l[4]
+			val center = l[1]
+			val right = l[2]
 
 			// we have a match at center
 			if (left < center && center > right) {
-				index * 2 + 2 to center
+				index * 1 + 1 to center
 			} else {
 				null
 			}
@@ -137,6 +136,25 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 
 		logger.info("${timepoints.size} timepoints left")
 
+		fun gaussSmoothing(samples: List<Float>, iterations: Int): List<Float> {
+			var smoothed = samples.toList()
+			val kernel = listOf(0.25f, 0.5f, 0.25f)
+			for (i in 0 until iterations) {
+				val newSmoothed = ArrayList<Float>(smoothed.size)
+				// Handle the first element
+				newSmoothed.add(smoothed[0] * 0.75f + smoothed[1] * 0.25f)
+				// Apply smoothing to the middle elements
+				for (j in 1 until smoothed.size - 1) {
+					val value = kernel[0] * smoothed[j-1] + kernel[1] * smoothed[j] + kernel[2] * smoothed[j+1]
+					newSmoothed.add(value)
+				}
+				// Handle the last element
+				newSmoothed.add(smoothed[smoothed.size - 2] * 0.25f + smoothed[smoothed.size - 1] * 0.75f)
+
+				smoothed = newSmoothed
+			}
+			return smoothed
+		}
 
 		//step2: find the maxIndices along the spine
 		// yo dawg, this will be a list of lists, where each entry in the first-level list
