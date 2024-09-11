@@ -547,9 +547,27 @@ class EyeTrackingDemo: Command{
             val localEntry = (intersection.relativeEntry) //.add(Vector3f(1.0f)) ) .mul (1.0f / 2.0f)
             val localExit = (intersection.relativeExit) //.add (Vector3f(1.0f)) ).mul  (1.0f / 2.0f)
             // TODO: Allow for sampling a given time point of a volume
-            val (samples, localDirection) = volume.sampleRay(localEntry, localExit) ?: (null to null)
+//            val (samples, localDirection) = volume.sampleRay(localEntry, localExit) ?: (null to null)
+            // TODO We dont need the local direction for grid traversal, but its still in the spine metadata for now
+            val localDirection = Vector3f(0f)
+            val (samples, samplePos) = volume.sampleRayGridTraversal(localEntry, localExit) ?: (null to null)
 
-            if (samples != null && localDirection != null) {
+//            if (samples != null && localDirection != null) {
+//                val metadata = SpineMetadata(
+//                        timepoint,
+//                        center,
+//                        direction,
+//                        intersection.distance,
+//                        localEntry,
+//                        localExit,
+//                        localDirection,
+//                        cam.headPosition,
+//                        cam.headOrientation,
+//                        cam.spatial().position,
+//                        confidence,
+//                        samples.map { it ?: 0.0f }
+//                )
+            if (samples != null && samplePos != null) {
                 val metadata = SpineMetadata(
                         timepoint,
                         center,
@@ -562,7 +580,8 @@ class EyeTrackingDemo: Command{
                         cam.headOrientation,
                         cam.spatial().position,
                         confidence,
-                        samples.map { it ?: 0.0f }
+                        samples.map { it ?: 0.0f },
+                        samplePos.map { it ?: Vector3f(0f) }
                 )
                 val count = samples.filterNotNull().count { it > 0.2f }
 
