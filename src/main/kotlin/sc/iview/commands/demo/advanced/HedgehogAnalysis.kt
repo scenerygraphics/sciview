@@ -173,7 +173,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 					//filter { it.first <1200}.
 					maxIndices.map { index ->
 						logger.debug("Generating vertex at index $index")
-						val position = Vector3f(spine.localEntry).add((Vector3f(spine.localDirection).mul(index.first.toFloat())))
+						val position = spine.position
 						val worldPosition = localToWorld.transform((Vector3f(position)).xyzw()).xyz()
 						SpineGraphVertex(tp.key,
 								position,
