@@ -541,7 +541,7 @@ class EyeTrackingDemo: Command{
         spine.spatial().orientBetweenPoints(p1, p2, true, true)
         spine.visible = true
 
-        val intersection = volume.spatial().intersectAABB(p1, (p2 - p1).normalize())
+        val intersection = volume.spatial().intersectAABB(p1, (p2 - p1).normalize(), true)
         if(intersection is MaybeIntersects.Intersection) {
             // get local entry and exit coordinates, and convert to UV coords
             val localEntry = (intersection.relativeEntry) //.add(Vector3f(1.0f)) ) .mul (1.0f / 2.0f)
