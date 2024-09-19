@@ -157,7 +157,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		}
 
 		//step2: find the maxIndices along the spine
-		// yo dawg, this will be a list of lists, where each entry in the first-level list
+		// this will be a list of lists, where each entry in the first-level list
 		// corresponds to a time point, which then contains a list of vertices within that timepoint.
 		val candidates: List<List<SpineGraphVertex>> = timepoints.map { tp ->
 			val vs = tp.value.mapIndexedNotNull { i, spine ->
@@ -173,7 +173,8 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 					//filter { it.first <1200}.
 					maxIndices.map { index ->
 						logger.debug("Generating vertex at index $index")
-						val position = spine.position
+						// get the position of the current index along the spine
+						val position = spine.samplePosList[index.first]
 						val worldPosition = localToWorld.transform((Vector3f(position)).xyzw()).xyz()
 						SpineGraphVertex(tp.key,
 								position,

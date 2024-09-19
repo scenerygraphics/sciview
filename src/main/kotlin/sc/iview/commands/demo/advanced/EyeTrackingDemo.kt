@@ -39,6 +39,7 @@ import org.scijava.log.LogService
 import graphics.scenery.attribute.material.Material
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
+import graphics.scenery.volumes.RAIVolume
 
 @Plugin(type = Command::class,
         menuRoot = "SciView",
@@ -551,7 +552,7 @@ class EyeTrackingDemo: Command{
             // TODO We dont need the local direction for grid traversal, but its still in the spine metadata for now
             val localDirection = Vector3f(0f)
             val (samples, samplePos) = volume.sampleRayGridTraversal(localEntry, localExit) ?: (null to null)
-
+            val volumeScale = (volume as RAIVolume).getVoxelScale()
 //            if (samples != null && localDirection != null) {
 //                val metadata = SpineMetadata(
 //                        timepoint,
@@ -581,7 +582,7 @@ class EyeTrackingDemo: Command{
                         cam.spatial().position,
                         confidence,
                         samples.map { it ?: 0.0f },
-                        samplePos.map { it ?: Vector3f(0f) }
+                        samplePos.map { it?.mul(volumeScale) ?: Vector3f(0f) }
                 )
                 val count = samples.filterNotNull().count { it > 0.2f }
 
