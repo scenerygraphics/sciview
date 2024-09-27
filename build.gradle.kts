@@ -1,7 +1,5 @@
-import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.net.URL
-import sciview.*
+import sciview.lwjglNatives
 
 plugins {
     java
@@ -181,7 +179,7 @@ tasks {
 
     withType<GenerateMavenPom>().configureEach {
         val scijavaParentPomVersion = project.properties["scijavaParentPOMVersion"]
-        val matcher = Regex("""generatePomFileFor(\w+)Publication""").matchEntire(name)
+//        val matcher = Regex("""generatePomFileFor(\w+)Publication""").matchEntire(name)
 //        val publicationName = matcher?.let { it.groupValues[1] }
 
         pom.properties.empty()
@@ -474,3 +472,8 @@ task<Copy>("copyDependencies") {
 }
 
 java.withSourcesJar()
+
+//extensions.findByName("buildScan")?.withGroovyBuilder {
+//    setProperty("termsOfServiceUrl", "https://gradle.com/terms-of-service")
+//    setProperty("termsOfServiceAgree", "yes")
+//}
