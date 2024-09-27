@@ -1,7 +1,5 @@
-import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.net.URL
-import sciview.*
+import sciview.lwjglNatives
 
 plugins {
     java
@@ -162,7 +160,7 @@ tasks {
         finalizedBy(jacocoTestReport) // report is always generated after tests run
     }
     jar {
-        archiveVersion.set(rootProject.version.toString())
+        archiveVersion = rootProject.version.toString()
 
         manifest.attributes["Implementation-Build"] = run { // retrieve the git commit hash
             val gitFolder = "$projectDir/.git/"
@@ -184,8 +182,8 @@ tasks {
 
     withType<GenerateMavenPom>().configureEach {
         val scijavaParentPomVersion = project.properties["scijavaParentPOMVersion"]
-        val matcher = Regex("""generatePomFileFor(\w+)Publication""").matchEntire(name)
-        val publicationName = matcher?.let { it.groupValues[1] }
+//        val matcher = Regex("""generatePomFileFor(\w+)Publication""").matchEntire(name)
+//        val publicationName = matcher?.let { it.groupValues[1] }
 
         pom.properties.empty()
 
@@ -344,8 +342,8 @@ tasks {
 
     jacocoTestReport {
         reports {
-            xml.required.set(true)
-            html.required.set(true)
+            xml.required = true
+            html.required = true
         }
         dependsOn(test) // tests are required to run before generating the report
     }
@@ -356,7 +354,7 @@ tasks {
             group = taskGroup
             classpath = sourceSets.main.get().runtimeClasspath
 
-            mainClass.set(className)
+            mainClass = className
 
             val props = System.getProperties().filter { (k, _) -> k.toString().startsWith(propertyPrefix) }
 
@@ -398,7 +396,7 @@ tasks {
             if (name != "InstancingBenchmark")
                 register<JavaExec>(name = className.substringAfterLast(".")) {
                     classpath = sourceSets.test.get().runtimeClasspath
-                    mainClass.set(className)
+                    mainClass = className
                     group = "demos.$exampleType"
 
                     val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
@@ -425,7 +423,7 @@ tasks {
                 //                    main = target.substringAfter("java${File.separatorChar}").replace(File.separatorChar, '.').substringBefore(".java")
                 //                }
 
-                mainClass.set("$target")
+                mainClass = "$target"
                 val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
 
                 val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
@@ -445,9 +443,9 @@ tasks {
         enabled = isRelease
         dokkaSourceSets.configureEach {
             sourceLink {
-                localDirectory.set(file("src/main/kotlin"))
-                remoteUrl.set(URL("https://github.com/scenerygraphics/sciview/tree/main/src/main/kotlin"))
-                remoteLineSuffix.set("#L")
+                localDirectory = file("src/main/kotlin")
+                remoteUrl = uri("https://github.com/scenerygraphics/sciview/tree/main/src/main/kotlin").toURL()
+                remoteLineSuffix = "#L"
             }
         }
     }
@@ -472,8 +470,13 @@ jacoco {
     toolVersion = "0.8.11"
 }
 
-task("copyDependencies", Copy::class) {
-    from(configurations.runtimeClasspath).into("$buildDir/dependencies")
+task<Copy>("copyDependencies") {
+    from(configurations.runtimeClasspath).into(layout.buildDirectory.dir("dependencies"))
 }
 
 java.withSourcesJar()
+
+//extensions.findByName("buildScan")?.withGroovyBuilder {
+//    setProperty("termsOfServiceUrl", "https://gradle.com/terms-of-service")
+//    setProperty("termsOfServiceAgree", "yes")
+//}
