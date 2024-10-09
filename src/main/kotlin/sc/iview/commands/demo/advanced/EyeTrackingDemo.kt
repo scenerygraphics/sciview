@@ -3,11 +3,8 @@ package sc.iview.commands.demo.advanced
 import graphics.scenery.*
 import graphics.scenery.controls.OpenVRHMD
 import graphics.scenery.controls.TrackedDeviceType
-import graphics.scenery.controls.TrackerRole
-import graphics.scenery.controls.behaviours.ControllerDrag
 import graphics.scenery.controls.eyetracking.PupilEyeTracker
 import graphics.scenery.textures.Texture
-import graphics.scenery.utils.MaybeIntersects
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.minus
 import graphics.scenery.utils.extensions.xyz
@@ -24,23 +21,16 @@ import org.scijava.ui.behaviour.ClickBehaviour
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
 import java.awt.image.DataBufferByte
-import java.io.BufferedWriter
 import java.io.ByteArrayInputStream
-import java.io.FileWriter
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.HashMap
-import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.ImageIO
 import kotlin.concurrent.thread
 import kotlin.math.PI
-import org.scijava.log.LogService
 import graphics.scenery.attribute.material.Material
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
-import graphics.scenery.volumes.RAIVolume
-import sc.iview.process.CellTrackingBase
 
 @Plugin(type = Command::class,
         menuRoot = "SciView",

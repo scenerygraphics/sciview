@@ -20,7 +20,6 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.HashMap
 import kotlin.concurrent.thread
-import org.scijava.log.LogService
 import graphics.scenery.attribute.material.Material
 import graphics.scenery.controls.behaviours.*
 import graphics.scenery.primitives.TextBoard
@@ -28,7 +27,6 @@ import graphics.scenery.utils.extensions.*
 import org.scijava.event.EventService
 import sc.iview.commands.file.OpenDirofTif
 import sc.iview.event.NodeTaggedEvent
-import sc.iview.process.CellTrackingBase
 
 @Plugin(type = Command::class,
         menuRoot = "SciView",

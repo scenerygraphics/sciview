@@ -10,7 +10,6 @@ import org.joml.*
 import org.scijava.command.Command
 import org.scijava.command.CommandService
 import org.scijava.plugin.Menu
-import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import org.scijava.ui.behaviour.ClickBehaviour
 import sc.iview.SciView
@@ -19,12 +18,10 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.HashMap
 import kotlin.concurrent.thread
-import org.scijava.log.LogService
 import graphics.scenery.attribute.material.Material
 import graphics.scenery.controls.*
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
-import sc.iview.process.CellTrackingBase
 
 @Plugin(type = Command::class,
     menuRoot = "SciView",

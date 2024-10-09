@@ -1,4 +1,4 @@
-package sc.iview.process
+package sc.iview.commands.demo.advanced
 
 import graphics.scenery.*
 import graphics.scenery.controls.OpenVRHMD
@@ -18,9 +18,6 @@ import org.scijava.log.LogService
 import org.scijava.plugin.Parameter
 import org.scijava.ui.behaviour.ClickBehaviour
 import sc.iview.SciView
-import sc.iview.commands.demo.advanced.ConfirmableClickBehaviour
-import sc.iview.commands.demo.advanced.HedgehogAnalysis
-import sc.iview.commands.demo.advanced.SpineMetadata
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.nio.file.Path

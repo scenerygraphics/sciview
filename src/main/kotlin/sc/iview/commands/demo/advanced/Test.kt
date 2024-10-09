@@ -2,7 +2,6 @@ package sc.iview.commands.demo.advanced
 
 import graphics.scenery.*
 import graphics.scenery.attribute.material.Material
-import graphics.scenery.controls.OpenVRHMD
 import graphics.scenery.numerics.Random
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
@@ -16,17 +15,13 @@ import org.joml.*
 import org.scijava.command.Command
 import org.scijava.command.CommandService
 import org.scijava.plugin.Menu
-import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
-import sc.iview.process.CellTrackingBase
 import java.io.File
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.text.DecimalFormat
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 
 @Plugin(type = Command::class,
