@@ -296,34 +296,23 @@ open class CellTrackingBase {
 
         val spine = (hedgehogs.children.last() as InstancedNode).addInstance()
         spine.spatial().orientBetweenPoints(p1, p2, true, true)
-        spine.visible = true
+        spine.visible = false
 
         val intersection = volume.spatial().intersectAABB(p1, (p2 - p1).normalize(), true)
+
+        if (volume.boundingBox?.isInside(cam.spatial().position)!!) {
+            logger.info("Can't track inside the volume! Please move out of the volume and try again")
+            return
+        }
         if(intersection is MaybeIntersects.Intersection) {
             // get local entry and exit coordinates, and convert to UV coords
-            val localEntry = (intersection.relativeEntry) //.add(Vector3f(1.0f)) ) .mul (1.0f / 2.0f)
-            val localExit = (intersection.relativeExit) //.add (Vector3f(1.0f)) ).mul  (1.0f / 2.0f)
-            // TODO: Allow for sampling a given time point of a volume
-//            val (samples, localDirection) = volume.sampleRay(localEntry, localExit) ?: (null to null)
+            val localEntry = (intersection.relativeEntry)
+            val localExit = (intersection.relativeExit)
             // TODO We dont need the local direction for grid traversal, but its still in the spine metadata for now
             val localDirection = Vector3f(0f)
             val (samples, samplePos) = volume.sampleRayGridTraversal(localEntry, localExit) ?: (null to null)
             val volumeScale = (volume as RAIVolume).getVoxelScale()
-//            if (samples != null && localDirection != null) {
-//                val metadata = SpineMetadata(
-//                        timepoint,
-//                        center,
-//                        direction,
-//                        intersection.distance,
-//                        localEntry,
-//                        localExit,
-//                        localDirection,
-//                        cam.headPosition,
-//                        cam.headOrientation,
-//                        cam.spatial().position,
-//                        confidence,
-//                        samples.map { it ?: 0.0f }
-//                )
+
             if (samples != null && samplePos != null) {
                 val metadata = SpineMetadata(
                     timepoint,
@@ -345,7 +334,8 @@ open class CellTrackingBase {
                 spine.metadata["spine"] = metadata
                 spine.instancedProperties["ModelMatrix"] = { spine.spatial().world }
                 // TODO: Show confidence as color for the spine
-                spine.instancedProperties["Metadata"] = { Vector4f(confidence, timepoint.toFloat()/volume.timepointCount, count.toFloat(), 0.0f) }
+                spine.instancedProperties["Metadata"] =
+                    { Vector4f(confidence, timepoint.toFloat() / volume.timepointCount, count.toFloat(), 0.0f) }
             }
         }
     }
