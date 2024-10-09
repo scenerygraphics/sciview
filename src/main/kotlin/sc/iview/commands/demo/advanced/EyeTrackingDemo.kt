@@ -55,8 +55,6 @@ class EyeTrackingDemo: Command, CellTrackingBase() {
     @Parameter
     override var mastodonUpdateGraph: (() -> Unit)? = null
 
-
-
     val pupilTracker = PupilEyeTracker(calibrationType = PupilEyeTracker.CalibrationType.WorldSpace, port = System.getProperty("PupilPort", "50020").toInt())
 
     val calibrationTarget = Icosphere(0.02f, 2)
@@ -80,6 +78,7 @@ class EyeTrackingDemo: Command, CellTrackingBase() {
             metallic = 0.0f
             diffuse = Vector3f(0.8f, 0.8f, 0.8f)
         }
+        referenceTarget.name = "Reference Target"
         sciview.camera?.addChild(referenceTarget)
 
         calibrationTarget.visible = false
@@ -87,6 +86,7 @@ class EyeTrackingDemo: Command, CellTrackingBase() {
             roughness = 1.0f
             metallic = 0.0f
             diffuse = Vector3f(1.0f, 1.0f, 1.0f)}
+        calibrationTarget.name = "Calibration Target"
         sciview.camera?.addChild(calibrationTarget)
 
         laser.visible = false
@@ -100,6 +100,7 @@ class EyeTrackingDemo: Command, CellTrackingBase() {
             diffuse = Vector3f(0.4f, 0.4f, 0.4f) }
 
         shell.spatial().position = Vector3f(0.0f, 0.0f, 0.0f)
+        shell.name = "Shell"
         sciview.addNode(shell)
 
         val volnodes = sciview.findNodes { node -> Volume::class.java.isAssignableFrom(node.javaClass) }
@@ -239,7 +240,7 @@ class EyeTrackingDemo: Command, CellTrackingBase() {
                         hmd.addKeyBinding("toggle_tracking", keybindingTracking)
 
                         volume.visible = true
-                        volume.runRecursive { it.visible = true }
+//                        volume.runRecursive { it.visible = true }
                         playing = true
                     }
 
