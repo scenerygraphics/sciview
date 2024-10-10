@@ -24,12 +24,9 @@ import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 
-open class CellTrackingBase {
-
-    @Parameter
-    lateinit var sciview: SciView
-
-    @Parameter
+open class CellTrackingBase(
+    open var sciview: SciView
+) {
     lateinit var logger: LogService
 
     lateinit var sessionId: String
@@ -52,8 +49,10 @@ open class CellTrackingBase {
 
     var volumeScaleFactor = 1.0f
 
-    open var mastodonCallbackLinkCreate: ((HedgehogAnalysis.SpineGraphVertex) -> Unit)? = null
-    open var mastodonUpdateGraph: (() -> Unit)? = null
+    var cellTrackingActive: Boolean = false
+
+    open var linkCreationCallback: ((HedgehogAnalysis.SpineGraphVertex) -> Unit)? = null
+    open var finalTrackCallback: (() -> Unit)? = null
 
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
     var hedgehogVisibility = HedgehogVisibility.Hidden
@@ -223,11 +222,14 @@ open class CellTrackingBase {
 
     }
 
-    fun launchHedgehogThread() {
+    /**
+     * Launches a thread that updates the volume time points, the hedgehog visibility and reference target color.
+     */
+    fun launchUpdaterThread() {
         thread {
             while(!sciview.isInitialized) { Thread.sleep(200) }
 
-            while(sciview.running) {
+            while(sciview.running && cellTrackingActive) {
                 if(playing || skipToNext || skipToPrevious) {
                     val oldTimepoint = volume.viewerState.currentTimepoint
                     val newVolume = if(skipToNext || playing) {
@@ -405,9 +407,9 @@ open class CellTrackingBase {
         trackFileWriter.newLine()
         trackFileWriter.newLine()
         trackFileWriter.write("# START OF TRACK $hedgehogId, child of $parentId\n")
-        if (mastodonCallbackLinkCreate != null && mastodonUpdateGraph != null) {
+        if (linkCreationCallback != null && finalTrackCallback != null) {
             track.points.windowed(2, 1).forEach { pair ->
-                mastodonCallbackLinkCreate?.let { it(pair[0].second) }
+                linkCreationCallback?.let { it(pair[0].second) }
 //            val element = mainTrack.addInstance()
 //            element.addAttribute(Material::class.java, cylinder.material())
 //            element.spatial().orientBetweenPoints(Vector3f(pair[0].first), Vector3f(pair[1].first), rescale = true, reposition = true)
@@ -417,7 +419,7 @@ open class CellTrackingBase {
                 val tp = pair[0].second.timepoint
                 trackFileWriter.write("$tp\t${p.x()}\t${p.y()}\t${p.z()}\t${hedgehogId}\t$parentId\t0\t0\n")
             }
-            mastodonUpdateGraph?.invoke()
+            finalTrackCallback?.invoke()
         } else {
             track.points.windowed(2, 1).forEach { pair ->
                 val p = Vector3f(pair[0].first).mul(Vector3f(volumeDimensions)) // direct product
@@ -430,6 +432,15 @@ open class CellTrackingBase {
 //        mainTrack.let { sciview.addNode(it, parent = volume) }
 
         trackFileWriter.close()
+    }
+
+    /**
+     * Stops the current tracking environment and restore the original state.
+     * This method should be overridden to extend
+     */
+    open fun stop() {
+        hmd.close()
+        logger.info("Shut down HMD and keybindings.")
     }
 
 }

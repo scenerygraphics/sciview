@@ -16,6 +16,7 @@ import graphics.scenery.volumes.Volume
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import org.joml.*
 import org.scijava.ui.behaviour.ClickBehaviour
+import sc.iview.SciView
 import java.awt.image.DataBufferByte
 import java.io.ByteArrayInputStream
 import java.nio.file.Files
@@ -27,26 +28,29 @@ import kotlin.math.PI
 /**
  * Tracking class used for communicating with eye trackers, tracking cells with them in a sciview VR environment.
  * It calls the Hedgehog analysis on the eye tracking results and communicates the results to Mastodon via
- * [mastodonCallbackLinkCreate], which is called on every spine graph vertex that is extracted, and
- * [mastodonUpdateGraph] which is called after all vertices are iterated, giving Mastodon a chance to rebuild its tracks.
+ * [linkCreationCallback], which is called on every spine graph vertex that is extracted, and
+ * [finalTrackCallback] which is called after all vertices of a track are iterated, giving Mastodon a chance to rebuild its tracks.
  */
 class EyeTracking(
-    override var mastodonCallbackLinkCreate: ((HedgehogAnalysis.SpineGraphVertex) -> Unit)? = null,
-    override var mastodonUpdateGraph: (() -> Unit)? = null
-): CellTrackingBase() {
+    override var linkCreationCallback: ((HedgehogAnalysis.SpineGraphVertex) -> Unit)? = null,
+    override var finalTrackCallback: (() -> Unit)? = null,
+    sciview: SciView
+): CellTrackingBase(sciview) {
 
     val pupilTracker = PupilEyeTracker(calibrationType = PupilEyeTracker.CalibrationType.WorldSpace, port = System.getProperty("PupilPort", "50020").toInt())
-
     val calibrationTarget = Icosphere(0.02f, 2)
     val laser = Cylinder(0.005f, 0.2f, 10)
 
     val confidenceThreshold = 0.60f
-
 //	var currentVolume = 0
+
+    private lateinit var lightTetrahedron: List<PointLight>
+    private lateinit var debugBoard: TextBoard
 
     fun run() {
 
         sciview.toggleVRRendering()
+        cellTrackingActive = true
         logger.info("VR mode has been toggled")
         hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
         sessionId = "BionicTracking-generated-${SystemHelpers.formatDateTime()}"
@@ -143,16 +147,21 @@ class EyeTracking(
         }
 
         // TODO: Replace with cam.showMessage()
-        val debugBoard = TextBoard()
+        debugBoard = TextBoard()
         debugBoard.name = "debugBoard"
-        debugBoard.scale = Vector3f(0.05f, 0.05f, 0.05f)
-        debugBoard.position = Vector3f(0.0f, -0.3f, -0.9f)
+        debugBoard.spatial().scale = Vector3f(0.05f, 0.05f, 0.05f)
+        debugBoard.spatial().position = Vector3f(0.0f, -0.3f, -0.9f)
         debugBoard.text = ""
         debugBoard.visible = false
         sciview.camera?.addChild(debugBoard)
 
-        val lights = Light.createLightTetrahedron<PointLight>(Vector3f(0.0f, 0.0f, 0.0f), spread = 5.0f, radius = 15.0f, intensity = 5.0f)
-        lights.forEach { sciview.addNode(it) }
+        lightTetrahedron = Light.createLightTetrahedron<PointLight>(
+            Vector3f(0.0f, 0.0f, 0.0f),
+            spread = 5.0f,
+            radius = 15.0f,
+            intensity = 5.0f
+        )
+        lightTetrahedron.forEach { sciview.addNode(it) }
 
         thread {
             logger.info("Adding onDeviceConnect handlers")
@@ -170,7 +179,7 @@ class EyeTracking(
             setupCalibration()
         }
 
-        launchHedgehogThread()
+        launchUpdaterThread()
     }
 
 
@@ -267,6 +276,22 @@ class EyeTracking(
         }
         hmd.addBehaviour("start_calibration", startCalibration)
         hmd.addKeyBinding("start_calibration", keybindingCalibration)
+    }
+
+    override fun stop() {
+        logger.info("Shutting down eye tracking environment. Disabling VR now...")
+        sciview.toggleVRRendering()
+        logger.info("Stopping volume and hedgehog updater thread...")
+        cellTrackingActive = false
+        logger.info("Deleting eye tracking scene objects...")
+        lightTetrahedron.forEach { sciview.deleteNode(it) }
+        sciview.deleteNode(sciview.find("Shell"))
+        listOf(referenceTarget, calibrationTarget, laser, debugBoard, hedgehogs).forEach {
+            sciview.deleteNode(it)
+        }
+        logger.info("Shutting down HMD and keybindings...")
+        hmd.close()
+        logger.info("Successfully cleaned up eye tracking environemt.")
     }
 
 }

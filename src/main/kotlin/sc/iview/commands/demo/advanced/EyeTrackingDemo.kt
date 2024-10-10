@@ -48,9 +48,12 @@ class EyeTrackingDemo: Command {
     @Parameter
     var mastodonUpdateGraph: (() -> Unit)? = null
 
+    @Parameter
+    private lateinit var sv: SciView
+
     override fun run() {
         // the actual eye tracking logic happens in here
-        val eyeTracking = EyeTracking(mastodonCallbackLinkCreate, mastodonUpdateGraph)
+        val eyeTracking = EyeTracking(mastodonCallbackLinkCreate, mastodonUpdateGraph, sv)
         eyeTracking.run()
     }
 
@@ -62,6 +65,7 @@ class EyeTrackingDemo: Command {
             val sv = SciView.create()
             val command = sv.scijavaContext!!.getService(CommandService::class.java)
             val argmap = HashMap<String, Any>()
+            argmap["sv"] = sv
             command.run(EyeTrackingDemo::class.java, true, argmap)
         }
     }
