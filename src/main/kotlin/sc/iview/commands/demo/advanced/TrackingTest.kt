@@ -12,24 +12,21 @@ import graphics.scenery.utils.extensions.xyz
 import graphics.scenery.utils.extensions.xyzw
 import graphics.scenery.volumes.Volume
 import org.joml.*
-import org.scijava.command.Command
 import org.scijava.command.CommandService
-import org.scijava.plugin.Menu
-import org.scijava.plugin.Plugin
 import sc.iview.SciView
-import sc.iview.commands.MenuWeights
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.text.DecimalFormat
 import kotlin.concurrent.thread
 
-@Plugin(type = Command::class,
-        menuRoot = "SciView",
-        menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
-            Menu(label = "Advanced", weight = MenuWeights.DEMO_ADVANCED),
-            Menu(label = "Test without VR and Eye Tracker", weight = MenuWeights.DEMO_ADVANCED_EYETRACKING)])
-class Test: Command, CellTrackingBase() {
+/**
+ * A class to test to show tracks and perform track analysis from saved CSV tracking files without
+ * the requirement of a VR headset.
+ */
+class TrackingTest(
+    sciview: SciView
+): CellTrackingBase(sciview) {
 
     //val calibrationTarget = Icosphere(0.02f, 2)
     val TestTarget = Icosphere(0.1f, 2)
@@ -43,7 +40,7 @@ class Test: Command, CellTrackingBase() {
 
 //	var currentVolume = 0
 
-    override fun run() {
+    fun run() {
 
         sciview.addNode(TestTarget)
         TestTarget.visible = false
@@ -117,7 +114,7 @@ class Test: Command, CellTrackingBase() {
             inputSetup()
         }
 
-        launchHedgehogThread()
+        launchUpdaterThread()
     }
 
     override fun inputSetup()
@@ -293,18 +290,6 @@ class Test: Command, CellTrackingBase() {
 //                spine.instancedProperties["ModelMatrix"] = { spine.spatial().world }
 //                spine.instancedProperties["Metadata"] = { Vector4f(confidence, timepoint.toFloat()/volume.timepointCount, count.toFloat(), 0.0f) }
             }
-        }
-    }
-
-    companion object {
-
-        @Throws(Exception::class)
-        @JvmStatic
-        fun main(args: Array<String>) {
-            val sv = SciView.create()
-            val command = sv.scijavaContext!!.getService(CommandService::class.java)
-            val argmap = HashMap<String, Any>()
-            command.run(EyeTrackingDemo::class.java, true, argmap)
         }
     }
 }

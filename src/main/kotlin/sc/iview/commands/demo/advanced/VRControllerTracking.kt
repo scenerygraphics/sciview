@@ -1,34 +1,32 @@
 package sc.iview.commands.demo.advanced
 
 import graphics.scenery.*
+import graphics.scenery.attribute.material.Material
+import graphics.scenery.controls.OpenVRHMD
+import graphics.scenery.controls.TrackedDevice
+import graphics.scenery.controls.TrackedDeviceType
+import graphics.scenery.primitives.Cylinder
+import graphics.scenery.primitives.TextBoard
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.minus
 import graphics.scenery.utils.extensions.xyz
 import graphics.scenery.utils.extensions.xyzw
 import graphics.scenery.volumes.Volume
-import org.joml.*
-import org.scijava.command.Command
-import org.scijava.command.CommandService
-import org.scijava.plugin.Menu
-import org.scijava.plugin.Plugin
+import org.joml.Matrix4f
+import org.joml.Vector3f
 import org.scijava.ui.behaviour.ClickBehaviour
 import sc.iview.SciView
-import sc.iview.commands.MenuWeights
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.util.HashMap
 import kotlin.concurrent.thread
-import graphics.scenery.attribute.material.Material
-import graphics.scenery.controls.*
-import graphics.scenery.primitives.Cylinder
-import graphics.scenery.primitives.TextBoard
 
-@Plugin(type = Command::class,
-    menuRoot = "SciView",
-    menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
-        Menu(label = "Advanced", weight = MenuWeights.DEMO_ADVANCED),
-        Menu(label = "Utilize VR Controller for Cell Tracking", weight = MenuWeights.DEMO_ADVANCED_EYETRACKING)])
-class VRControllerTrackingDemo: Command, CellTrackingBase() {
+
+/**
+ * This class utilizes VR controllers to track cells in volumetric datasets in a sciview environment.
+ */
+class VRControllerTracking(
+   sciview: SciView
+): CellTrackingBase(sciview) {
 
     val testTarget1 = Icosphere(0.01f, 2)
     val testTarget2 = Icosphere(0.04f, 2)
@@ -40,7 +38,7 @@ class VRControllerTrackingDemo: Command, CellTrackingBase() {
 
 //	var currentVolume = 0
 
-    override fun run() {
+    fun run() {
 
         sciview.toggleVRRendering()
         hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
@@ -126,7 +124,7 @@ class VRControllerTrackingDemo: Command, CellTrackingBase() {
             setupControllerforTracking()
         }
 
-        launchHedgehogThread()
+        launchUpdaterThread()
     }
 
     private fun setupControllerforTracking( keybindingTracking: String = "U") {
@@ -196,25 +194,8 @@ class VRControllerTrackingDemo: Command, CellTrackingBase() {
                             addSpine(headCenter, direction, volume,0.8f, volume.viewerState.currentTimepoint)
                         }
                     }
-
                 }
-
             }
-
-        }
-
-
-    }
-
-    companion object {
-
-        @Throws(Exception::class)
-        @JvmStatic
-        fun main(args: Array<String>) {
-            val sv = SciView.create()
-            val command = sv.scijavaContext!!.getService(CommandService::class.java)
-            val argmap = HashMap<String, Any>()
-            command.run(EyeTrackingDemo::class.java, true, argmap)
         }
     }
 }

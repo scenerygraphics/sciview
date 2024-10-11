@@ -1,42 +1,36 @@
 package sc.iview.commands.demo.advanced
 
 import graphics.scenery.*
+import graphics.scenery.attribute.material.Material
 import graphics.scenery.controls.OpenVRHMD
 import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.TrackerRole
+import graphics.scenery.controls.behaviours.VRGrab
+import graphics.scenery.controls.behaviours.VRSelect
+import graphics.scenery.controls.behaviours.VRTouch
+import graphics.scenery.primitives.TextBoard
 import graphics.scenery.utils.SystemHelpers
+import graphics.scenery.utils.extensions.minus
+import graphics.scenery.utils.extensions.xyz
+import graphics.scenery.utils.extensions.xyzw
 import graphics.scenery.volumes.Volume
-import org.joml.*
-import org.scijava.command.Command
-import org.scijava.command.CommandService
-import org.scijava.plugin.Menu
-import org.scijava.plugin.Parameter
-import org.scijava.plugin.Plugin
+import org.joml.Matrix4f
+import org.joml.Vector3f
+import org.scijava.event.EventService
 import org.scijava.ui.behaviour.ClickBehaviour
 import sc.iview.SciView
-import sc.iview.commands.MenuWeights
-import java.io.File
+import sc.iview.event.NodeTaggedEvent
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.util.HashMap
 import kotlin.concurrent.thread
-import graphics.scenery.attribute.material.Material
-import graphics.scenery.controls.behaviours.*
-import graphics.scenery.primitives.TextBoard
-import graphics.scenery.utils.extensions.*
-import org.scijava.event.EventService
-import sc.iview.commands.file.OpenDirofTif
-import sc.iview.event.NodeTaggedEvent
 
-@Plugin(type = Command::class,
-        menuRoot = "SciView",
-        menu = [Menu(label = "Demo", weight = MenuWeights.DEMO),
-            Menu(label = "Advanced", weight = MenuWeights.DEMO_ADVANCED),
-            Menu(label = "Utilize VR Headset for Cell Tracking", weight = MenuWeights.DEMO_ADVANCED_EYETRACKING)])
-class VRHeadSetTrackingDemo: Command, CellTrackingBase() {
-
-    @Parameter
-    private lateinit var eventService: EventService
+/**
+ * This class uses the VR headset's orientation to track cells in volumetric datasets in a sciview environment.
+ */
+class VRHeadsetTracking(
+    sciview: SciView,
+    val eventService: EventService,
+): CellTrackingBase(sciview) {
 
     var hedgehogsList =  mutableListOf<InstancedNode>()
 
@@ -44,7 +38,7 @@ class VRHeadSetTrackingDemo: Command, CellTrackingBase() {
 
 //	var currentVolume = 0
 
-    override fun run() {
+    fun run() {
 
         sciview.toggleVRRendering()
         hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
@@ -105,7 +99,7 @@ class VRHeadSetTrackingDemo: Command, CellTrackingBase() {
             setupHeadsetTracking()
         }
 
-        launchHedgehogThread()
+        launchUpdaterThread()
     }
 
     private fun setupHeadsetTracking() {
@@ -134,79 +128,59 @@ class VRHeadSetTrackingDemo: Command, CellTrackingBase() {
             true)
 
 
-        VRTouch.createAndSet(sciview.currentScene,hmd, listOf(TrackerRole.LeftHand,TrackerRole.RightHand),true)
+        VRTouch.createAndSet(sciview.currentScene,hmd, listOf(TrackerRole.LeftHand, TrackerRole.RightHand),true)
 
-        VRGrab.createAndSet(sciview.currentScene,hmd, listOf(OpenVRHMD.OpenVRButton.Side), listOf(TrackerRole.RightHand,TrackerRole.LeftHand))
+        VRGrab.createAndSet(sciview.currentScene,hmd, listOf(OpenVRHMD.OpenVRButton.Side), listOf(
+            TrackerRole.RightHand,
+            TrackerRole.LeftHand))
         setupControllerforTracking()
     }
 
     private fun setupControllerforTracking( keybindingTracking: String = "U") {
-            thread {
-                val cam = sciview.camera as? DetachedHeadCamera ?: return@thread
-                val toggleTracking = ClickBehaviour { _, _ ->
-                    if (tracking) {
-                        referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
-                        cam.showMessage("Tracking deactivated.",distance = 1.2f, size = 0.2f)
-                        tracking = false
-                        thread {
-                            dumpHedgehog()
-                            println("before dumphedgehog: " + hedgehogsList.last().instances.size.toString())
-                        }
-                    } else {
-                        addHedgehog()
-                        println("after addhedgehog: "+ hedgehogsList.last().instances.size.toString())
-                        referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
-                        cam.showMessage("Tracking active.",distance = 1.2f, size = 0.2f)
-                        tracking = true
+        thread {
+            val cam = sciview.camera as? DetachedHeadCamera ?: return@thread
+            val toggleTracking = ClickBehaviour { _, _ ->
+                if (tracking) {
+                    referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
+                    cam.showMessage("Tracking deactivated.",distance = 1.2f, size = 0.2f)
+                    tracking = false
+                    thread {
+                        dumpHedgehog()
+                        println("before dumphedgehog: " + hedgehogsList.last().instances.size.toString())
                     }
+                } else {
+                    addHedgehog()
+                    println("after addhedgehog: "+ hedgehogsList.last().instances.size.toString())
+                    referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
+                    cam.showMessage("Tracking active.",distance = 1.2f, size = 0.2f)
+                    tracking = true
                 }
-                //RightController.trigger
-                hmd.addBehaviour("toggle_tracking", toggleTracking)
-                hmd.addKeyBinding("toggle_tracking", keybindingTracking)
+            }
+            //RightController.trigger
+            hmd.addBehaviour("toggle_tracking", toggleTracking)
+            hmd.addKeyBinding("toggle_tracking", keybindingTracking)
 
-                volume.visible = true
-                volume.runRecursive { it.visible = true }
+            volume.visible = true
+            volume.runRecursive { it.visible = true }
 
 //                playing = false
 
-                while(true)
-                {
+            while(true)
+            {
 
-                    val headCenter = Matrix4f(cam.spatial().world).transform(Vector3f(0.0f,0f,-1f).xyzw()).xyz()
-                    val pointWorld = Matrix4f(cam.spatial().world).transform(Vector3f(0.0f,0f,-2f).xyzw()).xyz()
+                val headCenter = Matrix4f(cam.spatial().world).transform(Vector3f(0.0f,0f,-1f).xyzw()).xyz()
+                val pointWorld = Matrix4f(cam.spatial().world).transform(Vector3f(0.0f,0f,-2f).xyzw()).xyz()
 
-                    referenceTarget.visible = true
-                    referenceTarget.ifSpatial { position = Vector3f(0.0f,0f,-1f) }
+                referenceTarget.visible = true
+                referenceTarget.ifSpatial { position = Vector3f(0.0f,0f,-1f) }
 
-                    val direction = (pointWorld - headCenter).normalize()
-                    if (tracking) {
-                        addSpine(headCenter, direction, volume,0.8f, volume.viewerState.currentTimepoint)
-                    }
-
-                    Thread.sleep(2)
+                val direction = (pointWorld - headCenter).normalize()
+                if (tracking) {
+                    addSpine(headCenter, direction, volume,0.8f, volume.viewerState.currentTimepoint)
                 }
+
+                Thread.sleep(2)
             }
-
-    }
-
-    companion object {
-        //run function from here, it will automatically choose the volume for rendering, please give the correct location of volume
-        @Throws(Exception::class)
-        @JvmStatic
-        fun main(args: Array<String>) {
-            val sv = SciView.create()
-            val command = sv.scijavaContext!!.getService(CommandService::class.java)
-
-            command.run(OpenDirofTif::class.java, true,
-                hashMapOf<String,Any>(
-                    "file" to File("E:\\dataset\\Pdu_H2BeGFP_CAAXmCherry_0123_20130312_192018.corrected-histone"),
-                    "onlyFirst" to 10
-                ))
-                .get()
-
-            val argmap = HashMap<String, Any>()
-            command.run(VRHeadSetTrackingDemo::class.java, true, argmap)
-                .get()
         }
     }
 }
