@@ -8,6 +8,7 @@ import graphics.scenery.primitives.Cylinder
 import graphics.scenery.utils.MaybeIntersects
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.minus
+import graphics.scenery.utils.lazyLogger
 import graphics.scenery.volumes.RAIVolume
 import graphics.scenery.volumes.Volume
 import org.joml.Math
@@ -27,7 +28,7 @@ import kotlin.concurrent.thread
 open class CellTrackingBase(
     open var sciview: SciView
 ) {
-    lateinit var logger: LogService
+    val logger by lazyLogger()
 
     lateinit var sessionId: String
     lateinit var sessionDirectory: Path
@@ -49,6 +50,7 @@ open class CellTrackingBase(
 
     var volumeScaleFactor = 1.0f
 
+    // determines whether the volume and hedgehogs should keep listening for updates or not
     var cellTrackingActive: Boolean = false
 
     open var linkCreationCallback: ((HedgehogAnalysis.SpineGraphVertex) -> Unit)? = null
@@ -60,6 +62,12 @@ open class CellTrackingBase(
     enum class PlaybackDirection {
         Forward,
         Backward
+    }
+
+    init {
+        logger.info("we constructed celltrackingbase now. Lets toggle VR")
+        sciview.toggleVRRendering()
+        logger.info("yeah we toggled vr alright")
     }
 
     fun addHedgehog() {

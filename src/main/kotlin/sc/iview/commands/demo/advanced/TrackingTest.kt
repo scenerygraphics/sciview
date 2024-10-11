@@ -283,8 +283,8 @@ class TrackingTest(
                 )
                 val count = samples.filterNotNull().count { it > 0.002f }
 
-                logger.info("count of samples: "+ count.toString())
-                logger.info(samples)
+                logger.info("count of samples: $count")
+                logger.info(samples.joinToString { ", " })
 
 //                spine.metadata["spine"] = metadata
 //                spine.instancedProperties["ModelMatrix"] = { spine.spatial().world }
