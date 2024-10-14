@@ -1,12 +1,10 @@
 import graphics.scenery.utils.extensions.times
-import graphics.scenery.utils.lazyLogger
 import graphics.scenery.volumes.RAIVolume
 import graphics.scenery.volumes.TransferFunction
-import org.joml.Vector3f
 import org.scijava.command.CommandService
 import org.scijava.ui.UIService
 import sc.iview.SciView
-import sc.iview.commands.demo.advanced.EyeTrackingDemo
+import sc.iview.commands.demo.advanced.EyeTrackingCommand
 
 //object StartEye {
 
@@ -35,7 +33,7 @@ fun main() {
 
     val command = sv.scijavaContext!!.getService(CommandService::class.java)
     val argmap = HashMap<String, Any>()
-    command.run(EyeTrackingDemo::class.java, true, argmap)
+    command.run(EyeTrackingCommand::class.java, true, argmap)
 
 }
 //}
