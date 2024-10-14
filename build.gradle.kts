@@ -58,6 +58,7 @@ dependencies {
     }
 
     implementation("net.java.dev.jna:jna-platform:5.14.0")
+//    implementation("net.clearvolume:cleargl")
     implementation("org.janelia.saalfeldlab:n5")
     implementation("org.janelia.saalfeldlab:n5-imglib2")
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
@@ -147,6 +148,19 @@ dependencies {
 
 val isRelease: Boolean
     get() = System.getProperty("release") == "true"
+
+//kotlin {
+//    jvmToolchain(21)
+////    compilerOptions {
+////        jvmTarget = JvmTarget.JVM_21
+////        freeCompilerArgs = listOf("-Xinline-classes", "-opt-in=kotlin.RequiresOptIn")
+////    }
+//}
+//
+//java {
+//    targetCompatibility = JavaVersion.VERSION_21
+//    sourceCompatibility = JavaVersion.VERSION_21
+//}
 
 tasks {
     withType<KotlinCompile>().all {
@@ -414,30 +428,32 @@ tasks {
 
     register<JavaExec>(name = "run") {
         classpath = sourceSets.main.get().runtimeClasspath
-        if (project.hasProperty("target")) {
-            project.property("target")?.let { target ->
-                classpath = sourceSets.test.get().runtimeClasspath
+        var target: Any? = null
+        if (project.hasProperty("target"))
+            target = project.property("target")
+        target = "StartEyeTrackingDirectlyKt"
+        if (target != null) {
+            classpath = sourceSets.test.get().runtimeClasspath
 
-                println("Target is $target")
-                //                if(target.endsWith(".kt")) {
-                //                    main = target.substringAfter("kotlin${File.separatorChar}").replace(File.separatorChar, '.').substringBefore(".kt")
-                //                } else {
-                //                    main = target.substringAfter("java${File.separatorChar}").replace(File.separatorChar, '.').substringBefore(".java")
-                //                }
+            println("Target is $target")
+            //                if(target.endsWith(".kt")) {
+            //                    main = target.substringAfter("kotlin${File.separatorChar}").replace(File.separatorChar, '.').substringBefore(".kt")
+            //                } else {
+            //                    main = target.substringAfter("java${File.separatorChar}").replace(File.separatorChar, '.').substringBefore(".java")
+            //                }
 
-                mainClass.set("$target")
-                val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
+            mainClass.set("$target")
+            val props = System.getProperties().filter { (k, _) -> k.toString().startsWith("scenery.") }
 
-                val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
-                allJvmArgs = if (additionalArgs != null) {
-                    allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
-                } else {
-                    allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
-                }
-
-                println("Will run target $target with classpath $classpath, main=${mainClass.get()}")
-                println("JVM arguments passed to target: $allJvmArgs")
+            val additionalArgs = System.getenv("SCENERY_JVM_ARGS")
+            allJvmArgs = if (additionalArgs != null) {
+                allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") } + additionalArgs
+            } else {
+                allJvmArgs + props.flatMap { (k, v) -> listOf("-D$k=$v") }
             }
+
+            println("Will run target $target with classpath $classpath, main=${mainClass.get()}")
+            println("JVM arguments passed to target: $allJvmArgs")
         }
     }
 
