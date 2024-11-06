@@ -64,12 +64,6 @@ open class CellTrackingBase(
         Backward
     }
 
-    init {
-        logger.info("we constructed celltrackingbase now. Lets toggle VR")
-        sciview.toggleVRRendering()
-        logger.info("yeah we toggled vr alright")
-    }
-
     fun addHedgehog() {
         logger.info("added hedgehog")
         val hedgehog = Cylinder(0.005f, 1.0f, 16)
