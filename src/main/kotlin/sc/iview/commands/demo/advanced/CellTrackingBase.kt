@@ -64,6 +64,22 @@ open class CellTrackingBase(
         Backward
     }
 
+    private val observers = mutableListOf<TimepointObserver>()
+
+    /** Registers a new observer that will get updated whenever the VR user triggers a timepoint update. */
+    fun registerObserver(observer: TimepointObserver) {
+        observers.add(observer)
+    }
+
+    /** Unregisters the timepoint observer. */
+    fun unregisterObserver(observer: TimepointObserver) {
+        observers.remove(observer)
+    }
+
+    private fun notifyObservers(timepoint: Int) {
+        observers.forEach { it.onTimePointChanged(timepoint) }
+    }
+
     fun addHedgehog() {
         logger.info("added hedgehog")
         val hedgehog = Cylinder(0.005f, 1.0f, 16)
@@ -234,19 +250,19 @@ open class CellTrackingBase(
             while(sciview.running && cellTrackingActive) {
                 if(playing || skipToNext || skipToPrevious) {
                     val oldTimepoint = volume.viewerState.currentTimepoint
-                    val newVolume = if(skipToNext || playing) {
+                    if (skipToNext || playing) {
                         skipToNext = false
                         if(direction == PlaybackDirection.Forward) {
-                            volume.nextTimepoint()
+                            notifyObservers(oldTimepoint + 1)
                         } else {
-                            volume.previousTimepoint()
+                            notifyObservers(oldTimepoint - 1)
                         }
                     } else {
                         skipToPrevious = false
                         if(direction == PlaybackDirection.Forward) {
-                            volume.previousTimepoint()
+                            notifyObservers(oldTimepoint - 1)
                         } else {
-                            volume.nextTimepoint()
+                            notifyObservers(oldTimepoint + 1)
                         }
                     }
                     val newTimepoint = volume.viewerState.currentTimepoint

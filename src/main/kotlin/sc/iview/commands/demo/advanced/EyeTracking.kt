@@ -279,18 +279,17 @@ class EyeTracking(
     }
 
     override fun stop() {
-        logger.info("Shutting down eye tracking environment. Disabling VR now...")
+        hmd.close()
+        logger.info("Shut down HMD and keybindings.")
         sciview.toggleVRRendering()
-        logger.info("Stopping volume and hedgehog updater thread...")
+        logger.info("Shut down eye tracking environment and disabled VR.")
         cellTrackingActive = false
-        logger.info("Deleting eye tracking scene objects...")
+        logger.info("Stopped volume and hedgehog updater thread.")
         lightTetrahedron.forEach { sciview.deleteNode(it) }
         sciview.deleteNode(sciview.find("Shell"))
         listOf(referenceTarget, calibrationTarget, laser, debugBoard, hedgehogs).forEach {
             sciview.deleteNode(it)
         }
-        logger.info("Shutting down HMD and keybindings...")
-        hmd.close()
         logger.info("Successfully cleaned up eye tracking environemt.")
     }
 
