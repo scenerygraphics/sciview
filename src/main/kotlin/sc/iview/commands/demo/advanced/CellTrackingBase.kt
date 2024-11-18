@@ -297,6 +297,7 @@ open class CellTrackingBase(
 
                 Thread.sleep((1000.0f/volumesPerSecond).toLong())
             }
+            logger.info("CellTracking updater thread has stopped.")
         }
     }
 
@@ -445,10 +446,6 @@ open class CellTrackingBase(
                 trackFileWriter.write("$tp\t${p.x()}\t${p.y()}\t${p.z()}\t${hedgehogId}\t$parentId\t0\t0\n")
             }
         }
-
-
-//        mainTrack.let { sciview.addNode(it, parent = volume) }
-
         trackFileWriter.close()
     }
 
@@ -457,8 +454,6 @@ open class CellTrackingBase(
      * This method should be overridden to extend
      */
     open fun stop() {
-        hmd.close()
-        logger.info("Shut down HMD and keybindings.")
     }
 
 }

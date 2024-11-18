@@ -230,7 +230,6 @@ class EyeTracking(
                         hmd.addKeyBinding("toggle_tracking", keybindingTracking)
 
                         volume.visible = true
-//                        volume.runRecursive { it.visible = true }
                         playing = true
                     }
 
@@ -258,7 +257,6 @@ class EyeTracking(
                                 val direction = (pointWorld - headCenter).normalize()
 
                                 if (tracking) {
-//                                    log.info("Starting spine from $headCenter to $pointWorld")
                                     addSpine(headCenter, direction, volume, gaze.confidence, volume.viewerState.currentTimepoint)
                                 }
                             }
@@ -266,31 +264,29 @@ class EyeTracking(
 
 //                        else -> {gaze-> }
                     }
-
                     logger.info("Calibration routine done.")
                 }
-
-                // bind calibration start to menu key on controller
-
             }
         }
         hmd.addBehaviour("start_calibration", startCalibration)
         hmd.addKeyBinding("start_calibration", keybindingCalibration)
     }
 
+    /** Toggles the VR rendering, cleans up eyetracking-related scene objects and removes the light tetrahedron
+     * that was created for the calibration routine. */
     override fun stop() {
-        hmd.close()
-        logger.info("Shut down HMD and keybindings.")
-        sciview.toggleVRRendering()
-        logger.info("Shut down eye tracking environment and disabled VR.")
+        pupilTracker.unsubscribeFrames()
         cellTrackingActive = false
         logger.info("Stopped volume and hedgehog updater thread.")
         lightTetrahedron.forEach { sciview.deleteNode(it) }
         sciview.deleteNode(sciview.find("Shell"))
+        sciview.deleteNode(sciview.find("eyeFrames"))
         listOf(referenceTarget, calibrationTarget, laser, debugBoard, hedgehogs).forEach {
             sciview.deleteNode(it)
         }
         logger.info("Successfully cleaned up eye tracking environemt.")
+        sciview.toggleVRRendering()
+        logger.info("Shut down eye tracking environment and disabled VR.")
     }
 
 }
