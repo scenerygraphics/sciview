@@ -55,7 +55,6 @@ import graphics.scenery.utils.ExtractsNatives.Companion.getPlatform
 import graphics.scenery.utils.LogbackUtils
 import graphics.scenery.utils.SceneryPanel
 import graphics.scenery.utils.Statistics
-import graphics.scenery.utils.extensions.times
 import graphics.scenery.volumes.Colormap
 import graphics.scenery.volumes.RAIVolume
 import graphics.scenery.volumes.TransferFunction
@@ -113,7 +112,6 @@ import sc.iview.ui.CustomPropertyUI
 import sc.iview.ui.MainWindow
 import sc.iview.ui.SwingMainWindow
 import sc.iview.ui.TaskManager
-import ucar.units.ConversionException
 import java.awt.event.WindowListener
 import java.io.File
 import java.io.IOException
@@ -1828,29 +1826,41 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         val cam = scene.activeObserver as? DetachedHeadCamera ?: return
         var ti: TrackerInput? = null
         var hmdAdded = false
-        if (!hub.has(SceneryElement.HMDInput)) {
-            try {
-                val hmd = OpenVRHMD(false, true)
-                if (hmd.initializedAndWorking()) {
-                    hub.add(SceneryElement.HMDInput, hmd)
-                    ti = hmd
-                } else {
-                    logger.warn("Could not initialise VR headset, just activating stereo rendering.")
+
+        if (vrActive) {
+
+            // VR activation logic
+            if (!hub.has(SceneryElement.HMDInput)) {
+                try {
+                    val hmd = OpenVRHMD(false, true)
+                    if (hmd.initializedAndWorking()) {
+                        hub.add(SceneryElement.HMDInput, hmd)
+                        ti = hmd
+                    } else {
+                        logger.warn("Could not initialise VR headset, just activating stereo rendering.")
+                    }
+                } catch (e: Exception) {
+                    logger.error("Could not add OpenVRHMD: $e")
                 }
                 hmdAdded = true
-            } catch (e: Exception) {
-                logger.error("Could not add OpenVRHMD: $e")
+            } else {
+                ti = hub.getWorkingHMD()
+            }
+
+            // Set tracker on the DetachedHeadCamera
+            if (ti != null) {
+                cam.tracker = ti
+                logger.info("tracker set")
             }
         } else {
-            ti = hub.getWorkingHMD()
-        }
-        if (vrActive && ti != null) {
-            cam.tracker = ti
-            logger.info("tracker set")
-        } else {
+            // VR deactivation logic
+            // Convert back to normal Camera
+            logger.info("Shutting down VR")
             cam.tracker = null
         }
-        renderer.pushMode = false
+
+        // Enable push mode if VR is inactive, and the other way round
+        renderer.pushMode = !vrActive
 
         // we need to force reloading the renderer as the HMD might require device or instance extensions
         if (renderer is VulkanRenderer && hmdAdded) {
@@ -1865,7 +1875,17 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                 }
             }
         }
+        logger.debug("Replaced renderer.")
         renderer.toggleVR()
+        // Cleanup HMD after VR has been toggled off
+        if (!vrActive) {
+            if (hub.has(SceneryElement.HMDInput)) {
+                val hmd = hub.get(SceneryElement.HMDInput) as? OpenVRHMD
+                hmd?.close()
+//                hub.remove(hmd)
+                logger.debug("Closed HMD.")
+            }
+        }
     }
 
     /**
