@@ -1864,9 +1864,8 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                     e.printStackTrace()
                 }
             }
-
-            renderer.toggleVR()
         }
+        renderer.toggleVR()
     }
 
     /**
