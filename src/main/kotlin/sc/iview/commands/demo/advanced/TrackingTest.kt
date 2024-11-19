@@ -28,7 +28,6 @@ class TrackingTest(
     sciview: SciView
 ): CellTrackingBase(sciview) {
 
-    //val calibrationTarget = Icosphere(0.02f, 2)
     val TestTarget = Icosphere(0.1f, 2)
 
     val laser = Cylinder(0.005f, 0.2f, 10)
@@ -38,15 +37,11 @@ class TrackingTest(
 
     val confidenceThreshold = 0.60f
 
-//	var currentVolume = 0
-
     fun run() {
 
         sciview.addNode(TestTarget)
         TestTarget.visible = false
 
-//        sciview.toggleVRRendering()
-//        hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
         sessionId = "BionicTracking-generated-${SystemHelpers.formatDateTime()}"
         sessionDirectory = Files.createDirectory(Paths.get(System.getProperty("user.home"), "Desktop", sessionId))
 
@@ -131,49 +126,30 @@ class TrackingTest(
             volume.runRecursive { it.visible = true }
             playing = true
             tracking = true
-            //val p = hmd.getPose(TrackedDeviceType.Controller).firstOrNull { it.name == "Controller-3" }?.position
 
             if(true)
             {
-//                val p = Vector3f(0f,0f,-1f)
-//                referenceTarget.position = p
-//                referenceTarget.visible = true
                 val headCenter = point1.spatial().position//cam.viewportToWorld(Vector2f(0.0f, 0.0f))
                 val pointWorld = point2.spatial().position///Matrix4f(cam.world).transform(p.xyzw()).xyz()
-//
+
                 val direction = (pointWorld - headCenter).normalize()
 
                 if (tracking) {
-//                                    log.info("Starting spine from $headCenter to $pointWorld")
-                    //System.out.println("tracking!!!!!!!!!!")
-//                    println("direction:"+ direction.toString())
                     addSpine(headCenter, direction, volume,0.8f, volume.viewerState.currentTimepoint)
                     showTrack()
                 }
                 Thread.sleep(200)
             }
-            //referenceTarget.visible = true
-            // Pupil has mm units, so we divide by 1000 here to get to scenery units
-
-
-        }       // bind calibration start to menu key on controller
+        }
 
     }
 
     private fun showTrack()
     {
-//        val file = File("C:\\Users\\lanru\\Desktop\\BionicTracking-generated-2022-05-25 16.04.52\\Hedgehog_1_2022-05-25 16.06.03.csv")
         val file = File("C:\\Users\\lanru\\Desktop\\BionicTracking-generated-2022-10-19 13.48.51\\Hedgehog_1_2022-10-19 13.49.41.csv")
 
         var volumeDimensions = volume.getDimensions()
         var selfdefineworlfmatrix = volume.spatial().world
-       // volumeDimensions = Vector3f(700.0f,660.0f,113.0f)
-//        selfdefineworlfmatrix = Matrix4f(
-//            0.015f, 0f, 0f, 0f,
-//            0f, -0.015f, 0f, 0f,
-//            0f, 0f, 0.045f, 0f,
-//            -5f, 8f, -2f, 1f
-//        )
         val analysis = HedgehogAnalysis.fromCSVWithMatrix(file,selfdefineworlfmatrix)
         print("volume.getDimensions(): "+ volume.getDimensions())
         print("volume.spatial().world: "+ volume.spatial().world)
@@ -214,8 +190,6 @@ class TrackingTest(
             val tp = pair[0].second.timepoint
             val pp = Icosphere(0.1f, 1)
             pp.name = "trackpoint_${tp}_${pair[0].first.x}_${pair[0].first.y}_${pair[0].first.z}"
-//            println("volumeDimensions: " + volumeDimensions)
-//            println("volume.spatial().world: " + volume.spatial().world)
             println("the local position of the point is:" + pair[0].first)
             println("the world position of the point is: "+ p0w)
             pp.spatial().position = p0w
@@ -235,18 +209,6 @@ class TrackingTest(
         val temp = direction.mul(sphereDist + 2.0f * sphere.radius)
         val p2 = Vector3f(center).add(temp)
 
-
-//        print("center position: " + p1.toString())
-//        print("p2 position" + p2.toString())
-
-//        TestTarget.visible = true
-//        TestTarget.ifSpatial { position = p2}
-
-
-//        val spine = (hedgehogs.children.last() as InstancedNode).addInstance()
-//        spine.spatial().orientBetweenPoints(p1, p2, true, true)
-//        spine.visible = true
-
         val intersection = volume.spatial().intersectAABB(p1, (p2 - p1).normalize())
         System.out.println(intersection);
         if(intersection is MaybeIntersects.Intersection) {
@@ -255,14 +217,6 @@ class TrackingTest(
             val localExit = (intersection.relativeExit) //.add (Vector3f(1.0f)) ).mul  (1.0f / 2.0f)
             val nf = DecimalFormat("0.0000")
             println("Ray intersects volume at world=${intersection.entry.toString(nf)}/${intersection.exit.toString(nf)} local=${localEntry.toString(nf)}/${localExit.toString(nf)} ")
-
-//            System.out.println("localEntry:"+ localEntry.toString())
-//            System.out.println("localExit:" + localExit.toString())
-//            val worldpositionEntry = volume.spatial().world.transform((Vector3f(localEntry)).xyzw()).xyz()
-//            val worldpositionExit = volume.spatial().world.transform((Vector3f(localExit)).xyzw()).xyz()
-//            System.out.println("worldEntry:"+ worldpositionEntry.toString())
-//            System.out.println("worldExit:" + worldpositionExit.toString())
-
 
             val (samples, localDirection) = volume.sampleRay(localEntry, localExit) ?: (null to null)
 
@@ -285,10 +239,6 @@ class TrackingTest(
 
                 logger.info("count of samples: $count")
                 logger.info(samples.joinToString { ", " })
-
-//                spine.metadata["spine"] = metadata
-//                spine.instancedProperties["ModelMatrix"] = { spine.spatial().world }
-//                spine.instancedProperties["Metadata"] = { Vector4f(confidence, timepoint.toFloat()/volume.timepointCount, count.toFloat(), 0.0f) }
             }
         }
     }

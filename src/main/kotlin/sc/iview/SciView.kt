@@ -1040,7 +1040,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     /**
-     * Add Node n to the scene and set it as the active node/publish it to the event service if activePublish is true
+     * Add Node n to the scene and set it as the active node/publish it to the event service if activePublish is true.
      * @param n node to add to scene
      * @param activePublish flag to specify whether the node becomes active *and* is published in the inspector/services
      * @param block an optional code that will be executed as a part of adding the node
@@ -1882,7 +1882,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             if (hub.has(SceneryElement.HMDInput)) {
                 val hmd = hub.get(SceneryElement.HMDInput) as? OpenVRHMD
                 hmd?.close()
-//                hub.remove(hmd)
+                // TODO hub.remove(hmd)
                 logger.debug("Closed HMD.")
             }
         }

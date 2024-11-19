@@ -36,8 +36,6 @@ class VRHeadsetTracking(
 
     private var selectionStorage: Node? = null
 
-//	var currentVolume = 0
-
     fun run() {
 
         sciview.toggleVRRendering()
@@ -53,7 +51,6 @@ class VRHeadsetTracking(
         }
         sciview.camera!!.addChild(referenceTarget)
 
-
         val shell = Box(Vector3f(20.0f, 20.0f, 20.0f), insideNormals = true)
         shell.ifMaterial{
             cullingMode = Material.CullingMode.Front
@@ -63,11 +60,6 @@ class VRHeadsetTracking(
         sciview.addChild(shell)
 
         volume = sciview.find("volume") as Volume
-
-//        val testtarget = Icosphere(2f, 2)
-//        volume.addChild(testtarget)
-//        testtarget.addAttribute(Grabable::class.java,Grabable())
-//        testtarget.addAttribute(Selectable::class.java, Selectable(onSelect = {selectionStorage = testtarget}))
 
         val bb = BoundingGrid()
         bb.node = volume
@@ -112,16 +104,7 @@ class VRHeadsetTracking(
             { n ->
                 println("the spot ${n.name} is selected")
 
-                /**
-                 * delete the selected node from volume
-                 **/
-//                volume.runRecursive{it.removeChild(n)}
-//                eventService.publish(NodeRemovedEvent(n))
-
-
-                /*
-                    validate the selected node from volume, the tag event is designed specially for tag of Elephant
-                 */
+                // validate the selected node from volume, the tag event is designed specially for tag of Elephant
                 eventService.publish(NodeTaggedEvent(n))
 
             },
@@ -162,8 +145,6 @@ class VRHeadsetTracking(
 
             volume.visible = true
             volume.runRecursive { it.visible = true }
-
-//                playing = false
 
             while(true)
             {

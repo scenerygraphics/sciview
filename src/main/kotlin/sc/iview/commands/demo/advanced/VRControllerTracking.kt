@@ -36,8 +36,6 @@ class VRControllerTracking(
 
     var hedgehogsList =  mutableListOf<InstancedNode>()
 
-//	var currentVolume = 0
-
     fun run() {
 
         sciview.toggleVRRendering()
@@ -86,7 +84,6 @@ class VRControllerTracking(
         sciview.addChild(shell)
 
         volume = sciview.find("volume") as Volume
-//        volume.visible = false
 
         val bb = BoundingGrid()
         bb.node = volume
@@ -110,11 +107,6 @@ class VRControllerTracking(
                 logger.info("onDeviceConnect called, cam=${sciview.camera}")
                 if(device.type == TrackedDeviceType.Controller) {
                     logger.info("Got device ${device.name} at $timestamp")
-//                    if(device.role == TrackerRole.RightHand) {
-//                        rightController = device
-//                        log.info("rightController is found, its location is in ${rightController.position}")
-//                    }
-//                    rightController = hmd.getTrackedDevices(TrackedDeviceType.Controller).get("Controller-1")!!
                     device.model?.let { hmd.attachToNode(device, it, sciview.camera) }
                 }
             }

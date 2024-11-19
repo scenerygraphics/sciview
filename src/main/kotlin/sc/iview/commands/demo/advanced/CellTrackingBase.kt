@@ -25,6 +25,12 @@ import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 
+/**
+ * Base class for different VR cell tracking purposes. It includes functionality to add spines and edgehogs,
+ * as used by [EyeTracking], and registers controller bindings via [inputSetup]. It is possible to register observers
+ * that listen to timepoint changes with [registerObserver].
+ * @param [sciview] The [SciView] instance to use
+ */
 open class CellTrackingBase(
     open var sciview: SciView
 ) {
@@ -399,26 +405,13 @@ open class CellTrackingBase(
         }
 
         if(track == null) {
-//            logger.warn("No track returned")
+            logger.warn("No track returned")
             sciview.camera?.showMessage("No track returned", distance = 1.2f, size = 0.2f,messageColor = Vector4f(1.0f, 0.0f, 0.0f,1.0f))
             return
         }
 
         lastHedgehog.metadata["HedgehogAnalysis"] = track
         lastHedgehog.metadata["Spines"] = spines
-
-//        logger.info("---\nTrack: ${track.points.joinToString("\n")}\n---")
-
-//        val cylinder = Cylinder(0.1f, 1.0f, 6, smoothSides = true)
-//        cylinder.setMaterial(ShaderMaterial.fromFiles("DeferredInstancedColor.vert", "DeferredInstancedColor.frag")) {
-//            diffuse = Vector3f(1f)
-//            ambient = Vector3f(1f)
-//            roughness = 1f
-//        }
-
-//        cylinder.name = "Track-$hedgehogId"
-//        val mainTrack = InstancedNode(cylinder)
-//        mainTrack.instancedProperties["Color"] = { Vector4f(1f) }
 
         val parentId = 0
         val volumeDimensions = volume.getDimensions()
@@ -429,11 +422,6 @@ open class CellTrackingBase(
         if (linkCreationCallback != null && finalTrackCallback != null) {
             track.points.windowed(2, 1).forEach { pair ->
                 linkCreationCallback?.let { it(pair[0].second) }
-//            val element = mainTrack.addInstance()
-//            element.addAttribute(Material::class.java, cylinder.material())
-//            element.spatial().orientBetweenPoints(Vector3f(pair[0].first), Vector3f(pair[1].first), rescale = true, reposition = true)
-//            element.parent = volume
-//                mainTrack.instances.add(element)
                 val p = Vector3f(pair[0].first).mul(Vector3f(volumeDimensions)) // direct product
                 val tp = pair[0].second.timepoint
                 trackFileWriter.write("$tp\t${p.x()}\t${p.y()}\t${p.z()}\t${hedgehogId}\t$parentId\t0\t0\n")
@@ -451,7 +439,7 @@ open class CellTrackingBase(
 
     /**
      * Stops the current tracking environment and restore the original state.
-     * This method should be overridden to extend
+     * This method needs to be overridden.
      */
     open fun stop() {
     }

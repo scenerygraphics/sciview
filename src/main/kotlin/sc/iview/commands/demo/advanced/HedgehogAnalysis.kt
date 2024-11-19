@@ -10,8 +10,9 @@ import java.io.File
 import kotlin.math.sqrt
 
 /**
- * <Description>
- *
+ * Performs analysis over a collection of eye-tracking spines (aka hedgehog). Extracts a list of local maxima from
+ * the sampled volume, removes statistical outliers and performs a graph optimization over the remaining maxima to
+ * extract the likeliest path of the cell. The companion object contains methods to load CSV files.
  * @author Ulrik Günther <hello@ulrik.is>
  */
 class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix4f) {
@@ -418,8 +419,8 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 
 fun main(args: Array<String>) {
 	val logger = LoggerFactory.getLogger("HedgehogAnalysisMain")
-
-	val file = File("C:\\Users\\lanru\\Desktop\\BionicTracking-generated-2021-11-29 19.37.43\\Hedgehog_1_2021-11-29 19.38.32.csv")
+	// main should only be called for testing purposes
+	val file = File("C:/path/to/your/test/CSV")
 	val analysis = HedgehogAnalysis.fromCSV(file)
 	val results = analysis.run()
 	logger.info("Results: \n$results")

@@ -42,7 +42,6 @@ class EyeTracking(
     val laser = Cylinder(0.005f, 0.2f, 10)
 
     val confidenceThreshold = 0.60f
-//	var currentVolume = 0
 
     private lateinit var lightTetrahedron: List<PointLight>
     private lateinit var debugBoard: TextBoard
@@ -200,7 +199,6 @@ class EyeTracking(
 
                     pupilTracker.onCalibrationSuccess = {
                         cam.showMessage("Calibration succeeded!", distance = 2f, size = 0.2f, messageColor = Vector4f(0.0f, 1.0f, 0.0f, 1.0f), centered = true)
-//						cam.children.find { it.name == "debugBoard" }?.visible = true
 
                         for (i in 0 until 20) {
                             referenceTarget.ifMaterial{diffuse = Vector3f(0.0f, 1.0f, 0.0f) }
@@ -243,7 +241,7 @@ class EyeTracking(
                         calibrationTarget = calibrationTarget)
 
                     pupilTracker.onGazeReceived = when (pupilTracker.calibrationType) {
-                        //NEW
+
                         PupilEyeTracker.CalibrationType.WorldSpace -> { gaze ->
                             if (gaze.confidence > confidenceThreshold) {
                                 val p = gaze.gazePoint()
@@ -261,8 +259,6 @@ class EyeTracking(
                                 }
                             }
                         }
-
-//                        else -> {gaze-> }
                     }
                     logger.info("Calibration routine done.")
                 }
@@ -272,7 +268,7 @@ class EyeTracking(
         hmd.addKeyBinding("start_calibration", keybindingCalibration)
     }
 
-    /** Toggles the VR rendering, cleans up eyetracking-related scene objects and removes the light tetrahedron
+    /** Toggles the VR rendering off, cleans up eyetracking-related scene objects and removes the light tetrahedron
      * that was created for the calibration routine. */
     override fun stop() {
         pupilTracker.unsubscribeFrames()

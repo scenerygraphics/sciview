@@ -16,7 +16,6 @@ data class SpineMetadata(
 		val localDirection: Vector3f,
 		val headPosition: Vector3f,
 		val headOrientation: Quaternionf,
-//		val headOrientation: Quaternion,
 		val position: Vector3f,
 		val confidence: Float,
 		val samples: List<Float?>,

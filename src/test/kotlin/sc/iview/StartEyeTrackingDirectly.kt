@@ -6,11 +6,7 @@ import org.scijava.ui.UIService
 import sc.iview.SciView
 import sc.iview.commands.demo.advanced.EyeTrackingCommand
 
-//object StartEye {
-
-//    val logger by lazyLogger()
-
-//  @JvmStatic
+//  Test class with hardcoded path to open eyetracking directly.
 fun main() {
     val sv = SciView.create()
     val context = sv.scijavaContext
@@ -36,4 +32,3 @@ fun main() {
     command.run(EyeTrackingCommand::class.java, true, argmap)
 
 }
-//}
