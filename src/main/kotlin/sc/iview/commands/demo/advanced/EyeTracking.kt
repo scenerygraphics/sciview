@@ -3,7 +3,9 @@ package sc.iview.commands.demo.advanced
 import graphics.scenery.*
 import graphics.scenery.attribute.material.Material
 import graphics.scenery.controls.OpenVRHMD
+import graphics.scenery.controls.OpenVRHMD.OpenVRButton
 import graphics.scenery.controls.TrackedDeviceType
+import graphics.scenery.controls.TrackerRole
 import graphics.scenery.controls.eyetracking.PupilEyeTracker
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
@@ -182,7 +184,10 @@ class EyeTracking(
     }
 
 
-    private fun setupCalibration(keybindingCalibration: String = "N", keybindingTracking: String = "U") {
+    private fun setupCalibration(
+        keybindingCalibration: Pair<TrackerRole, OpenVRButton> = (TrackerRole.RightHand to OpenVRButton.Menu),
+        keybindingTracking: Pair<TrackerRole, OpenVRButton> = (TrackerRole.RightHand to OpenVRButton.Trigger)
+    ) {
         val startCalibration = ClickBehaviour { _, _ ->
             thread {
                 val cam = sciview.camera as? DetachedHeadCamera ?: return@thread
@@ -225,7 +230,7 @@ class EyeTracking(
                             tracking = !tracking
                         }
                         hmd.addBehaviour("toggle_tracking", toggleTracking)
-                        hmd.addKeyBinding("toggle_tracking", keybindingTracking)
+                        hmd.addKeyBinding("toggle_tracking", keybindingTracking.first, keybindingTracking.second)
 
                         volume.visible = true
                         playing = true
@@ -265,7 +270,7 @@ class EyeTracking(
             }
         }
         hmd.addBehaviour("start_calibration", startCalibration)
-        hmd.addKeyBinding("start_calibration", keybindingCalibration)
+        hmd.addKeyBinding("start_calibration", keybindingCalibration.first, keybindingCalibration.second)
     }
 
     /** Toggles the VR rendering off, cleans up eyetracking-related scene objects and removes the light tetrahedron

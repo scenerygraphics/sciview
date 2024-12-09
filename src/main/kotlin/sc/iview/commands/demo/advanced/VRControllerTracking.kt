@@ -3,8 +3,10 @@ package sc.iview.commands.demo.advanced
 import graphics.scenery.*
 import graphics.scenery.attribute.material.Material
 import graphics.scenery.controls.OpenVRHMD
+import graphics.scenery.controls.OpenVRHMD.OpenVRButton
 import graphics.scenery.controls.TrackedDevice
 import graphics.scenery.controls.TrackedDeviceType
+import graphics.scenery.controls.TrackerRole
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
 import graphics.scenery.utils.SystemHelpers
@@ -119,7 +121,9 @@ class VRControllerTracking(
         launchUpdaterThread()
     }
 
-    private fun setupControllerforTracking( keybindingTracking: String = "U") {
+    private fun setupControllerforTracking(
+        keybindingTracking: Pair<TrackerRole, OpenVRButton> = (TrackerRole.RightHand to OpenVRButton.Trigger)
+    ) {
 
         thread {
             val cam = sciview.camera as? DetachedHeadCamera ?: return@thread
@@ -140,7 +144,7 @@ class VRControllerTracking(
                 }
             }
             hmd.addBehaviour("toggle_tracking", toggleTracking)
-            hmd.addKeyBinding("toggle_tracking", keybindingTracking)
+            hmd.addKeyBinding("toggle_tracking", keybindingTracking.first, keybindingTracking.second)
 
             volume.visible = true
             volume.runRecursive { it.visible = true }

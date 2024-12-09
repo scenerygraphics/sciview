@@ -1,5 +1,6 @@
 package sc.iview.commands.demo.advanced
 
+import com.intellij.ui.tabs.impl.ShapeTransform.Right
 import graphics.scenery.*
 import graphics.scenery.controls.OpenVRHMD
 import graphics.scenery.controls.TrackerRole
@@ -11,6 +12,7 @@ import graphics.scenery.utils.extensions.minus
 import graphics.scenery.utils.lazyLogger
 import graphics.scenery.volumes.RAIVolume
 import graphics.scenery.volumes.Volume
+import org.apache.commons.math3.geometry.partitioning.Side
 import org.joml.Math
 import org.joml.Matrix4f
 import org.joml.Vector3f
@@ -103,13 +105,14 @@ open class CellTrackingBase(
 
         sciview.sceneryInputHandler?.let { handler ->
             hashMapOf(
-                "move_forward_fast" to "K",
-                "move_back_fast" to "J",
-                "move_left_fast" to "H",
-                "move_right_fast" to "L").forEach { (name, key) ->
+                "move_forward_fast" to (TrackerRole.LeftHand to OpenVRHMD.OpenVRButton.Up),
+                "move_back_fast" to (TrackerRole.LeftHand to OpenVRHMD.OpenVRButton.Down),
+                "move_left_fast" to (TrackerRole.LeftHand to OpenVRHMD.OpenVRButton.Left),
+                "move_right_fast" to (TrackerRole.LeftHand to OpenVRHMD.OpenVRButton.Right)).forEach { (name, key) ->
                 handler.getBehaviour(name)?.let { b ->
                     hmd.addBehaviour(name, b)
-                    hmd.addKeyBinding(name, key)
+                    hmd.addKeyBinding(name, key.first, key.second)
+
                 }
             }
         }
@@ -227,22 +230,22 @@ open class CellTrackingBase(
         hmd.addBehaviour("slower_or_scale", slowerOrScale)
         hmd.addBehaviour("play_pause", playPause)
         hmd.addBehaviour("toggle_hedgehog", toggleHedgehog)
-        hmd.addBehaviour("trigger_move", move)
         hmd.addBehaviour("delete_hedgehog", deleteLastHedgehog)
+        hmd.addBehaviour("trigger_move", move)
         hmd.addBehaviour("cell_division", cellDivision)
 
-        hmd.addKeyBinding("toggle_hedgehog", "X")
-        hmd.addKeyBinding("delete_hedgehog", "Y")
-        hmd.addKeyBinding("skip_to_next", "D")
-        hmd.addKeyBinding("skip_to_prev", "A")
-        hmd.addKeyBinding("faster_or_scale", "W")
-        hmd.addKeyBinding("slower_or_scale", "S")
-        hmd.addKeyBinding("play_pause", "M")
-        hmd.addKeyBinding("playback_direction", "N")
-        hmd.addKeyBinding("cell_division", "T")
+        hmd.addKeyBinding("skip_to_next", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Right)
+        hmd.addKeyBinding("skip_to_prev", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Left)
+        hmd.addKeyBinding("faster_or_scale", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Up)
+        hmd.addKeyBinding("slower_or_scale", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Down)
+        hmd.addKeyBinding("play_pause", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Menu)
+        hmd.addKeyBinding("toggle_hedgehog", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Side)
+        hmd.addKeyBinding("delete_hedgehog", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Side)
+        hmd.addKeyBinding("playback_direction", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Menu)
+        hmd.addKeyBinding("cell_division", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Trigger)
 
         hmd.allowRepeats += OpenVRHMD.OpenVRButton.Trigger to TrackerRole.LeftHand
-        logger.info("calibration should start now")
+        logger.info("Registered VR controller bindings.")
 
     }
 
