@@ -179,6 +179,9 @@ class EyeTracking(
                     }
                     if (device.role == TrackerRole.RightHand) {
                         addTip()
+                        rightVRController?.name = "rightHand"
+                    } else if (device.role == TrackerRole.LeftHand) {
+                        leftVRController?.name = "leftHand"
                     }
                 }
             }
@@ -289,9 +292,13 @@ class EyeTracking(
         cellTrackingActive = false
         logger.info("Stopped volume and hedgehog updater thread.")
         lightTetrahedron.forEach { sciview.deleteNode(it) }
-        sciview.deleteNode(sciview.find("Shell"))
-        val eyeFrames = sciview.find("eyeFrames")
-        eyeFrames?.let { sciview.deleteNode(it) }
+
+        // Try to find and delete possibly existing objects
+        listOf("Shell", "eyeFrames", "leftHand", "rightHand").forEach {
+            val n = sciview.find(it)
+            n?.let { sciview.deleteNode(n) }
+        }
+        // Delete definitely existing objects
         listOf(referenceTarget, calibrationTarget, laser, debugBoard, hedgehogs).forEach {
             sciview.deleteNode(it)
         }
