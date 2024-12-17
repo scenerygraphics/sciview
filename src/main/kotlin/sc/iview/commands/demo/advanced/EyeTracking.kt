@@ -36,6 +36,7 @@ import kotlin.math.PI
 class EyeTracking(
     override var linkCreationCallback: ((HedgehogAnalysis.SpineGraphVertex) -> Unit)? = null,
     override var finalTrackCallback: (() -> Unit)? = null,
+    override var spotCreationCallback: ((Int, Vector3f) -> Unit)? = null,
     sciview: SciView
 ): CellTrackingBase(sciview) {
 
@@ -171,6 +172,14 @@ class EyeTracking(
                 if(device.type == TrackedDeviceType.Controller) {
                     logger.info("Got device ${device.name} at $timestamp")
                     device.model?.let { hmd.attachToNode(device, it, sciview.camera) }
+                    when (device.role) {
+                        TrackerRole.Invalid -> {}
+                        TrackerRole.LeftHand -> leftVRController = device
+                        TrackerRole.RightHand -> rightVRController = device
+                    }
+                    if (device.role == TrackerRole.RightHand) {
+                        addTip()
+                    }
                 }
             }
         }
@@ -186,7 +195,7 @@ class EyeTracking(
 
     private fun setupCalibration(
         keybindingCalibration: Pair<TrackerRole, OpenVRButton> = (TrackerRole.RightHand to OpenVRButton.Menu),
-        keybindingTracking: Pair<TrackerRole, OpenVRButton> = (TrackerRole.RightHand to OpenVRButton.Trigger)
+        keybindingTracking: Pair<TrackerRole, OpenVRButton> = (TrackerRole.LeftHand to OpenVRButton.Trigger)
     ) {
         val startCalibration = ClickBehaviour { _, _ ->
             thread {
@@ -281,7 +290,8 @@ class EyeTracking(
         logger.info("Stopped volume and hedgehog updater thread.")
         lightTetrahedron.forEach { sciview.deleteNode(it) }
         sciview.deleteNode(sciview.find("Shell"))
-        sciview.deleteNode(sciview.find("eyeFrames"))
+        val eyeFrames = sciview.find("eyeFrames")
+        eyeFrames?.let { sciview.deleteNode(it) }
         listOf(referenceTarget, calibrationTarget, laser, debugBoard, hedgehogs).forEach {
             sciview.deleteNode(it)
         }

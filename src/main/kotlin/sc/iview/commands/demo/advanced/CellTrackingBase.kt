@@ -3,6 +3,8 @@ package sc.iview.commands.demo.advanced
 import com.intellij.ui.tabs.impl.ShapeTransform.Right
 import graphics.scenery.*
 import graphics.scenery.controls.OpenVRHMD
+import graphics.scenery.controls.TrackedDevice
+import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.TrackerRole
 import graphics.scenery.controls.behaviours.ControllerDrag
 import graphics.scenery.primitives.Cylinder
@@ -63,9 +65,14 @@ open class CellTrackingBase(
 
     open var linkCreationCallback: ((HedgehogAnalysis.SpineGraphVertex) -> Unit)? = null
     open var finalTrackCallback: (() -> Unit)? = null
+    open var spotCreationCallback: ((Int, Vector3f) -> Unit)? = null
 
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
     var hedgehogVisibility = HedgehogVisibility.Hidden
+
+    var leftVRController: TrackedDevice? = null
+    var rightVRController: TrackedDevice? = null
+    lateinit var tip: Sphere
 
     enum class PlaybackDirection {
         Forward,
@@ -97,6 +104,18 @@ open class CellTrackingBase(
         hedgehogInstanced.instancedProperties["ModelMatrix"] = { hedgehog.spatial().world}
         hedgehogInstanced.instancedProperties["Metadata"] = { Vector4f(0.0f, 0.0f, 0.0f, 0.0f) }
         hedgehogs.addChild(hedgehogInstanced)
+    }
+
+    fun addTip() {
+        tip = Sphere(0.01f)
+        tip.material {
+            diffuse = Vector3f(0.8f, 0.9f, 1f)
+        }
+        tip.spatial().position = Vector3f(0.0f, -0.02f, -0.08f)
+        rightVRController?.model?.let {
+            sciview.addNode(tip, parent = it)
+            logger.debug("Added tip to right controller")
+        }
     }
 
     open fun inputSetup()
@@ -209,19 +228,25 @@ open class CellTrackingBase(
                 )
             })
 
-        hmd.addBehaviour("playback_direction", ClickBehaviour { _, _ ->
-            direction = if(direction == PlaybackDirection.Forward) {
-                PlaybackDirection.Backward
-            } else {
-                PlaybackDirection.Forward
-            }
-            cam.showMessage("Playing: ${direction}", distance = 2f, centered = true)
-        })
+//        hmd.addBehaviour("playback_direction", ClickBehaviour { _, _ ->
+//            direction = if(direction == PlaybackDirection.Forward) {
+//                PlaybackDirection.Backward
+//            } else {
+//                PlaybackDirection.Forward
+//            }
+//            cam.showMessage("Playing: ${direction}", distance = 2f, centered = true)
+//        })
 
-        val cellDivision = ClickBehaviour { _, _ ->
-            cam.showMessage("Adding cell division", distance = 2f, duration = 1000)
-            dumpHedgehog()
-            addHedgehog()
+//        val cellDivision = ClickBehaviour { _, _ ->
+//            cam.showMessage("Adding cell division", distance = 2f, duration = 1000)
+//            dumpHedgehog()
+//            addHedgehog()
+//        }
+
+        val addSpotWithController = ClickBehaviour { _, _ ->
+            val p = tip.spatial().worldPosition(tip.spatial().position)
+            logger.info("Got tip position: $p")
+            spotCreationCallback?.invoke(volume.currentTimepoint, p)
         }
 
         hmd.addBehaviour("skip_to_next", nextTimepoint)
@@ -229,20 +254,23 @@ open class CellTrackingBase(
         hmd.addBehaviour("faster_or_scale", fasterOrScale)
         hmd.addBehaviour("slower_or_scale", slowerOrScale)
         hmd.addBehaviour("play_pause", playPause)
-        hmd.addBehaviour("toggle_hedgehog", toggleHedgehog)
-        hmd.addBehaviour("delete_hedgehog", deleteLastHedgehog)
+//        hmd.addBehaviour("toggle_hedgehog", toggleHedgehog)
+//        hmd.addBehaviour("delete_hedgehog", deleteLastHedgehog)
         hmd.addBehaviour("trigger_move", move)
-        hmd.addBehaviour("cell_division", cellDivision)
+//        hmd.addBehaviour("cell_division", cellDivision)
+        hmd.addBehaviour("addSpotWithController", addSpotWithController)
 
         hmd.addKeyBinding("skip_to_next", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Right)
         hmd.addKeyBinding("skip_to_prev", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Left)
         hmd.addKeyBinding("faster_or_scale", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Up)
         hmd.addKeyBinding("slower_or_scale", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Down)
         hmd.addKeyBinding("play_pause", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Menu)
-        hmd.addKeyBinding("toggle_hedgehog", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Side)
-        hmd.addKeyBinding("delete_hedgehog", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Side)
-        hmd.addKeyBinding("playback_direction", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Menu)
-        hmd.addKeyBinding("cell_division", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Trigger)
+//        hmd.addKeyBinding("toggle_hedgehog", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Side)
+//        hmd.addKeyBinding("delete_hedgehog", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Side)
+        hmd.addKeyBinding("trigger_move", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Side)
+//        hmd.addKeyBinding("playback_direction", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Menu)
+//        hmd.addKeyBinding("cell_division", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Trigger)
+        hmd.addKeyBinding("addSpotWithController", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
 
         hmd.allowRepeats += OpenVRHMD.OpenVRButton.Trigger to TrackerRole.LeftHand
         logger.info("Registered VR controller bindings.")
