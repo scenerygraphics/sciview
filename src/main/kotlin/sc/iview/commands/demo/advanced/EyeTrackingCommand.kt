@@ -9,6 +9,7 @@ import org.scijava.plugin.Parameter
 import org.scijava.plugin.Plugin
 import sc.iview.SciView
 import sc.iview.commands.MenuWeights
+import sc.iview.commands.demo.advanced.HedgehogAnalysis.SpineGraphVertex
 import java.util.HashMap
 
 @Plugin(
@@ -24,7 +25,7 @@ import java.util.HashMap
 class EyeTrackingCommand : Command {
 
     @Parameter
-    var mastodonCallbackLinkCreate: ((HedgehogAnalysis.SpineGraphVertex) -> Unit)? = null
+    var mastodonCallbackLinkCreate: ((List<Pair<Vector3f, SpineGraphVertex>>) -> Unit)? = null
 
     @Parameter
     var mastodonUpdateGraph: (() -> Unit)? = null

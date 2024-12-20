@@ -19,6 +19,7 @@ import net.imglib2.type.numeric.integer.UnsignedByteType
 import org.joml.*
 import org.scijava.ui.behaviour.ClickBehaviour
 import sc.iview.SciView
+import sc.iview.commands.demo.advanced.HedgehogAnalysis.SpineGraphVertex
 import java.awt.image.DataBufferByte
 import java.io.ByteArrayInputStream
 import java.nio.file.Files
@@ -30,11 +31,11 @@ import kotlin.math.PI
 /**
  * Tracking class used for communicating with eye trackers, tracking cells with them in a sciview VR environment.
  * It calls the Hedgehog analysis on the eye tracking results and communicates the results to Mastodon via
- * [linkCreationCallback], which is called on every spine graph vertex that is extracted, and
+ * [trackCreationCallback], which is called on every spine graph vertex that is extracted, and
  * [finalTrackCallback] which is called after all vertices of a track are iterated, giving Mastodon a chance to rebuild its tracks.
  */
 class EyeTracking(
-    override var linkCreationCallback: ((HedgehogAnalysis.SpineGraphVertex) -> Unit)? = null,
+    override var trackCreationCallback: ((List<Pair<Vector3f, SpineGraphVertex>>) -> Unit)? = null,
     override var finalTrackCallback: (() -> Unit)? = null,
     override var spotCreationCallback: ((Int, Vector3f) -> Unit)? = null,
     sciview: SciView

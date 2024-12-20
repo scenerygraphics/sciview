@@ -1,10 +1,8 @@
 package sc.iview.commands.demo.advanced
 
-import com.intellij.ui.tabs.impl.ShapeTransform.Right
 import graphics.scenery.*
 import graphics.scenery.controls.OpenVRHMD
 import graphics.scenery.controls.TrackedDevice
-import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.TrackerRole
 import graphics.scenery.controls.behaviours.ControllerDrag
 import graphics.scenery.primitives.Cylinder
@@ -14,15 +12,13 @@ import graphics.scenery.utils.extensions.minus
 import graphics.scenery.utils.lazyLogger
 import graphics.scenery.volumes.RAIVolume
 import graphics.scenery.volumes.Volume
-import org.apache.commons.math3.geometry.partitioning.Side
 import org.joml.Math
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.joml.Vector4f
-import org.scijava.log.LogService
-import org.scijava.plugin.Parameter
 import org.scijava.ui.behaviour.ClickBehaviour
 import sc.iview.SciView
+import sc.iview.commands.demo.advanced.HedgehogAnalysis.SpineGraphVertex
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.nio.file.Path
@@ -63,7 +59,7 @@ open class CellTrackingBase(
     // determines whether the volume and hedgehogs should keep listening for updates or not
     var cellTrackingActive: Boolean = false
 
-    open var linkCreationCallback: ((HedgehogAnalysis.SpineGraphVertex) -> Unit)? = null
+    open var trackCreationCallback: ((List<Pair<Vector3f, SpineGraphVertex>>) -> Unit)? = null
     open var finalTrackCallback: (() -> Unit)? = null
     open var spotCreationCallback: ((Int, Vector3f) -> Unit)? = null
 
@@ -101,6 +97,7 @@ open class CellTrackingBase(
         hedgehog.visible = false
         hedgehog.setMaterial(ShaderMaterial.fromFiles("DeferredInstancedColor.frag", "DeferredInstancedColor.vert"))
         val hedgehogInstanced = InstancedNode(hedgehog)
+        hedgehogInstanced.visible = false
         hedgehogInstanced.instancedProperties["ModelMatrix"] = { hedgehog.spatial().world}
         hedgehogInstanced.instancedProperties["Metadata"] = { Vector4f(0.0f, 0.0f, 0.0f, 0.0f) }
         hedgehogs.addChild(hedgehogInstanced)
@@ -172,7 +169,7 @@ open class CellTrackingBase(
                 volumesPerSecond = maxOf(minOf(volumesPerSecond+1, 20), 1)
                 cam.showMessage("Speed: $volumesPerSecond vol/s",distance = 1.2f, size = 0.2f, centered = true)
             } else {
-                volumeScaleFactor = minOf(volumeScaleFactor * 1.2f, 3.0f)
+                volumeScaleFactor = minOf(volumeScaleFactor * 1.05f, 100.0f)
                 volume.spatial().scale = Vector3f(1.0f) .mul(volumeScaleFactor)
             }
         }
@@ -182,7 +179,7 @@ open class CellTrackingBase(
                 volumesPerSecond = maxOf(minOf(volumesPerSecond-1, 20), 1)
                 cam.showMessage("Speed: $volumesPerSecond vol/s",distance = 2f, size = 0.2f, centered = true)
             } else {
-                volumeScaleFactor = maxOf(volumeScaleFactor / 1.2f, 0.1f)
+                volumeScaleFactor = maxOf(volumeScaleFactor / 1.05f, 0.1f)
                 volume.spatial().scale = Vector3f(1.0f) .mul(volumeScaleFactor)
             }
         }
@@ -450,20 +447,14 @@ open class CellTrackingBase(
         trackFileWriter.newLine()
         trackFileWriter.newLine()
         trackFileWriter.write("# START OF TRACK $hedgehogId, child of $parentId\n")
-        if (linkCreationCallback != null && finalTrackCallback != null) {
-            track.points.windowed(2, 1).forEach { pair ->
-                linkCreationCallback?.let { it(pair[0].second) }
-                val p = Vector3f(pair[0].first).mul(Vector3f(volumeDimensions)) // direct product
-                val tp = pair[0].second.timepoint
-                trackFileWriter.write("$tp\t${p.x()}\t${p.y()}\t${p.z()}\t${hedgehogId}\t$parentId\t0\t0\n")
-            }
+        if (trackCreationCallback != null && finalTrackCallback != null) {
+            trackCreationCallback?.invoke(track.points)
             finalTrackCallback?.invoke()
-        } else {
-            track.points.windowed(2, 1).forEach { pair ->
-                val p = Vector3f(pair[0].first).mul(Vector3f(volumeDimensions)) // direct product
-                val tp = pair[0].second.timepoint
-                trackFileWriter.write("$tp\t${p.x()}\t${p.y()}\t${p.z()}\t${hedgehogId}\t$parentId\t0\t0\n")
-            }
+        }
+        track.points.windowed(2, 1).forEach { pair ->
+            val p = Vector3f(pair[0].first).mul(Vector3f(volumeDimensions)) // direct product
+            val tp = pair[0].second.timepoint
+            trackFileWriter.write("$tp\t${p.x()}\t${p.y()}\t${p.z()}\t${hedgehogId}\t$parentId\t0\t0\n")
         }
         trackFileWriter.close()
     }
