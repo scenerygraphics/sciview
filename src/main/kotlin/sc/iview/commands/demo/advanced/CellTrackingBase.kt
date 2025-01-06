@@ -59,9 +59,11 @@ open class CellTrackingBase(
     // determines whether the volume and hedgehogs should keep listening for updates or not
     var cellTrackingActive: Boolean = false
 
-    open var trackCreationCallback: ((List<Pair<Vector3f, SpineGraphVertex>>) -> Unit)? = null
-    open var finalTrackCallback: (() -> Unit)? = null
-    open var spotCreationCallback: ((Int, Vector3f) -> Unit)? = null
+    var trackCreationCallback: ((List<Pair<Vector3f, SpineGraphVertex>>) -> Unit)? = null
+    var finalTrackCallback: (() -> Unit)? = null
+    var spotCreationCallback: ((Int, Vector3f) -> Unit)? = null
+    var spotSelectionCallback: ((Vector3f, Int) -> Unit)? = null
+    var spotMoveCallback: ((Int, Vector3f) -> Unit)? = null
 
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
     var hedgehogVisibility = HedgehogVisibility.Hidden
@@ -246,6 +248,12 @@ open class CellTrackingBase(
             spotCreationCallback?.invoke(volume.currentTimepoint, p)
         }
 
+        val selectSpotWithController = ClickBehaviour { _, _ ->
+            val p = tip.spatial().worldPosition(tip.spatial().position)
+            logger.info("Got tip position: $p")
+            spotSelectionCallback?.invoke(p, volume.currentTimepoint)
+        }
+
         hmd.addBehaviour("skip_to_next", nextTimepoint)
         hmd.addBehaviour("skip_to_prev", prevTimepoint)
         hmd.addBehaviour("faster_or_scale", fasterOrScale)
@@ -255,8 +263,8 @@ open class CellTrackingBase(
 //        hmd.addBehaviour("delete_hedgehog", deleteLastHedgehog)
         hmd.addBehaviour("trigger_move", move)
 //        hmd.addBehaviour("cell_division", cellDivision)
-        hmd.addBehaviour("addSpotWithController", addSpotWithController)
-
+//        hmd.addBehaviour("addSpotWithController", addSpotWithController)
+        hmd.addBehaviour("selectSpotWithController", selectSpotWithController)
         hmd.addKeyBinding("skip_to_next", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Right)
         hmd.addKeyBinding("skip_to_prev", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Left)
         hmd.addKeyBinding("faster_or_scale", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Up)
@@ -267,7 +275,8 @@ open class CellTrackingBase(
         hmd.addKeyBinding("trigger_move", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Side)
 //        hmd.addKeyBinding("playback_direction", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Menu)
 //        hmd.addKeyBinding("cell_division", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Trigger)
-        hmd.addKeyBinding("addSpotWithController", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
+//        hmd.addKeyBinding("addSpotWithController", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
+        hmd.addKeyBinding("selectSpotWithController", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
 
         hmd.allowRepeats += OpenVRHMD.OpenVRButton.Trigger to TrackerRole.LeftHand
         logger.info("Registered VR controller bindings.")

@@ -34,11 +34,14 @@ class EyeTrackingCommand : Command {
     var mastodonAddSpot: ((Int, Vector3f) -> Unit)? = null
 
     @Parameter
+    var mastodonSelectSpot: ((Vector3f, Int) -> Unit)? = null
+
+    @Parameter
     private lateinit var sv: SciView
 
     override fun run() {
         // the actual eye tracking logic happens in here
-        val eyeTracking = EyeTracking(mastodonCallbackLinkCreate, mastodonUpdateGraph, mastodonAddSpot, sv)
+        val eyeTracking = EyeTracking(mastodonCallbackLinkCreate, mastodonUpdateGraph, mastodonAddSpot, mastodonSelectSpot, sv)
         eyeTracking.run()
     }
 

@@ -35,9 +35,6 @@ import kotlin.math.PI
  * [finalTrackCallback] which is called after all vertices of a track are iterated, giving Mastodon a chance to rebuild its tracks.
  */
 class EyeTracking(
-    override var trackCreationCallback: ((List<Pair<Vector3f, SpineGraphVertex>>) -> Unit)? = null,
-    override var finalTrackCallback: (() -> Unit)? = null,
-    override var spotCreationCallback: ((Int, Vector3f) -> Unit)? = null,
     sciview: SciView
 ): CellTrackingBase(sciview) {
 
