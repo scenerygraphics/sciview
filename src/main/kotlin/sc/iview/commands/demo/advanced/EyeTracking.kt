@@ -44,15 +44,12 @@ class EyeTracking(
 
     val confidenceThreshold = 0.60f
 
-    private lateinit var lightTetrahedron: List<PointLight>
     private lateinit var debugBoard: TextBoard
 
-    fun run() {
+    override fun run() {
+        // Do all the things for general VR startup before setting up the eye tracking environment
+        super.run()
 
-        sciview.toggleVRRendering()
-        cellTrackingActive = true
-        logger.info("VR mode has been toggled")
-        hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
         sessionId = "BionicTracking-generated-${SystemHelpers.formatDateTime()}"
         sessionDirectory = Files.createDirectory(Paths.get(System.getProperty("user.home"), "Desktop", sessionId))
 
@@ -79,25 +76,6 @@ class EyeTracking(
         laser.name = "Laser"
         sciview.addNode(laser)
 
-        val shell = Box(Vector3f(20.0f, 20.0f, 20.0f), insideNormals = true)
-        shell.ifMaterial{
-            cullingMode = Material.CullingMode.Front
-            diffuse = Vector3f(0.4f, 0.4f, 0.4f) }
-
-        shell.spatial().position = Vector3f(0.0f, 0.0f, 0.0f)
-        shell.name = "Shell"
-        sciview.addNode(shell)
-
-        val volnodes = sciview.findNodes { node -> Volume::class.java.isAssignableFrom(node.javaClass) }
-
-        val v = (volnodes.firstOrNull() as? Volume)
-        if(v == null) {
-            logger.warn("No volume found, bailing")
-            return
-        } else {
-            logger.info("found ${volnodes.size} volume nodes. Using the first one: ${volnodes.first()}")
-            volume = v
-        }
         volume.visible = false
 
         val bb = BoundingGrid()
@@ -155,42 +133,7 @@ class EyeTracking(
         debugBoard.visible = false
         sciview.camera?.addChild(debugBoard)
 
-        lightTetrahedron = Light.createLightTetrahedron<PointLight>(
-            Vector3f(0.0f, 0.0f, 0.0f),
-            spread = 5.0f,
-            radius = 15.0f,
-            intensity = 5.0f
-        )
-        lightTetrahedron.forEach { sciview.addNode(it) }
-
-        thread {
-            logger.info("Adding onDeviceConnect handlers")
-            hmd.events.onDeviceConnect.add { hmd, device, timestamp ->
-                logger.info("onDeviceConnect called, cam=${sciview.camera}")
-                if(device.type == TrackedDeviceType.Controller) {
-                    logger.info("Got device ${device.name} at $timestamp")
-                    device.model?.let { hmd.attachToNode(device, it, sciview.camera) }
-                    when (device.role) {
-                        TrackerRole.Invalid -> {}
-                        TrackerRole.LeftHand -> leftVRController = device
-                        TrackerRole.RightHand -> rightVRController = device
-                    }
-                    if (device.role == TrackerRole.RightHand) {
-                        addTip()
-                        rightVRController?.name = "rightHand"
-                    } else if (device.role == TrackerRole.LeftHand) {
-                        leftVRController?.name = "leftHand"
-                    }
-                }
-            }
-        }
-        thread{
-            logger.info("started thread for inputSetup")
-            inputSetup()
-            setupCalibration()
-        }
-
-        launchUpdaterThread()
+        setupCalibration()
     }
 
 
@@ -286,23 +229,18 @@ class EyeTracking(
     /** Toggles the VR rendering off, cleans up eyetracking-related scene objects and removes the light tetrahedron
      * that was created for the calibration routine. */
     override fun stop() {
+
         pupilTracker.unsubscribeFrames()
         cellTrackingActive = false
         logger.info("Stopped volume and hedgehog updater thread.")
-        lightTetrahedron.forEach { sciview.deleteNode(it) }
-
-        // Try to find and delete possibly existing objects
-        listOf("Shell", "eyeFrames", "leftHand", "rightHand").forEach {
-            val n = sciview.find(it)
-            n?.let { sciview.deleteNode(n) }
-        }
+        val n = sciview.find("eyeFrames")
+        n?.let { sciview.deleteNode(it) }
         // Delete definitely existing objects
         listOf(referenceTarget, calibrationTarget, laser, debugBoard, hedgehogs).forEach {
             sciview.deleteNode(it)
         }
         logger.info("Successfully cleaned up eye tracking environemt.")
-        sciview.toggleVRRendering()
-        logger.info("Shut down eye tracking environment and disabled VR.")
+        super.stop()
     }
 
 }

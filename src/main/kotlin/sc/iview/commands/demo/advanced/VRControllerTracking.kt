@@ -38,7 +38,7 @@ class VRControllerTracking(
 
     var hedgehogsList =  mutableListOf<InstancedNode>()
 
-    fun run() {
+    override fun run() {
 
         sciview.toggleVRRendering()
         hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")

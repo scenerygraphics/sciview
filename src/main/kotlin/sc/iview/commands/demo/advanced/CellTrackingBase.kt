@@ -1,8 +1,10 @@
 package sc.iview.commands.demo.advanced
 
 import graphics.scenery.*
+import graphics.scenery.attribute.material.Material
 import graphics.scenery.controls.OpenVRHMD
 import graphics.scenery.controls.TrackedDevice
+import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.TrackerRole
 import graphics.scenery.controls.behaviours.ControllerDrag
 import graphics.scenery.primitives.Cylinder
@@ -56,6 +58,8 @@ open class CellTrackingBase(
 
     var volumeScaleFactor = 1.0f
 
+    private lateinit var lightTetrahedron: List<PointLight>
+
     // determines whether the volume and hedgehogs should keep listening for updates or not
     var cellTrackingActive: Boolean = false
 
@@ -78,6 +82,70 @@ open class CellTrackingBase(
     }
 
     private val observers = mutableListOf<TimepointObserver>()
+
+    open fun run() {
+        sciview.toggleVRRendering()
+        logger.info("VR mode has been toggled")
+        hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
+
+        val shell = Box(Vector3f(20.0f, 20.0f, 20.0f), insideNormals = true)
+        shell.ifMaterial{
+            cullingMode = Material.CullingMode.Front
+            diffuse = Vector3f(0.4f, 0.4f, 0.4f) }
+
+        shell.spatial().position = Vector3f(0.0f, 0.0f, 0.0f)
+        shell.name = "Shell"
+        sciview.addNode(shell)
+
+        lightTetrahedron = Light.createLightTetrahedron<PointLight>(
+            Vector3f(0.0f, 0.0f, 0.0f),
+            spread = 5.0f,
+            radius = 15.0f,
+            intensity = 5.0f
+        )
+        lightTetrahedron.forEach { sciview.addNode(it) }
+
+        val volnodes = sciview.findNodes { node -> Volume::class.java.isAssignableFrom(node.javaClass) }
+
+        val v = (volnodes.firstOrNull() as? Volume)
+        if(v == null) {
+            logger.warn("No volume found, bailing")
+            return
+        } else {
+            logger.info("found ${volnodes.size} volume nodes. Using the first one: ${volnodes.first()}")
+            volume = v
+        }
+
+        thread {
+            logger.info("Adding onDeviceConnect handlers")
+            hmd.events.onDeviceConnect.add { hmd, device, timestamp ->
+                logger.info("onDeviceConnect called, cam=${sciview.camera}")
+                if(device.type == TrackedDeviceType.Controller) {
+                    logger.info("Got device ${device.name} at $timestamp")
+                    device.model?.let { hmd.attachToNode(device, it, sciview.camera) }
+                    when (device.role) {
+                        TrackerRole.Invalid -> {}
+                        TrackerRole.LeftHand -> leftVRController = device
+                        TrackerRole.RightHand -> rightVRController = device
+                    }
+                    if (device.role == TrackerRole.RightHand) {
+                        addTip()
+                        device.name = "rightHand"
+                    } else if (device.role == TrackerRole.LeftHand) {
+                        device.name = "leftHand"
+                    }
+                }
+            }
+        }
+
+        thread {
+            logger.info("started thread for inputSetup")
+            inputSetup()
+        }
+
+        cellTrackingActive = true
+        launchUpdaterThread()
+    }
 
     /** Registers a new observer that will get updated whenever the VR user triggers a timepoint update. */
     fun registerObserver(observer: TimepointObserver) {
@@ -470,9 +538,18 @@ open class CellTrackingBase(
 
     /**
      * Stops the current tracking environment and restore the original state.
-     * This method needs to be overridden.
+     * This method should be overridden if functionality is extended, to make sure any extra objects are also deleted.
      */
     open fun stop() {
+        lightTetrahedron.forEach { sciview.deleteNode(it) }
+        // Try to find and delete possibly existing VR objects
+        listOf("Shell", "leftHand", "rightHand").forEach {
+            val n = sciview.find(it)
+            n?.let { sciview.deleteNode(n) }
+        }
+        logger.info("Cleaned up basic VR objects.")
+        sciview.toggleVRRendering()
+        logger.info("Shut down eye tracking environment and disabled VR.")
     }
 
 }

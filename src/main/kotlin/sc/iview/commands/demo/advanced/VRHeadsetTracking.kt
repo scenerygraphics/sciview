@@ -36,7 +36,7 @@ class VRHeadsetTracking(
 
     private var selectionStorage: Node? = null
 
-    fun run() {
+    override fun run() {
 
         sciview.toggleVRRendering()
         hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")

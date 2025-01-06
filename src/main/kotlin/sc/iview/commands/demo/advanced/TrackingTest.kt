@@ -37,7 +37,7 @@ class TrackingTest(
 
     val confidenceThreshold = 0.60f
 
-    fun run() {
+    override fun run() {
 
         sciview.addNode(TestTarget)
         TestTarget.visible = false
