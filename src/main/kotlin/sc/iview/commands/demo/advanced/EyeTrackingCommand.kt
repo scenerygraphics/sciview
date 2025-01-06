@@ -25,23 +25,11 @@ import java.util.HashMap
 class EyeTrackingCommand : Command {
 
     @Parameter
-    var mastodonCallbackLinkCreate: ((List<Pair<Vector3f, SpineGraphVertex>>) -> Unit)? = null
-
-    @Parameter
-    var mastodonUpdateGraph: (() -> Unit)? = null
-
-    @Parameter
-    var mastodonAddSpot: ((Int, Vector3f) -> Unit)? = null
-
-    @Parameter
-    var mastodonSelectSpot: ((Vector3f, Int) -> Unit)? = null
-
-    @Parameter
     private lateinit var sv: SciView
 
     override fun run() {
         // the actual eye tracking logic happens in here
-        val eyeTracking = EyeTracking(mastodonCallbackLinkCreate, mastodonUpdateGraph, mastodonAddSpot, mastodonSelectSpot, sv)
+        val eyeTracking = EyeTracking(sv)
         eyeTracking.run()
     }
 
