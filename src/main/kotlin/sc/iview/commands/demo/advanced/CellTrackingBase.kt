@@ -178,7 +178,7 @@ open class CellTrackingBase(
         tip.material {
             diffuse = Vector3f(0.8f, 0.9f, 1f)
         }
-        tip.spatial().position = Vector3f(0.0f, -0.02f, -0.08f)
+        tip.spatial().position = Vector3f(0.0f, -0f, -0.05f)
         rightVRController?.model?.let {
             sciview.addNode(tip, parent = it)
             logger.debug("Added tip to right controller")
@@ -239,8 +239,8 @@ open class CellTrackingBase(
                 volumesPerSecond = maxOf(minOf(volumesPerSecond+1, 20), 1)
                 cam.showMessage("Speed: $volumesPerSecond vol/s",distance = 1.2f, size = 0.2f, centered = true)
             } else {
-                volumeScaleFactor = minOf(volumeScaleFactor * 1.05f, 100.0f)
-                volume.spatial().scale = Vector3f(1.0f) .mul(volumeScaleFactor)
+//                volumeScaleFactor = minOf(volumeScaleFactor * 1.05f, 100.0f)
+//                volume.spatial().scale = Vector3f(1.0f) .mul(volumeScaleFactor)
             }
         }
 
@@ -249,8 +249,8 @@ open class CellTrackingBase(
                 volumesPerSecond = maxOf(minOf(volumesPerSecond-1, 20), 1)
                 cam.showMessage("Speed: $volumesPerSecond vol/s",distance = 2f, size = 0.2f, centered = true)
             } else {
-                volumeScaleFactor = maxOf(volumeScaleFactor / 1.05f, 0.1f)
-                volume.spatial().scale = Vector3f(1.0f) .mul(volumeScaleFactor)
+//                volumeScaleFactor = maxOf(volumeScaleFactor / 1.05f, 0.1f)
+//                volume.spatial().scale = Vector3f(1.0f) .mul(volumeScaleFactor)
             }
         }
 
