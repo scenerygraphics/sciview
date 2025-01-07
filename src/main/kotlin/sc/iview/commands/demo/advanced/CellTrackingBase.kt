@@ -19,6 +19,7 @@ import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.joml.Vector4f
 import org.scijava.ui.behaviour.ClickBehaviour
+import org.scijava.ui.behaviour.DragBehaviour
 import sc.iview.SciView
 import sc.iview.commands.demo.advanced.HedgehogAnalysis.SpineGraphVertex
 import java.io.BufferedWriter
@@ -67,7 +68,9 @@ open class CellTrackingBase(
     var finalTrackCallback: (() -> Unit)? = null
     var spotCreationCallback: ((Int, Vector3f) -> Unit)? = null
     var spotSelectionCallback: ((Vector3f, Int) -> Unit)? = null
-    var spotMoveCallback: ((Int, Vector3f) -> Unit)? = null
+    var spotMoveInitCallback: ((Vector3f) -> Unit)? = null
+    var spotMoveDragCallback: ((Vector3f) -> Unit)? = null
+    var spotMoveEndCallback: ((Vector3f) -> Unit)? = null
 
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
     var hedgehogVisibility = HedgehogVisibility.Hidden
@@ -311,15 +314,29 @@ open class CellTrackingBase(
 //        }
 
         val addSpotWithController = ClickBehaviour { _, _ ->
-            val p = tip.spatial().worldPosition(tip.spatial().position)
+            val p = getTipPosition()
             logger.info("Got tip position: $p")
             spotCreationCallback?.invoke(volume.currentTimepoint, p)
         }
 
         val selectSpotWithController = ClickBehaviour { _, _ ->
-            val p = tip.spatial().worldPosition(tip.spatial().position)
+            val p = getTipPosition()
             logger.info("Got tip position: $p")
             spotSelectionCallback?.invoke(p, volume.currentTimepoint)
+        }
+
+        class MoveInstanceVR(): DragBehaviour {
+            override fun init(x: Int, y: Int) {
+                spotMoveInitCallback?.invoke(getTipPosition())
+            }
+
+            override fun drag(x: Int, y: Int) {
+                spotMoveDragCallback?.invoke(getTipPosition())
+            }
+
+            override fun end(x: Int, y: Int) {
+                spotMoveEndCallback?.invoke(getTipPosition())
+            }
         }
 
         hmd.addBehaviour("skip_to_next", nextTimepoint)
@@ -332,6 +349,8 @@ open class CellTrackingBase(
         hmd.addBehaviour("trigger_move", move)
 //        hmd.addBehaviour("cell_division", cellDivision)
 //        hmd.addBehaviour("addSpotWithController", addSpotWithController)
+        hmd.addBehaviour("moveSpotWithController", MoveInstanceVR())
+        hmd.addKeyBinding("moveSpotWithController", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Side)
         hmd.addBehaviour("selectSpotWithController", selectSpotWithController)
         hmd.addKeyBinding("skip_to_next", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Right)
         hmd.addKeyBinding("skip_to_prev", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Left)
@@ -349,6 +368,11 @@ open class CellTrackingBase(
         hmd.allowRepeats += OpenVRHMD.OpenVRButton.Trigger to TrackerRole.LeftHand
         logger.info("Registered VR controller bindings.")
 
+    }
+
+    /** Returns the world position of the right controller's tool tip as [Vector3f]. */
+    fun getTipPosition(): Vector3f {
+        return tip.spatial().worldPosition(tip.spatial().position)
     }
 
     /**
