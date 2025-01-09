@@ -9,7 +9,6 @@ import graphics.scenery.controls.behaviours.VRTwoHandDragBehavior
 import graphics.scenery.controls.behaviours.VRTwoHandDragOffhand
 import graphics.scenery.utils.extensions.minus
 import graphics.scenery.utils.extensions.plus
-import graphics.scenery.utils.extensions.plusAssign
 import graphics.scenery.utils.extensions.times
 import org.joml.Matrix4f
 import org.joml.Quaternionf
@@ -22,13 +21,14 @@ import java.util.concurrent.CompletableFuture
  * The fastest way to attach the behavior is by using [createAndSet].
  * @author Jan Tiemann
  * @author Samuel Pantze */
-class VR2HandWorldTransform(
+class VR2HandNodeTransform(
     name: String,
     controller: Spatial,
     offhand: VRTwoHandDragOffhand,
     val scene: Scene,
-    var scaleLocked: Boolean = false,
-    var rotationLocked: Boolean = false,
+    val scaleLocked: Boolean = false,
+    val rotationLocked: Boolean = false,
+    val lockYaxis: Boolean = true,
     val target: Node
 ) : VRTwoHandDragBehavior(name, controller, offhand) {
 
@@ -44,16 +44,18 @@ class VR2HandWorldTransform(
             VRScale.getScaleDelta(currentPositionMain, currentPositionOff, lastPositionMain, lastPositionOff)
 
         val newRein = (currentPositionMain - currentPositionOff).normalize()
-        newRein.y = 0f
         val oldRein = (lastPositionMain - lastPositionOff).normalize()
-        oldRein.y = 0f
+        if (lockYaxis) {
+            oldRein.y = 0f
+            newRein.y = 0f
+        }
 
         val newReinRotation = Quaternionf().lookAlong(newRein, Vector3f(0f, 1f, 0f))
         val oldReinRotation = Quaternionf().lookAlong(oldRein, Vector3f(0f, 1f, 0f))
         val diffRotation = oldReinRotation.mul(newReinRotation.invert())
 
         // Use the center point between both controller positions as pivot
-        val pivot = (currentPositionOff - currentPositionMain).div(2f) + currentPositionOff
+        val pivot = (currentPositionMain - currentPositionOff).div(2f) + currentPositionOff
 
         target.let {
             if (!rotationLocked) {
@@ -86,21 +88,23 @@ class VR2HandWorldTransform(
             scene: Scene,
             scaleLocked: Boolean = false,
             rotationLocked: Boolean = false,
+            lockYaxis: Boolean = true,
             target: Node
-        ): CompletableFuture<VR2HandWorldTransform> {
+        ): CompletableFuture<VR2HandNodeTransform> {
             @Suppress("UNCHECKED_CAST") return createAndSet(
                 hmd, button
             ) { controller: Spatial, offhand: VRTwoHandDragOffhand ->
-                VR2HandWorldTransform(
+                VR2HandNodeTransform(
                     "Scaling",
                     controller,
                     offhand,
                     scene,
                     scaleLocked,
                     rotationLocked,
+                    lockYaxis,
                     target
                 )
-            } as CompletableFuture<VR2HandWorldTransform>
+            } as CompletableFuture<VR2HandNodeTransform>
         }
     }
 }
