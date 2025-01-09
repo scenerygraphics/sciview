@@ -19,6 +19,7 @@ import java.util.concurrent.CompletableFuture
 
 /** Transform a target node [target] by pressing the same buttons defined in [createAndSet] on both VR controllers.
  * The fastest way to attach the behavior is by using [createAndSet].
+ * [onEndCallback] is an optional lambda that is executed once the behavior ends.
  * @author Jan Tiemann
  * @author Samuel Pantze */
 class VR2HandNodeTransform(
@@ -29,9 +30,9 @@ class VR2HandNodeTransform(
     val scaleLocked: Boolean = false,
     val rotationLocked: Boolean = false,
     val lockYaxis: Boolean = true,
-    val target: Node
+    val target: Node,
+    val onEndCallback: (() -> Unit)? = null
 ) : VRTwoHandDragBehavior(name, controller, offhand) {
-
 
     override fun dragDelta(
         currentPositionMain: Vector3f,
@@ -54,8 +55,8 @@ class VR2HandNodeTransform(
         val oldReinRotation = Quaternionf().lookAlong(oldRein, Vector3f(0f, 1f, 0f))
         val diffRotation = oldReinRotation.mul(newReinRotation.invert())
 
-        // Use the center point between both controller positions as pivot
-        val pivot = (currentPositionMain - currentPositionOff).div(2f) + currentPositionOff
+        // Use the node's center as pivot
+        val pivot = target.spatialOrNull()?.position ?: Vector3f(0f)
 
         target.let {
             if (!rotationLocked) {
@@ -78,6 +79,11 @@ class VR2HandNodeTransform(
         }
     }
 
+    override fun end(x: Int, y: Int) {
+        super.end(x, y)
+        onEndCallback?.invoke()
+    }
+
     companion object {
         /**
          * Convenience method for adding scale behaviour
@@ -89,7 +95,8 @@ class VR2HandNodeTransform(
             scaleLocked: Boolean = false,
             rotationLocked: Boolean = false,
             lockYaxis: Boolean = true,
-            target: Node
+            target: Node,
+            onEndCallback: (() -> Unit)? = null
         ): CompletableFuture<VR2HandNodeTransform> {
             @Suppress("UNCHECKED_CAST") return createAndSet(
                 hmd, button
@@ -102,7 +109,8 @@ class VR2HandNodeTransform(
                     scaleLocked,
                     rotationLocked,
                     lockYaxis,
-                    target
+                    target,
+                    onEndCallback
                 )
             } as CompletableFuture<VR2HandNodeTransform>
         }

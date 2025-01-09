@@ -22,7 +22,7 @@ import org.scijava.ui.behaviour.ClickBehaviour
 import org.scijava.ui.behaviour.DragBehaviour
 import sc.iview.SciView
 import sc.iview.commands.demo.advanced.HedgehogAnalysis.SpineGraphVertex
-import sc.iview.controls.behaviours.VR2HandWorldTransform
+import sc.iview.controls.behaviours.VR2HandNodeTransform
 import sc.iview.controls.behaviours.VRGrabTheWorld
 import java.io.BufferedWriter
 import java.io.FileWriter
@@ -73,6 +73,7 @@ open class CellTrackingBase(
     var spotMoveInitCallback: ((Vector3f) -> Unit)? = null
     var spotMoveDragCallback: ((Vector3f) -> Unit)? = null
     var spotMoveEndCallback: ((Vector3f) -> Unit)? = null
+    var rebuildGeometryCallback: (() -> Unit)? = null
 
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
     var hedgehogVisibility = HedgehogVisibility.Hidden
@@ -364,8 +365,12 @@ open class CellTrackingBase(
             sciview.currentScene, hmd, listOf(OpenVRHMD.OpenVRButton.Side), listOf(TrackerRole.LeftHand)
         )
 
-        VR2HandWorldTransform.createAndSet(
-            hmd, OpenVRHMD.OpenVRButton.Side, sciview.currentScene, target = volume
+        VR2HandNodeTransform.createAndSet(
+            hmd,
+            OpenVRHMD.OpenVRButton.Side,
+            sciview.currentScene,
+            target = volume,
+            onEndCallback = rebuildGeometryCallback
         )
 
 //        hmd.addBehaviour("addSpotWithController", addSpotWithController)
