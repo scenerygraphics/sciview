@@ -22,6 +22,8 @@ import org.scijava.ui.behaviour.ClickBehaviour
 import org.scijava.ui.behaviour.DragBehaviour
 import sc.iview.SciView
 import sc.iview.commands.demo.advanced.HedgehogAnalysis.SpineGraphVertex
+import sc.iview.controls.behaviours.VR2HandWorldTransform
+import sc.iview.controls.behaviours.VRGrabTheWorld
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.nio.file.Path
@@ -315,13 +317,13 @@ open class CellTrackingBase(
 
         val addSpotWithController = ClickBehaviour { _, _ ->
             val p = getTipPosition()
-            logger.info("Got tip position: $p")
+            logger.debug("Got tip position: $p")
             spotCreationCallback?.invoke(volume.currentTimepoint, p)
         }
 
         val selectSpotWithController = ClickBehaviour { _, _ ->
             val p = getTipPosition()
-            logger.info("Got tip position: $p")
+            logger.debug("Got tip position: $p")
             spotSelectionCallback?.invoke(p, volume.currentTimepoint)
         }
 
@@ -344,26 +346,43 @@ open class CellTrackingBase(
         hmd.addBehaviour("faster_or_scale", fasterOrScale)
         hmd.addBehaviour("slower_or_scale", slowerOrScale)
         hmd.addBehaviour("play_pause", playPause)
-//        hmd.addBehaviour("toggle_hedgehog", toggleHedgehog)
-//        hmd.addBehaviour("delete_hedgehog", deleteLastHedgehog)
-        hmd.addBehaviour("trigger_move", move)
-//        hmd.addBehaviour("cell_division", cellDivision)
-//        hmd.addBehaviour("addSpotWithController", addSpotWithController)
-        hmd.addBehaviour("moveSpotWithController", MoveInstanceVR())
-        hmd.addKeyBinding("moveSpotWithController", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Side)
-        hmd.addBehaviour("selectSpotWithController", selectSpotWithController)
         hmd.addKeyBinding("skip_to_next", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Right)
         hmd.addKeyBinding("skip_to_prev", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Left)
         hmd.addKeyBinding("faster_or_scale", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Up)
         hmd.addKeyBinding("slower_or_scale", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Down)
         hmd.addKeyBinding("play_pause", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Menu)
+
+//        hmd.addBehaviour("toggle_hedgehog", toggleHedgehog)
+//        hmd.addBehaviour("delete_hedgehog", deleteLastHedgehog)
+//        hmd.addBehaviour("cell_division", cellDivision)
+//        hmd.addKeyBinding("cell_division", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Trigger)
+
+//        hmd.addBehaviour("trigger_move", move)
+//        hmd.addKeyBinding("trigger_move", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Side)
+
+        VRGrabTheWorld.createAndSet(
+            sciview.currentScene, hmd, listOf(OpenVRHMD.OpenVRButton.Side), listOf(TrackerRole.LeftHand)
+        )
+
+        VR2HandWorldTransform.createAndSet(
+            hmd, OpenVRHMD.OpenVRButton.Side, sciview.currentScene, target = volume
+        )
+
+//        hmd.addBehaviour("addSpotWithController", addSpotWithController)
+//        hmd.addKeyBinding("addSpotWithController", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
+
+        hmd.addBehaviour("moveSpotWithController", MoveInstanceVR())
+        hmd.addKeyBinding("moveSpotWithController", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Side)
+
+        hmd.addBehaviour("selectSpotWithController", selectSpotWithController)
+        hmd.addKeyBinding("selectSpotWithController", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
+
 //        hmd.addKeyBinding("toggle_hedgehog", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Side)
 //        hmd.addKeyBinding("delete_hedgehog", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Side)
-        hmd.addKeyBinding("trigger_move", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Side)
+
 //        hmd.addKeyBinding("playback_direction", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Menu)
-//        hmd.addKeyBinding("cell_division", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Trigger)
-//        hmd.addKeyBinding("addSpotWithController", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
-        hmd.addKeyBinding("selectSpotWithController", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
+
+
 
         hmd.allowRepeats += OpenVRHMD.OpenVRButton.Trigger to TrackerRole.LeftHand
         logger.info("Registered VR controller bindings.")
