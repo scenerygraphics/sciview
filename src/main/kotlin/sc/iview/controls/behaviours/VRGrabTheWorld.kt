@@ -20,6 +20,9 @@ class VRGrabTheWorld (
     @Suppress("UNUSED_PARAMETER") name: String,
     controllerHitbox: Node,
     private val cam: Spatial,
+    val buttonmanager: MultiVRButtonStateManager,
+    val button: OpenVRHMD.OpenVRButton,
+    val trackerRole: TrackerRole
 ) : DragBehaviour {
 
     var camDiff = Vector3f()
@@ -29,18 +32,24 @@ class VRGrabTheWorld (
 
 
     override fun init(x: Int, y: Int) {
+        buttonmanager.pressButton(button, trackerRole)
         camDiff = controllerSpatial.worldPosition() - cam.position
     }
 
     override fun drag(x: Int, y: Int) {
-        //grabbed world
-        val newCamDiff = controllerSpatial.worldPosition() - cam.position
-        val diffTranslation = camDiff - newCamDiff //reversed
-        cam.position += diffTranslation
-        camDiff = newCamDiff
+        // Only drag when no other grab button is currently active
+        // to prevent simultaneous behaviors with two-handed gestures
+        if (!buttonmanager.isTwoHandedActive()) {
+            //grabbed world
+            val newCamDiff = controllerSpatial.worldPosition() - cam.position
+            val diffTranslation = camDiff - newCamDiff //reversed
+            cam.position += diffTranslation
+            camDiff = newCamDiff
+        }
     }
 
     override fun end(x: Int, y: Int) {
+        buttonmanager.releaseButton(button, trackerRole)
     }
 
     companion object {
@@ -49,7 +58,11 @@ class VRGrabTheWorld (
          * Convenience method for adding grab behaviour
          */
         fun createAndSet(
-            scene: Scene, hmd: OpenVRHMD, buttons: List<OpenVRHMD.OpenVRButton>, controllerSide: List<TrackerRole>
+            scene: Scene,
+            hmd: OpenVRHMD,
+            buttons: List<OpenVRHMD.OpenVRButton>,
+            controllerSide: List<TrackerRole>,
+            buttonmanager: MultiVRButtonStateManager,
         ) {
             hmd.events.onDeviceConnect.add { _, device, _ ->
                 if (device.type == TrackedDeviceType.Controller) {
@@ -58,9 +71,14 @@ class VRGrabTheWorld (
                             buttons.forEach { button ->
                                 val name = "VRDrag:${hmd.trackingSystemName}:${device.role}:$button"
                                 val grabBehaviour = VRGrabTheWorld(
-                                    name, controller.children.first(), scene.findObserver()!!.spatial()
+                                    name,
+                                    controller.children.first(),
+                                    scene.findObserver()!!.spatial(),
+                                    buttonmanager,
+                                    button,
+                                    device.role
                                 )
-
+                                buttonmanager.registerButtonConfig(button, device.role)
                                 hmd.addBehaviour(name, grabBehaviour)
                                 hmd.addKeyBinding(name, device.role, button)
                             }

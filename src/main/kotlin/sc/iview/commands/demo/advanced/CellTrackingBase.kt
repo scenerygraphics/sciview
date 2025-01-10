@@ -22,6 +22,9 @@ import org.scijava.ui.behaviour.ClickBehaviour
 import org.scijava.ui.behaviour.DragBehaviour
 import sc.iview.SciView
 import sc.iview.commands.demo.advanced.HedgehogAnalysis.SpineGraphVertex
+import sc.iview.commands.file.Open
+import sc.iview.controls.behaviours.MoveInstanceVR
+import sc.iview.controls.behaviours.MultiVRButtonStateManager
 import sc.iview.controls.behaviours.VR2HandNodeTransform
 import sc.iview.controls.behaviours.VRGrabTheWorld
 import java.io.BufferedWriter
@@ -81,6 +84,8 @@ open class CellTrackingBase(
     var leftVRController: TrackedDevice? = null
     var rightVRController: TrackedDevice? = null
     lateinit var tip: Sphere
+
+    val buttonManager = MultiVRButtonStateManager()
 
     enum class PlaybackDirection {
         Forward,
@@ -328,20 +333,6 @@ open class CellTrackingBase(
             spotSelectionCallback?.invoke(p, volume.currentTimepoint)
         }
 
-        class MoveInstanceVR(): DragBehaviour {
-            override fun init(x: Int, y: Int) {
-                spotMoveInitCallback?.invoke(getTipPosition())
-            }
-
-            override fun drag(x: Int, y: Int) {
-                spotMoveDragCallback?.invoke(getTipPosition())
-            }
-
-            override fun end(x: Int, y: Int) {
-                spotMoveEndCallback?.invoke(getTipPosition())
-            }
-        }
-
         hmd.addBehaviour("skip_to_next", nextTimepoint)
         hmd.addBehaviour("skip_to_prev", prevTimepoint)
         hmd.addBehaviour("faster_or_scale", fasterOrScale)
@@ -361,8 +352,10 @@ open class CellTrackingBase(
 //        hmd.addBehaviour("trigger_move", move)
 //        hmd.addKeyBinding("trigger_move", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Side)
 
+
+
         VRGrabTheWorld.createAndSet(
-            sciview.currentScene, hmd, listOf(OpenVRHMD.OpenVRButton.Side), listOf(TrackerRole.LeftHand)
+            sciview.currentScene, hmd, listOf(OpenVRHMD.OpenVRButton.Side), listOf(TrackerRole.LeftHand), buttonManager
         )
 
         VR2HandNodeTransform.createAndSet(
@@ -373,11 +366,18 @@ open class CellTrackingBase(
             onEndCallback = rebuildGeometryCallback
         )
 
+        MoveInstanceVR.createAndSet(
+            sciview.currentScene, hmd, listOf(OpenVRHMD.OpenVRButton.Side), listOf(TrackerRole.RightHand),
+            buttonManager,
+            { getTipPosition() },
+            spotMoveInitCallback,
+            spotMoveDragCallback,
+            spotMoveEndCallback,
+        )
+
 //        hmd.addBehaviour("addSpotWithController", addSpotWithController)
 //        hmd.addKeyBinding("addSpotWithController", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
 
-        hmd.addBehaviour("moveSpotWithController", MoveInstanceVR())
-        hmd.addKeyBinding("moveSpotWithController", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Side)
 
         hmd.addBehaviour("selectSpotWithController", selectSpotWithController)
         hmd.addKeyBinding("selectSpotWithController", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
