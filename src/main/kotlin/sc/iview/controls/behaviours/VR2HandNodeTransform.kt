@@ -29,6 +29,7 @@ class VR2HandNodeTransform(
     val scene: Scene,
     val scaleLocked: Boolean = false,
     val rotationLocked: Boolean = false,
+    val positionLocked: Boolean = false,
     val lockYaxis: Boolean = true,
     val target: Node,
     val onEndCallback: (() -> Unit)? = null
@@ -76,6 +77,13 @@ class VR2HandNodeTransform(
                     needsUpdate = true
                 }
             }
+            if (!positionLocked) {
+                val positionDelta =
+                    (currentPositionMain + currentPositionOff) / 2f - (lastPositionMain + lastPositionOff) / 2f
+                target.ifSpatial {
+                    position.add(positionDelta)
+                }
+            }
         }
     }
 
@@ -94,6 +102,7 @@ class VR2HandNodeTransform(
             scene: Scene,
             scaleLocked: Boolean = false,
             rotationLocked: Boolean = false,
+            positionLocked: Boolean = false,
             lockYaxis: Boolean = true,
             target: Node,
             onEndCallback: (() -> Unit)? = null
@@ -108,6 +117,7 @@ class VR2HandNodeTransform(
                     scene,
                     scaleLocked,
                     rotationLocked,
+                    positionLocked,
                     lockYaxis,
                     target,
                     onEndCallback
