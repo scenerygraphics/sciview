@@ -1,5 +1,6 @@
 package sc.iview.commands.demo.advanced
 
+import com.intellij.ui.tabs.impl.ShapeTransform.Right
 import graphics.scenery.*
 import graphics.scenery.attribute.material.Material
 import graphics.scenery.controls.OpenVRHMD
@@ -8,16 +9,15 @@ import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.TrackerRole
 import graphics.scenery.controls.behaviours.ControllerDrag
 import graphics.scenery.primitives.Cylinder
+import graphics.scenery.ui.Button
+import graphics.scenery.ui.Column
 import graphics.scenery.utils.MaybeIntersects
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.minus
 import graphics.scenery.utils.lazyLogger
 import graphics.scenery.volumes.RAIVolume
 import graphics.scenery.volumes.Volume
-import org.joml.Math
-import org.joml.Matrix4f
-import org.joml.Vector3f
-import org.joml.Vector4f
+import org.joml.*
 import org.scijava.ui.behaviour.ClickBehaviour
 import org.scijava.ui.behaviour.DragBehaviour
 import sc.iview.SciView
@@ -79,6 +79,16 @@ open class CellTrackingBase(
     var rebuildGeometryCallback: (() -> Unit)? = null
 
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
+
+    enum class RightTriggerModes {Create, Edit, Delete, Track}
+
+    private val tools = mapOf(RightTriggerModes.Create to "addSpotWithController",
+        RightTriggerModes.Edit to "selectSpotWithController",
+        RightTriggerModes.Delete to "deleteSpotWithController",
+        RightTriggerModes.Track to "trackCellWithController",)
+
+    private val currentTool: RightTriggerModes = RightTriggerModes.Edit
+
     var hedgehogVisibility = HedgehogVisibility.Hidden
 
     var leftVRController: TrackedDevice? = null
@@ -144,6 +154,7 @@ open class CellTrackingBase(
                         device.name = "rightHand"
                     } else if (device.role == TrackerRole.LeftHand) {
                         device.name = "leftHand"
+                        setupLeftWristMenu()
                     }
                 }
             }
@@ -170,6 +181,77 @@ open class CellTrackingBase(
 
     private fun notifyObservers(timepoint: Int) {
         observers.forEach { it.onTimePointChanged(timepoint) }
+    }
+
+    private fun setupLeftWristMenu() {
+        val createButton = Button(
+                "Create Spot", command = this::selectCreateButton,
+                color = Vector3f(0.5f, 0.95f, 0.45f),
+                pressedColor = Vector3f(0.2f, 1f, 0.15f),
+            )
+        val editButton = Button(
+            "Edit Spot", command = this::selectEditButton,
+            color = Vector3f(0.4f, 0.45f, 0.95f),
+            pressedColor = Vector3f(0.15f, 0.2f, 1f)
+        )
+        val deleteButton = Button(
+            "Delete Spot", command = this::selectDeleteButton,
+            color = Vector3f(0.95f, 0.5f, 0.45f),
+            pressedColor = Vector3f(1f, 0.2f, 0.15f)
+        )
+        val trackButton = Button(
+            "Controller Tracking ", command = this::selectTrackButton,
+            color = Vector3f(0.9f, 0.9f, 0.5f),
+            pressedColor = Vector3f(1f, 1f, 0.2f)
+        )
+        val leftWristColumn = Column(createButton, editButton, deleteButton, trackButton)
+        leftWristColumn.ifSpatial {
+            position = Vector3f(0.0f, 0.0f, -.2f)
+            rotation = Quaternionf().rotationY(90f)
+        }
+
+        leftVRController?.model?.let {
+            sciview.addNode(leftWristColumn, parent = it)
+        }
+    }
+
+    val addSpotWithController = ClickBehaviour { _, _ ->
+        val p = getTipPosition()
+        logger.debug("Got tip position: $p")
+        spotCreationCallback?.invoke(volume.currentTimepoint, p)
+    }
+
+    val selectSpotWithController = ClickBehaviour { _, _ ->
+        val p = getTipPosition()
+        logger.debug("Got tip position: $p")
+        spotSelectionCallback?.invoke(p, volume.currentTimepoint)
+    }
+
+    private fun selectCreateButton() {
+        unregisterCurrentTool()
+        hmd.addBehaviour(tools[RightTriggerModes.Create]!!, addSpotWithController)
+        hmd.addKeyBinding(tools[RightTriggerModes.Create]!!, TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
+    }
+
+    private fun selectEditButton() {
+        unregisterCurrentTool()
+        hmd.addBehaviour(tools[RightTriggerModes.Edit]!!, selectSpotWithController)
+        hmd.addKeyBinding(tools[RightTriggerModes.Edit]!!, TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
+    }
+
+    private fun selectDeleteButton() {
+        unregisterCurrentTool()
+    }
+
+    private fun selectTrackButton() {
+        unregisterCurrentTool()
+    }
+
+    private fun unregisterCurrentTool() {
+        tools[currentTool]?.let {
+            hmd.removeBehaviour(it)
+            hmd.removeKeyBinding(it)
+        }
     }
 
     fun addHedgehog() {
@@ -321,17 +403,7 @@ open class CellTrackingBase(
 //            addHedgehog()
 //        }
 
-        val addSpotWithController = ClickBehaviour { _, _ ->
-            val p = getTipPosition()
-            logger.debug("Got tip position: $p")
-            spotCreationCallback?.invoke(volume.currentTimepoint, p)
-        }
 
-        val selectSpotWithController = ClickBehaviour { _, _ ->
-            val p = getTipPosition()
-            logger.debug("Got tip position: $p")
-            spotSelectionCallback?.invoke(p, volume.currentTimepoint)
-        }
 
         hmd.addBehaviour("skip_to_next", nextTimepoint)
         hmd.addBehaviour("skip_to_prev", prevTimepoint)
@@ -375,12 +447,8 @@ open class CellTrackingBase(
             spotMoveEndCallback,
         )
 
-//        hmd.addBehaviour("addSpotWithController", addSpotWithController)
-//        hmd.addKeyBinding("addSpotWithController", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
 
 
-        hmd.addBehaviour("selectSpotWithController", selectSpotWithController)
-        hmd.addKeyBinding("selectSpotWithController", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
 
 //        hmd.addKeyBinding("toggle_hedgehog", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Side)
 //        hmd.addKeyBinding("delete_hedgehog", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Side)
