@@ -84,7 +84,7 @@ open class CellTrackingBase(
         "Delete" to "deleteSpotWithController",
         "Track" to "trackCellWithController",)
 
-    private val currentTool = "Edit"
+    private var currentTool = "Edit"
 
     var hedgehogVisibility = HedgehogVisibility.Hidden
 
@@ -201,7 +201,7 @@ open class CellTrackingBase(
         )
         leftWristColumn = Column(createButton, editButton, trackButton, centerVertically = true, centerHorizontally = true)
         leftWristColumn.ifSpatial {
-            scale = Vector3f(0.03f)
+            scale = Vector3f(0.05f)
             position = Vector3f(0.05f, 0.05f, 0.2f)
             rotation = Quaternionf().rotationXYZ(-1.57f, 1.57f, 0f)
         }
@@ -246,6 +246,7 @@ open class CellTrackingBase(
             "Track" -> trackCellsWithController
             else -> null
         }
+        currentTool = pressed
         behavior?.let {
             hmd.addBehaviour(tools[pressed]!!, behavior)
             hmd.addKeyBinding(tools[pressed]!!, TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
