@@ -1,6 +1,5 @@
 package sc.iview.commands.demo.advanced
 
-import com.intellij.ui.tabs.impl.ShapeTransform.Right
 import graphics.scenery.*
 import graphics.scenery.attribute.material.Material
 import graphics.scenery.controls.OpenVRHMD
@@ -8,6 +7,8 @@ import graphics.scenery.controls.TrackedDevice
 import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.TrackerRole
 import graphics.scenery.controls.behaviours.ControllerDrag
+import graphics.scenery.controls.behaviours.VRPress
+import graphics.scenery.controls.behaviours.VRTouch
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.ui.Button
 import graphics.scenery.ui.Column
@@ -19,10 +20,8 @@ import graphics.scenery.volumes.RAIVolume
 import graphics.scenery.volumes.Volume
 import org.joml.*
 import org.scijava.ui.behaviour.ClickBehaviour
-import org.scijava.ui.behaviour.DragBehaviour
 import sc.iview.SciView
 import sc.iview.commands.demo.advanced.HedgehogAnalysis.SpineGraphVertex
-import sc.iview.commands.file.Open
 import sc.iview.controls.behaviours.MoveInstanceVR
 import sc.iview.controls.behaviours.MultiVRButtonStateManager
 import sc.iview.controls.behaviours.VR2HandNodeTransform
@@ -80,20 +79,20 @@ open class CellTrackingBase(
 
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
 
-    enum class RightTriggerModes {Create, Edit, Delete, Track}
+    private val tools = mapOf("Create" to "addSpotWithController",
+        "Edit" to "selectSpotWithController",
+        "Delete" to "deleteSpotWithController",
+        "Track" to "trackCellWithController",)
 
-    private val tools = mapOf(RightTriggerModes.Create to "addSpotWithController",
-        RightTriggerModes.Edit to "selectSpotWithController",
-        RightTriggerModes.Delete to "deleteSpotWithController",
-        RightTriggerModes.Track to "trackCellWithController",)
-
-    private val currentTool: RightTriggerModes = RightTriggerModes.Edit
+    private val currentTool = "Edit"
 
     var hedgehogVisibility = HedgehogVisibility.Hidden
 
     var leftVRController: TrackedDevice? = null
     var rightVRController: TrackedDevice? = null
-    lateinit var tip: Sphere
+    var tip = Sphere(0.007f)
+
+    lateinit var leftWristColumn: Column
 
     val buttonManager = MultiVRButtonStateManager()
 
@@ -185,34 +184,34 @@ open class CellTrackingBase(
 
     private fun setupLeftWristMenu() {
         val createButton = Button(
-                "Create Spot", command = this::selectCreateButton,
+                "Create", command = this::selectCreateButton, byTouch =  true, stayPressed = true,
                 color = Vector3f(0.5f, 0.95f, 0.45f),
                 pressedColor = Vector3f(0.2f, 1f, 0.15f),
             )
         val editButton = Button(
-            "Edit Spot", command = this::selectEditButton,
+            "Edit", command = this::selectEditButton, byTouch =  true, stayPressed = true,
             color = Vector3f(0.4f, 0.45f, 0.95f),
             pressedColor = Vector3f(0.15f, 0.2f, 1f)
         )
-        val deleteButton = Button(
-            "Delete Spot", command = this::selectDeleteButton,
-            color = Vector3f(0.95f, 0.5f, 0.45f),
-            pressedColor = Vector3f(1f, 0.2f, 0.15f)
-        )
+
         val trackButton = Button(
-            "Controller Tracking ", command = this::selectTrackButton,
+            "Track", command = this::selectTrackButton, byTouch =  true, stayPressed = true,
             color = Vector3f(0.9f, 0.9f, 0.5f),
             pressedColor = Vector3f(1f, 1f, 0.2f)
         )
-        val leftWristColumn = Column(createButton, editButton, deleteButton, trackButton)
+        leftWristColumn = Column(createButton, editButton, trackButton, centerVertically = true, centerHorizontally = true)
         leftWristColumn.ifSpatial {
-            position = Vector3f(0.0f, 0.0f, -.2f)
-            rotation = Quaternionf().rotationY(90f)
+            scale = Vector3f(0.03f)
+            position = Vector3f(0.05f, 0.05f, 0.2f)
+            rotation = Quaternionf().rotationXYZ(-1.57f, 1.57f, 0f)
         }
 
         leftVRController?.model?.let {
             sciview.addNode(leftWristColumn, parent = it)
         }
+
+        // Use editing as default option
+        selectEditButton()
     }
 
     val addSpotWithController = ClickBehaviour { _, _ ->
@@ -227,30 +226,55 @@ open class CellTrackingBase(
         spotSelectionCallback?.invoke(p, volume.currentTimepoint)
     }
 
-    private fun selectCreateButton() {
+    val trackCellsWithController = ClickBehaviour { _, _ ->
+
+    }
+
+    private fun updateWristButtonActions(pressed: String) {
+        leftWristColumn.children.filterIsInstance<Button>().forEach {
+            // release all buttons that are currently not selected
+            if (it.text != pressed) {
+                it.release()
+            }
+        }
+        // remove the currently selected tool
         unregisterCurrentTool()
-        hmd.addBehaviour(tools[RightTriggerModes.Create]!!, addSpotWithController)
-        hmd.addKeyBinding(tools[RightTriggerModes.Create]!!, TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
+        // add the currently selected tool as behavior
+        val behavior = when (pressed) {
+            "Create" -> addSpotWithController
+            "Edit" -> selectSpotWithController
+            "Track" -> trackCellsWithController
+            else -> null
+        }
+        behavior?.let {
+            hmd.addBehaviour(tools[pressed]!!, behavior)
+            hmd.addKeyBinding(tools[pressed]!!, TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
+        }
+    }
+
+    private fun selectCreateButton() {
+        logger.info("Selected the spot creation tool")
+        updateWristButtonActions("Create")
     }
 
     private fun selectEditButton() {
-        unregisterCurrentTool()
-        hmd.addBehaviour(tools[RightTriggerModes.Edit]!!, selectSpotWithController)
-        hmd.addKeyBinding(tools[RightTriggerModes.Edit]!!, TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
-    }
-
-    private fun selectDeleteButton() {
-        unregisterCurrentTool()
+        logger.info("Selected the spot editing tool")
+        updateWristButtonActions("Edit")
     }
 
     private fun selectTrackButton() {
-        unregisterCurrentTool()
+        logger.info("Selected the cell tracking tool")
+        updateWristButtonActions("Track")
     }
 
     private fun unregisterCurrentTool() {
         tools[currentTool]?.let {
-            hmd.removeBehaviour(it)
-            hmd.removeKeyBinding(it)
+            val b = hmd.getBehaviour(it)
+            if (b != null) {
+                hmd.removeBehaviour(it)
+                hmd.removeKeyBinding(it)
+                logger.info("unregistered $it")
+            }
         }
     }
 
@@ -267,7 +291,6 @@ open class CellTrackingBase(
     }
 
     fun addTip() {
-        tip = Sphere(0.01f)
         tip.material {
             diffuse = Vector3f(0.8f, 0.9f, 1f)
         }
@@ -424,7 +447,7 @@ open class CellTrackingBase(
 //        hmd.addBehaviour("trigger_move", move)
 //        hmd.addKeyBinding("trigger_move", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Side)
 
-
+        VRTouch.createAndSet(sciview.currentScene, hmd, listOf(TrackerRole.RightHand), false, customTip = tip)
 
         VRGrabTheWorld.createAndSet(
             sciview.currentScene, hmd, listOf(OpenVRHMD.OpenVRButton.Side), listOf(TrackerRole.LeftHand), buttonManager

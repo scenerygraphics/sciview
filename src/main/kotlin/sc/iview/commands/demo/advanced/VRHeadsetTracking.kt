@@ -113,9 +113,7 @@ class VRHeadsetTracking(
 
         VRTouch.createAndSet(sciview.currentScene,hmd, listOf(TrackerRole.LeftHand, TrackerRole.RightHand),true)
 
-        VRGrab.createAndSet(sciview.currentScene,hmd, listOf(OpenVRHMD.OpenVRButton.Side), listOf(
-            TrackerRole.RightHand,
-            TrackerRole.LeftHand))
+        VRGrab.createAndSet(sciview.currentScene,hmd, OpenVRHMD.OpenVRButton.Side, TrackerRole.RightHand)
         setupControllerforTracking()
     }
 
