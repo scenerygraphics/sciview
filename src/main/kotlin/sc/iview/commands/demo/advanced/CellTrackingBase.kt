@@ -72,6 +72,7 @@ open class CellTrackingBase(
     var finalTrackCallback: (() -> Unit)? = null
     var spotCreationCallback: ((Int, Vector3f) -> Unit)? = null
     var spotSelectionCallback: ((Vector3f, Int) -> Unit)? = null
+    var spotDeletionCallback: (() -> Unit)? = null
     var spotMoveInitCallback: ((Vector3f) -> Unit)? = null
     var spotMoveDragCallback: ((Vector3f) -> Unit)? = null
     var spotMoveEndCallback: ((Vector3f) -> Unit)? = null
@@ -202,7 +203,7 @@ open class CellTrackingBase(
         leftWristColumn = Column(createButton, editButton, trackButton, centerVertically = true, centerHorizontally = true)
         leftWristColumn.ifSpatial {
             scale = Vector3f(0.05f)
-            position = Vector3f(0.05f, 0.05f, 0.2f)
+            position = Vector3f(0.05f, 0.05f, 0.25f)
             rotation = Quaternionf().rotationXYZ(-1.57f, 1.57f, 0f)
         }
 
@@ -448,6 +449,7 @@ open class CellTrackingBase(
 //        hmd.addBehaviour("trigger_move", move)
 //        hmd.addKeyBinding("trigger_move", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Side)
 
+        // this behavior is needed for touching the menu buttons
         VRTouch.createAndSet(sciview.currentScene, hmd, listOf(TrackerRole.RightHand), false, customTip = tip)
 
         VRGrabTheWorld.createAndSet(
@@ -462,6 +464,7 @@ open class CellTrackingBase(
             onEndCallback = rebuildGeometryCallback
         )
 
+        // drag behavior can stay enabled regardless of current tool mode
         MoveInstanceVR.createAndSet(
             sciview.currentScene, hmd, listOf(OpenVRHMD.OpenVRButton.Side), listOf(TrackerRole.RightHand),
             buttonManager,
@@ -471,8 +474,13 @@ open class CellTrackingBase(
             spotMoveEndCallback,
         )
 
+        val deleteSpotBehavior = ClickBehaviour { _, _ ->
+            spotDeletionCallback?.invoke()
+            rebuildGeometryCallback?.invoke()
+        }
 
-
+        hmd.addBehaviour("DeleteSpot", deleteSpotBehavior)
+        hmd.addKeyBinding("DeleteSpot", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.A)
 
 //        hmd.addKeyBinding("toggle_hedgehog", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Side)
 //        hmd.addKeyBinding("delete_hedgehog", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Side)
