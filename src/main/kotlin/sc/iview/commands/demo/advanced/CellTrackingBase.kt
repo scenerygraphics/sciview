@@ -7,7 +7,6 @@ import graphics.scenery.controls.TrackedDevice
 import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.TrackerRole
 import graphics.scenery.controls.behaviours.ControllerDrag
-import graphics.scenery.controls.behaviours.VRPress
 import graphics.scenery.controls.behaviours.VRTouch
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.ui.Button
@@ -68,14 +67,21 @@ open class CellTrackingBase(
     // determines whether the volume and hedgehogs should keep listening for updates or not
     var cellTrackingActive: Boolean = false
 
+    /** Takes a [SpineGraphVertex] and its positions to create the corresponding track in Mastodon. */
     var trackCreationCallback: ((List<Pair<Vector3f, SpineGraphVertex>>) -> Unit)? = null
-    var finalTrackCallback: (() -> Unit)? = null
-    var spotCreationCallback: ((Int, Vector3f) -> Unit)? = null
-    var spotSelectionCallback: ((Vector3f, Int) -> Unit)? = null
+    var spotCreationCallback: ((tp: Int, sciviewPos: Vector3f, connectToPrev: Boolean) -> Unit)? = null
+    /** Select a spot based on the controller tip's position, current time point and a multiple of the radius
+     * in which a selection event is counted as valid. */
+    var spotSelectionCallback: ((sciviewPos: Vector3f, tp: Int, radiusFactor: Float) -> Boolean)? = null
+    /** Deletes the currently selected spot. */
     var spotDeletionCallback: (() -> Unit)? = null
     var spotMoveInitCallback: ((Vector3f) -> Unit)? = null
     var spotMoveDragCallback: ((Vector3f) -> Unit)? = null
     var spotMoveEndCallback: ((Vector3f) -> Unit)? = null
+    /** Links a selected spot to the previously created spot. */
+    var spotLinkCallback: (() -> Unit)? = null
+    /** Resets the previously created spot to null, so a new track can be generated with the controller. */
+    var resetTrackingCallback: (() -> Unit)? = null
     var rebuildGeometryCallback: (() -> Unit)? = null
 
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
@@ -103,6 +109,15 @@ open class CellTrackingBase(
     }
 
     private val observers = mutableListOf<TimepointObserver>()
+
+    val deleteSpotBehavior = ClickBehaviour { _, _ ->
+        spotDeletionCallback?.invoke()
+        rebuildGeometryCallback?.invoke()
+    }
+
+    val resetControllerTrack = ClickBehaviour { _, _ ->
+        resetTrackingCallback?.invoke()
+    }
 
     open fun run() {
         sciview.toggleVRRendering()
@@ -218,17 +233,35 @@ open class CellTrackingBase(
     val addSpotWithController = ClickBehaviour { _, _ ->
         val p = getTipPosition()
         logger.debug("Got tip position: $p")
-        spotCreationCallback?.invoke(volume.currentTimepoint, p)
+        spotCreationCallback?.invoke(volume.currentTimepoint, p, false)
     }
 
     val selectSpotWithController = ClickBehaviour { _, _ ->
         val p = getTipPosition()
         logger.debug("Got tip position: $p")
-        spotSelectionCallback?.invoke(p, volume.currentTimepoint)
+        spotSelectionCallback?.invoke(p, volume.currentTimepoint, 2f)
     }
 
     val trackCellsWithController = ClickBehaviour { _, _ ->
-
+        // we dont want animation, because we track step by step
+        playing = false
+        // play the volume backwards, step by step, so cell split events can simply be turned into a merge event
+        if (volume.currentTimepoint > 0) {
+            val p = getTipPosition()
+            logger.debug("Got tip position: $p")
+            // did the user click on an existing cell and wants to merge the track into it?
+            val wantMerge = spotSelectionCallback?.invoke(p, volume.currentTimepoint, 1.5f) ?: false
+            if (!wantMerge) {
+                logger.info("Tracked a new spot at position $p")
+                spotCreationCallback?.invoke(volume.currentTimepoint, p, true)
+            } else {
+                spotLinkCallback?.invoke()
+            }
+            volume.goToTimepoint(volume.currentTimepoint - 1)
+            notifyObservers(volume.currentTimepoint)
+        } else {
+            sciview.camera?.showMessage("Reached the first time point!", centered = true)
+        }
     }
 
     private fun updateWristButtonActions(pressed: String) {
@@ -257,26 +290,45 @@ open class CellTrackingBase(
     private fun selectCreateButton() {
         logger.info("Selected the spot creation tool")
         updateWristButtonActions("Create")
+        tip.material { diffuse = Vector3f(0.2f, 1f, 0.15f) }
     }
 
     private fun selectEditButton() {
         logger.info("Selected the spot editing tool")
         updateWristButtonActions("Edit")
+        tip.material { diffuse = Vector3f(0.15f, 0.2f, 1f) }
+        hmd.addBehaviour("DeleteSpot", deleteSpotBehavior)
+        hmd.addKeyBinding("DeleteSpot", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.A)
     }
 
     private fun selectTrackButton() {
         logger.info("Selected the cell tracking tool")
         updateWristButtonActions("Track")
+        tip.material { diffuse = Vector3f(1f, 1f, 0.2f) }
+        resetTrackingCallback?.invoke()
+        hmd.addBehaviour("ResetTrack", resetControllerTrack)
+        hmd.addKeyBinding("ResetTrack", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.A)
+        volume.goToLastTimepoint()
     }
 
     private fun unregisterCurrentTool() {
-        tools[currentTool]?.let {
-            val b = hmd.getBehaviour(it)
+
+        fun maybeRemoveBehavior(s: String) {
+            val b = hmd.getBehaviour(s)
             if (b != null) {
-                hmd.removeBehaviour(it)
-                hmd.removeKeyBinding(it)
-                logger.info("unregistered $it")
+                hmd.removeBehaviour(s)
+                hmd.removeKeyBinding(s)
+                logger.info("unregistered $s")
             }
+        }
+
+        tools[currentTool]?.let {
+            maybeRemoveBehavior(it)
+        }
+        // Remove additional behaviors that might have been added
+        when (currentTool) {
+            "Edit" -> maybeRemoveBehavior("DeleteSpot")
+            "Track" -> maybeRemoveBehavior("ResetTrack")
         }
     }
 
@@ -294,7 +346,7 @@ open class CellTrackingBase(
 
     fun addTip() {
         tip.material {
-            diffuse = Vector3f(0.8f, 0.9f, 1f)
+            diffuse = Vector3f(0.15f, 0.2f, 1f)
         }
         tip.spatial().position = Vector3f(0.0f, -0f, -0.05f)
         rightVRController?.model?.let {
@@ -316,7 +368,6 @@ open class CellTrackingBase(
                 handler.getBehaviour(name)?.let { b ->
                     hmd.addBehaviour(name, b)
                     hmd.addKeyBinding(name, key.first, key.second)
-
                 }
             }
         }
@@ -352,24 +403,14 @@ open class CellTrackingBase(
             skipToPrevious = true
         }
 
-        val fasterOrScale = ClickBehaviour { _, _ ->
-            if(playing) {
-                volumesPerSecond = maxOf(minOf(volumesPerSecond+1, 20), 1)
-                cam.showMessage("Speed: $volumesPerSecond vol/s",distance = 1.2f, size = 0.2f, centered = true)
-            } else {
-//                volumeScaleFactor = minOf(volumeScaleFactor * 1.05f, 100.0f)
-//                volume.spatial().scale = Vector3f(1.0f) .mul(volumeScaleFactor)
-            }
+        val faster = ClickBehaviour { _, _ ->
+            volumesPerSecond = maxOf(minOf(volumesPerSecond+1, 20), 1)
+            cam.showMessage("Speed: $volumesPerSecond vol/s",distance = 1.2f, size = 0.2f, centered = true)
         }
 
-        val slowerOrScale = ClickBehaviour { _, _ ->
-            if(playing) {
-                volumesPerSecond = maxOf(minOf(volumesPerSecond-1, 20), 1)
-                cam.showMessage("Speed: $volumesPerSecond vol/s",distance = 2f, size = 0.2f, centered = true)
-            } else {
-//                volumeScaleFactor = maxOf(volumeScaleFactor / 1.05f, 0.1f)
-//                volume.spatial().scale = Vector3f(1.0f) .mul(volumeScaleFactor)
-            }
+        val slower = ClickBehaviour { _, _ ->
+            volumesPerSecond = maxOf(minOf(volumesPerSecond-1, 20), 1)
+            cam.showMessage("Speed: $volumesPerSecond vol/s",distance = 2f, size = 0.2f, centered = true)
         }
 
         val playPause = ClickBehaviour { _, _ ->
@@ -428,17 +469,15 @@ open class CellTrackingBase(
 //            addHedgehog()
 //        }
 
-
-
         hmd.addBehaviour("skip_to_next", nextTimepoint)
         hmd.addBehaviour("skip_to_prev", prevTimepoint)
-        hmd.addBehaviour("faster_or_scale", fasterOrScale)
-        hmd.addBehaviour("slower_or_scale", slowerOrScale)
+        hmd.addBehaviour("faster", faster)
+        hmd.addBehaviour("slower", slower)
         hmd.addBehaviour("play_pause", playPause)
         hmd.addKeyBinding("skip_to_next", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Right)
         hmd.addKeyBinding("skip_to_prev", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Left)
-        hmd.addKeyBinding("faster_or_scale", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Up)
-        hmd.addKeyBinding("slower_or_scale", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Down)
+        hmd.addKeyBinding("faster", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Up)
+        hmd.addKeyBinding("slower", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Down)
         hmd.addKeyBinding("play_pause", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Menu)
 
 //        hmd.addBehaviour("toggle_hedgehog", toggleHedgehog)
@@ -474,20 +513,10 @@ open class CellTrackingBase(
             spotMoveEndCallback,
         )
 
-        val deleteSpotBehavior = ClickBehaviour { _, _ ->
-            spotDeletionCallback?.invoke()
-            rebuildGeometryCallback?.invoke()
-        }
-
-        hmd.addBehaviour("DeleteSpot", deleteSpotBehavior)
-        hmd.addKeyBinding("DeleteSpot", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.A)
-
 //        hmd.addKeyBinding("toggle_hedgehog", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Side)
 //        hmd.addKeyBinding("delete_hedgehog", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Side)
 
 //        hmd.addKeyBinding("playback_direction", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Menu)
-
-
 
         hmd.allowRepeats += OpenVRHMD.OpenVRButton.Trigger to TrackerRole.LeftHand
         logger.info("Registered VR controller bindings.")
@@ -496,7 +525,7 @@ open class CellTrackingBase(
 
     /** Returns the world position of the right controller's tool tip as [Vector3f]. */
     fun getTipPosition(): Vector3f {
-        return tip.spatial().worldPosition(tip.spatial().position)
+        return tip.boundingBox?.center ?: Vector3f(0f)
     }
 
     /**
@@ -672,9 +701,9 @@ open class CellTrackingBase(
         trackFileWriter.newLine()
         trackFileWriter.newLine()
         trackFileWriter.write("# START OF TRACK $hedgehogId, child of $parentId\n")
-        if (trackCreationCallback != null && finalTrackCallback != null) {
+        if (trackCreationCallback != null && rebuildGeometryCallback != null) {
             trackCreationCallback?.invoke(track.points)
-            finalTrackCallback?.invoke()
+            rebuildGeometryCallback?.invoke()
         }
         track.points.windowed(2, 1).forEach { pair ->
             val p = Vector3f(pair[0].first).mul(Vector3f(volumeDimensions)) // direct product

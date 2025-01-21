@@ -31,8 +31,7 @@ import kotlin.math.PI
 /**
  * Tracking class used for communicating with eye trackers, tracking cells with them in a sciview VR environment.
  * It calls the Hedgehog analysis on the eye tracking results and communicates the results to Mastodon via
- * [trackCreationCallback], which is called on every spine graph vertex that is extracted, and
- * [finalTrackCallback] which is called after all vertices of a track are iterated, giving Mastodon a chance to rebuild its tracks.
+ * [trackCreationCallback], which is called on every spine graph vertex that is extracted
  */
 class EyeTracking(
     sciview: SciView
