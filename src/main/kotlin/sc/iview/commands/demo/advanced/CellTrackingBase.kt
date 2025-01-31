@@ -11,6 +11,7 @@ import graphics.scenery.controls.behaviours.VRTouch
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.ui.Button
 import graphics.scenery.ui.Column
+import graphics.scenery.ui.Gui3DElement
 import graphics.scenery.utils.MaybeIntersects
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.minus
@@ -30,6 +31,8 @@ import java.io.FileWriter
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 
 /**
  * Base class for different VR cell tracking purposes. It includes functionality to add spines and edgehogs,
@@ -84,7 +87,18 @@ open class CellTrackingBase(
     var resetTrackingCallback: (() -> Unit)? = null
     var rebuildGeometryCallback: (() -> Unit)? = null
 
+    var stageSpotsCallback: (() -> Unit)? = null
+    var predictSpotsCallback: (() -> Unit)? = null
+    var trainSpotsCallback: (() -> Unit)? = null
+    var neighborLinkingCallback: (() -> Unit)? = null
+    // TODO add train flow functionality
+    var trainFlowCallback: (() -> Unit)? = null
+
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
+
+    enum class PlaybackDirection { Forward, Backward }
+
+    enum class ElephantMode { stageSpots, trainAll, predict, NNLinking }
 
     private val tools = mapOf("Create" to "addSpotWithController",
         "Edit" to "selectSpotWithController",
@@ -97,16 +111,13 @@ open class CellTrackingBase(
 
     var leftVRController: TrackedDevice? = null
     var rightVRController: TrackedDevice? = null
-    var tip = Sphere(0.007f)
 
-    lateinit var leftWristColumn: Column
+    var tip = Sphere(0.007f)
+    var leftToolColumn: Column? = null
+
+    var leftElephantColumn: Column? = null
 
     val buttonManager = MultiVRButtonStateManager()
-
-    enum class PlaybackDirection {
-        Forward,
-        Backward
-    }
 
     private val observers = mutableListOf<TimepointObserver>()
 
@@ -167,9 +178,10 @@ open class CellTrackingBase(
                     if (device.role == TrackerRole.RightHand) {
                         addTip()
                         device.name = "rightHand"
+                        leftVRController?.name = "leftHand"
                     } else if (device.role == TrackerRole.LeftHand) {
                         device.name = "leftHand"
-                        setupLeftWristMenu()
+                        rightVRController?.name = "rightHand"
                     }
                 }
             }
@@ -198,7 +210,7 @@ open class CellTrackingBase(
         observers.forEach { it.onTimePointChanged(timepoint) }
     }
 
-    private fun setupLeftWristMenu() {
+    private fun setupLeftToolMenu() {
         val createButton = Button(
                 "Create", command = this::selectCreateButton, byTouch =  true, stayPressed = true,
                 color = Vector3f(0.5f, 0.95f, 0.45f),
@@ -215,19 +227,32 @@ open class CellTrackingBase(
             color = Vector3f(0.9f, 0.9f, 0.5f),
             pressedColor = Vector3f(1f, 1f, 0.2f)
         )
-        leftWristColumn = Column(createButton, editButton, trackButton, centerVertically = true, centerHorizontally = true)
-        leftWristColumn.ifSpatial {
-            scale = Vector3f(0.05f)
-            position = Vector3f(0.05f, 0.05f, 0.25f)
-            rotation = Quaternionf().rotationXYZ(-1.57f, 1.57f, 0f)
-        }
 
-        leftVRController?.model?.let {
-            sciview.addNode(leftWristColumn, parent = it)
-        }
-
+        leftToolColumn = createGenericWristMenu(createButton, editButton, trackButton)
+        leftToolColumn?.name = "Left Tool Column"
         // Use editing as default option
         selectEditButton()
+    }
+
+    private fun createGenericWristMenu(vararg elements: Gui3DElement): Column {
+        val column = Column(*elements, centerVertically = true, centerHorizontally = true)
+        column.ifSpatial {
+            scale = Vector3f(0.05f)
+            position = Vector3f(0.05f, 0.05f, column.height / 20f + 0.1f)
+            rotation = Quaternionf().rotationXYZ(-1.57f, 1.57f, 0f)
+        }
+        leftVRController?.model?.let {
+            sciview.addNode(column, parent = it)
+            column.children.forEach { child ->
+                val bb = BoundingGrid()
+                bb.node = child
+                bb.gridColor = Vector3f(0.5f, 1f, 0.4f)
+                sciview.addNode(bb, parent = it)
+            }
+        }
+        column.pack()
+        logger.info("height for column is ${column.height}")
+        return column
     }
 
     val addSpotWithController = ClickBehaviour { _, _ ->
@@ -264,11 +289,13 @@ open class CellTrackingBase(
         }
     }
 
-    private fun updateWristButtonActions(pressed: String) {
-        leftWristColumn.children.filterIsInstance<Button>().forEach {
-            // release all buttons that are currently not selected
-            if (it.text != pressed) {
-                it.release()
+    private fun updateLeftToolButtonActions(pressed: String) {
+        leftToolColumn?.let {
+            it.children.filterIsInstance<Button>().forEach {
+                // force release all buttons that are currently not selected
+                if (it.text != pressed) {
+                    it.release(true)
+                }
             }
         }
         // remove the currently selected tool
@@ -289,13 +316,13 @@ open class CellTrackingBase(
 
     private fun selectCreateButton() {
         logger.info("Selected the spot creation tool")
-        updateWristButtonActions("Create")
+        updateLeftToolButtonActions("Create")
         tip.material { diffuse = Vector3f(0.2f, 1f, 0.15f) }
     }
 
     private fun selectEditButton() {
         logger.info("Selected the spot editing tool")
-        updateWristButtonActions("Edit")
+        updateLeftToolButtonActions("Edit")
         tip.material { diffuse = Vector3f(0.15f, 0.2f, 1f) }
         hmd.addBehaviour("DeleteSpot", deleteSpotBehavior)
         hmd.addKeyBinding("DeleteSpot", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.A)
@@ -303,7 +330,7 @@ open class CellTrackingBase(
 
     private fun selectTrackButton() {
         logger.info("Selected the cell tracking tool")
-        updateWristButtonActions("Track")
+        updateLeftToolButtonActions("Track")
         tip.material { diffuse = Vector3f(1f, 1f, 0.2f) }
         resetTrackingCallback?.invoke()
         hmd.addBehaviour("ResetTrack", resetControllerTrack)
@@ -332,6 +359,68 @@ open class CellTrackingBase(
         }
     }
 
+    fun setupElephantMenu() {
+        val unpressedColor = Vector3f(0.81f, 0.81f, 1f)
+        val pressedColor = Vector3f(0.54f, 0.44f, 1f)
+        val stageSpotsButton = Button(
+            "Stage all",
+            command = { updateElephantActions(ElephantMode.stageSpots) }, byTouch = true, depressDelay = 500,
+            color = unpressedColor, pressedColor = pressedColor)
+        val trainAllButton = Button(
+            "Train All TPs",
+            command = { updateElephantActions(ElephantMode.trainAll) }, byTouch = true, depressDelay = 500,
+            color = unpressedColor, pressedColor = pressedColor)
+        val predictAllButton = Button(
+            "Predict All TPs",
+            command = {updateElephantActions(ElephantMode.predict) }, byTouch = true, depressDelay = 500,
+            color = unpressedColor, pressedColor = pressedColor)
+        val linkingButton = Button(
+            "NN linking",
+            command = {updateElephantActions(ElephantMode.NNLinking) }, byTouch = true, depressDelay = 500,
+            color = unpressedColor, pressedColor = pressedColor)
+
+        leftElephantColumn =
+            createGenericWristMenu(stageSpotsButton, trainAllButton, predictAllButton, linkingButton)
+        leftElephantColumn?.name = "Left Elephant Menu"
+    }
+
+    var lastButtonTime = TimeSource.Monotonic.markNow()
+
+    private fun updateElephantActions(mode: ElephantMode) {
+        val buttonTime = TimeSource.Monotonic.markNow()
+
+        if (buttonTime.minus(lastButtonTime) > 2.0.seconds) {
+            when (mode) {
+                ElephantMode.stageSpots -> stageSpotsCallback?.invoke()
+                ElephantMode.trainAll -> trainSpotsCallback?.invoke()
+                ElephantMode.predict -> predictSpotsCallback?.invoke()
+                ElephantMode.NNLinking -> neighborLinkingCallback?.invoke()
+            }
+        } else {
+            sciview.camera?.showMessage("Have some patience!", duration = 1500)
+        }
+        lastButtonTime = buttonTime
+    }
+
+    private fun toggleLeftWristMenus() {
+        if (leftToolColumn == null) {
+            logger.info("Setting up left wrist menu")
+            setupLeftToolMenu()
+            leftToolColumn!!.visible = false
+        }
+        if (leftElephantColumn == null) {
+            logger.info("Setting up left elephant menu")
+            setupElephantMenu()
+            leftElephantColumn!!.visible = true
+        }
+
+        leftElephantColumn!!.visible = !leftElephantColumn!!.visible
+        leftToolColumn!!.visible = !leftToolColumn!!.visible
+        val ev = leftElephantColumn!!.visible
+        logger.info("Toggled from ${if (ev) "tool" else "elephant"} menu to ${if (!ev) "tool" else "elephant"} menu.")
+    }
+
+
     fun addHedgehog() {
         logger.info("added hedgehog")
         val hedgehog = Cylinder(0.005f, 1.0f, 16)
@@ -349,9 +438,15 @@ open class CellTrackingBase(
             diffuse = Vector3f(0.15f, 0.2f, 1f)
         }
         tip.spatial().position = Vector3f(0.0f, -0f, -0.05f)
+//        val bb = BoundingGrid()
+//        bb.node = tip
+//        bb.name = "Tip BB"
+//        bb.lineWidth = 2f
+//        bb.gridColor = Vector3f(1f, 0.3f, 0.25f)
         rightVRController?.model?.let {
             sciview.addNode(tip, parent = it)
-            logger.debug("Added tip to right controller")
+//            sciview.addNode(bb, parent = it)
+            logger.info("Added tip to right controller")
         }
     }
 
@@ -487,6 +582,9 @@ open class CellTrackingBase(
 
 //        hmd.addBehaviour("trigger_move", move)
 //        hmd.addKeyBinding("trigger_move", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Side)
+
+        hmd.addBehaviour("toggleLeftWristMenu", ClickBehaviour { _, _ -> toggleLeftWristMenus() })
+        hmd.addKeyBinding("toggleLeftWristMenu", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.A)
 
         // this behavior is needed for touching the menu buttons
         VRTouch.createAndSet(sciview.currentScene, hmd, listOf(TrackerRole.RightHand), false, customTip = tip)
