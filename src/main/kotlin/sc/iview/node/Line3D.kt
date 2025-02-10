@@ -147,7 +147,7 @@ class Line3D : Mesh {
      * geometry information into consideration if this Node implements [HasGeometry].
      * In case a bounding box cannot be determined, the function will return null.
      */
-    override fun generateBoundingBox(): OrientedBoundingBox? {
+    override fun generateBoundingBox(includeChildren: Boolean): OrientedBoundingBox? {
         var bb = OrientedBoundingBox(this, 0.0f, 0.0f, 0.0f,
                 0.0f, 0.0f, 0.0f)
         for (n in children) {
