@@ -56,23 +56,14 @@ class VR2HandNodeTransform(
         val oldReinRotation = Quaternionf().lookAlong(oldRein, Vector3f(0f, 1f, 0f))
         val diffRotation = oldReinRotation.mul(newReinRotation.invert())
 
-        // Use the node's center as pivot
-        val pivot = target.spatialOrNull()?.position ?: Vector3f(0f)
-
         target.let {
             if (!rotationLocked) {
-                val rot = Matrix4f().translate(pivot).rotate(diffRotation).translate(pivot.times(-1f))
                 it.ifSpatial {
-                    position.add(rot.getTranslation(Vector3f()))
-                    rotation.mul(rot.getNormalizedRotation(Quaternionf()))
+                    rotation.mul(diffRotation)
                 }
             }
             if (!scaleLocked) {
                 target.ifSpatial {
-                    // pivot and target are in same space
-                    for (i in 0..2) {
-                        position.setComponent(i, (position[i] + pivot[i] * (scaleDelta - 1)))
-                    }
                     scale *= scaleDelta
                     needsUpdate = true
                 }
