@@ -126,7 +126,7 @@ open class CellTrackingBase(
         rebuildGeometryCallback?.invoke()
     }
 
-    val resetControllerTrack = ClickBehaviour { _, _ ->
+    val resetControllerTrackBehavior = ClickBehaviour { _, _ ->
         resetTrackingCallback?.invoke()
     }
 
@@ -177,11 +177,9 @@ open class CellTrackingBase(
                     }
                     if (device.role == TrackerRole.RightHand) {
                         addTip()
-                        device.name = "rightHand"
-                        leftVRController?.name = "leftHand"
+                        device.model?.name = "rightHand"
                     } else if (device.role == TrackerRole.LeftHand) {
-                        device.name = "leftHand"
-                        rightVRController?.name = "rightHand"
+                        device.model?.name = "leftHand"
                     }
                 }
             }
@@ -286,6 +284,7 @@ open class CellTrackingBase(
             notifyObservers(volume.currentTimepoint)
         } else {
             sciview.camera?.showMessage("Reached the first time point!", centered = true)
+            resetTrackingCallback?.invoke()
         }
     }
 
@@ -333,7 +332,7 @@ open class CellTrackingBase(
         updateLeftToolButtonActions("Track")
         tip.material { diffuse = Vector3f(1f, 1f, 0.2f) }
         resetTrackingCallback?.invoke()
-        hmd.addBehaviour("ResetTrack", resetControllerTrack)
+        hmd.addBehaviour("ResetTrack", resetControllerTrackBehavior)
         hmd.addKeyBinding("ResetTrack", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.A)
         volume.goToLastTimepoint()
     }
