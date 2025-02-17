@@ -115,12 +115,11 @@ dependencies {
     implementation("org.janelia.saalfeldlab:n5")
     implementation("org.janelia.saalfeldlab:n5-hdf5")
     implementation("sc.fiji:spim_data")
-    implementation("org.slf4j:slf4j-simple")
 
     implementation(platform(kotlin("bom")))
     implementation(kotlin("stdlib-jdk8"))
     testImplementation(kotlin("test-junit"))
-    testImplementation("org.slf4j:slf4j-simple")
+    testImplementation("org.slf4j:slf4j-simple:2.0.16")
 
     implementation("sc.fiji:bigdataviewer-core")
     implementation("sc.fiji:bigdataviewer-vistools")
