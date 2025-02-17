@@ -68,9 +68,7 @@ dependencies {
 
     // SciJava dependencies
 
-    implementation("org.yaml:snakeyaml") {
-        version { strictly("1.33") }
-    }
+    implementation("org.yaml:snakeyaml:2.3")
     implementation("org.scijava:scijava-common")
     implementation("org.scijava:ui-behaviour")
     implementation("org.scijava:script-editor")
