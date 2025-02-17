@@ -58,6 +58,7 @@ dependencies {
     }
 
     implementation("net.java.dev.jna:jna-platform:5.14.0")
+//    implementation("net.clearvolume:cleargl")
     implementation("org.janelia.saalfeldlab:n5")
     implementation("org.janelia.saalfeldlab:n5-imglib2")
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
@@ -67,9 +68,7 @@ dependencies {
 
     // SciJava dependencies
 
-    implementation("org.yaml:snakeyaml") {
-        version { strictly("1.33") }
-    }
+    implementation("org.yaml:snakeyaml:2.3")
     implementation("org.scijava:scijava-common")
     implementation("org.scijava:ui-behaviour")
     implementation("org.scijava:script-editor")
@@ -147,6 +146,19 @@ dependencies {
 
 val isRelease: Boolean
     get() = System.getProperty("release") == "true"
+
+//kotlin {
+//    jvmToolchain(21)
+////    compilerOptions {
+////        jvmTarget = JvmTarget.JVM_21
+////        freeCompilerArgs = listOf("-Xinline-classes", "-opt-in=kotlin.RequiresOptIn")
+////    }
+//}
+//
+//java {
+//    targetCompatibility = JavaVersion.VERSION_21
+//    sourceCompatibility = JavaVersion.VERSION_21
+//}
 
 tasks {
     withType<KotlinCompile>().all {
