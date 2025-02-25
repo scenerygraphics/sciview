@@ -1,5 +1,6 @@
 package sc.iview.commands.demo.advanced
 
+import edu.mines.jtk.opt.Vect
 import graphics.scenery.*
 import graphics.scenery.attribute.material.Material
 import graphics.scenery.controls.OpenVRHMD
@@ -15,6 +16,7 @@ import graphics.scenery.ui.Gui3DElement
 import graphics.scenery.utils.MaybeIntersects
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.minus
+import graphics.scenery.utils.extensions.times
 import graphics.scenery.utils.lazyLogger
 import graphics.scenery.volumes.RAIVolume
 import graphics.scenery.volumes.Volume
@@ -283,7 +285,7 @@ open class CellTrackingBase(
             volume.goToTimepoint(volume.currentTimepoint - 1)
             notifyObservers(volume.currentTimepoint)
         } else {
-            sciview.camera?.showMessage("Reached the first time point!", centered = true)
+            sciview.camera?.showMessage("Reached the first time point!", centered = true, distance = 2f, size = 0.2f)
             resetTrackingCallback?.invoke()
         }
     }
@@ -396,7 +398,7 @@ open class CellTrackingBase(
                 ElephantMode.NNLinking -> neighborLinkingCallback?.invoke()
             }
         } else {
-            sciview.camera?.showMessage("Have some patience!", duration = 1500)
+            sciview.camera?.showMessage("Have some patience!", duration = 1500, distance = 0.3f)
         }
         lastButtonTime = buttonTime
     }
@@ -671,11 +673,12 @@ open class CellTrackingBase(
                         }
                     }
 
-                    if(tracking && oldTimepoint == (volume.timepointCount-1) && newTimepoint == 0) {
+                    if(tracking && newTimepoint == 0) {
                         tracking = false
-
+                        playing = false
                         referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f)}
-                        sciview.camera!!.showMessage("Tracking deactivated.",distance = 1.2f, size = 0.2f)
+                        logger.info("Deactivated eye tracking by reaching timepoint 0.")
+                        sciview.camera!!.showMessage("Tracking deactivated.",distance = 2f, size = 0.2f, centered = true)
                         dumpHedgehog()
                     }
                 }
@@ -755,7 +758,7 @@ open class CellTrackingBase(
 
         val hedgehogFile = sessionDirectory.resolve("Hedgehog_${hedgehogId}_${SystemHelpers.formatDateTime()}.csv").toFile()
         val hedgehogFileWriter = hedgehogFile.bufferedWriter()
-        hedgehogFileWriter.write("Timepoint,Origin,Direction,LocalEntry,LocalExit,LocalDirection,HeadPosition,HeadOrientation,Position,Confidence,Samples\n")
+        hedgehogFileWriter.write("Timepoint;Origin;Direction;LocalEntry;LocalExit;LocalDirection;HeadPosition;HeadOrientation;Position;Confidence;Samples\n")
 
         val trackFile = sessionDirectory.resolve("Tracks.tsv").toFile()
         val trackFileWriter = BufferedWriter(FileWriter(trackFile, true))
@@ -801,6 +804,8 @@ open class CellTrackingBase(
         if (trackCreationCallback != null && rebuildGeometryCallback != null) {
             trackCreationCallback?.invoke(track.points)
             rebuildGeometryCallback?.invoke()
+        } else {
+            logger.warn("Tried to send track data to Mastodon but couldn't find the callbacks!")
         }
         track.points.windowed(2, 1).forEach { pair ->
             val p = Vector3f(pair[0].first).mul(Vector3f(volumeDimensions)) // direct product

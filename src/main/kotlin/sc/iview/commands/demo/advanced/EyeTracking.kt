@@ -169,12 +169,14 @@ class EyeTracking(
 
                         val toggleTracking = ClickBehaviour { _, _ ->
                             if (tracking) {
-                                logger.info("deactivating tracking...")
+                                logger.info("deactivated tracking through user input.")
                                 referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
                                 cam.showMessage("Tracking deactivated.",distance = 2f, size = 0.2f, centered = true)
                                 dumpHedgehog()
+                                playing = false
                             } else {
                                 logger.info("activating tracking...")
+                                playing = true
                                 addHedgehog()
                                 referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
                                 cam.showMessage("Tracking active.",distance = 2f, size = 0.2f, centered = true)

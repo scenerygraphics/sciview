@@ -114,8 +114,9 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 
 	fun run(): Track? {
 
-		val startingThreshold = 0.002f
-		val localMaxThreshold = 0.001f
+		// Adapt thresholds based on data from the first spine
+		val startingThreshold = timepoints.entries.first().value.first.samples.min() * 2f + 0.002f
+		val localMaxThreshold = timepoints.entries.first().value.first.samples.max() * 0.2f
 		val zscoreThreshold = 2.0f
 		val removeTooFarThreshold = 5.0f
 
@@ -124,16 +125,32 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		}
 
 
-		//step1: find the startingPoint by using startingthreshold
+		//step1: find the startingPoint by using startingThreshold
 		val startingPoint = timepoints.entries.firstOrNull { entry ->
-			entry.value.any { metadata -> metadata.samples.filterNotNull().any { it > startingThreshold } }
+			entry.value.any { metadata -> metadata.samples.any { it > startingThreshold } }
 		} ?: return null
 
-		logger.info("Starting point is ${startingPoint.key}/${timepoints.size} (threshold=$startingThreshold)")
+		logger.info("Starting point is ${startingPoint.key}/${timepoints.size} (threshold=$startingThreshold), localMayThreshold=$localMaxThreshold")
 
 		// filter timepoints, remove all before the starting point
 		timepoints.filter { it.key > startingPoint.key }
 				.forEach { timepoints.remove(it.key) }
+
+		// Stop timepoints after reaching 0
+		val result = mutableMapOf<Int, ArrayList<SpineMetadata>>()
+		var foundZero = false
+
+		for ((time, value) in timepoints) {
+			if (foundZero) {
+				break
+			}
+			result[time] = value
+			if (time == 0) {
+				foundZero = true
+			}
+		}
+		timepoints.clear()
+		timepoints.putAll(result)
 
 		logger.info("${timepoints.size} timepoints left")
 
@@ -157,14 +174,16 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 			return smoothed
 		}
 
-		//step2: find the maxIndices along the spine
+		// step2: find the maxIndices along the spine
 		// this will be a list of lists, where each entry in the first-level list
 		// corresponds to a time point, which then contains a list of vertices within that timepoint.
 		val candidates: List<List<SpineGraphVertex>> = timepoints.map { tp ->
 			val vs = tp.value.mapIndexedNotNull { i, spine ->
+				// First apply a subtle smoothing kernel to prevent many close/similar local maxima
+				val smoothedSamples = gaussSmoothing(spine.samples, 4)
 				// determine local maxima (and their indices) along the spine, aka, actual things the user might have
 				// seen when looking into the direction of the spine
-				val maxIndices = localMaxima(spine.samples.filterNotNull())
+				val maxIndices = localMaxima(smoothedSamples)
 				logger.debug("Local maxima at ${tp.key}/$i are: ${maxIndices.joinToString(",")}")
 
 				// if there actually are local maxima, generate a graph vertex for them with all the necessary metadata
@@ -183,7 +202,6 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 								index.first,
 								index.second,
 								spine)
-
 					}
 				} else {
 					null
@@ -232,47 +250,47 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		fun zScore(value: Float, m: Float, sd: Float) = ((value - m)/sd)
 
 		//step4: if some path is longer than multiple average length, it should be removed
-		while (shortestPath.any { it.distance() >= removeTooFarThreshold * avgPathLength }) {
-			shortestPath = shortestPath.filter { it.distance() < removeTooFarThreshold * avgPathLength }.toMutableList()
-			shortestPath.windowed(3, 1, partialWindows = true).forEach {
-				// this reconnects the neighbors after the offending vertex has been removed
-				it.getOrNull(0)?.next = it.getOrNull(1)
-				it.getOrNull(1)?.previous = it.getOrNull(0)
-				it.getOrNull(1)?.next = it.getOrNull(2)
-				it.getOrNull(2)?.previous = it.getOrNull(1)
-			}
-
-		}
+		// TODO Don't remove vertices along the path, as that doesn't translate well to Mastodon tracks. Find a different way?
+//		while (shortestPath.any { it.distance() >= removeTooFarThreshold * avgPathLength }) {
+//			shortestPath = shortestPath.filter { it.distance() < removeTooFarThreshold * avgPathLength }.toMutableList()
+//			shortestPath.windowed(3, 1, partialWindows = true).forEach {
+//				// this reconnects the neighbors after the offending vertex has been removed
+//				it.getOrNull(0)?.next = it.getOrNull(1)
+//				it.getOrNull(1)?.previous = it.getOrNull(0)
+//				it.getOrNull(1)?.next = it.getOrNull(2)
+//				it.getOrNull(2)?.previous = it.getOrNull(1)
+//			}
+//		}
 
 		// recalculate statistics after offending vertex removal
 		avgPathLength = shortestPath.map { it.distance() }.average().toFloat()
 		stdDevPathLength = shortestPath.map { it.distance() }.stddev().toFloat()
 
 		//step5: remove some vertices according to zscoreThreshold
-		var remaining = shortestPath.count { zScore(it.distance(), avgPathLength, stdDevPathLength) > zscoreThreshold }
-		logger.info("Iterating: ${shortestPath.size} vertices remaining, with $remaining failing z-score criterion")
-		while(remaining > 0) {
-			val outliers = shortestPath
-					.filter { zScore(it.distance(), avgPathLength, stdDevPathLength) > zscoreThreshold }
-					.map {
-						val idx = shortestPath.indexOf(it)
-						listOf(idx-1,idx,idx+1)
-					}.flatten()
+//		var remaining = shortestPath.count { zScore(it.distance(), avgPathLength, stdDevPathLength) > zscoreThreshold }
+//		logger.info("Iterating: ${shortestPath.size} vertices remaining, with $remaining failing z-score criterion")
+//		while(remaining > 0) {
+//			val outliers = shortestPath
+//					.filter { zScore(it.distance(), avgPathLength, stdDevPathLength) > zscoreThreshold }
+//					.map {
+//						val idx = shortestPath.indexOf(it)
+//						listOf(idx-1,idx,idx+1)
+//					}.flatten()
+//
+//			shortestPath = shortestPath.filterIndexed { index, _ -> index !in outliers }.toMutableList()
+//			remaining = shortestPath.count { zScore(it.distance(), avgPathLength, stdDevPathLength) > zscoreThreshold }
+//
+//			shortestPath.windowed(3, 1, partialWindows = true).forEach {
+//				it.getOrNull(0)?.next = it.getOrNull(1)
+//				it.getOrNull(1)?.previous = it.getOrNull(0)
+//				it.getOrNull(1)?.next = it.getOrNull(2)
+//				it.getOrNull(2)?.previous = it.getOrNull(1)
+//			}
+//			logger.info("Iterating: ${shortestPath.size} vertices remaining, with $remaining failing z-score criterion")
+//		}
 
-			shortestPath = shortestPath.filterIndexed { index, _ -> index !in outliers }.toMutableList()
-			remaining = shortestPath.count { zScore(it.distance(), avgPathLength, stdDevPathLength) > zscoreThreshold }
-
-			shortestPath.windowed(3, 1, partialWindows = true).forEach {
-				it.getOrNull(0)?.next = it.getOrNull(1)
-				it.getOrNull(1)?.previous = it.getOrNull(0)
-				it.getOrNull(1)?.next = it.getOrNull(2)
-				it.getOrNull(2)?.previous = it.getOrNull(1)
-			}
-			logger.info("Iterating: ${shortestPath.size} vertices remaining, with $remaining failing z-score criterion")
-		}
-
-		val afterCount = shortestPath.size
-		logger.info("Pruned ${beforeCount - afterCount} vertices due to path length")
+//		val afterCount = shortestPath.size
+//		logger.info("Pruned ${beforeCount - afterCount} vertices due to path length")
 		val singlePoints = shortestPath
 				.groupBy { it.timepoint }
 				.mapNotNull { vs -> vs.value.maxByOrNull{ it.metadata.confidence } }
