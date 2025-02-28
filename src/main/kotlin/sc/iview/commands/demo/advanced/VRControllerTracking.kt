@@ -129,10 +129,10 @@ class VRControllerTracking(
             val cam = sciview.camera as? DetachedHeadCamera ?: return@thread
 
             val toggleTracking = ClickBehaviour { _, _ ->
-                if (tracking) {
+                if (eyeTrackingActive) {
                     referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
                     cam.showMessage("Tracking deactivated.",distance = 1.2f, size = 0.2f)
-                    tracking = false
+                    eyeTrackingActive = false
                     dumpHedgehog()
                     println("before dumphedgehog: "+ hedgehogsList.last().instances.size.toString())
                 } else {
@@ -140,7 +140,7 @@ class VRControllerTracking(
                     println("after addhedgehog: "+ hedgehogsList.last().instances.size.toString())
                     referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
                     cam.showMessage("Tracking active.",distance = 1.2f, size = 0.2f)
-                    tracking = true
+                    eyeTrackingActive = true
                 }
             }
             hmd.addBehaviour("toggle_tracking", toggleTracking)
@@ -186,7 +186,7 @@ class VRControllerTracking(
                         referenceTarget.ifSpatial { position =  pointWorld}
 
                         val direction = (pointWorld - headCenter).normalize()
-                        if (tracking) {
+                        if (eyeTrackingActive) {
                             addSpine(headCenter, direction, volume,0.8f, volume.viewerState.currentTimepoint)
                         }
                     }

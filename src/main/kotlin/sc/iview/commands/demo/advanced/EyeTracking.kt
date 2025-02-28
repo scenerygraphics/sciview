@@ -1,10 +1,7 @@
 package sc.iview.commands.demo.advanced
 
 import graphics.scenery.*
-import graphics.scenery.attribute.material.Material
-import graphics.scenery.controls.OpenVRHMD
 import graphics.scenery.controls.OpenVRHMD.OpenVRButton
-import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.TrackerRole
 import graphics.scenery.controls.eyetracking.PupilEyeTracker
 import graphics.scenery.primitives.Cylinder
@@ -14,12 +11,10 @@ import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.minus
 import graphics.scenery.utils.extensions.xyz
 import graphics.scenery.utils.extensions.xyzw
-import graphics.scenery.volumes.Volume
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import org.joml.*
 import org.scijava.ui.behaviour.ClickBehaviour
 import sc.iview.SciView
-import sc.iview.commands.demo.advanced.HedgehogAnalysis.SpineGraphVertex
 import java.awt.image.DataBufferByte
 import java.io.ByteArrayInputStream
 import java.nio.file.Files
@@ -168,7 +163,7 @@ class EyeTracking(
                         hmd.removeKeyBinding("start_calibration")
 
                         val toggleTracking = ClickBehaviour { _, _ ->
-                            if (tracking) {
+                            if (eyeTrackingActive) {
                                 logger.info("deactivated tracking through user input.")
                                 referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
                                 cam.showMessage("Tracking deactivated.",distance = 2f, size = 0.2f, centered = true)
@@ -181,7 +176,7 @@ class EyeTracking(
                                 referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
                                 cam.showMessage("Tracking active.",distance = 2f, size = 0.2f, centered = true)
                             }
-                            tracking = !tracking
+                            eyeTrackingActive = !eyeTrackingActive
                         }
                         hmd.addBehaviour("toggle_tracking", toggleTracking)
                         hmd.addKeyBinding("toggle_tracking", keybindingTracking.first, keybindingTracking.second)
@@ -213,7 +208,7 @@ class EyeTracking(
                                 val pointWorld = Matrix4f(cam.spatial().world).transform(p.xyzw()).xyz()
                                 val direction = (pointWorld - headCenter).normalize()
 
-                                if (tracking) {
+                                if (eyeTrackingActive) {
                                     addSpine(headCenter, direction, volume, gaze.confidence, volume.viewerState.currentTimepoint)
                                 }
                             }

@@ -8,6 +8,7 @@ import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.TrackerRole
 import graphics.scenery.utils.extensions.minus
 import graphics.scenery.utils.extensions.plusAssign
+import graphics.scenery.utils.extensions.times
 import org.joml.Vector3f
 import org.scijava.ui.behaviour.DragBehaviour
 
@@ -22,7 +23,8 @@ class VRGrabTheWorld (
     private val cam: Spatial,
     val buttonmanager: MultiVRButtonStateManager,
     val button: OpenVRHMD.OpenVRButton,
-    val trackerRole: TrackerRole
+    val trackerRole: TrackerRole,
+    val multiplier: Float
 ) : DragBehaviour {
 
     var camDiff = Vector3f()
@@ -43,7 +45,7 @@ class VRGrabTheWorld (
             //grabbed world
             val newCamDiff = controllerSpatial.worldPosition() - cam.position
             val diffTranslation = camDiff - newCamDiff //reversed
-            cam.position += diffTranslation
+            cam.position += diffTranslation * multiplier
             camDiff = newCamDiff
         }
     }
@@ -63,6 +65,7 @@ class VRGrabTheWorld (
             buttons: List<OpenVRHMD.OpenVRButton>,
             controllerSide: List<TrackerRole>,
             buttonmanager: MultiVRButtonStateManager,
+            multiplier: Float = 1f
         ) {
             hmd.events.onDeviceConnect.add { _, device, _ ->
                 if (device.type == TrackedDeviceType.Controller) {
@@ -76,7 +79,8 @@ class VRGrabTheWorld (
                                     scene.findObserver()!!.spatial(),
                                     buttonmanager,
                                     button,
-                                    device.role
+                                    device.role,
+                                    multiplier
                                 )
                                 buttonmanager.registerButtonConfig(button, device.role)
                                 hmd.addBehaviour(name, grabBehaviour)

@@ -12,7 +12,6 @@ import graphics.scenery.utils.extensions.xyz
 import graphics.scenery.utils.extensions.xyzw
 import graphics.scenery.volumes.Volume
 import org.joml.*
-import org.scijava.command.CommandService
 import sc.iview.SciView
 import java.io.File
 import java.nio.file.Files
@@ -125,7 +124,7 @@ class TrackingTest(
             volume.visible = true
             volume.runRecursive { it.visible = true }
             playing = true
-            tracking = true
+            eyeTrackingActive = true
 
             if(true)
             {
@@ -134,7 +133,7 @@ class TrackingTest(
 
                 val direction = (pointWorld - headCenter).normalize()
 
-                if (tracking) {
+                if (eyeTrackingActive) {
                     addSpine(headCenter, direction, volume,0.8f, volume.viewerState.currentTimepoint)
                     showTrack()
                 }
