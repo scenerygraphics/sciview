@@ -75,7 +75,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 								val worldPosition: Vector3f,
 								val index: Int,
 								val value: Float,
-								val metadata : SpineMetadata,
+								val metadata : SpineMetadata? = null,
 								var previous: SpineGraphVertex? = null,
 								var next: SpineGraphVertex? = null) {
 
@@ -293,9 +293,9 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 //		logger.info("Pruned ${beforeCount - afterCount} vertices due to path length")
 		val singlePoints = shortestPath
 				.groupBy { it.timepoint }
-				.mapNotNull { vs -> vs.value.maxByOrNull{ it.metadata.confidence } }
+				.mapNotNull { vs -> vs.value.maxByOrNull{ it.metadata?.confidence ?: 0f } }
 				.filter {
-					it.metadata.direction.dot(it.previous!!.metadata.direction) > 0.5f
+					(it.metadata?.direction?.dot(it.previous!!.metadata?.direction) ?: 0f) > 0.5f
 				}
 
 
