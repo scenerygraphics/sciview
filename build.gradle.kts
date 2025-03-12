@@ -134,6 +134,8 @@ dependencies {
     // OME
     implementation("ome:formats-bsd")
     implementation("ome:formats-gpl")
+
+    implementation("org.mastodon:mastodon:1.0.0-beta-34")
 }
 
 //kapt {
