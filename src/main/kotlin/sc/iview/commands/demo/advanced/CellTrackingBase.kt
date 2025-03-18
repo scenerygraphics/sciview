@@ -14,10 +14,13 @@ import graphics.scenery.ui.Gui3DElement
 import graphics.scenery.utils.MaybeIntersects
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.minus
+import graphics.scenery.utils.extensions.xyz
+import graphics.scenery.utils.extensions.xyzw
 import graphics.scenery.utils.lazyLogger
 import graphics.scenery.volumes.RAIVolume
 import graphics.scenery.volumes.Volume
 import org.joml.*
+import org.mastodon.mamut.model.Spot
 import org.scijava.ui.behaviour.ClickBehaviour
 import sc.iview.SciView
 import sc.iview.commands.demo.advanced.HedgehogAnalysis.SpineGraphVertex
@@ -42,7 +45,7 @@ import kotlin.time.TimeSource
 open class CellTrackingBase(
     open var sciview: SciView
 ) {
-    val logger by lazyLogger()
+    val logger by lazyLogger(System.getProperty("scenery.LogLevel", "info"))
 
     lateinit var sessionId: String
     lateinit var sessionDirectory: Path
@@ -69,19 +72,21 @@ open class CellTrackingBase(
     // determines whether the volume and hedgehogs should keep listening for updates or not
     var cellTrackingActive: Boolean = false
 
-    /** Takes a [SpineGraphVertex] and its positions to create the corresponding track in Mastodon. */
-    var trackCreationCallback: ((List<Pair<Vector3f, SpineGraphVertex>>) -> Unit)? = null
-    var spotCreateDeleteCallback: ((tp: Int, sciviewPos: Vector3f, connectToPrev: Boolean) -> Unit)? = null
+    /** Takes a [SpineGraphVertex] and its positions to create the corresponding track in Mastodon.
+     * Set the boolean to true if the coordinates are in world space. The bridge will convert them to Mastodon coords. */
+    var trackCreationCallback: ((List<Pair<Vector3f, SpineGraphVertex>>, Boolean) -> Unit)? = null
+    var spotCreateDeleteCallback: ((tp: Int, sciviewPos: Vector3f) -> Unit)? = null
     /** Select a spot based on the controller tip's position, current time point and a multiple of the radius
      * in which a selection event is counted as valid. */
-    var spotSelectionCallback: ((sciviewPos: Vector3f, tp: Int, radiusFactor: Float) -> Boolean)? = null
-//    /** Deletes the currently selected spot. */
-//    var spotDeletionCallback: (() -> Unit)? = null
+    var spotSelectionCallback: ((sciviewPos: Vector3f, tp: Int, radiusFactor: Float) -> Pair<Spot?, Boolean>)? = null
     var spotMoveInitCallback: ((Vector3f) -> Unit)? = null
     var spotMoveDragCallback: ((Vector3f) -> Unit)? = null
     var spotMoveEndCallback: ((Vector3f) -> Unit)? = null
-    /** Links a selected spot to the previously created spot. */
+    /** Links a selected spot to the closest spot to handle merge events. */
     var spotLinkCallback: (() -> Unit)? = null
+    /** Generates a single link between two vectors without adding the data to Mastodon.
+     * Used during controller tracking for visual feedback. */
+    var singleLinkPreviewCallback: ((Vector3f, Vector3f) -> Unit)? = null
     /** Resets the previously created spot to null, so a new track can be generated with the controller. */
     var resetTrackingCallback: (() -> Unit)? = null
     var rebuildGeometryCallback: (() -> Unit)? = null
@@ -264,32 +269,62 @@ open class CellTrackingBase(
 
     var controllerTrackingActive = false
 
-    val trackCellsWithController = ClickBehaviour { _, _ ->
-        // we dont want animation, because we track step by step
-        playing = false
+    /** Intermediate storage for a single track created with the controllers.
+     * Once tracking is finished, this track is sent to Mastodon. */
+    var controllerTrackList = mutableListOf<Pair<Vector3f, SpineGraphVertex>>()
 
+    /** This lambda is called every time the user performs a click with controller-based tracking. */
+    val trackCellsWithController = ClickBehaviour { _, _ ->
+        if (!controllerTrackingActive) {
+            controllerTrackingActive = true
+            // we dont want animation, because we track step by step
+            playing = false
+        }
         // play the volume backwards, step by step, so cell split events can simply be turned into a merge event
         if (volume.currentTimepoint > 0) {
-            controllerTrackingActive = true
             val p = getCursorPosition()
-            logger.debug("Got tip position: $p")
             // did the user click on an existing cell and wants to merge the track into it?
-            val wantMerge = spotSelectionCallback?.invoke(p, volume.currentTimepoint, 1.5f) ?: false
-            if (!wantMerge) {
-                logger.info("Tracked a new spot at position $p")
-                spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, true)
-            } else {
+            val (selected, isValid) = spotSelectionCallback?.invoke(p, volume.currentTimepoint, 1.5f) ?: (null to false)
+            logger.debug("Tracked a new spot at position $p")
+            logger.debug("Do we want to merge? $isValid. Selected spot is $selected")
+            // Create a placeholder link during tracking for immediate feedback
+            if (controllerTrackList.size > 0) {
+                singleLinkPreviewCallback?.invoke(controllerTrackList.last().first, p)
+            }
+            controllerTrackList.add(
+                p to SpineGraphVertex(
+                    volume.currentTimepoint,
+                    p,
+                    volume.spatial().world.transform((Vector3f(p)).xyzw()).xyz(),
+                    controllerTrackList.size,
+                    0f // This is ugly, but we don't care about the sampled value of the volume here
+                )
+            )
+            volume.goToTimepoint(volume.currentTimepoint - 1)
+            if (isValid) {
+                endControllerTracking()
+                // Now we merge the selected spot into the closest one, which is the last spot that we annotated
+                // This has to happen after endControllerTracking since we first need to build the actual Mastodon branch for it
                 spotLinkCallback?.invoke()
             }
-            volume.goToTimepoint(volume.currentTimepoint - 1)
+            // This will also redraw all geometry using Mastodon as source
             notifyObservers(volume.currentTimepoint)
         } else {
-            controllerTrackingActive = false
             sciview.camera?.showMessage("Reached the first time point!", centered = true, distance = 2f, size = 0.2f)
-            resetTrackingCallback?.invoke()
             // Let's head back to the last timepoint for starting a new track fast-like
             volume.goToLastTimepoint()
-            notifyObservers(volume.currentTimepoint)
+            endControllerTracking()
+        }
+    }
+
+    /** Stops the current controller tracking process and sends the created track to Mastodon. */
+    private fun endControllerTracking() {
+        if (controllerTrackingActive) {
+            logger.info("Ending controller tracking now and sending ${controllerTrackList.size} spots to Mastodon to chew on.")
+            controllerTrackingActive = false
+//            resetTrackingCallback?.invoke()
+            trackCreationCallback?.invoke(controllerTrackList, true)
+            controllerTrackList.clear()
         }
     }
 
@@ -395,6 +430,7 @@ open class CellTrackingBase(
         leftElephantColumn =
             createGenericWristMenu(stageSpotsButton, trainAllButton, predictAllButton, linkingButton)
         leftElephantColumn?.name = "Left Elephant Menu"
+        leftElephantColumn?.visible = false
     }
 
     var lastButtonTime = TimeSource.Monotonic.markNow()
@@ -419,7 +455,7 @@ open class CellTrackingBase(
     fun setupUndoMenu() {
         val undoButton = Button(
             "Undo",
-            command = {mastodonUndoCallback?.invoke()}, byTouch = true, depressDelay = 300,
+            command = {mastodonUndoCallback?.invoke()}, byTouch = true, depressDelay = 400,
             color = Vector3f(0.8f), pressedColor = Vector3f(0.95f, 0.35f, 0.25f)
         )
         leftUndoMenu = createGenericWristMenu(undoButton)
@@ -521,12 +557,12 @@ open class CellTrackingBase(
         }
 
         val faster = ClickBehaviour { _, _ ->
-            volumesPerSecond = maxOf(minOf(volumesPerSecond+0.1f, 20f), 1f)
+            volumesPerSecond = maxOf(minOf(volumesPerSecond+0.2f, 20f), 1f)
             cam.showMessage("Speed: ${"%.1f".format(volumesPerSecond)} vol/s",distance = 1.2f, size = 0.2f, centered = true)
         }
 
         val slower = ClickBehaviour { _, _ ->
-            volumesPerSecond = maxOf(minOf(volumesPerSecond-0.1f, 20f), 1f)
+            volumesPerSecond = maxOf(minOf(volumesPerSecond-0.2f, 20f), 1f)
             cam.showMessage("Speed: ${"%.1f".format(volumesPerSecond)} vol/s",distance = 2f, size = 0.2f, centered = true)
         }
 
@@ -613,11 +649,11 @@ open class CellTrackingBase(
 
         val spotAddDeleteResetBehavior = ClickBehaviour {_, _ ->
             if (controllerTrackingActive) {
-                resetTrackingCallback?.invoke()
+                endControllerTracking()
             } else {
                 val p = getCursorPosition()
-                logger.debug("Got tip position: $p")
-                spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, false)
+                logger.debug("Got cursor position: $p")
+                spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p)
             }
         }
 
@@ -626,7 +662,7 @@ open class CellTrackingBase(
 
         val spotSelectBehavior = ClickBehaviour { _, _ ->
             val p = getCursorPosition()
-            logger.debug("Got tip position: $p")
+            logger.debug("Got cursor position: $p")
             spotSelectionCallback?.invoke(p, volume.currentTimepoint, 2f)
         }
 
@@ -853,7 +889,7 @@ open class CellTrackingBase(
         trackFileWriter.newLine()
         trackFileWriter.write("# START OF TRACK $hedgehogId, child of $parentId\n")
         if (trackCreationCallback != null && rebuildGeometryCallback != null) {
-            trackCreationCallback?.invoke(track.points)
+            trackCreationCallback?.invoke(track.points, false)
             rebuildGeometryCallback?.invoke()
         } else {
             logger.warn("Tried to send track data to Mastodon but couldn't find the callbacks!")
