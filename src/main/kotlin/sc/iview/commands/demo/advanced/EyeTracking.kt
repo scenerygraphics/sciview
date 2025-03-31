@@ -183,7 +183,6 @@ class EyeTracking(
         launchUpdaterThread()
     }
 
-
     private fun setupCalibration(
         keybindingCalibration: Pair<TrackerRole, OpenVRButton> = (TrackerRole.RightHand to OpenVRButton.Menu),
         keybindingTracking: Pair<TrackerRole, OpenVRButton> = (TrackerRole.RightHand to OpenVRButton.Trigger)
