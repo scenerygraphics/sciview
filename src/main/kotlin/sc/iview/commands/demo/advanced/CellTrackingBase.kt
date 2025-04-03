@@ -129,6 +129,8 @@ open class CellTrackingBase(
     var leftElephantColumn: Column? = null
     var leftUndoMenu: Column? = null
 
+    var enableTrackingPreview = true
+
     val leftMenuList = mutableListOf<Column>()
     var leftMenuIndex = 0
 
@@ -300,7 +302,7 @@ open class CellTrackingBase(
             logger.debug("Tracked a new spot at position $p")
             logger.debug("Do we want to merge? $isValid. Selected spot is $selected")
             // Create a placeholder link during tracking for immediate feedback
-            if (controllerTrackList.size > 0) {
+            if (controllerTrackList.size > 0 && enableTrackingPreview) {
                 singleLinkPreviewCallback?.invoke(controllerTrackList.last().first, p)
             }
             controllerTrackList.add(
@@ -470,7 +472,12 @@ open class CellTrackingBase(
             command = {mastodonUndoCallback?.invoke()}, byTouch = true, depressDelay = 400,
             color = Vector3f(0.8f), pressedColor = Vector3f(0.95f, 0.35f, 0.25f)
         )
-        leftUndoMenu = createGenericWristMenu(undoButton)
+        val toggleTrackingPreviewBtn = Button(
+            "Toggle Preview",
+            command = {enableTrackingPreview != enableTrackingPreview}, byTouch = true, depressDelay = 400,
+            color = Vector3f(0.8f), pressedColor = Vector3f(0.95f, 0.35f, 0.25f)
+        )
+        leftUndoMenu = createGenericWristMenu(undoButton, toggleTrackingPreviewBtn)
         leftUndoMenu?.name = "Left Undo Menu"
     }
 
