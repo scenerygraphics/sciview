@@ -88,9 +88,11 @@ open class CellTrackingBase(
     var spotMoveEndCallback: ((Vector3f) -> Unit)? = null
     /** Links a selected spot to the closest spot to handle merge events. */
     var spotLinkCallback: (() -> Unit)? = null
-    /** Generates a single link between two vectors without adding the data to Mastodon.
-     * Used during controller tracking for visual feedback. */
-    var singleLinkPreviewCallback: ((Vector3f, Vector3f) -> Unit)? = null
+    /** Generates a single link between a new position and the previously annotated one.
+     * Sends the position data to the bridge for intermediary keeping.
+     * The integer is the timepoint. The boolean specifies whether the link preview should be rendered. */
+    var singleLinkTrackedCallback: ((Vector3f, Int, Boolean) -> Unit)? = null
+    var toggleTrackingPreviewCallback: ((Boolean) -> Unit)? = null
     /** Resets the previously created spot to null, so a new track can be generated with the controller. */
     var resetTrackingCallback: (() -> Unit)? = null
     var rebuildGeometryCallback: (() -> Unit)? = null
@@ -293,18 +295,17 @@ open class CellTrackingBase(
         if (volume.currentTimepoint > 0) {
             val p = getCursorPosition()
             // did the user click on an existing cell and wants to merge the track into it?
-            val (selected, isValid) = spotSelectionCallback?.invoke(p, volume.currentTimepoint, 1.5f) ?: (null to false)
+            val (selected, isValidSelection) = spotSelectionCallback?.invoke(p, volume.currentTimepoint, 1.5f) ?: (null to false)
             // If this is the first spot we track, and its a valid existing spot, mark it as such
-            if (isValid && controllerTrackList.size == 0) {
+            if (isValidSelection && controllerTrackList.size == 0) {
                 startWithExistingSpot = selected
                 logger.info("Set startWithExistingPost to $startWithExistingSpot")
             }
             logger.debug("Tracked a new spot at position $p")
-            logger.debug("Do we want to merge? $isValid. Selected spot is $selected")
+            logger.debug("Do we want to merge? $isValidSelection. Selected spot is $selected")
             // Create a placeholder link during tracking for immediate feedback
-            if (controllerTrackList.size > 0 && enableTrackingPreview) {
-                singleLinkPreviewCallback?.invoke(controllerTrackList.last().first, p)
-            }
+            singleLinkTrackedCallback?.invoke(p, volume.currentTimepoint, enableTrackingPreview)
+
             controllerTrackList.add(
                 p to SpineGraphVertex(
                     volume.currentTimepoint,
@@ -315,7 +316,8 @@ open class CellTrackingBase(
                 )
             )
             volume.goToTimepoint(volume.currentTimepoint - 1)
-            if (isValid && controllerTrackList.size > 1) {
+            // If the user clicked a cell and its *not* the first in the track, we assume it is a merge event and end the tracking
+            if (isValidSelection && controllerTrackList.size > 1) {
                 endControllerTracking()
                 // Now we merge the selected spot into the closest one, which is the last spot that we annotated
                 // This has to happen after endControllerTracking since we first need to build the actual Mastodon branch for it
@@ -474,7 +476,10 @@ open class CellTrackingBase(
         )
         val toggleTrackingPreviewBtn = Button(
             "Toggle Preview",
-            command = {enableTrackingPreview != enableTrackingPreview}, byTouch = true, depressDelay = 400,
+            command = {
+                enableTrackingPreview = !enableTrackingPreview
+                toggleTrackingPreviewCallback?.invoke(enableTrackingPreview)
+            }, byTouch = true, depressDelay = 400,
             color = Vector3f(0.8f), pressedColor = Vector3f(0.95f, 0.35f, 0.25f)
         )
         leftUndoMenu = createGenericWristMenu(undoButton, toggleTrackingPreviewBtn)
@@ -523,9 +528,10 @@ open class CellTrackingBase(
 
         volumeTPWidget.text = volume.currentTimepoint.toString()
         volumeTPWidget.name = "Volume Timepoint Widget"
+        volumeTPWidget.fontColor = Vector4f(0.4f, 0.45f, 1f, 1f)
         volumeTPWidget.spatial {
             scale = Vector3f(0.07f)
-            position = Vector3f(-0.05f, -0.05f, 0f)
+            position = Vector3f(-0.05f, -0.05f, 0.12f)
             rotation = Quaternionf().rotationXYZ(-1.57f, -1.57f, 0f)
         }
 
