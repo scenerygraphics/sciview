@@ -129,6 +129,9 @@ open class CellTrackingBase(
     var tip = Sphere(0.007f)
     var leftToolColumn: Column? = null
     var leftElephantColumn: Column? = null
+    var leftColumnTrain: Column? = null
+    var leftColumnPredict: Column? = null
+    var leftColumnLink: Column? = null
     var leftUndoMenu: Column? = null
 
     var enableTrackingPreview = true
@@ -192,7 +195,7 @@ open class CellTrackingBase(
                         device.model?.name = "leftHand"
                         setupElephantMenu()
                         setupUndoMenu()
-                        cycleLeftMenus()
+//                        cycleLeftMenus()
                     }
                 }
             }
@@ -435,7 +438,7 @@ open class CellTrackingBase(
             command = { updateElephantActions(ElephantMode.trainAll) }, byTouch = true, depressDelay = 500,
             color = unpressedColor, pressedColor = pressedColor)
         val predictAllButton = Button(
-            "Predict All TPs",
+            "Predict this TP",
             command = {updateElephantActions(ElephantMode.predict) }, byTouch = true, depressDelay = 500,
             color = unpressedColor, pressedColor = pressedColor)
         val linkingButton = Button(
@@ -444,28 +447,50 @@ open class CellTrackingBase(
             color = unpressedColor, pressedColor = pressedColor)
 
         leftElephantColumn =
-            createGenericWristMenu(stageSpotsButton, trainAllButton, predictAllButton, linkingButton)
+            createGenericWristMenu(stageSpotsButton)
         leftElephantColumn?.name = "Left Elephant Menu"
         leftElephantColumn?.visible = false
+        leftColumnPredict = createGenericWristMenu(predictAllButton)
+        leftColumnPredict?.visible = false
+        leftColumnTrain = createGenericWristMenu(trainAllButton)
+        leftColumnTrain?.visible = false
+        leftColumnLink = createGenericWristMenu(linkingButton)
+        leftColumnLink?.visible = false
     }
 
-    var lastButtonTime = TimeSource.Monotonic.markNow()
+    var lastButtonTime = System.nanoTime()
 
     /** Ensure that only a single Elephant action is triggered at a time */
     private fun updateElephantActions(mode: ElephantMode) {
-        val buttonTime = TimeSource.Monotonic.markNow()
+        val buttonTime = System.nanoTime()
 
-        if (buttonTime.minus(lastButtonTime) > 2.0.seconds) {
-            when (mode) {
-                ElephantMode.stageSpots -> stageSpotsCallback?.invoke()
-                ElephantMode.trainAll -> trainSpotsCallback?.invoke()
-                ElephantMode.predict -> predictSpotsCallback?.invoke()
-                ElephantMode.NNLinking -> neighborLinkingCallback?.invoke()
+        if ((buttonTime - lastButtonTime) > 10E9) {
+
+            thread {
+//                leftElephantColumn?.children?.forEach {
+//                    (it as Button).enabled.set(false)
+//                }
+                when (mode) {
+                    ElephantMode.stageSpots -> stageSpotsCallback?.invoke()
+                    ElephantMode.trainAll -> trainSpotsCallback?.invoke()
+                    ElephantMode.predict -> predictSpotsCallback?.invoke()
+                    ElephantMode.NNLinking -> neighborLinkingCallback?.invoke()
+                }
+//                Thread.sleep(500)
+//                leftElephantColumn?.children?.forEach {
+//                    val b = it as Button
+//                    b.enabled.set(true)
+//                    b.release(true)
+//                }
+                logger.info("We locked the buttons for ${(buttonTime-lastButtonTime)/1e6} ms ")
+                lastButtonTime = buttonTime
             }
+
+
         } else {
-            sciview.camera?.showMessage("Have some patience!", duration = 1500, distance = 0.3f)
+            sciview.camera?.showMessage("Have some patience!", duration = 1500, distance = 2f, size = 0.2f, centered = true)
         }
-        lastButtonTime = buttonTime
+
     }
 
     fun setupUndoMenu() {
