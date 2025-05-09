@@ -7,6 +7,9 @@ import graphics.scenery.controls.eyetracking.PupilEyeTracker
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
 import graphics.scenery.textures.Texture
+import graphics.scenery.ui.Button
+import graphics.scenery.ui.Column
+import graphics.scenery.ui.ToggleButton
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.minus
 import graphics.scenery.utils.extensions.xyz
@@ -40,6 +43,8 @@ class EyeTracking(
 
     private lateinit var debugBoard: TextBoard
 
+    var leftEyeTrackColumn: Column? = null
+
     override fun run() {
         // Do all the things for general VR startup before setting up the eye tracking environment
         super.run()
@@ -69,8 +74,6 @@ class EyeTracking(
         laser.ifMaterial{diffuse = Vector3f(1.0f, 1.0f, 1.0f) }
         laser.name = "Laser"
         sciview.addNode(laser)
-
-        volume.visible = false
 
         val bb = BoundingGrid()
         bb.node = volume
@@ -127,99 +130,152 @@ class EyeTracking(
         debugBoard.visible = false
         sciview.camera?.addChild(debugBoard)
 
-        setupCalibration()
+        setupEyeTracking()
+
+        setupEyeTrackingMenu()
     }
 
 
-    private fun setupCalibration(
+    private fun setupEyeTracking(
         keybindingCalibration: Pair<TrackerRole, OpenVRButton> = (TrackerRole.RightHand to OpenVRButton.Menu),
         keybindingTracking: Pair<TrackerRole, OpenVRButton> = (TrackerRole.LeftHand to OpenVRButton.Trigger)
     ) {
         val startCalibration = ClickBehaviour { _, _ ->
-            thread {
-                val cam = sciview.camera as? DetachedHeadCamera ?: return@thread
-                pupilTracker.gazeConfidenceThreshold = confidenceThreshold
-                if (!pupilTracker.isCalibrated) {
-                    logger.info("pupil is currently uncalibrated")
-                    pupilTracker.onCalibrationInProgress = {
-                        cam.showMessage("Crunching equations ...",distance = 2f, size = 0.2f, messageColor = Vector4f(1.0f, 0.8f, 0.0f, 1.0f), duration = 15000, centered = true)
-                    }
-
-                    pupilTracker.onCalibrationFailed = {
-                        cam.showMessage("Calibration failed.",distance = 2f, size = 0.2f, messageColor = Vector4f(1.0f, 0.0f, 0.0f, 1.0f), centered = true)
-                    }
-
-                    pupilTracker.onCalibrationSuccess = {
-                        cam.showMessage("Calibration succeeded!", distance = 2f, size = 0.2f, messageColor = Vector4f(0.0f, 1.0f, 0.0f, 1.0f), centered = true)
-
-                        for (i in 0 until 20) {
-                            referenceTarget.ifMaterial{diffuse = Vector3f(0.0f, 1.0f, 0.0f) }
-                            Thread.sleep(100)
-                            referenceTarget.ifMaterial { diffuse = Vector3f(0.8f, 0.8f, 0.8f) }
-                            Thread.sleep(30)
-                        }
-
-                        hmd.removeBehaviour("start_calibration")
-                        hmd.removeKeyBinding("start_calibration")
-
-                        val toggleTracking = ClickBehaviour { _, _ ->
-                            if (eyeTrackingActive) {
-                                logger.info("deactivated tracking through user input.")
-                                referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
-                                cam.showMessage("Tracking deactivated.",distance = 2f, size = 0.2f, centered = true)
-                                dumpHedgehog()
-                                playing = false
-                            } else {
-                                logger.info("activating tracking...")
-                                playing = true
-                                addHedgehog()
-                                referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
-                                cam.showMessage("Tracking active.",distance = 2f, size = 0.2f, centered = true)
-                            }
-                            eyeTrackingActive = !eyeTrackingActive
-                        }
-                        hmd.addBehaviour("toggle_tracking", toggleTracking)
-                        hmd.addKeyBinding("toggle_tracking", keybindingTracking.first, keybindingTracking.second)
-
-                        volume.visible = true
-                        playing = true
-                    }
-
-                    pupilTracker.unsubscribeFrames()
-                    sciview.deleteNode(sciview.find("eyeFrames"))
-
-                    logger.info("Starting eye tracker calibration")
-                    cam.showMessage("Follow the white rabbit.", distance = 2f, size = 0.2f,duration = 1500, centered = true)
-                    pupilTracker.calibrate(cam, hmd,
-                        generateReferenceData = true,
-                        calibrationTarget = calibrationTarget)
-
-                    pupilTracker.onGazeReceived = when (pupilTracker.calibrationType) {
-
-                        PupilEyeTracker.CalibrationType.WorldSpace -> { gaze ->
-                            if (gaze.confidence > confidenceThreshold) {
-                                val p = gaze.gazePoint()
-                                referenceTarget.visible = true
-                                // Pupil has mm units, so we divide by 1000 here to get to scenery units
-                                referenceTarget.spatial().position = p
-                                (cam.children.find { it.name == "debugBoard" } as? TextBoard)?.text = "${String.format("%.2f", p.x())}, ${String.format("%.2f", p.y())}, ${String.format("%.2f", p.z())}"
-
-                                val headCenter = cam.spatial().viewportToWorld(Vector2f(0.0f, 0.0f))
-                                val pointWorld = Matrix4f(cam.spatial().world).transform(p.xyzw()).xyz()
-                                val direction = (pointWorld - headCenter).normalize()
-
-                                if (eyeTrackingActive) {
-                                    addSpine(headCenter, direction, volume, gaze.confidence, volume.viewerState.currentTimepoint)
-                                }
-                            }
-                        }
-                    }
-                    logger.info("Calibration routine done.")
-                }
-            }
+            calibrateEyeTrackers()
         }
+
+        val cam = sciview.camera as? DetachedHeadCamera ?: return
+
+        val toggleTracking = ClickBehaviour { _, _ ->
+            if (eyeTrackingActive) {
+                logger.info("deactivated tracking through user input.")
+                referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
+                cam.showMessage("Tracking deactivated.",distance = 2f, size = 0.2f, centered = true)
+                dumpHedgehog()
+                playing = false
+            } else {
+                logger.info("activating tracking...")
+                playing = true
+                addHedgehog()
+                referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
+                cam.showMessage("Tracking active.",distance = 2f, size = 0.2f, centered = true)
+            }
+            eyeTrackingActive = !eyeTrackingActive
+        }
+
+        hmd.addBehaviour("toggle_tracking", toggleTracking)
+        hmd.addKeyBinding("toggle_tracking", keybindingTracking.first, keybindingTracking.second)
+
         hmd.addBehaviour("start_calibration", startCalibration)
         hmd.addKeyBinding("start_calibration", keybindingCalibration.first, keybindingCalibration.second)
+    }
+
+    private fun calibrateEyeTrackers(force: Boolean = false) {
+        thread {
+            val cam = sciview.camera as? DetachedHeadCamera ?: return@thread
+            pupilTracker.gazeConfidenceThreshold = confidenceThreshold
+            if (!pupilTracker.isCalibrated || force) {
+                logger.info("Calibrating pupil trackers...")
+
+                volume.visible = false
+
+                pupilTracker.onCalibrationInProgress = {
+                    cam.showMessage(
+                        "Crunching equations ...",
+                        distance = 2f, size = 0.2f,
+                        messageColor = Vector4f(1.0f, 0.8f, 0.0f, 1.0f),
+                        duration = 15000, centered = true
+                    )
+                }
+
+                pupilTracker.onCalibrationFailed = {
+                    cam.showMessage(
+                        "Calibration failed.",
+                        distance = 2f, size = 0.2f,
+                        messageColor = Vector4f(1.0f, 0.0f, 0.0f, 1.0f),
+                        centered = true
+                    )
+                }
+
+                pupilTracker.onCalibrationSuccess = {
+                    cam.showMessage(
+                        "Calibration succeeded!",
+                        distance = 2f, size = 0.2f,
+                        messageColor = Vector4f(0.0f, 1.0f, 0.0f, 1.0f),
+                        centered = true
+                    )
+
+                    for (i in 0 until 20) {
+                        referenceTarget.ifMaterial{diffuse = Vector3f(0.0f, 1.0f, 0.0f) }
+                        Thread.sleep(100)
+                        referenceTarget.ifMaterial { diffuse = Vector3f(0.8f, 0.8f, 0.8f) }
+                        Thread.sleep(30)
+                    }
+
+                    if (!pupilTracker.isCalibrated) {
+                        hmd.removeBehaviour("start_calibration")
+                        hmd.removeKeyBinding("start_calibration")
+                    }
+
+                    volume.visible = true
+                    playing = false
+                }
+
+                pupilTracker.unsubscribeFrames()
+                sciview.deleteNode(sciview.find("eyeFrames"))
+
+                logger.info("Starting eye tracker calibration")
+                cam.showMessage("Follow the white rabbit.", distance = 2f, size = 0.2f,duration = 1500, centered = true)
+
+                pupilTracker.calibrate(cam, hmd,
+                    generateReferenceData = true,
+                    calibrationTarget = calibrationTarget)
+
+                pupilTracker.onGazeReceived = when (pupilTracker.calibrationType) {
+
+                    PupilEyeTracker.CalibrationType.WorldSpace -> { gaze ->
+                        if (gaze.confidence > confidenceThreshold) {
+                            val p = gaze.gazePoint()
+                            referenceTarget.visible = true
+                            // Pupil has mm units, so we divide by 1000 here to get to scenery units
+                            referenceTarget.spatial().position = p
+                            (cam.children.find { it.name == "debugBoard" } as? TextBoard)?.text = "${String.format("%.2f", p.x())}, ${String.format("%.2f", p.y())}, ${String.format("%.2f", p.z())}"
+
+                            val headCenter = cam.spatial().viewportToWorld(Vector2f(0.0f, 0.0f))
+                            val pointWorld = Matrix4f(cam.spatial().world).transform(p.xyzw()).xyz()
+                            val direction = (pointWorld - headCenter).normalize()
+
+                            if (eyeTrackingActive) {
+                                addSpine(headCenter, direction, volume, gaze.confidence, volume.viewerState.currentTimepoint)
+                            }
+                        }
+                    }
+                }
+                logger.info("Calibration routine done.")
+            }
+        }
+    }
+
+    private fun setupEyeTrackingMenu() {
+
+        val calibrateButton = Button("Calibrate",
+            command = { calibrateEyeTrackers() },
+            byTouch = true, depressDelay = 500)
+
+        val toggleHedgehogsBtn = ToggleButton(
+            "Hedgehogs Off",
+            "Hedgehogs On",
+            command = {
+                hedgehogVisibility = if (hedgehogVisibility == HedgehogVisibility.Hidden) {
+                    HedgehogVisibility.PerTimePoint
+                } else {
+                    HedgehogVisibility.Hidden
+                }
+            },
+            byTouch = true
+        )
+
+        leftEyeTrackColumn = createWristMenuColumn(toggleHedgehogsBtn, calibrateButton, name = "Eye Tracking Menu")
     }
 
     /** Toggles the VR rendering off, cleans up eyetracking-related scene objects and removes the light tetrahedron
