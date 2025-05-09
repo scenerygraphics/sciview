@@ -1816,11 +1816,24 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         return renderer
     }
 
+    private var originalFOV = camera?.fov
+
     /**
      * Enable VR rendering
      */
     fun toggleVRRendering() {
         var renderer = renderer ?: return
+
+        // Save camera's original settings if we switch from 2D to VR
+        if (!vrActive) {
+            originalFOV = camera?.fov
+        }
+
+        // If turning off VR, store the controls state before deactivating
+        if (vrActive) {
+            // We're about to turn off VR
+            controls.stashControls()
+        }
 
         vrActive = !vrActive
         val cam = scene.activeObserver as? DetachedHeadCamera ?: return
@@ -1857,6 +1870,15 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             // Convert back to normal Camera
             logger.info("Shutting down VR")
             cam.tracker = null
+
+            // Reset FOV to original value when turning off VR
+            originalFOV?.let { camera?.fov = it }
+
+            // Restore controls after turning off VR
+            controls.restoreControls()
+
+            // Reset input controls to ensure proper camera behavior
+            inputSetup()
         }
 
         // Enable push mode if VR is inactive, and the other way round
