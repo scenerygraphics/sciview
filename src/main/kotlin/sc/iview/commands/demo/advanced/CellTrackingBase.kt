@@ -9,9 +9,7 @@ import graphics.scenery.controls.TrackerRole
 import graphics.scenery.controls.behaviours.VRTouch
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
-import graphics.scenery.ui.Button
-import graphics.scenery.ui.Column
-import graphics.scenery.ui.Gui3DElement
+import graphics.scenery.ui.*
 import graphics.scenery.utils.MaybeIntersects
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.minus
@@ -34,8 +32,6 @@ import java.io.FileWriter
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.TimeSource
 
 /**
  * Base class for different VR cell tracking purposes. It includes functionality to add spines and edgehogs,
@@ -79,7 +75,10 @@ open class CellTrackingBase(
      * Set the first boolean to true if the coordinates are in world space. The bridge will convert them to Mastodon coords.
      * The Spot defines whether to start with an existing spot, so the lambda will use that as starting point. */
     var trackCreationCallback: ((List<Pair<Vector3f, SpineGraphVertex>>, Boolean, Spot?) -> Unit)? = null
-    var spotCreateDeleteCallback: ((tp: Int, sciviewPos: Vector3f) -> Unit)? = null
+    /** Passes the current time point and the cursor position to the bridge to either create a new spot
+     * or delete an existing spot if there is a spot selected.
+     * The deleteBranch flag indicates whether we want to delete the whole branch or just a spot.  */
+    var spotCreateDeleteCallback: ((tp: Int, sciviewPos: Vector3f, deleteBranch: Boolean) -> Unit)? = null
     /** Select a spot based on the controller tip's position, current time point and a multiple of the radius
      * in which a selection event is counted as valid. */
     var spotSelectionCallback: ((sciviewPos: Vector3f, tp: Int, radiusFactor: Float) -> Pair<Spot?, Boolean>)? = null
@@ -98,7 +97,7 @@ open class CellTrackingBase(
     var rebuildGeometryCallback: (() -> Unit)? = null
 
     var stageSpotsCallback: (() -> Unit)? = null
-    var predictSpotsCallback: (() -> Unit)? = null
+    var predictSpotsCallback: ((all: Boolean) -> Unit)? = null
     var trainSpotsCallback: (() -> Unit)? = null
     var neighborLinkingCallback: (() -> Unit)? = null
     // TODO add train flow functionality
@@ -112,7 +111,7 @@ open class CellTrackingBase(
 
     enum class PlaybackDirection { Forward, Backward }
 
-    enum class ElephantMode { stageSpots, trainAll, predict, NNLinking }
+    enum class ElephantMode { StageSpots, TrainAll, PredictTP, PredictAll, NNLinking }
 
     private val tools = mapOf("Create" to "addSpotWithController",
         "Edit" to "selectSpotWithController",
@@ -194,7 +193,7 @@ open class CellTrackingBase(
                     } else if (device.role == TrackerRole.LeftHand) {
                         device.model?.name = "leftHand"
                         setupElephantMenu()
-                        setupUndoMenu()
+                        setupGeneralMenu()
 //                        cycleLeftMenus()
                     }
                 }
@@ -249,7 +248,11 @@ open class CellTrackingBase(
 //    }
 
     /** Attaches a column of [Gui3DElement]s to the left VR controller and adds the column to [leftMenuList]. */
-    private fun createGenericWristMenu(vararg elements: Gui3DElement, debug: Boolean = false): Column {
+    protected fun createWristMenuColumn(
+        vararg elements: Gui3DElement,
+        debug: Boolean = false,
+        name: String = "Menu"
+    ): Column {
         val column = Column(*elements, centerVertically = true, centerHorizontally = true)
         column.ifSpatial {
             scale = Vector3f(0.05f)
@@ -267,6 +270,7 @@ open class CellTrackingBase(
                 }
             }
         }
+        column.name = name
         column.pack()
         leftMenuList.add(column)
         return column
@@ -341,139 +345,62 @@ open class CellTrackingBase(
         if (controllerTrackingActive) {
             logger.info("Ending controller tracking now and sending ${controllerTrackList.size} spots to Mastodon to chew on.")
             controllerTrackingActive = false
-//            resetTrackingCallback?.invoke()
             trackCreationCallback?.invoke(controllerTrackList, true, startWithExistingSpot)
             controllerTrackList.clear()
         }
     }
 
-//    val deleteSpotBehavior = ClickBehaviour { _, _ ->
-//        spotDeletionCallback?.invoke()
-//        rebuildGeometryCallback?.invoke()
-//    }
-
-//    val resetControllerTrackBehavior = ClickBehaviour { _, _ ->
-//        resetTrackingCallback?.invoke()
-//    }
-
-//    private fun updateLeftToolButtonActions(pressed: String) {
-//        leftToolColumn?.let {
-//            it.children.filterIsInstance<Button>().forEach {
-//                // force release all buttons that are currently not selected
-//                if (it.text != pressed) {
-//                    it.release(true)
-//                }
-//            }
-//        }
-//        // remove the currently selected tool
-//        unregisterCurrentTool()
-//        // add the currently selected tool as behavior
-//        val behavior = when (pressed) {
-//            "Create" -> addSpotWithController
-//            "Edit" -> selectSpotWithController
-//            "Track" -> trackCellsWithController
-//            else -> null
-//        }
-//        currentTool = pressed
-//        behavior?.let {
-//            hmd.addBehaviour(tools[pressed]!!, behavior)
-//            hmd.addKeyBinding(tools[pressed]!!, TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
-//        }
-//    }
-
-//    private fun selectCreateButton() {
-//        logger.info("Selected the spot creation tool")
-//        updateLeftToolButtonActions("Create")
-//        tip.material { diffuse = Vector3f(0.2f, 1f, 0.15f) }
-//    }
-//
-//    private fun selectEditButton() {
-//        logger.info("Selected the spot editing tool")
-//        updateLeftToolButtonActions("Edit")
-//        tip.material { diffuse = Vector3f(0.15f, 0.2f, 1f) }
-//        hmd.addBehaviour("DeleteSpot", deleteSpotBehavior)
-//        hmd.addKeyBinding("DeleteSpot", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.A)
-//    }
-//
-//    private fun selectTrackButton() {
-//        logger.info("Selected the cell tracking tool")
-//        updateLeftToolButtonActions("Track")
-//        tip.material { diffuse = Vector3f(1f, 1f, 0.2f) }
-//        resetTrackingCallback?.invoke()
-//        hmd.addBehaviour("ResetTrack", resetControllerTrackBehavior)
-//        hmd.addKeyBinding("ResetTrack", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.A)
-//        volume.goToLastTimepoint()
-//    }
-
-//    private fun unregisterCurrentTool() {
-//
-//        fun maybeRemoveBehavior(s: String) {
-//            val b = hmd.getBehaviour(s)
-//            if (b != null) {
-//                hmd.removeBehaviour(s)
-//                hmd.removeKeyBinding(s)
-//                logger.info("unregistered $s")
-//            }
-//        }
-//
-//        tools[currentTool]?.let {
-//            maybeRemoveBehavior(it)
-//        }
-//        // Remove additional behaviors that might have been added
-//        when (currentTool) {
-//            "Edit" -> maybeRemoveBehavior("DeleteSpot")
-//            "Track" -> maybeRemoveBehavior("ResetTrack")
-//        }
-//    }
-
     fun setupElephantMenu() {
         val unpressedColor = Vector3f(0.81f, 0.81f, 1f)
-        val pressedColor = Vector3f(0.54f, 0.44f, 1f)
+        val touchingColor = Vector3f(0.7f, 0.65f, 1f)
+        val pressedColor = Vector3f(0.54f, 0.44f, 0.96f)
         val stageSpotsButton = Button(
             "Stage all",
-            command = { updateElephantActions(ElephantMode.stageSpots) }, byTouch = true, depressDelay = 500,
-            color = unpressedColor, pressedColor = pressedColor)
+            command = { updateElephantActions(ElephantMode.StageSpots) }, byTouch = true, depressDelay = 500,
+            color = unpressedColor, touchingColor = touchingColor, pressedColor = pressedColor)
         val trainAllButton = Button(
             "Train All TPs",
-            command = { updateElephantActions(ElephantMode.trainAll) }, byTouch = true, depressDelay = 500,
-            color = unpressedColor, pressedColor = pressedColor)
+            command = { updateElephantActions(ElephantMode.TrainAll) }, byTouch = true, depressDelay = 500,
+            color = unpressedColor, touchingColor = touchingColor, pressedColor = pressedColor)
         val predictAllButton = Button(
-            "Predict this TP",
-            command = {updateElephantActions(ElephantMode.predict) }, byTouch = true, depressDelay = 500,
-            color = unpressedColor, pressedColor = pressedColor)
+            "Predict All",
+            command = { updateElephantActions(ElephantMode.PredictAll) }, byTouch = true, depressDelay = 500,
+            color = unpressedColor, touchingColor = touchingColor, pressedColor = pressedColor)
+        val predictTPButton = Button(
+            "Predict TP",
+            command = { updateElephantActions(ElephantMode.PredictTP) }, byTouch = true, depressDelay = 500,
+            color = unpressedColor, touchingColor = touchingColor, pressedColor = pressedColor)
         val linkingButton = Button(
             "NN linking",
-            command = {updateElephantActions(ElephantMode.NNLinking) }, byTouch = true, depressDelay = 500,
-            color = unpressedColor, pressedColor = pressedColor)
+            command = { updateElephantActions(ElephantMode.NNLinking) }, byTouch = true, depressDelay = 500,
+            color = unpressedColor, touchingColor = touchingColor, pressedColor = pressedColor)
 
         leftElephantColumn =
-            createGenericWristMenu(stageSpotsButton)
-        leftElephantColumn?.name = "Left Elephant Menu"
+            createWristMenuColumn(stageSpotsButton, name = "Stage Menu")
         leftElephantColumn?.visible = false
-        leftColumnPredict = createGenericWristMenu(predictAllButton)
+        leftColumnPredict = createWristMenuColumn(trainAllButton, predictTPButton, predictAllButton, name = "Train/Predict Menu")
         leftColumnPredict?.visible = false
-        leftColumnTrain = createGenericWristMenu(trainAllButton)
-        leftColumnTrain?.visible = false
-        leftColumnLink = createGenericWristMenu(linkingButton)
+        leftColumnLink = createWristMenuColumn(linkingButton, name = "Linking Menu")
         leftColumnLink?.visible = false
     }
 
-    var lastButtonTime = System.nanoTime()
+    var lastButtonTime = System.currentTimeMillis()
 
     /** Ensure that only a single Elephant action is triggered at a time */
     private fun updateElephantActions(mode: ElephantMode) {
-        val buttonTime = System.nanoTime()
+        val buttonTime = System.currentTimeMillis()
 
-        if ((buttonTime - lastButtonTime) > 10E9) {
+        if ((buttonTime - lastButtonTime) > 1000) {
 
             thread {
 //                leftElephantColumn?.children?.forEach {
 //                    (it as Button).enabled.set(false)
 //                }
                 when (mode) {
-                    ElephantMode.stageSpots -> stageSpotsCallback?.invoke()
-                    ElephantMode.trainAll -> trainSpotsCallback?.invoke()
-                    ElephantMode.predict -> predictSpotsCallback?.invoke()
+                    ElephantMode.StageSpots -> stageSpotsCallback?.invoke()
+                    ElephantMode.TrainAll -> trainSpotsCallback?.invoke()
+                    ElephantMode.PredictTP -> predictSpotsCallback?.invoke(false)
+                    ElephantMode.PredictAll -> predictSpotsCallback?.invoke(true)
                     ElephantMode.NNLinking -> neighborLinkingCallback?.invoke()
                 }
 //                Thread.sleep(500)
@@ -482,10 +409,9 @@ open class CellTrackingBase(
 //                    b.enabled.set(true)
 //                    b.release(true)
 //                }
-                logger.info("We locked the buttons for ${(buttonTime-lastButtonTime)/1e6} ms ")
+                logger.info("We locked the buttons for ${(buttonTime-lastButtonTime)} ms ")
                 lastButtonTime = buttonTime
             }
-
 
         } else {
             sciview.camera?.showMessage("Have some patience!", duration = 1500, distance = 2f, size = 0.2f, centered = true)
@@ -493,28 +419,96 @@ open class CellTrackingBase(
 
     }
 
-    fun setupUndoMenu() {
+    fun setupGeneralMenu() {
+
+        val cam = sciview.camera ?: throw IllegalStateException("Could not find camera")
+
+        val color = Vector3f(0.8f)
+        val pressedColor = Vector3f(0.95f, 0.35f, 0.25f)
+        val touchingColor = Vector3f(0.7f, 0.55f, 0.55f)
+
         val undoButton = Button(
             "Undo",
-            command = {mastodonUndoCallback?.invoke()}, byTouch = true, depressDelay = 400,
-            color = Vector3f(0.8f), pressedColor = Vector3f(0.95f, 0.35f, 0.25f)
+            command = { mastodonUndoCallback?.invoke() }, byTouch = true, depressDelay = 250,
+            color = color, pressedColor = pressedColor, touchingColor = touchingColor
         )
-        val toggleTrackingPreviewBtn = Button(
-            "Toggle Preview",
-            command = {
+        val toggleTrackingPreviewBtn = ToggleButton(
+            "Preview Off", "Preview On", command = {
                 enableTrackingPreview = !enableTrackingPreview
                 toggleTrackingPreviewCallback?.invoke(enableTrackingPreview)
-            }, byTouch = true, depressDelay = 400,
-            color = Vector3f(0.8f), pressedColor = Vector3f(0.95f, 0.35f, 0.25f)
+            }, byTouch = true,
+            color = color,
+            touchingColor = Vector3f(0.67f, 0.9f, 0.63f),
+            pressedColor = Vector3f(0.35f, 0.95f, 0.25f)
         )
-        leftUndoMenu = createGenericWristMenu(undoButton, toggleTrackingPreviewBtn)
-        leftUndoMenu?.name = "Left Undo Menu"
+        val togglePlaybackDirBtn = ToggleButton(
+            textFalse = "BW", textTrue = "FW", command = {
+                direction = if (direction == PlaybackDirection.Forward) {
+                    PlaybackDirection.Backward
+                } else {
+                    PlaybackDirection.Forward
+                }
+            }, byTouch = true,
+            color = Vector3f(0.52f, 0.87f, 0.86f),
+            touchingColor = color,
+            pressedColor = Vector3f(0.84f, 0.87f, 0.52f)
+        )
+        val playSlowerBtn = Button(
+            "<", command = {
+                volumesPerSecond = maxOf(volumesPerSecond - 1f, 1f)
+                cam.showMessage(
+                    "Speed: ${"%.0f".format(volumesPerSecond)} vol/s",
+                    distance = 1.2f, size = 0.2f, centered = true
+                )
+            }, byTouch = true, depressDelay = 250,
+            color = color, pressedColor = pressedColor, touchingColor = touchingColor
+        )
+        val playFasterBtn = Button(
+            ">", command = {
+                volumesPerSecond = minOf(volumesPerSecond + 1f, 20f)
+                cam.showMessage(
+                    "Speed: ${"%.0f".format(volumesPerSecond)} vol/s",
+                    distance = 1.2f, size = 0.2f, centered = true
+                )
+            }, byTouch = true, depressDelay = 250,
+            color = color, pressedColor = pressedColor, touchingColor = touchingColor
+        )
+        val goToLastBtn = Button(
+            ">|", command = {
+                playing = false
+                volume.goToLastTimepoint()
+                notifyObservers(volume.currentTimepoint)
+                cam.showMessage("Jumped to timepoint ${volume.currentTimepoint}.",
+                    distance = 1.2f, size = 0.2f, centered = true)
+            }, byTouch = true, depressDelay = 250,
+            color = color, pressedColor = pressedColor, touchingColor = touchingColor
+        )
+        val goToFirstBtn = Button(
+            "|<", command = {
+                playing = false
+                volume.goToFirstTimepoint()
+                notifyObservers(volume.currentTimepoint)
+                cam.showMessage("Jumped to timepoint ${volume.currentTimepoint}.",
+                    distance = 1.2f, size = 0.2f, centered = true)
+            }, byTouch = true, depressDelay = 250,
+            color = color, pressedColor = pressedColor, touchingColor = touchingColor
+        )
+
+        val timeControlRow = Row(goToFirstBtn, playSlowerBtn, togglePlaybackDirBtn, playFasterBtn, goToLastBtn)
+
+        leftUndoMenu = createWristMenuColumn(undoButton, name = "Left Undo Menu")
+        leftUndoMenu?.visible = false
+        val previewMenu = createWristMenuColumn(toggleTrackingPreviewBtn, name = "Preview Menu")
+        previewMenu.visible = false
+        val timeMenu = createWristMenuColumn(timeControlRow, name = "Time Menu")
+        timeMenu.visible = false
     }
+
 
     private fun cycleLeftMenus() {
         leftMenuList.forEach { it.visible = false }
         leftMenuIndex = (leftMenuIndex + 1) % leftMenuList.size
-        logger.info("trying to cycle to ${leftMenuList[leftMenuIndex].name}")
+        logger.info("Cycling to ${leftMenuList[leftMenuIndex].name}")
         leftMenuList[leftMenuIndex].visible = true
     }
 
@@ -708,15 +702,32 @@ open class CellTrackingBase(
         hmd.addBehaviour("controller tracking", trackCellsWithController)
         hmd.addKeyBinding("controller tracking", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
 
-        val spotAddDeleteResetBehavior = ClickBehaviour {_, _ ->
-            if (controllerTrackingActive) {
-                endControllerTracking()
-            } else {
-                val p = getCursorPosition()
-                logger.debug("Got cursor position: $p")
-                spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p)
-            }
-        }
+        /** Several behaviors mapped per default to the right menu button. If controller tracking is active,
+         * end the tracking. If not, clicking will either create or delete a spot, depending on whether the user
+         * previously selected a spot. The double tap behavior deletes the whole connected branch. */
+        val spotAddDeleteResetBehavior = ConfirmableClickBehaviour(
+            armedAction = { timeout ->
+                if (controllerTrackingActive) {
+                    endControllerTracking()
+                } else {
+                    val p = getCursorPosition()
+                    logger.debug("Got cursor position: $p")
+                    spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, false)
+                    true // we need to return something for this behavior
+                }
+            },
+            confirmAction = {
+                if (controllerTrackingActive) {
+                    endControllerTracking()
+                } else {
+                    val p = getCursorPosition()
+                    logger.debug("Got cursor position: $p")
+                    spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, true)
+                    true // we need to return something for this behavior
+                }
+            },
+            timeout = 600
+        )
 
         hmd.addBehaviour("add/delete spot", spotAddDeleteResetBehavior)
         hmd.addKeyBinding("add/delete spot", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Menu)
