@@ -9,8 +9,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 /** Keep track of which VR buttons are currently being pressed. This is useful if you want to assign the same button
  * to different behaviors with different combinations. This class helps with managing the button states.
  * Buttons to track first need to be registered with [registerButtonConfig]. Call [pressButton] and [releaseButton]
- * in your behavior init/end methods. */
-class MultiVRButtonStateManager() {
+ * in your behavior init/end methods. You can check if both hands are in use with [isTwoHandedActive] or if a specific
+ * button is currently pressed with [isButtonPressed]. */
+class MultiVRButtonStateManager {
     data class ButtonConfig (
         val button: OpenVRHMD.OpenVRButton,
         val trackerRole: TrackerRole
@@ -44,11 +45,21 @@ class MultiVRButtonStateManager() {
         return true
     }
 
+    /** Overload function that takes a button config instead of separate button and trackerrole inputs. */
+    fun pressButton(buttonConfig: ButtonConfig) {
+        pressButton(buttonConfig.button, buttonConfig.trackerRole)
+    }
+
     /** Remove a button from the list of pressed buttons. */
     fun releaseButton(button: OpenVRHMD.OpenVRButton, role: TrackerRole) {
         val config = ButtonConfig(button, role)
         activeButtons[config] = false
         updateTwoHandedState()
+    }
+
+    /** Overload function that takes a button config instead of separate button and trackerrole inputs. */
+    fun releaseButton(buttonConfig: ButtonConfig) {
+        releaseButton(buttonConfig.button, buttonConfig.trackerRole)
     }
 
     private fun updateTwoHandedState() {
@@ -71,5 +82,10 @@ class MultiVRButtonStateManager() {
     /** Check if a button is currently being pressed. */
     fun isButtonPressed(button: OpenVRHMD.OpenVRButton, role: TrackerRole): Boolean {
         return activeButtons[ButtonConfig(button, role)] ?: false
+    }
+
+    /** Retrieve a list of currently registered buttons. */
+    fun getRegisteredButtons(): MutableList<ButtonConfig> {
+        return btnConfig
     }
 }
