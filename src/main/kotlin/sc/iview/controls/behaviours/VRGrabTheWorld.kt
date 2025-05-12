@@ -15,13 +15,14 @@ import org.scijava.ui.behaviour.DragBehaviour
 
 /** Move yourself (the scene camera) by pressing a VR button.
  * The fastest way to attach the behavior is by using [createAndSet].
+ * You can pass a [grabButtonmanager] to handle multiple assignments per button.
  * @author Jan Tiemann
  * @author Samuel Pantze */
 class VRGrabTheWorld (
     @Suppress("UNUSED_PARAMETER") name: String,
     controllerHitbox: Node,
     private val cam: Spatial,
-    val buttonmanager: MultiVRButtonStateManager,
+    val grabButtonmanager: MultiVRButtonStateManager? = null,
     val button: OpenVRHMD.OpenVRButton,
     val trackerRole: TrackerRole,
     val multiplier: Float
@@ -34,14 +35,14 @@ class VRGrabTheWorld (
 
 
     override fun init(x: Int, y: Int) {
-        buttonmanager.pressButton(button, trackerRole)
+        grabButtonmanager?.pressButton(button, trackerRole)
         camDiff = controllerSpatial.worldPosition() - cam.position
     }
 
     override fun drag(x: Int, y: Int) {
         // Only drag when no other grab button is currently active
         // to prevent simultaneous behaviors with two-handed gestures
-        if (!buttonmanager.isTwoHandedActive()) {
+        if (grabButtonmanager?.isTwoHandedActive() != true) {
             //grabbed world
             val newCamDiff = controllerSpatial.worldPosition() - cam.position
             val diffTranslation = camDiff - newCamDiff //reversed
@@ -51,7 +52,7 @@ class VRGrabTheWorld (
     }
 
     override fun end(x: Int, y: Int) {
-        buttonmanager.releaseButton(button, trackerRole)
+        grabButtonmanager?.releaseButton(button, trackerRole)
     }
 
     companion object {
@@ -64,7 +65,7 @@ class VRGrabTheWorld (
             hmd: OpenVRHMD,
             buttons: List<OpenVRHMD.OpenVRButton>,
             controllerSide: List<TrackerRole>,
-            buttonmanager: MultiVRButtonStateManager,
+            buttonmanager: MultiVRButtonStateManager? = null,
             multiplier: Float = 1f
         ) {
             hmd.events.onDeviceConnect.add { _, device, _ ->
@@ -82,7 +83,7 @@ class VRGrabTheWorld (
                                     device.role,
                                     multiplier
                                 )
-                                buttonmanager.registerButtonConfig(button, device.role)
+                                buttonmanager?.registerButtonConfig(button, device.role)
                                 hmd.addBehaviour(name, grabBehaviour)
                                 hmd.addKeyBinding(name, device.role, button)
                             }
