@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Buttons to track first need to be registered with [registerButtonConfig]. Call [pressButton] and [releaseButton]
  * in your behavior init/end methods. You can check if both hands are in use with [isTwoHandedActive] or if a specific
  * button is currently pressed with [isButtonPressed]. */
-class MultiVRButtonStateManager {
+class MultiButtonManager {
     data class ButtonConfig (
         val button: OpenVRHMD.OpenVRButton,
         val trackerRole: TrackerRole
@@ -19,61 +19,55 @@ class MultiVRButtonStateManager {
 
     val logger by lazyLogger()
 
-    /** List of currently pressed buttons, stored as [ButtonConfig] and whether the button is pressed right now. */
-    private val activeButtons = ConcurrentHashMap<ButtonConfig, Boolean>()
+    /** List of registered buttons, stored as [ButtonConfig] and whether the button is pressed right now. */
+    private val buttons = ConcurrentHashMap<ButtonConfig, Boolean>()
     private val twoHandedActive = AtomicBoolean(false)
-    private val btnConfig: MutableList<ButtonConfig> = mutableListOf()
 
     init {
-        btnConfig.forEach { config ->
-            activeButtons[config] = false
+        buttons.forEach { (config, value) ->
+            buttons[config] = false
         }
     }
 
     /** Add a new button configuration that the manager will keep track of. */
     fun registerButtonConfig(button: OpenVRHMD.OpenVRButton, trackerRole: TrackerRole) {
         logger.debug("Registered new button config: $button, $trackerRole")
-        btnConfig.add(ButtonConfig(button, trackerRole))
+        buttons[ButtonConfig(button, trackerRole)] = false
     }
 
     /** Add a button to the list of pressed buttons. */
     fun pressButton(button: OpenVRHMD.OpenVRButton, role: TrackerRole): Boolean {
         val config = ButtonConfig(button, role)
-        if (!btnConfig.contains(config)) { return false }
-        activeButtons[config] = true
+        if (!buttons.containsKey(config)) { return false }
+        buttons[config] = true
         updateTwoHandedState()
         return true
     }
 
     /** Overload function that takes a button config instead of separate button and trackerrole inputs. */
-    fun pressButton(buttonConfig: ButtonConfig) {
-        pressButton(buttonConfig.button, buttonConfig.trackerRole)
+    fun pressButton(buttonConfig: ButtonConfig): Boolean {
+        return pressButton(buttonConfig.button, buttonConfig.trackerRole)
     }
 
     /** Remove a button from the list of pressed buttons. */
-    fun releaseButton(button: OpenVRHMD.OpenVRButton, role: TrackerRole) {
+    fun releaseButton(button: OpenVRHMD.OpenVRButton, role: TrackerRole): Boolean {
         val config = ButtonConfig(button, role)
-        activeButtons[config] = false
+        if (!buttons.containsKey(config)) { return false }
+        buttons[config] = false
         updateTwoHandedState()
+        return true
     }
 
     /** Overload function that takes a button config instead of separate button and trackerrole inputs. */
-    fun releaseButton(buttonConfig: ButtonConfig) {
-        releaseButton(buttonConfig.button, buttonConfig.trackerRole)
+    fun releaseButton(buttonConfig: ButtonConfig): Boolean {
+        return releaseButton(buttonConfig.button, buttonConfig.trackerRole)
     }
 
     private fun updateTwoHandedState() {
-        // Check each button type to see if it's pressed on both hands
-        val anyMatchingButtonsPressed = btnConfig
-            .map { it.button }
-            .distinct()
-            .any { button ->
-                val leftPressed = activeButtons[ButtonConfig(button, TrackerRole.LeftHand)] ?: false
-                val rightPressed = activeButtons[ButtonConfig(button, TrackerRole.RightHand)] ?: false
-                leftPressed && rightPressed
-            }
-
-        twoHandedActive.set(anyMatchingButtonsPressed)
+        // Check if any buttons are pressed on both hands
+        val leftPressed = buttons.any { it.key.trackerRole == TrackerRole.LeftHand && it.value }
+        val rightPressed = buttons.any { it.key.trackerRole == TrackerRole.RightHand && it.value }
+        twoHandedActive.set(leftPressed && rightPressed)
     }
 
     /** Returns true when the same button is currently pressed on both VR controllers. */
@@ -81,11 +75,11 @@ class MultiVRButtonStateManager {
 
     /** Check if a button is currently being pressed. */
     fun isButtonPressed(button: OpenVRHMD.OpenVRButton, role: TrackerRole): Boolean {
-        return activeButtons[ButtonConfig(button, role)] ?: false
+        return buttons[ButtonConfig(button, role)] ?: false
     }
 
     /** Retrieve a list of currently registered buttons. */
-    fun getRegisteredButtons(): MutableList<ButtonConfig> {
-        return btnConfig
+    fun getRegisteredButtons(): ConcurrentHashMap<ButtonConfig, Boolean> {
+        return buttons
     }
 }
