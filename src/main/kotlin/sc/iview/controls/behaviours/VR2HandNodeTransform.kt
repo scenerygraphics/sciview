@@ -4,13 +4,13 @@ import graphics.scenery.Node
 import graphics.scenery.Scene
 import graphics.scenery.attribute.spatial.Spatial
 import graphics.scenery.controls.OpenVRHMD
+import graphics.scenery.controls.TrackerRole
 import graphics.scenery.controls.behaviours.VRScale
 import graphics.scenery.controls.behaviours.VRTwoHandDragBehavior
 import graphics.scenery.controls.behaviours.VRTwoHandDragOffhand
 import graphics.scenery.utils.extensions.minus
 import graphics.scenery.utils.extensions.plus
 import graphics.scenery.utils.extensions.times
-import org.joml.Matrix4f
 import org.joml.Quaternionf
 import org.joml.Vector3f
 import sc.iview.controls.behaviours.VRGrabTheWorld.Companion.createAndSet
@@ -32,8 +32,21 @@ class VR2HandNodeTransform(
     val positionLocked: Boolean = false,
     val lockYaxis: Boolean = true,
     val target: Node,
-    val onEndCallback: (() -> Unit)? = null
+    private val onEndCallback: (() -> Unit)? = null,
+    private val resetRotationBtnManager: MultiButtonManager? = null,
+    private val resetRotationButton: MultiButtonManager.ButtonConfig? = null,
 ) : VRTwoHandDragBehavior(name, controller, offhand) {
+
+    override fun init(x: Int, y: Int) {
+        super.init(x, y)
+        // Find the button that doesn't lock the y Axis and indicate that it is now pressed
+        val transformBtn =
+            resetRotationBtnManager?.getRegisteredButtons()
+                ?.filter { it.key != resetRotationButton }?.map { it.key }?.firstOrNull()
+        if (transformBtn != null) {
+            resetRotationBtnManager?.pressButton(transformBtn)
+        }
+    }
 
     override fun dragDelta(
         currentPositionMain: Vector3f,
@@ -45,27 +58,31 @@ class VR2HandNodeTransform(
         val scaleDelta =
             VRScale.getScaleDelta(currentPositionMain, currentPositionOff, lastPositionMain, lastPositionOff)
 
-        val newRein = (currentPositionMain - currentPositionOff).normalize()
-        val oldRein = (lastPositionMain - lastPositionOff).normalize()
+        val currentDirection = (currentPositionMain - currentPositionOff).normalize()
+        val lastDirection = (lastPositionMain - lastPositionOff).normalize()
         if (lockYaxis) {
-            oldRein.y = 0f
-            newRein.y = 0f
+            lastDirection.y = 0f
+            currentDirection.y = 0f
         }
 
-        val newReinRotation = Quaternionf().lookAlong(newRein, Vector3f(0f, 1f, 0f))
-        val oldReinRotation = Quaternionf().lookAlong(oldRein, Vector3f(0f, 1f, 0f))
-        val diffRotation = oldReinRotation.mul(newReinRotation.invert())
+        // Rotation implementation: https://discussions.unity.com/t/two-hand-grabbing-of-objects-in-virtual-reality/219972
 
         target.let {
             if (!rotationLocked) {
                 it.ifSpatial {
-                    rotation.mul(diffRotation)
+                    val rotationDelta = Quaternionf().rotationTo(lastDirection, currentDirection)
+                    if (resetRotationBtnManager?.isTwoHandedActive() == true) {
+                        // Reset the rotation when the
+                        rotation = Quaternionf()
+                    } else {
+                        // Rotate node with respect to the world space delta
+                        rotation = Quaternionf(rotationDelta).mul(Quaternionf(rotation))
+                    }
                 }
             }
             if (!scaleLocked) {
                 target.ifSpatial {
                     scale *= scaleDelta
-                    needsUpdate = true
                 }
             }
             if (!positionLocked) {
@@ -81,6 +98,11 @@ class VR2HandNodeTransform(
     override fun end(x: Int, y: Int) {
         super.end(x, y)
         onEndCallback?.invoke()
+        // Find the button that doesn't lock the y Axis and indicate that it is now released
+        val transformBtn = resetRotationBtnManager?.getRegisteredButtons()?.filter { it.key != resetRotationButton }?.map {it.key}?.firstOrNull()
+        if (transformBtn != null) {
+            resetRotationBtnManager?.releaseButton(transformBtn)
+        }
     }
 
     companion object {
@@ -96,11 +118,18 @@ class VR2HandNodeTransform(
             positionLocked: Boolean = false,
             lockYaxis: Boolean = true,
             target: Node,
-            onEndCallback: (() -> Unit)? = null
+            onEndCallback: (() -> Unit)? = null,
+            resetRotationBtnManager: MultiButtonManager? = null,
+            resetRotationButton: MultiButtonManager.ButtonConfig? = null,
         ): CompletableFuture<VR2HandNodeTransform> {
             @Suppress("UNCHECKED_CAST") return createAndSet(
                 hmd, button
             ) { controller: Spatial, offhand: VRTwoHandDragOffhand ->
+                // Assign the yLock button and the right grab button to the button manager to handle multi-button events
+                resetRotationButton?.let {
+                    resetRotationBtnManager?.registerButtonConfig(it.button, it.trackerRole)
+                }
+                resetRotationBtnManager?.registerButtonConfig(button, TrackerRole.RightHand)
                 VR2HandNodeTransform(
                     "Scaling",
                     controller,
@@ -111,7 +140,9 @@ class VR2HandNodeTransform(
                     positionLocked,
                     lockYaxis,
                     target,
-                    onEndCallback
+                    onEndCallback,
+                    resetRotationBtnManager,
+                    resetRotationButton
                 )
             } as CompletableFuture<VR2HandNodeTransform>
         }
