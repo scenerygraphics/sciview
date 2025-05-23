@@ -8,7 +8,7 @@ import org.joml.Vector3f
 import org.scijava.ui.behaviour.DragBehaviour
 
 class MoveInstanceVR(
-    val buttonmanager: MultiVRButtonStateManager,
+    val buttonmanager: MultiButtonManager,
     val button: OpenVRHMD.OpenVRButton,
     val trackerRole: TrackerRole,
     val getTipPosition: () -> Vector3f,
@@ -49,7 +49,7 @@ class MoveInstanceVR(
             hmd: OpenVRHMD,
             buttons: List<OpenVRHMD.OpenVRButton>,
             controllerSide: List<TrackerRole>,
-            buttonmanager: MultiVRButtonStateManager,
+            buttonmanager: MultiButtonManager,
             getTipPosition: () -> Vector3f,
             spotMoveInitCallback: ((Vector3f) -> Unit)? = null,
             spotMoveDragCallback: ((Vector3f) -> Unit)? = null,

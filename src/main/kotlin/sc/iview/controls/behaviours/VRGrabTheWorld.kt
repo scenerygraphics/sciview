@@ -22,15 +22,15 @@ class VRGrabTheWorld (
     @Suppress("UNUSED_PARAMETER") name: String,
     controllerHitbox: Node,
     private val cam: Spatial,
-    val grabButtonmanager: MultiVRButtonStateManager? = null,
+    private val grabButtonmanager: MultiButtonManager? = null,
     val button: OpenVRHMD.OpenVRButton,
-    val trackerRole: TrackerRole,
-    val multiplier: Float
+    private val trackerRole: TrackerRole,
+    private val multiplier: Float
 ) : DragBehaviour {
 
-    var camDiff = Vector3f()
+    private var camDiff = Vector3f()
 
-    protected val controllerSpatial: Spatial = controllerHitbox.spatialOrNull()
+    private val controllerSpatial: Spatial = controllerHitbox.spatialOrNull()
         ?: throw IllegalArgumentException("controller hitbox needs a spatial attribute")
 
 
@@ -65,7 +65,7 @@ class VRGrabTheWorld (
             hmd: OpenVRHMD,
             buttons: List<OpenVRHMD.OpenVRButton>,
             controllerSide: List<TrackerRole>,
-            buttonmanager: MultiVRButtonStateManager? = null,
+            buttonManager: MultiButtonManager? = null,
             multiplier: Float = 1f
         ) {
             hmd.events.onDeviceConnect.add { _, device, _ ->
@@ -78,12 +78,12 @@ class VRGrabTheWorld (
                                     name,
                                     controller.children.first(),
                                     scene.findObserver()!!.spatial(),
-                                    buttonmanager,
+                                    buttonManager,
                                     button,
                                     device.role,
                                     multiplier
                                 )
-                                buttonmanager?.registerButtonConfig(button, device.role)
+                                buttonManager?.registerButtonConfig(button, device.role)
                                 hmd.addBehaviour(name, grabBehaviour)
                                 hmd.addKeyBinding(name, device.role, button)
                             }

@@ -21,10 +21,11 @@ import graphics.scenery.volumes.Volume
 import org.joml.*
 import org.mastodon.mamut.model.Spot
 import org.scijava.ui.behaviour.ClickBehaviour
+import org.scijava.ui.behaviour.DragBehaviour
 import sc.iview.SciView
 import sc.iview.commands.demo.advanced.HedgehogAnalysis.SpineGraphVertex
 import sc.iview.controls.behaviours.MoveInstanceVR
-import sc.iview.controls.behaviours.MultiVRButtonStateManager
+import sc.iview.controls.behaviours.MultiButtonManager
 import sc.iview.controls.behaviours.VR2HandNodeTransform
 import sc.iview.controls.behaviours.VRGrabTheWorld
 import java.io.BufferedWriter
@@ -138,7 +139,8 @@ open class CellTrackingBase(
     val leftMenuList = mutableListOf<Column>()
     var leftMenuIndex = 0
 
-    val buttonManager = MultiVRButtonStateManager()
+    val grabButtonManager = MultiButtonManager()
+    val resetRotationBtnManager = MultiButtonManager()
 
     private val observers = mutableListOf<TimepointObserver>()
 
@@ -260,7 +262,7 @@ open class CellTrackingBase(
             rotation = Quaternionf().rotationXYZ(-1.57f, 1.57f, 0f)
         }
         leftVRController?.model?.let {
-            sciview.addNode(column, parent = it)
+            sciview.addNode(column, parent = it, activePublish = false)
             if (debug) {
                 column.children.forEach { child ->
                     val bb = BoundingGrid()
@@ -508,7 +510,7 @@ open class CellTrackingBase(
     private fun cycleLeftMenus() {
         leftMenuList.forEach { it.visible = false }
         leftMenuIndex = (leftMenuIndex + 1) % leftMenuList.size
-        logger.info("Cycling to ${leftMenuList[leftMenuIndex].name}")
+        logger.debug("Cycling to ${leftMenuList[leftMenuIndex].name}")
         leftMenuList[leftMenuIndex].visible = true
     }
 
@@ -688,16 +690,33 @@ open class CellTrackingBase(
         hmd.addKeyBinding("slower", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Down)
         hmd.addKeyBinding("play_pause", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Menu)
 
-//        hmd.addBehaviour("toggle_hedgehog", toggleHedgehog)
-//        hmd.addBehaviour("delete_hedgehog", deleteLastHedgehog)
-//        hmd.addBehaviour("cell_division", cellDivision)
-//        hmd.addKeyBinding("cell_division", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Trigger)
 
-//        hmd.addBehaviour("trigger_move", move)
-//        hmd.addKeyBinding("trigger_move", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Side)
+        /** Local class that handles double assignment of the left A key which is used to cycle menus as well as
+         * reset the rotation when pressed while the [VR2HandNodeTransform] is active. */
+        class CycleMenuAndLockAxisBehavior(val button: OpenVRHMD.OpenVRButton, val role: TrackerRole)
+            : DragBehaviour {
+            fun setupKeybind() {
+                logger.debug("Setting up keybinds for CycleMenuAndLockAxisBehavior")
+                resetRotationBtnManager.registerButtonConfig(button, role)
+            }
+            override fun init(x: Int, y: Int) {
+                resetRotationBtnManager.pressButton(button, role)
+                if (!resetRotationBtnManager.isTwoHandedActive()) {
+                    cycleLeftMenus()
+                }
+            }
+            override fun drag(x: Int, y: Int) {}
+            override fun end(x: Int, y: Int) {
+                resetRotationBtnManager.releaseButton(button, role)
+            }
+        }
 
-        hmd.addBehaviour("toggleLeftWristMenu", ClickBehaviour { _, _ -> cycleLeftMenus() })
-        hmd.addKeyBinding("toggleLeftWristMenu", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.A)
+        val leftAButtonBehavior = CycleMenuAndLockAxisBehavior(OpenVRHMD.OpenVRButton.A, TrackerRole.LeftHand)
+        leftAButtonBehavior.let {
+            it.setupKeybind()
+            hmd.addBehaviour("toggleLeftWristMenu", it)
+            hmd.addKeyBinding("toggleLeftWristMenu", it.role, it.button)
+        }
 
         hmd.addBehaviour("controller tracking", trackCellsWithController)
         hmd.addKeyBinding("controller tracking", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
@@ -705,31 +724,29 @@ open class CellTrackingBase(
         /** Several behaviors mapped per default to the right menu button. If controller tracking is active,
          * end the tracking. If not, clicking will either create or delete a spot, depending on whether the user
          * previously selected a spot. The double tap behavior deletes the whole connected branch. */
-        val spotAddDeleteResetBehavior = ConfirmableClickBehaviour(
-            armedAction = { timeout ->
-                if (controllerTrackingActive) {
-                    endControllerTracking()
-                } else {
-                    val p = getCursorPosition()
-                    logger.debug("Got cursor position: $p")
-                    spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, false)
-                    true // we need to return something for this behavior
-                }
-            },
-            confirmAction = {
-                if (controllerTrackingActive) {
-                    endControllerTracking()
-                } else {
-                    val p = getCursorPosition()
-                    logger.debug("Got cursor position: $p")
-                    spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, true)
-                    true // we need to return something for this behavior
-                }
-            },
-            timeout = 600
-        )
 
-        hmd.addBehaviour("add/delete spot", spotAddDeleteResetBehavior)
+        class AddDeleteResetBehavior : DragBehaviour {
+            var start = System.currentTimeMillis()
+            override fun init(x: Int, y: Int) {
+                start = System.currentTimeMillis()
+            }
+            override fun drag(x: Int, y: Int) {}
+            override fun end(x: Int, y: Int) {
+                if (controllerTrackingActive) {
+                    endControllerTracking()
+                } else {
+                    val p = getCursorPosition()
+                    logger.debug("Got cursor position: $p")
+                    if (System.currentTimeMillis() - start > 500) {
+                        spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, true)
+                    } else {
+                        spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, false)
+                    }
+                }
+            }
+        }
+
+        hmd.addBehaviour("add/delete spot", AddDeleteResetBehavior())
         hmd.addKeyBinding("add/delete spot", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Menu)
 
         val spotSelectBehavior = ClickBehaviour { _, _ ->
@@ -749,7 +766,7 @@ open class CellTrackingBase(
             hmd,
             listOf(OpenVRHMD.OpenVRButton.Side),
             listOf(TrackerRole.LeftHand),
-            buttonManager,
+            grabButtonManager,
             1.5f
         )
 
@@ -757,14 +774,17 @@ open class CellTrackingBase(
             hmd,
             OpenVRHMD.OpenVRButton.Side,
             sciview.currentScene,
+            lockYaxis = false,
             target = volume,
-            onEndCallback = rebuildGeometryCallback
+            onEndCallback = rebuildGeometryCallback,
+            resetRotationBtnManager = resetRotationBtnManager,
+            resetRotationButton = MultiButtonManager.ButtonConfig(leftAButtonBehavior.button, leftAButtonBehavior.role)
         )
 
         // drag behavior can stay enabled regardless of current tool mode
         MoveInstanceVR.createAndSet(
             sciview.currentScene, hmd, listOf(OpenVRHMD.OpenVRButton.Side), listOf(TrackerRole.RightHand),
-            buttonManager,
+            grabButtonManager,
             { getCursorPosition() },
             spotMoveInitCallback,
             spotMoveDragCallback,
