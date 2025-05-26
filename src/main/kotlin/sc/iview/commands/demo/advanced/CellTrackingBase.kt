@@ -723,23 +723,28 @@ open class CellTrackingBase(
 
         /** Several behaviors mapped per default to the right menu button. If controller tracking is active,
          * end the tracking. If not, clicking will either create or delete a spot, depending on whether the user
-         * previously selected a spot. The double tap behavior deletes the whole connected branch. */
-
+         * previously selected a spot. Holding the button for more than 0.5s deletes the whole connected branch. */
         class AddDeleteResetBehavior : DragBehaviour {
             var start = System.currentTimeMillis()
+            var wasExecuted = false
             override fun init(x: Int, y: Int) {
                 start = System.currentTimeMillis()
+                wasExecuted = false
             }
-            override fun drag(x: Int, y: Int) {}
+            override fun drag(x: Int, y: Int) {
+                if (System.currentTimeMillis() - start > 500 && !wasExecuted) {
+                    val p = getCursorPosition()
+                    spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, true)
+                    wasExecuted = true
+                }
+            }
             override fun end(x: Int, y: Int) {
                 if (controllerTrackingActive) {
                     endControllerTracking()
                 } else {
                     val p = getCursorPosition()
                     logger.debug("Got cursor position: $p")
-                    if (System.currentTimeMillis() - start > 500) {
-                        spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, true)
-                    } else {
+                    if (!wasExecuted) {
                         spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, false)
                     }
                 }
