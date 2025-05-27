@@ -196,7 +196,6 @@ open class CellTrackingBase(
                         device.model?.name = "leftHand"
                         setupElephantMenu()
                         setupGeneralMenu()
-//                        cycleLeftMenus()
                     }
                 }
             }
@@ -224,30 +223,6 @@ open class CellTrackingBase(
     private fun notifyObservers(timepoint: Int) {
         observers.forEach { it.onTimePointChanged(timepoint) }
     }
-
-//    private fun setupLeftToolMenu() {
-//        val createButton = Button(
-//                "Create", command = this::selectCreateButton, byTouch =  true, stayPressed = true,
-//                color = Vector3f(0.5f, 0.95f, 0.45f),
-//                pressedColor = Vector3f(0.2f, 1f, 0.15f),
-//            )
-//        val editButton = Button(
-//            "Edit", command = this::selectEditButton, byTouch =  true, stayPressed = true,
-//            color = Vector3f(0.4f, 0.45f, 0.95f),
-//            pressedColor = Vector3f(0.15f, 0.2f, 1f)
-//        )
-//
-//        val trackButton = Button(
-//            "Track", command = this::selectTrackButton, byTouch =  true, stayPressed = true,
-//            color = Vector3f(0.9f, 0.9f, 0.5f),
-//            pressedColor = Vector3f(1f, 1f, 0.2f)
-//        )
-//
-//        leftToolColumn = createGenericWristMenu(createButton, editButton, trackButton)
-//        leftToolColumn?.name = "Left Tool Column"
-//        // Use editing as default option
-//        selectEditButton()
-//    }
 
     /** Attaches a column of [Gui3DElement]s to the left VR controller and adds the column to [leftMenuList]. */
     protected fun createWristMenuColumn(
@@ -277,12 +252,6 @@ open class CellTrackingBase(
         leftMenuList.add(column)
         return column
     }
-
-//    val addSpotWithController = ClickBehaviour { _, _ ->
-//        val p = getCursorPosition()
-//        logger.debug("Got tip position: $p")
-//        spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, false)
-//    }
 
     var controllerTrackingActive = false
 
@@ -396,9 +365,6 @@ open class CellTrackingBase(
         if ((buttonTime - lastButtonTime) > 1000) {
 
             thread {
-//                leftElephantColumn?.children?.forEach {
-//                    (it as Button).enabled.set(false)
-//                }
                 when (mode) {
                     ElephantMode.StageSpots -> stageSpotsCallback?.invoke()
                     ElephantMode.TrainAll -> trainSpotsCallback?.invoke()
@@ -406,12 +372,7 @@ open class CellTrackingBase(
                     ElephantMode.PredictAll -> predictSpotsCallback?.invoke(true)
                     ElephantMode.NNLinking -> neighborLinkingCallback?.invoke()
                 }
-//                Thread.sleep(500)
-//                leftElephantColumn?.children?.forEach {
-//                    val b = it as Button
-//                    b.enabled.set(true)
-//                    b.release(true)
-//                }
+
                 logger.info("We locked the buttons for ${(buttonTime-lastButtonTime)} ms ")
                 lastButtonTime = buttonTime
             }
@@ -633,8 +594,6 @@ open class CellTrackingBase(
             }
         }
 
-//        val move = ControllerDrag(TrackerRole.LeftHand, hmd) { volume }
-
         val deleteLastHedgehog = ConfirmableClickBehaviour(
             armedAction = { timeout ->
                 cam.showMessage("Deleting last track, press again to confirm.",distance = 2f, size = 0.2f,
@@ -664,21 +623,6 @@ open class CellTrackingBase(
                     centered = true
                 )
             })
-
-//        hmd.addBehaviour("playback_direction", ClickBehaviour { _, _ ->
-//            direction = if(direction == PlaybackDirection.Forward) {
-//                PlaybackDirection.Backward
-//            } else {
-//                PlaybackDirection.Forward
-//            }
-//            cam.showMessage("Playing: ${direction}", distance = 2f, centered = true)
-//        })
-
-//        val cellDivision = ClickBehaviour { _, _ ->
-//            cam.showMessage("Adding cell division", distance = 2f, duration = 1000)
-//            dumpHedgehog()
-//            addHedgehog()
-//        }
 
         hmd.addBehaviour("skip_to_next", nextTimepoint)
         hmd.addBehaviour("skip_to_prev", prevTimepoint)
@@ -809,11 +753,6 @@ open class CellTrackingBase(
             spotMoveDragCallback,
             spotMoveEndCallback,
         )
-
-//        hmd.addKeyBinding("toggle_hedgehog", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Side)
-//        hmd.addKeyBinding("delete_hedgehog", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Side)
-
-//        hmd.addKeyBinding("playback_direction", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Menu)
 
         hmd.allowRepeats += OpenVRHMD.OpenVRButton.Trigger to TrackerRole.LeftHand
         logger.info("Registered VR controller bindings.")
