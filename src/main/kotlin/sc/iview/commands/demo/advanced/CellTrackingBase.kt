@@ -57,7 +57,7 @@ open class CellTrackingBase(
     val referenceTarget = Icosphere(0.004f, 2)
 
     @Volatile var eyeTrackingActive = false
-    var playing = true
+    var playing = false
     var direction = PlaybackDirection.Backward
     var volumesPerSecond = 1f
     var skipToNext = false
@@ -81,8 +81,8 @@ open class CellTrackingBase(
      * The deleteBranch flag indicates whether we want to delete the whole branch or just a spot.  */
     var spotCreateDeleteCallback: ((tp: Int, sciviewPos: Vector3f, deleteBranch: Boolean) -> Unit)? = null
     /** Select a spot based on the controller tip's position, current time point and a multiple of the radius
-     * in which a selection event is counted as valid. */
-    var spotSelectionCallback: ((sciviewPos: Vector3f, tp: Int, radiusFactor: Float) -> Pair<Spot?, Boolean>)? = null
+     * in which a selection event is counted as valid. addOnly prevents deselection from clicking away. */
+    var spotSelectionCallback: ((sciviewPos: Vector3f, tp: Int, radiusFactor: Float, addOnly: Boolean) -> Pair<Spot?, Boolean>)? = null
     var spotMoveInitCallback: ((Vector3f) -> Unit)? = null
     var spotMoveDragCallback: ((Vector3f) -> Unit)? = null
     var spotMoveEndCallback: ((Vector3f) -> Unit)? = null
@@ -304,7 +304,8 @@ open class CellTrackingBase(
         if (volume.currentTimepoint > 0) {
             val p = getCursorPosition()
             // did the user click on an existing cell and wants to merge the track into it?
-            val (selected, isValidSelection) = spotSelectionCallback?.invoke(p, volume.currentTimepoint, 1.5f) ?: (null to false)
+            val (selected, isValidSelection) =
+                spotSelectionCallback?.invoke(p, volume.currentTimepoint, 1.5f, false) ?: (null to false)
             // If this is the first spot we track, and its a valid existing spot, mark it as such
             if (isValidSelection && controllerTrackList.size == 0) {
                 startWithExistingSpot = selected
@@ -754,13 +755,26 @@ open class CellTrackingBase(
         hmd.addBehaviour("add/delete spot", AddDeleteResetBehavior())
         hmd.addKeyBinding("add/delete spot", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Menu)
 
-        val spotSelectBehavior = ClickBehaviour { _, _ ->
-            val p = getCursorPosition()
-            logger.debug("Got cursor position: $p")
-            spotSelectionCallback?.invoke(p, volume.currentTimepoint, 2f)
+        class DragSelectBehavior: DragBehaviour {
+            var time = System.currentTimeMillis()
+            override fun init(x: Int, y: Int) {
+                time = System.currentTimeMillis()
+                val p = getCursorPosition()
+                spotSelectionCallback?.invoke(p, volume.currentTimepoint, 3f, false)
+            }
+            override fun drag(x: Int, y: Int) {
+                // Only perform the selection method ten times a second
+                if (System.currentTimeMillis() - time > 100) {
+                    val p = getCursorPosition()
+                    spotSelectionCallback?.invoke(p, volume.currentTimepoint, 4f, true)
+                    time = System.currentTimeMillis()
+                }
+            }
+            override fun end(x: Int, y: Int) {
+            }
         }
 
-        hmd.addBehaviour("select spot", spotSelectBehavior)
+        hmd.addBehaviour("select spot", DragSelectBehavior())
         hmd.addKeyBinding("select spot", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.A)
 
         // this behavior is needed for touching the menu buttons
