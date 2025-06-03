@@ -403,7 +403,8 @@ open class CellTrackingBase(
             }, byTouch = true,
             color = color,
             touchingColor = Vector3f(0.67f, 0.9f, 0.63f),
-            pressedColor = Vector3f(0.35f, 0.95f, 0.25f)
+            pressedColor = Vector3f(0.35f, 0.95f, 0.25f),
+            default = true
         )
         val togglePlaybackDirBtn = ToggleButton(
             textFalse = "BW", textTrue = "FW", command = {
