@@ -137,13 +137,8 @@ class EyeTracking(
 
 
     private fun setupEyeTracking(
-        keybindingCalibration: Pair<TrackerRole, OpenVRButton> = (TrackerRole.RightHand to OpenVRButton.Menu),
-        keybindingTracking: Pair<TrackerRole, OpenVRButton> = (TrackerRole.LeftHand to OpenVRButton.Trigger)
+        keybindingCalibration: Pair<TrackerRole, OpenVRButton> = (TrackerRole.RightHand to OpenVRButton.Menu)
     ) {
-        val startCalibration = ClickBehaviour { _, _ ->
-            calibrateEyeTrackers()
-        }
-
         val cam = sciview.camera as? DetachedHeadCamera ?: return
 
         val toggleTracking = ClickBehaviour { _, _ ->
@@ -163,11 +158,7 @@ class EyeTracking(
             eyeTrackingActive = !eyeTrackingActive
         }
 
-        hmd.addBehaviour("toggle_tracking", toggleTracking)
-        hmd.addKeyBinding("toggle_tracking", keybindingTracking.first, keybindingTracking.second)
-
-        hmd.addBehaviour("start_calibration", startCalibration)
-        hmd.addKeyBinding("start_calibration", keybindingCalibration.first, keybindingCalibration.second)
+        mapper.setKeyBindAndBehavior(hmd, "eye_tracking", toggleTracking)
     }
 
     private fun calibrateEyeTrackers(force: Boolean = false) {
@@ -283,7 +274,6 @@ class EyeTracking(
     override fun stop() {
 
         pupilTracker.unsubscribeFrames()
-        cellTrackingActive = false
         logger.info("Stopped volume and hedgehog updater thread.")
         val n = sciview.find("eyeFrames")
         n?.let { sciview.deleteNode(it) }

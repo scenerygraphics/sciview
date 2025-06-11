@@ -69,7 +69,7 @@ open class CellTrackingBase(
 
     val volumeTPWidget = TextBoard()
 
-    // determines whether the volume and hedgehogs should keep listening for updates or not
+    /** determines whether the volume and hedgehogs should keep listening for updates or not */
     var cellTrackingActive: Boolean = false
 
     /** Takes a [SpineGraphVertex] and its positions to create the corresponding track in Mastodon.
@@ -105,8 +105,6 @@ open class CellTrackingBase(
     var trainFlowCallback: (() -> Unit)? = null
 
     var mastodonUndoCallback: (() -> Unit)? = null
-    var mastodonLockGraph: (() -> Unit)? = null
-    var mastodonUnlockGraph: (() -> Unit)? = null
 
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
 
@@ -114,22 +112,13 @@ open class CellTrackingBase(
 
     enum class ElephantMode { StageSpots, TrainAll, PredictTP, PredictAll, NNLinking }
 
-    private val tools = mapOf("Create" to "addSpotWithController",
-        "Edit" to "selectSpotWithController",
-        "Delete" to "deleteSpotWithController",
-        "Track" to "trackCellWithController",)
-
-    private var currentTool = "Edit"
-
     var hedgehogVisibility = HedgehogVisibility.Hidden
 
     var leftVRController: TrackedDevice? = null
     var rightVRController: TrackedDevice? = null
 
     var tip = Sphere(0.007f)
-    var leftToolColumn: Column? = null
     var leftElephantColumn: Column? = null
-    var leftColumnTrain: Column? = null
     var leftColumnPredict: Column? = null
     var leftColumnLink: Column? = null
     var leftUndoMenu: Column? = null
@@ -142,6 +131,8 @@ open class CellTrackingBase(
     val grabButtonManager = MultiButtonManager()
     val resetRotationBtnManager = MultiButtonManager()
 
+    val mapper = CellTrackingButtonMapper
+
     private val observers = mutableListOf<TimepointObserver>()
 
     open fun run() {
@@ -149,10 +140,16 @@ open class CellTrackingBase(
         logger.info("VR mode has been toggled")
         hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
 
+        // Try to load the correct button mapping corresponding to the controller layout
+        val isProfileLoaded = mapper.loadProfile(hmd.manufacturer)
+        if (!isProfileLoaded) {
+            throw IllegalStateException("Could not load profile, headset type unknown!")
+        }
         val shell = Box(Vector3f(20.0f, 20.0f, 20.0f), insideNormals = true)
-        shell.ifMaterial{
+        shell.ifMaterial {
             cullingMode = Material.CullingMode.Front
-            diffuse = Vector3f(0.4f, 0.4f, 0.4f) }
+            diffuse = Vector3f(0.4f, 0.4f, 0.4f)
+        }
 
         shell.spatial().position = Vector3f(0.0f, 0.0f, 0.0f)
         shell.name = "Shell"
@@ -220,6 +217,7 @@ open class CellTrackingBase(
         observers.remove(observer)
     }
 
+    /** Notifies all active observers of a change of timepoint. */
     private fun notifyObservers(timepoint: Int) {
         observers.forEach { it.onTimePointChanged(timepoint) }
     }
@@ -533,14 +531,13 @@ open class CellTrackingBase(
         val cam = sciview.camera ?: throw IllegalStateException("Could not find camera")
 
         sciview.sceneryInputHandler?.let { handler ->
-            hashMapOf(
-                "move_forward_fast" to (TrackerRole.LeftHand to OpenVRHMD.OpenVRButton.Up),
-                "move_back_fast" to (TrackerRole.LeftHand to OpenVRHMD.OpenVRButton.Down),
-                "move_left_fast" to (TrackerRole.LeftHand to OpenVRHMD.OpenVRButton.Left),
-                "move_right_fast" to (TrackerRole.LeftHand to OpenVRHMD.OpenVRButton.Right)).forEach { (name, key) ->
-                handler.getBehaviour(name)?.let { b ->
-                    hmd.addBehaviour(name, b)
-                    hmd.addKeyBinding(name, key.first, key.second)
+            listOf(
+                "move_forward_fast",
+                "move_back_fast",
+                "move_left_fast",
+                "move_right_fast").forEach { name ->
+                handler.getBehaviour(name)?.let { behaviour ->
+                    mapper.setKeyBindAndBehavior(hmd, name, behaviour)
                 }
             }
         }
@@ -625,23 +622,17 @@ open class CellTrackingBase(
                 )
             })
 
-        hmd.addBehaviour("skip_to_next", nextTimepoint)
-        hmd.addBehaviour("skip_to_prev", prevTimepoint)
-        hmd.addBehaviour("faster", faster)
-        hmd.addBehaviour("slower", slower)
-        hmd.addBehaviour("play_pause", playPause)
-        hmd.addKeyBinding("skip_to_next", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Right)
-        hmd.addKeyBinding("skip_to_prev", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Left)
-        hmd.addKeyBinding("faster", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Up)
-        hmd.addKeyBinding("slower", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Down)
-        hmd.addKeyBinding("play_pause", TrackerRole.LeftHand, OpenVRHMD.OpenVRButton.Menu)
-
+        mapper.setKeyBindAndBehavior(hmd, "stepFwd", nextTimepoint)
+        mapper.setKeyBindAndBehavior(hmd, "stepBwd", prevTimepoint)
+        mapper.setKeyBindAndBehavior(hmd, "faster", faster)
+        mapper.setKeyBindAndBehavior(hmd, "slower", slower)
+        mapper.setKeyBindAndBehavior(hmd, "play_pause", playPause)
 
         /** Local class that handles double assignment of the left A key which is used to cycle menus as well as
          * reset the rotation when pressed while the [VR2HandNodeTransform] is active. */
         class CycleMenuAndLockAxisBehavior(val button: OpenVRHMD.OpenVRButton, val role: TrackerRole)
             : DragBehaviour {
-            fun setupKeybind() {
+            fun registerConfig() {
                 logger.debug("Setting up keybinds for CycleMenuAndLockAxisBehavior")
                 resetRotationBtnManager.registerButtonConfig(button, role)
             }
@@ -659,13 +650,11 @@ open class CellTrackingBase(
 
         val leftAButtonBehavior = CycleMenuAndLockAxisBehavior(OpenVRHMD.OpenVRButton.A, TrackerRole.LeftHand)
         leftAButtonBehavior.let {
-            it.setupKeybind()
-            hmd.addBehaviour("toggleLeftWristMenu", it)
-            hmd.addKeyBinding("toggleLeftWristMenu", it.role, it.button)
+            it.registerConfig()
+            mapper.setKeyBindAndBehavior(hmd, "cycleMenu", it)
         }
 
-        hmd.addBehaviour("controller tracking", trackCellsWithController)
-        hmd.addKeyBinding("controller tracking", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Trigger)
+        mapper.setKeyBindAndBehavior(hmd, "controllerTracking", trackCellsWithController)
 
         /** Several behaviors mapped per default to the right menu button. If controller tracking is active,
          * end the tracking. If not, clicking will either create or delete a spot, depending on whether the user
@@ -697,8 +686,7 @@ open class CellTrackingBase(
             }
         }
 
-        hmd.addBehaviour("add/delete spot", AddDeleteResetBehavior())
-        hmd.addKeyBinding("add/delete spot", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.Menu)
+        mapper.setKeyBindAndBehavior(hmd, "addDeleteReset", AddDeleteResetBehavior())
 
         class DragSelectBehavior: DragBehaviour {
             var time = System.currentTimeMillis()
@@ -719,8 +707,7 @@ open class CellTrackingBase(
             }
         }
 
-        hmd.addBehaviour("select spot", DragSelectBehavior())
-        hmd.addKeyBinding("select spot", TrackerRole.RightHand, OpenVRHMD.OpenVRButton.A)
+        mapper.setKeyBindAndBehavior(hmd, "select", DragSelectBehavior())
 
         // this behavior is needed for touching the menu buttons
         VRTouch.createAndSet(sciview.currentScene, hmd, listOf(TrackerRole.RightHand), false, customTip = tip)
@@ -958,6 +945,7 @@ open class CellTrackingBase(
      * This method should be overridden if functionality is extended, to make sure any extra objects are also deleted.
      */
     open fun stop() {
+        cellTrackingActive = false
         lightTetrahedron.forEach { sciview.deleteNode(it) }
         // Try to find and delete possibly existing VR objects
         listOf("Shell", "leftHand", "rightHand").forEach {
