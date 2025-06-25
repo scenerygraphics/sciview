@@ -74,8 +74,9 @@ open class CellTrackingBase(
 
     /** Takes a [SpineGraphVertex] and its positions to create the corresponding track in Mastodon.
      * Set the first boolean to true if the coordinates are in world space. The bridge will convert them to Mastodon coords.
-     * The Spot defines whether to start with an existing spot, so the lambda will use that as starting point. */
-    var trackCreationCallback: ((List<Pair<Vector3f, SpineGraphVertex>>, Boolean, Spot?) -> Unit)? = null
+     * The first Spot defines whether to start with an existing spot, so the lambda will use that as starting point.
+     * The second spot defines whether we want to merge into this spot. */
+    var trackCreationCallback: ((List<Pair<Vector3f, SpineGraphVertex>>, Boolean, Spot?, Spot?) -> Unit)? = null
     /** Passes the current time point and the cursor position to the bridge to either create a new spot
      * or delete an existing spot if there is a spot selected.
      * The deleteBranch flag indicates whether we want to delete the whole branch or just a spot.  */
@@ -295,10 +296,10 @@ open class CellTrackingBase(
             volume.goToTimepoint(volume.currentTimepoint - 1)
             // If the user clicked a cell and its *not* the first in the track, we assume it is a merge event and end the tracking
             if (isValidSelection && controllerTrackList.size > 1) {
-                endControllerTracking()
+                endControllerTracking(selected)
                 // Now we merge the selected spot into the closest one, which is the last spot that we annotated
                 // This has to happen after endControllerTracking since we first need to build the actual Mastodon branch for it
-                spotLinkCallback?.invoke()
+//                spotLinkCallback?.invoke()
             }
             // This will also redraw all geometry using Mastodon as source
             notifyObservers(volume.currentTimepoint)
@@ -311,11 +312,11 @@ open class CellTrackingBase(
     }
 
     /** Stops the current controller tracking process and sends the created track to Mastodon. */
-    private fun endControllerTracking() {
+    private fun endControllerTracking(mergeSpot: Spot? = null) {
         if (controllerTrackingActive) {
             logger.info("Ending controller tracking now and sending ${controllerTrackList.size} spots to Mastodon to chew on.")
             controllerTrackingActive = false
-            trackCreationCallback?.invoke(controllerTrackList, true, startWithExistingSpot)
+            trackCreationCallback?.invoke(controllerTrackList, true, startWithExistingSpot, mergeSpot)
             controllerTrackList.clear()
         }
     }
@@ -927,7 +928,7 @@ open class CellTrackingBase(
         trackFileWriter.newLine()
         trackFileWriter.write("# START OF TRACK $hedgehogId, child of $parentId\n")
         if (trackCreationCallback != null && rebuildGeometryCallback != null) {
-            trackCreationCallback?.invoke(track.points, false, null)
+            trackCreationCallback?.invoke(track.points, false, null, null)
             rebuildGeometryCallback?.invoke()
         } else {
             logger.warn("Tried to send track data to Mastodon but couldn't find the callbacks!")
