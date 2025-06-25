@@ -36,10 +36,6 @@ object CellTrackingButtonMapper {
 
     val logger by lazyLogger(System.getProperty("scenery.LogLevel", "info"))
 
-    init {
-        loadProfile(Manufacturer.Oculus)
-    }
-
     private val profiles = mapOf(
         Manufacturer.HTC to mapOf(
             "eyeTracking" to ButtonConfig(TrackerRole.LeftHand, OpenVRButton.Trigger),
@@ -79,6 +75,10 @@ object CellTrackingButtonMapper {
             "move_right_fast" to ButtonConfig(TrackerRole.LeftHand, OpenVRButton.Right),
         )
     )
+
+    init {
+        loadProfile(Manufacturer.Oculus)
+    }
 
     /** Load the current profile's button mapping */
     fun loadProfile(p: Manufacturer): Boolean {
