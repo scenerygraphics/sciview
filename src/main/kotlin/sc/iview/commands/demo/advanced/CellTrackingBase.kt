@@ -269,7 +269,7 @@ open class CellTrackingBase(
             startWithExistingSpot = null
         }
         // play the volume backwards, step by step, so cell split events can simply be turned into a merge event
-        if (volume.currentTimepoint > 0) {
+        if (volume.currentTimepoint >= 0) {
             val p = getCursorPosition()
             // did the user click on an existing cell and wants to merge the track into it?
             val (selected, isValidSelection) =
