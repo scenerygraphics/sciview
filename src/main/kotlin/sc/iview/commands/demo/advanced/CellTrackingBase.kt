@@ -12,9 +12,7 @@ import graphics.scenery.primitives.TextBoard
 import graphics.scenery.ui.*
 import graphics.scenery.utils.MaybeIntersects
 import graphics.scenery.utils.SystemHelpers
-import graphics.scenery.utils.extensions.minus
-import graphics.scenery.utils.extensions.xyz
-import graphics.scenery.utils.extensions.xyzw
+import graphics.scenery.utils.extensions.*
 import graphics.scenery.utils.lazyLogger
 import graphics.scenery.volumes.RAIVolume
 import graphics.scenery.volumes.Volume
@@ -59,7 +57,7 @@ open class CellTrackingBase(
     @Volatile var eyeTrackingActive = false
     var playing = false
     var direction = PlaybackDirection.Backward
-    var volumesPerSecond = 1f
+    var volumesPerSecond = 6f
     var skipToNext = false
     var skipToPrevious = false
 
@@ -72,15 +70,16 @@ open class CellTrackingBase(
     /** determines whether the volume and hedgehogs should keep listening for updates or not */
     var cellTrackingActive: Boolean = false
 
-    /** Takes a [SpineGraphVertex] and its positions to create the corresponding track in Mastodon.
+    /** Takes a list of [SpineGraphVertex] and its positions to create the corresponding track in Mastodon.
+     * In the case of controller tracking, the points were already sent to Mastodon one by one via [singleLinkTrackedCallback] and the list is not needed.
      * Set the first boolean to true if the coordinates are in world space. The bridge will convert them to Mastodon coords.
      * The first Spot defines whether to start with an existing spot, so the lambda will use that as starting point.
      * The second spot defines whether we want to merge into this spot. */
-    var trackCreationCallback: ((List<Pair<Vector3f, SpineGraphVertex>>, Boolean, Spot?, Spot?) -> Unit)? = null
-    /** Passes the current time point and the cursor position to the bridge to either create a new spot
+    var trackCreationCallback: ((List<Pair<Vector3f, SpineGraphVertex>>?, Boolean, Spot?, Spot?) -> Unit)? = null
+    /** Passes the current time point, the cursor position and its radius to the bridge to either create a new spot
      * or delete an existing spot if there is a spot selected.
      * The deleteBranch flag indicates whether we want to delete the whole branch or just a spot.  */
-    var spotCreateDeleteCallback: ((tp: Int, sciviewPos: Vector3f, deleteBranch: Boolean) -> Unit)? = null
+    var spotCreateDeleteCallback: ((tp: Int, sciviewPos: Vector3f, radius: Float, deleteBranch: Boolean) -> Unit)? = null
     /** Select a spot based on the controller tip's position, current time point and a multiple of the radius
      * in which a selection event is counted as valid. addOnly prevents deselection from clicking away. */
     var spotSelectionCallback: ((sciviewPos: Vector3f, tp: Int, radiusFactor: Float, addOnly: Boolean) -> Pair<Spot?, Boolean>)? = null
@@ -90,9 +89,10 @@ open class CellTrackingBase(
     /** Links a selected spot to the closest spot to handle merge events. */
     var spotLinkCallback: (() -> Unit)? = null
     /** Generates a single link between a new position and the previously annotated one.
-     * Sends the position data to the bridge for intermediary keeping.
-     * The integer is the timepoint. The boolean specifies whether the link preview should be rendered. */
-    var singleLinkTrackedCallback: ((Vector3f, Int, Boolean) -> Unit)? = null
+     * Sends the position data to the bridge for intermediary keeping. The integer is the timepoint.
+     * The Float contains the cursor's radius in sciview space.
+     * The boolean specifies whether the link preview should be rendered. */
+    var singleLinkTrackedCallback: ((pos: Vector3f, tp: Int, radius: Float, preview: Boolean) -> Unit)? = null
     var toggleTrackingPreviewCallback: ((Boolean) -> Unit)? = null
     /** Resets the previously created spot to null, so a new track can be generated with the controller. */
     var resetTrackingCallback: (() -> Unit)? = null
@@ -118,7 +118,7 @@ open class CellTrackingBase(
     var leftVRController: TrackedDevice? = null
     var rightVRController: TrackedDevice? = null
 
-    var tip = Sphere(0.007f)
+    var cursor = CursorTool
     var leftElephantColumn: Column? = null
     var leftColumnPredict: Column? = null
     var leftColumnLink: Column? = null
@@ -263,6 +263,7 @@ open class CellTrackingBase(
     val trackCellsWithController = ClickBehaviour { _, _ ->
         if (!controllerTrackingActive) {
             controllerTrackingActive = true
+            cursor.setTrackingColor()
             // we dont want animation, because we track step by step
             playing = false
             // Assume the user didn't click on an existing spot to start the track.
@@ -270,7 +271,7 @@ open class CellTrackingBase(
         }
         // play the volume backwards, step by step, so cell split events can simply be turned into a merge event
         if (volume.currentTimepoint > 0) {
-            val p = getCursorPosition()
+            val p = cursor.getPosition()
             // did the user click on an existing cell and wants to merge the track into it?
             val (selected, isValidSelection) =
                 spotSelectionCallback?.invoke(p, volume.currentTimepoint, 1.5f, false) ?: (null to false)
@@ -282,24 +283,21 @@ open class CellTrackingBase(
             logger.debug("Tracked a new spot at position $p")
             logger.debug("Do we want to merge? $isValidSelection. Selected spot is $selected")
             // Create a placeholder link during tracking for immediate feedback
-            singleLinkTrackedCallback?.invoke(p, volume.currentTimepoint, enableTrackingPreview)
+            singleLinkTrackedCallback?.invoke(p, volume.currentTimepoint, cursor.radius, enableTrackingPreview)
 
-            controllerTrackList.add(
-                p to SpineGraphVertex(
-                    volume.currentTimepoint,
-                    p,
-                    volume.spatial().world.transform((Vector3f(p)).xyzw()).xyz(),
-                    controllerTrackList.size,
-                    0f // This is ugly, but we don't care about the sampled value of the volume here
-                )
-            )
+//            controllerTrackList.add(
+//                p to SpineGraphVertex(
+//                    volume.currentTimepoint,
+//                    p,
+//                    volume.spatial().world.transform((Vector3f(p)).xyzw()).xyz(),
+//                    controllerTrackList.size,
+//                    0f // This is ugly, but we don't care about the sampled value of the volume here
+//                )
+//            )
             volume.goToTimepoint(volume.currentTimepoint - 1)
             // If the user clicked a cell and its *not* the first in the track, we assume it is a merge event and end the tracking
             if (isValidSelection && controllerTrackList.size > 1) {
                 endControllerTracking(selected)
-                // Now we merge the selected spot into the closest one, which is the last spot that we annotated
-                // This has to happen after endControllerTracking since we first need to build the actual Mastodon branch for it
-//                spotLinkCallback?.invoke()
             }
             // This will also redraw all geometry using Mastodon as source
             notifyObservers(volume.currentTimepoint)
@@ -316,8 +314,9 @@ open class CellTrackingBase(
         if (controllerTrackingActive) {
             logger.info("Ending controller tracking now and sending ${controllerTrackList.size} spots to Mastodon to chew on.")
             controllerTrackingActive = false
-            trackCreationCallback?.invoke(controllerTrackList, true, startWithExistingSpot, mergeSpot)
+            trackCreationCallback?.invoke(null, true, startWithExistingSpot, mergeSpot)
             controllerTrackList.clear()
+            cursor.resetColor()
         }
     }
 
@@ -495,19 +494,6 @@ open class CellTrackingBase(
         if (sciview.findNodes { it.name == "VR Cursor" }.isNotEmpty()) {
             return
         }
-        tip.material {
-            diffuse = Vector3f(0.15f, 0.2f, 1f)
-        }
-        tip.spatial().position = Vector3f(0.0f, -0f, -0.05f)
-        tip.name = "VR Cursor"
-        var bb: BoundingGrid? = null
-        if (debug) {
-            bb = BoundingGrid()
-            bb.node = tip
-            bb.name = "Cursor BB"
-            bb.lineWidth = 2f
-            bb.gridColor = Vector3f(1f, 0.3f, 0.25f)
-        }
 
         volumeTPWidget.text = volume.currentTimepoint.toString()
         volumeTPWidget.name = "Volume Timepoint Widget"
@@ -519,12 +505,66 @@ open class CellTrackingBase(
         }
 
         rightVRController?.model?.let {
-            sciview.addNode(tip, parent = it)
-            if (debug) sciview.addNode(bb, parent = it)
-            logger.info("Added cursor to right controller")
-
+            cursor.attachCursor(sciview, it)
             sciview.addNode(volumeTPWidget, activePublish = false, parent = it)
         }
+    }
+
+    /** Object that represents the 3D cursor in form of a sphere. It needs to be attached to a VR controller via [attachCursor].
+     * The current cursor position can be obtained with [getPosition]. The current radius is stored in [radius].
+     * The tool can be scaled up and down with [scaleByFactor].
+     * [resetColor], [setSelectColor] and [setTrackingColor] allow changing the cursor's color to reflect the currently active operation. */
+    object CursorTool {
+        private val logger by lazyLogger()
+        var radius: Float = 0.007f
+            private set
+        val cursor = Sphere(radius)
+        private val initPos = Vector3f(-0.01f, -0.05f, -0.03f)
+
+        fun getPosition() = cursor.spatial().worldPosition()
+
+        fun attachCursor(sciview: SciView, parent: Node, debug: Boolean = false) {
+            cursor.name = "VR Cursor"
+            cursor.material {
+                diffuse = Vector3f(0.15f, 0.2f, 1f)
+            }
+            cursor.spatial().position = initPos
+            sciview.addNode(cursor, parent = parent)
+
+            if (debug) {
+                val bb = BoundingGrid()
+                bb.node = cursor
+                bb.name = "Cursor BB"
+                bb.lineWidth = 2f
+                bb.gridColor = Vector3f(1f, 0.3f, 0.25f)
+                sciview.addNode(bb, parent = parent)
+            }
+            logger.info("Attached cursor to controller.")
+        }
+
+        fun scaleByFactor(factor: Float) {
+            var clampedFac = 1f
+            // Only apply the factor if we are in the radius range 0.001f - 0.1f
+            if ((factor < 1f && radius > 0.001f) || (factor > 1f && radius < 0.15f)) {
+                clampedFac = factor
+            }
+            radius *= clampedFac
+            cursor.spatial().scale = Vector3f(radius/0.007f)
+            cursor.spatial().position = Vector3f(initPos) + Vector3f(initPos).normalize().times(radius - 0.007f)
+        }
+
+        fun resetColor() {
+            cursor.material().diffuse = Vector3f(0.15f, 0.2f, 1f)
+        }
+
+        fun setSelectColor() {
+            cursor.material().diffuse = Vector3f(1f, 0.25f, 0.25f)
+        }
+
+        fun setTrackingColor() {
+            cursor.material().diffuse = Vector3f(0.65f, 1f, 0.22f)
+        }
+
     }
 
     open fun inputSetup()
@@ -572,6 +612,14 @@ open class CellTrackingBase(
 
         val prevTimepoint = ClickBehaviour { _, _ ->
             skipToPrevious = true
+        }
+
+        val cursorIncrease = ClickBehaviour { _, _ ->
+            cursor.scaleByFactor(1.05f)
+        }
+
+        val cursorDecrease = ClickBehaviour { _, _ ->
+            cursor.scaleByFactor(0.95f)
         }
 
         val faster = ClickBehaviour { _, _ ->
@@ -625,9 +673,11 @@ open class CellTrackingBase(
 
         mapper.setKeyBindAndBehavior(hmd, "stepFwd", nextTimepoint)
         mapper.setKeyBindAndBehavior(hmd, "stepBwd", prevTimepoint)
-        mapper.setKeyBindAndBehavior(hmd, "faster", faster)
-        mapper.setKeyBindAndBehavior(hmd, "slower", slower)
+//        mapper.setKeyBindAndBehavior(hmd, "faster", faster)
+//        mapper.setKeyBindAndBehavior(hmd, "slower", slower)
         mapper.setKeyBindAndBehavior(hmd, "play_pause", playPause)
+        mapper.setKeyBindAndBehavior(hmd, "radiusIncrease", cursorIncrease)
+        mapper.setKeyBindAndBehavior(hmd, "radiusDecrease", cursorDecrease)
 
         /** Local class that handles double assignment of the left A key which is used to cycle menus as well as
          * reset the rotation when pressed while the [VR2HandNodeTransform] is active. */
@@ -669,8 +719,8 @@ open class CellTrackingBase(
             }
             override fun drag(x: Int, y: Int) {
                 if (System.currentTimeMillis() - start > 500 && !wasExecuted) {
-                    val p = getCursorPosition()
-                    spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, true)
+                    val p = cursor.getPosition()
+                    spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, cursor.radius, true)
                     wasExecuted = true
                 }
             }
@@ -678,10 +728,10 @@ open class CellTrackingBase(
                 if (controllerTrackingActive) {
                     endControllerTracking()
                 } else {
-                    val p = getCursorPosition()
+                    val p = cursor.getPosition()
                     logger.debug("Got cursor position: $p")
                     if (!wasExecuted) {
-                        spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, false)
+                        spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, cursor.radius, false)
                     }
                 }
             }
@@ -693,25 +743,27 @@ open class CellTrackingBase(
             var time = System.currentTimeMillis()
             override fun init(x: Int, y: Int) {
                 time = System.currentTimeMillis()
-                val p = getCursorPosition()
+                val p = cursor.getPosition()
+                cursor.setSelectColor()
                 spotSelectionCallback?.invoke(p, volume.currentTimepoint, 3f, false)
             }
             override fun drag(x: Int, y: Int) {
                 // Only perform the selection method ten times a second
                 if (System.currentTimeMillis() - time > 100) {
-                    val p = getCursorPosition()
+                    val p = cursor.getPosition()
                     spotSelectionCallback?.invoke(p, volume.currentTimepoint, 4f, true)
                     time = System.currentTimeMillis()
                 }
             }
             override fun end(x: Int, y: Int) {
+                cursor.resetColor()
             }
         }
 
         mapper.setKeyBindAndBehavior(hmd, "select", DragSelectBehavior())
 
         // this behavior is needed for touching the menu buttons
-        VRTouch.createAndSet(sciview.currentScene, hmd, listOf(TrackerRole.RightHand), false, customTip = tip)
+        VRTouch.createAndSet(sciview.currentScene, hmd, listOf(TrackerRole.RightHand), false, customTip = cursor.cursor)
 
         VRGrabTheWorld.createAndSet(
             sciview.currentScene,
@@ -737,7 +789,7 @@ open class CellTrackingBase(
         MoveInstanceVR.createAndSet(
             sciview.currentScene, hmd, listOf(OpenVRHMD.OpenVRButton.Side), listOf(TrackerRole.RightHand),
             grabButtonManager,
-            { getCursorPosition() },
+            { cursor.getPosition() },
             spotMoveInitCallback,
             spotMoveDragCallback,
             spotMoveEndCallback,
@@ -746,11 +798,6 @@ open class CellTrackingBase(
         hmd.allowRepeats += OpenVRHMD.OpenVRButton.Trigger to TrackerRole.LeftHand
         logger.info("Registered VR controller bindings.")
 
-    }
-
-    /** Returns the world position of the right controller's tool tip as [Vector3f]. */
-    fun getCursorPosition(): Vector3f {
-        return tip.boundingBox?.center ?: Vector3f(0f)
     }
 
     /**

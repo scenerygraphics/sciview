@@ -31,6 +31,8 @@ object CellTrackingButtonMapper {
     var move_back_fast: ButtonConfig? = null
     var move_left_fast: ButtonConfig? = null
     var move_right_fast: ButtonConfig? = null
+    var radiusIncrease: ButtonConfig? = null
+    var radiusDecrease: ButtonConfig? = null
 
     private var currentProfile: Manufacturer = Manufacturer.Oculus
 
@@ -46,6 +48,8 @@ object CellTrackingButtonMapper {
             "cycleMenu" to ButtonConfig(TrackerRole.LeftHand, OpenVRButton.Menu),
             "faster" to null,
             "slower" to null,
+            "radiusIncrease" to null,
+            "radiusDecrease" to null,
             "stepFwd" to ButtonConfig(TrackerRole.RightHand, OpenVRButton.Left),
             "stepBwd" to ButtonConfig(TrackerRole.RightHand, OpenVRButton.Right),
             "addDeleteReset" to ButtonConfig(TrackerRole.RightHand, OpenVRButton.Up),
@@ -63,8 +67,8 @@ object CellTrackingButtonMapper {
             "grabSpot" to ButtonConfig(TrackerRole.RightHand, OpenVRButton.Side),
             "playback" to ButtonConfig(TrackerRole.LeftHand, OpenVRButton.A),
             "cycleMenu" to ButtonConfig(TrackerRole.LeftHand, OpenVRButton.Menu),
-            "faster" to ButtonConfig(TrackerRole.RightHand, OpenVRButton.Up),
-            "slower" to ButtonConfig(TrackerRole.RightHand, OpenVRButton.Down),
+//            "faster" to ButtonConfig(TrackerRole.RightHand, OpenVRButton.Up),
+//            "slower" to ButtonConfig(TrackerRole.RightHand, OpenVRButton.Down),
             "stepFwd" to ButtonConfig(TrackerRole.RightHand, OpenVRButton.Left),
             "stepBwd" to ButtonConfig(TrackerRole.RightHand, OpenVRButton.Right),
             "addDeleteReset" to ButtonConfig(TrackerRole.RightHand, OpenVRButton.Menu),
@@ -73,6 +77,8 @@ object CellTrackingButtonMapper {
             "move_back_fast" to ButtonConfig(TrackerRole.LeftHand, OpenVRButton.Down),
             "move_left_fast" to ButtonConfig(TrackerRole.LeftHand, OpenVRButton.Left),
             "move_right_fast" to ButtonConfig(TrackerRole.LeftHand, OpenVRButton.Right),
+            "radiusIncrease" to ButtonConfig(TrackerRole.RightHand, OpenVRButton.Up),
+            "radiusDecrease" to ButtonConfig(TrackerRole.RightHand, OpenVRButton.Down),
         )
     )
 
@@ -100,6 +106,8 @@ object CellTrackingButtonMapper {
         move_back_fast = profile["move_back_fast"]
         move_left_fast = profile["move_left_fast"]
         move_right_fast = profile["move_right_fast"]
+        radiusIncrease = profile["radiusIncrease"]
+        radiusDecrease = profile["radiusDecrease"]
         return true
     }
 
@@ -125,6 +133,8 @@ object CellTrackingButtonMapper {
             "move_back_fast" -> move_back_fast
             "move_left_fast" -> move_left_fast
             "move_right_fast" -> move_right_fast
+            "radiusIncrease" -> radiusIncrease
+            "radiusDecrease" -> radiusDecrease
             else -> null
         }
     }
@@ -136,6 +146,7 @@ object CellTrackingButtonMapper {
         if (config != null) {
             hmd.addKeyBinding(name, config.r, config.b)
             hmd.addBehaviour(name, behavior)
+            logger.info("Added behavior $behavior to ${config.r}, ${config.b}.")
         } else {
             logger.warn("No valid button mapping found for key '$name' in current profile!")
         }
