@@ -146,7 +146,7 @@ object CellTrackingButtonMapper {
         if (config != null) {
             hmd.addKeyBinding(name, config.r, config.b)
             hmd.addBehaviour(name, behavior)
-            logger.info("Added behavior $behavior to ${config.r}, ${config.b}.")
+            logger.debug("Added behavior $behavior to ${config.r}, ${config.b}.")
         } else {
             logger.warn("No valid button mapping found for key '$name' in current profile!")
         }

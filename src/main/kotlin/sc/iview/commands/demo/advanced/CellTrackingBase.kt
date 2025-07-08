@@ -274,7 +274,7 @@ open class CellTrackingBase(
             val p = cursor.getPosition()
             // did the user click on an existing cell and wants to merge the track into it?
             val (selected, isValidSelection) =
-                spotSelectionCallback?.invoke(p, volume.currentTimepoint, 1.5f, false) ?: (null to false)
+                spotSelectionCallback?.invoke(p, volume.currentTimepoint, cursor.radius, false) ?: (null to false)
             // If this is the first spot we track, and its a valid existing spot, mark it as such
             if (isValidSelection && controllerTrackList.size == 0) {
                 startWithExistingSpot = selected
@@ -745,13 +745,13 @@ open class CellTrackingBase(
                 time = System.currentTimeMillis()
                 val p = cursor.getPosition()
                 cursor.setSelectColor()
-                spotSelectionCallback?.invoke(p, volume.currentTimepoint, 3f, false)
+                spotSelectionCallback?.invoke(p, volume.currentTimepoint, cursor.radius, false)
             }
             override fun drag(x: Int, y: Int) {
                 // Only perform the selection method ten times a second
                 if (System.currentTimeMillis() - time > 100) {
                     val p = cursor.getPosition()
-                    spotSelectionCallback?.invoke(p, volume.currentTimepoint, 4f, true)
+                    spotSelectionCallback?.invoke(p, volume.currentTimepoint, cursor.radius, true)
                     time = System.currentTimeMillis()
                 }
             }
