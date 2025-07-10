@@ -6,6 +6,7 @@ import graphics.scenery.controls.OpenVRHMD
 import graphics.scenery.controls.TrackedDevice
 import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.TrackerRole
+import graphics.scenery.controls.behaviours.AnalogInputWrapper
 import graphics.scenery.controls.behaviours.VRTouch
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
@@ -82,7 +83,7 @@ open class CellTrackingBase(
     var spotCreateDeleteCallback: ((tp: Int, sciviewPos: Vector3f, radius: Float, deleteBranch: Boolean) -> Unit)? = null
     /** Select a spot based on the controller tip's position, current time point and a multiple of the radius
      * in which a selection event is counted as valid. addOnly prevents deselection from clicking away. */
-    var spotSelectionCallback: ((sciviewPos: Vector3f, tp: Int, radiusFactor: Float, addOnly: Boolean) -> Pair<Spot?, Boolean>)? = null
+    var spotSelectCallback: ((sciviewPos: Vector3f, tp: Int, radiusFactor: Float, addOnly: Boolean) -> Pair<Spot?, Boolean>)? = null
     var spotMoveInitCallback: ((Vector3f) -> Unit)? = null
     var spotMoveDragCallback: ((Vector3f) -> Unit)? = null
     var spotMoveEndCallback: ((Vector3f) -> Unit)? = null
@@ -94,8 +95,6 @@ open class CellTrackingBase(
      * The boolean specifies whether the link preview should be rendered. */
     var singleLinkTrackedCallback: ((pos: Vector3f, tp: Int, radius: Float, preview: Boolean) -> Unit)? = null
     var toggleTrackingPreviewCallback: ((Boolean) -> Unit)? = null
-    /** Resets the previously created spot to null, so a new track can be generated with the controller. */
-    var resetTrackingCallback: (() -> Unit)? = null
     var rebuildGeometryCallback: (() -> Unit)? = null
 
     var stageSpotsCallback: (() -> Unit)? = null
@@ -104,8 +103,12 @@ open class CellTrackingBase(
     var neighborLinkingCallback: (() -> Unit)? = null
     // TODO add train flow functionality
     var trainFlowCallback: (() -> Unit)? = null
-
+    /** Reverts to the point previously saved by Mastodon's undo recorder. */
     var mastodonUndoCallback: (() -> Unit)? = null
+    /** Returns a list of spots currently selected in Mastodon. Used to determine whether to scale the cursor or the spots. */
+    var getSelectionCallback: (() -> List<InstancedNode.Instance>)? = null
+    /** Adjusts the radii of spots, both in sciview and Mastodon. */
+    var scaleSpotsCallback: ((Float) -> Unit)? = null
 
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
 
@@ -274,7 +277,7 @@ open class CellTrackingBase(
             val p = cursor.getPosition()
             // did the user click on an existing cell and wants to merge the track into it?
             val (selected, isValidSelection) =
-                spotSelectionCallback?.invoke(p, volume.currentTimepoint, cursor.radius, false) ?: (null to false)
+                spotSelectCallback?.invoke(p, volume.currentTimepoint, cursor.radius, false) ?: (null to false)
             // If this is the first spot we track, and its a valid existing spot, mark it as such
             if (isValidSelection && controllerTrackList.size == 0) {
                 startWithExistingSpot = selected
@@ -614,13 +617,28 @@ open class CellTrackingBase(
             skipToPrevious = true
         }
 
-        val cursorIncrease = ClickBehaviour { _, _ ->
-            cursor.scaleByFactor(1.05f)
+        class ScaleCursorOrSpotsBehavior(val factor: Float): DragBehaviour {
+            var isSelected = false
+            override fun init(p0: Int, p1: Int) {
+                // determine whether we selected spots or not
+                isSelected = getSelectionCallback?.invoke()?.isNotEmpty() ?: false
+            }
+
+            override fun drag(p0: Int, p1: Int) {
+                if (isSelected) {
+                    scaleSpotsCallback?.invoke(factor)
+                } else {
+                    cursor.scaleByFactor(factor)
+                }
+            }
+
+            override fun end(p0: Int, p1: Int) {
+            }
         }
 
-        val cursorDecrease = ClickBehaviour { _, _ ->
-            cursor.scaleByFactor(0.95f)
-        }
+        val scaleCursorOrSpotsUp = AnalogInputWrapper(ScaleCursorOrSpotsBehavior(1.05f), sciview.currentScene)
+
+        val scaleCursorOrSpotsDown = AnalogInputWrapper(ScaleCursorOrSpotsBehavior(0.95f), sciview.currentScene)
 
         val faster = ClickBehaviour { _, _ ->
             volumesPerSecond = maxOf(minOf(volumesPerSecond+0.2f, 20f), 1f)
@@ -676,8 +694,8 @@ open class CellTrackingBase(
 //        mapper.setKeyBindAndBehavior(hmd, "faster", faster)
 //        mapper.setKeyBindAndBehavior(hmd, "slower", slower)
         mapper.setKeyBindAndBehavior(hmd, "play_pause", playPause)
-        mapper.setKeyBindAndBehavior(hmd, "radiusIncrease", cursorIncrease)
-        mapper.setKeyBindAndBehavior(hmd, "radiusDecrease", cursorDecrease)
+        mapper.setKeyBindAndBehavior(hmd, "radiusIncrease", scaleCursorOrSpotsUp)
+        mapper.setKeyBindAndBehavior(hmd, "radiusDecrease", scaleCursorOrSpotsDown)
 
         /** Local class that handles double assignment of the left A key which is used to cycle menus as well as
          * reset the rotation when pressed while the [VR2HandNodeTransform] is active. */
@@ -745,13 +763,13 @@ open class CellTrackingBase(
                 time = System.currentTimeMillis()
                 val p = cursor.getPosition()
                 cursor.setSelectColor()
-                spotSelectionCallback?.invoke(p, volume.currentTimepoint, cursor.radius, false)
+                spotSelectCallback?.invoke(p, volume.currentTimepoint, cursor.radius, false)
             }
             override fun drag(x: Int, y: Int) {
                 // Only perform the selection method ten times a second
                 if (System.currentTimeMillis() - time > 100) {
                     val p = cursor.getPosition()
-                    spotSelectionCallback?.invoke(p, volume.currentTimepoint, cursor.radius, true)
+                    spotSelectCallback?.invoke(p, volume.currentTimepoint, cursor.radius, true)
                     time = System.currentTimeMillis()
                 }
             }
