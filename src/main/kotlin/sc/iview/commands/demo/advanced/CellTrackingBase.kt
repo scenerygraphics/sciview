@@ -108,7 +108,7 @@ open class CellTrackingBase(
     /** Returns a list of spots currently selected in Mastodon. Used to determine whether to scale the cursor or the spots. */
     var getSelectionCallback: (() -> List<InstancedNode.Instance>)? = null
     /** Adjusts the radii of spots, both in sciview and Mastodon. */
-    var scaleSpotsCallback: ((Float) -> Unit)? = null
+    var scaleSpotsCallback: ((radius: Float, update: Boolean) -> Unit)? = null
 
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
 
@@ -626,19 +626,21 @@ open class CellTrackingBase(
 
             override fun drag(p0: Int, p1: Int) {
                 if (isSelected) {
-                    scaleSpotsCallback?.invoke(factor)
+                    scaleSpotsCallback?.invoke(factor, false)
                 } else {
-                    cursor.scaleByFactor(factor)
+                    // Make cursor movement a little stronger than
+                    cursor.scaleByFactor(factor * factor)
                 }
             }
 
             override fun end(p0: Int, p1: Int) {
+                scaleSpotsCallback?.invoke(factor, true)
             }
         }
 
-        val scaleCursorOrSpotsUp = AnalogInputWrapper(ScaleCursorOrSpotsBehavior(1.05f), sciview.currentScene)
+        val scaleCursorOrSpotsUp = AnalogInputWrapper(ScaleCursorOrSpotsBehavior(1.02f), sciview.currentScene)
 
-        val scaleCursorOrSpotsDown = AnalogInputWrapper(ScaleCursorOrSpotsBehavior(0.95f), sciview.currentScene)
+        val scaleCursorOrSpotsDown = AnalogInputWrapper(ScaleCursorOrSpotsBehavior(0.98f), sciview.currentScene)
 
         val faster = ClickBehaviour { _, _ ->
             volumesPerSecond = maxOf(minOf(volumesPerSecond+0.2f, 20f), 1f)
