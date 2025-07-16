@@ -103,8 +103,8 @@ open class CellTrackingBase(
     var neighborLinkingCallback: (() -> Unit)? = null
     // TODO add train flow functionality
     var trainFlowCallback: (() -> Unit)? = null
-    /** Reverts to the point previously saved by Mastodon's undo recorder. */
-    var mastodonUndoCallback: (() -> Unit)? = null
+    /** Reverts to the point previously saved by Mastodon's undo recorder. Also handles redo events if undo is set to false. */
+    var mastodonUndoRedoCallback: ((undo: Boolean) -> Unit)? = null
     /** Returns a list of spots currently selected in Mastodon. Used to determine whether to scale the cursor or the spots. */
     var getSelectionCallback: (() -> List<InstancedNode.Instance>)? = null
     /** Adjusts the radii of spots, both in sciview and Mastodon. */
@@ -197,14 +197,11 @@ open class CellTrackingBase(
                         device.model?.name = "leftHand"
                         setupElephantMenu()
                         setupGeneralMenu()
+                        inputSetup()
+                        logger.info("Set up navigation and editing controls.")
                     }
                 }
             }
-        }
-
-        thread {
-            logger.info("started thread for inputSetup")
-            inputSetup()
         }
 
         cellTrackingActive = true
@@ -394,7 +391,12 @@ open class CellTrackingBase(
 
         val undoButton = Button(
             "Undo",
-            command = { mastodonUndoCallback?.invoke() }, byTouch = true, depressDelay = 250,
+            command = { mastodonUndoRedoCallback?.invoke(true) }, byTouch = true, depressDelay = 250,
+            color = color, pressedColor = pressedColor, touchingColor = touchingColor
+        )
+        val redoButton = Button(
+            "Redo",
+            command = {mastodonUndoRedoCallback?.invoke(false)}, byTouch = true, depressDelay = 250,
             color = color, pressedColor = pressedColor, touchingColor = touchingColor
         )
         val toggleTrackingPreviewBtn = ToggleButton(
@@ -462,7 +464,7 @@ open class CellTrackingBase(
 
         val timeControlRow = Row(goToFirstBtn, playSlowerBtn, togglePlaybackDirBtn, playFasterBtn, goToLastBtn)
 
-        leftUndoMenu = createWristMenuColumn(undoButton, name = "Left Undo Menu")
+        leftUndoMenu = createWristMenuColumn(undoButton, redoButton, name = "Left Undo Menu")
         leftUndoMenu?.visible = false
         val previewMenu = createWristMenuColumn(toggleTrackingPreviewBtn, name = "Preview Menu")
         previewMenu.visible = false
@@ -695,7 +697,7 @@ open class CellTrackingBase(
         mapper.setKeyBindAndBehavior(hmd, "stepBwd", prevTimepoint)
 //        mapper.setKeyBindAndBehavior(hmd, "faster", faster)
 //        mapper.setKeyBindAndBehavior(hmd, "slower", slower)
-        mapper.setKeyBindAndBehavior(hmd, "play_pause", playPause)
+        mapper.setKeyBindAndBehavior(hmd, "playback", playPause)
         mapper.setKeyBindAndBehavior(hmd, "radiusIncrease", scaleCursorOrSpotsUp)
         mapper.setKeyBindAndBehavior(hmd, "radiusDecrease", scaleCursorOrSpotsDown)
 

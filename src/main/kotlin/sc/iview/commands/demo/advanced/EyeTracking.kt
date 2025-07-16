@@ -2,6 +2,7 @@ package sc.iview.commands.demo.advanced
 
 import graphics.scenery.*
 import graphics.scenery.controls.OpenVRHMD.OpenVRButton
+import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.TrackerRole
 import graphics.scenery.controls.eyetracking.PupilEyeTracker
 import graphics.scenery.primitives.Cylinder
@@ -130,9 +131,13 @@ class EyeTracking(
         debugBoard.visible = false
         sciview.camera?.addChild(debugBoard)
 
-        setupEyeTracking()
+        hmd.events.onDeviceConnect.add { hmd, device, timestamp ->
+            if (device.type == TrackedDeviceType.Controller) {
+                setupEyeTracking()
+                setupEyeTrackingMenu()
+            }
+        }
 
-        setupEyeTrackingMenu()
     }
 
 
@@ -142,6 +147,10 @@ class EyeTracking(
         val cam = sciview.camera as? DetachedHeadCamera ?: return
 
         val toggleTracking = ClickBehaviour { _, _ ->
+            if (!pupilTracker.isCalibrated) {
+                logger.warn("Can't do eye tracking because eye trackers are not calibrated yet.")
+                return@ClickBehaviour
+            }
             if (eyeTrackingActive) {
                 logger.info("deactivated tracking through user input.")
                 referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
@@ -150,7 +159,7 @@ class EyeTracking(
                 playing = false
             } else {
                 logger.info("activating tracking...")
-                playing = true
+                playing = false
                 addHedgehog()
                 referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
                 cam.showMessage("Tracking active.",distance = 2f, size = 0.2f, centered = true)
@@ -158,7 +167,7 @@ class EyeTracking(
             eyeTrackingActive = !eyeTrackingActive
         }
 
-        mapper.setKeyBindAndBehavior(hmd, "eye_tracking", toggleTracking)
+        mapper.setKeyBindAndBehavior(hmd, "eyeTracking", toggleTracking)
     }
 
     private fun calibrateEyeTrackers(force: Boolean = false) {
@@ -265,8 +274,8 @@ class EyeTracking(
             },
             byTouch = true
         )
-
         leftEyeTrackColumn = createWristMenuColumn(toggleHedgehogsBtn, calibrateButton, name = "Eye Tracking Menu")
+        leftEyeTrackColumn?.visible = false
     }
 
     /** Toggles the VR rendering off, cleans up eyetracking-related scene objects and removes the light tetrahedron
