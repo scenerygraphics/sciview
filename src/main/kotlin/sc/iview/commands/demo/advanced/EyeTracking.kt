@@ -141,9 +141,7 @@ class EyeTracking(
     }
 
 
-    private fun setupEyeTracking(
-        keybindingCalibration: Pair<TrackerRole, OpenVRButton> = (TrackerRole.RightHand to OpenVRButton.Menu)
-    ) {
+    private fun setupEyeTracking() {
         val cam = sciview.camera as? DetachedHeadCamera ?: return
 
         val toggleTracking = ClickBehaviour { _, _ ->

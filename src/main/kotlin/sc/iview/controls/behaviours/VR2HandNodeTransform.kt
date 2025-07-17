@@ -72,7 +72,7 @@ class VR2HandNodeTransform(
                 it.ifSpatial {
                     val rotationDelta = Quaternionf().rotationTo(lastDirection, currentDirection)
                     if (resetRotationBtnManager?.isTwoHandedActive() == true) {
-                        // Reset the rotation when the
+                        // Reset the rotation when the reset button was pressed too
                         rotation = Quaternionf()
                     } else {
                         // Rotate node with respect to the world space delta

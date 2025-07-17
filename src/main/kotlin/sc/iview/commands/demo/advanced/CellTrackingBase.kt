@@ -285,15 +285,6 @@ open class CellTrackingBase(
             // Create a placeholder link during tracking for immediate feedback
             singleLinkTrackedCallback?.invoke(p, volume.currentTimepoint, cursor.radius, enableTrackingPreview)
 
-//            controllerTrackList.add(
-//                p to SpineGraphVertex(
-//                    volume.currentTimepoint,
-//                    p,
-//                    volume.spatial().world.transform((Vector3f(p)).xyzw()).xyz(),
-//                    controllerTrackList.size,
-//                    0f // This is ugly, but we don't care about the sampled value of the volume here
-//                )
-//            )
             volume.goToTimepoint(volume.currentTimepoint - 1)
             // If the user clicked a cell and its *not* the first in the track, we assume it is a merge event and end the tracking
             if (isValidSelection && controllerTrackList.size > 1) {
