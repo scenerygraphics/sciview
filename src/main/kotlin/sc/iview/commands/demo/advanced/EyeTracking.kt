@@ -157,7 +157,7 @@ class EyeTracking(
                 playing = false
             } else {
                 logger.info("activating tracking...")
-                playing = false
+                playing = true
                 addHedgehog()
                 referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
                 cam.showMessage("Tracking active.",distance = 2f, size = 0.2f, centered = true)
