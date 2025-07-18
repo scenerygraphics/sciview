@@ -1,9 +1,7 @@
 package sc.iview.commands.demo.advanced
 
 import graphics.scenery.*
-import graphics.scenery.controls.OpenVRHMD.OpenVRButton
 import graphics.scenery.controls.TrackedDeviceType
-import graphics.scenery.controls.TrackerRole
 import graphics.scenery.controls.eyetracking.PupilEyeTracker
 import graphics.scenery.primitives.Cylinder
 import graphics.scenery.primitives.TextBoard
@@ -13,9 +11,12 @@ import graphics.scenery.ui.Column
 import graphics.scenery.ui.ToggleButton
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.minus
+import graphics.scenery.utils.extensions.toFloatArray
 import graphics.scenery.utils.extensions.xyz
 import graphics.scenery.utils.extensions.xyzw
 import net.imglib2.type.numeric.integer.UnsignedByteType
+import org.apache.commons.math3.ml.clustering.Clusterable
+import org.apache.commons.math3.ml.clustering.DBSCANClusterer
 import org.joml.*
 import org.scijava.ui.behaviour.ClickBehaviour
 import sc.iview.SciView
@@ -26,6 +27,7 @@ import java.nio.file.Paths
 import javax.imageio.ImageIO
 import kotlin.concurrent.thread
 import kotlin.math.PI
+import kotlin.time.TimeSource
 
 /**
  * Tracking class used for communicating with eye trackers, tracking cells with them in a sciview VR environment.
@@ -45,6 +47,10 @@ class EyeTracking(
     private lateinit var debugBoard: TextBoard
 
     var leftEyeTrackColumn: Column? = null
+
+    enum class TrackingType { Follow, Pick }
+
+    private var currentTrackingType = TrackingType.Follow
 
     override fun run() {
         // Do all the things for general VR startup before setting up the eye tracking environment
@@ -138,6 +144,20 @@ class EyeTracking(
             }
         }
 
+        // Attach a behavior to the main loop that stops the eye tracking once we reached the first time point
+        // and analyzes the created track.
+        attachToLoop {
+            val newTimepoint = volume.viewerState.currentTimepoint
+            if (eyeTrackingActive && newTimepoint == 0) {
+                eyeTrackingActive = false
+                playing = false
+                referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
+                logger.info("Deactivated eye tracking by reaching timepoint 0.")
+                sciview.camera!!.showMessage("Tracking deactivated.", distance = 2f, size = 0.2f, centered = true)
+                analyzeEyeTrack()
+            }
+        }
+
     }
 
 
@@ -153,11 +173,19 @@ class EyeTracking(
                 logger.info("deactivated tracking through user input.")
                 referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
                 cam.showMessage("Tracking deactivated.",distance = 2f, size = 0.2f, centered = true)
-                dumpHedgehog()
+                if (currentTrackingType == TrackingType.Follow) {
+                    analyzeEyeTrack()
+                } else {
+                    analyzeGazeClusters()
+                }
                 playing = false
             } else {
                 logger.info("activating tracking...")
-                playing = false
+                playing = if (currentTrackingType == TrackingType.Follow) {
+                    true
+                } else {
+                    false
+                }
                 addHedgehog()
                 referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
                 cam.showMessage("Tracking active.",distance = 2f, size = 0.2f, centered = true)
@@ -272,14 +300,181 @@ class EyeTracking(
             },
             byTouch = true
         )
-        leftEyeTrackColumn = createWristMenuColumn(toggleHedgehogsBtn, calibrateButton, name = "Eye Tracking Menu")
+
+        val toggleTrackTypeBtn = ToggleButton(
+            "Follow Cell",
+            "Count Cells",
+            command = {
+                currentTrackingType = if (currentTrackingType == TrackingType.Follow) {
+                    TrackingType.Pick
+                } else {
+                    TrackingType.Follow
+                }
+            },
+            byTouch = true,
+            color = Vector3f(0.65f, 1f, 0.22f),
+            pressedColor = Vector3f(0.15f, 0.2f, 1f)
+        )
+
+        leftEyeTrackColumn =
+            createWristMenuColumn(toggleTrackTypeBtn, toggleHedgehogsBtn, calibrateButton, name = "Eye Tracking Menu")
         leftEyeTrackColumn?.visible = false
+    }
+
+    /** Writes the accumulated gazes (hedgehog) to a file, analyzes it,
+     * sends the track to Mastodon and writes the track to a file. */
+    private fun analyzeEyeTrack() {
+        val lastHedgehog =  hedgehogs.children.last() as InstancedNode
+        val hedgehogId = hedgehogIds.incrementAndGet()
+
+        writeHedgehogToFile(lastHedgehog, hedgehogId)
+
+        val spines = lastHedgehog.instances.mapNotNull { spine ->
+            spine.metadata["spine"] as? SpineMetadata
+        }
+
+        val existingAnalysis = lastHedgehog.metadata["HedgehogAnalysis"] as? HedgehogAnalysis.Track
+        val track = if(existingAnalysis is HedgehogAnalysis.Track) {
+            existingAnalysis
+        } else {
+            val h = HedgehogAnalysis(spines, Matrix4f(volume.spatial().world))
+            h.run()
+        }
+
+        if(track == null) {
+            logger.warn("No track returned")
+            sciview.camera?.showMessage("No track returned", distance = 1.2f, size = 0.2f,messageColor = Vector4f(1.0f, 0.0f, 0.0f,1.0f))
+            return
+        }
+
+        if (trackCreationCallback != null && rebuildGeometryCallback != null) {
+            trackCreationCallback?.invoke(track.points, false, null, null)
+            rebuildGeometryCallback?.invoke()
+        } else {
+            logger.warn("Tried to send track data to Mastodon but couldn't find the callbacks!")
+        }
+
+        writeTrackToFile(track.points, hedgehogId)
+
+    }
+
+    private fun Vector3f.toDoubleArray(): DoubleArray {
+        return this.toFloatArray().map { it.toDouble() }.toDoubleArray()
+    }
+
+    private fun analyzeGazeClusters() {
+        logger.info("Starting analysis of gaze clusters...")
+        val lastHedgehog =  hedgehogs.children.last() as InstancedNode
+        val hedgehogId = hedgehogIds.incrementAndGet()
+
+        writeHedgehogToFile(lastHedgehog, hedgehogId)
+
+        val spines = lastHedgehog.instances.mapNotNull { spine ->
+            spine.metadata["spine"] as? SpineMetadata
+        }
+        logger.info("Starting with ${spines.size} spines")
+
+        // Calculate the distance from each direction to its neighbor
+        val speeds = mutableListOf<Float>()
+        for (i in 0..< spines.size - 1) {
+            speeds.add(spines[i].direction.distance(spines[i+1].direction))
+        }
+        logger.info("Min speed: ${speeds.min()}, max speed: ${speeds.max()}")
+        val medianSpeed = speeds.sorted()[speeds.size/2]
+        logger.info("Median speed: $medianSpeed")
+
+        // Clean the list of spines by removing the ones that are too far from their neighbors
+        val cleanedSpines = mutableListOf<SpineMetadata>()
+        speeds.forEachIndexed { index, speed ->
+            if (speed < 0.3 * medianSpeed) {
+                cleanedSpines.add(spines[index])
+            }
+        }
+        logger.info("After cleaning: ${cleanedSpines.size} spines remain")
+
+        var start = TimeSource.Monotonic.markNow()
+        val clustering = DBSCANClusterer<Clusterable>((10 * medianSpeed).toDouble(), 3)
+
+        // Create a map to efficiently find spine metadata by direction
+        val spineByDirection = cleanedSpines.associateBy { it.direction.toDoubleArray().contentHashCode() }
+
+        val clusters = clustering.cluster(cleanedSpines.map {
+            Clusterable {
+                // On the fly conversion of a Vector3f to a double array
+                it.direction.toDoubleArray()
+            }
+        })
+        logger.info("Clustering took ${TimeSource.Monotonic.markNow() - start}")
+        logger.info("We got ${clusters.size} clusters")
+
+        // Extract the mean direction for each cluster,
+        // and find the corresponding start positions and average them too
+        val cluster_centers = clusters.map { cluster ->
+            val meanDirArray = arrayListOf(0.0, 0.0, 0.0)
+            val meanPosArray = arrayListOf(0.0, 0.0, 0.0)
+
+            cluster.points.forEach { point ->
+                meanDirArray[0] += point.point[0]
+                meanDirArray[1] += point.point[1]
+                meanDirArray[2] += point.point[2]
+
+                val spine = spineByDirection[point.point.contentHashCode()]
+                if (spine != null) {
+                    meanPosArray[0] += spine.position.x.toDouble()
+                    meanPosArray[1] += spine.position.y.toDouble()
+                    meanPosArray[2] += spine.position.z.toDouble()
+                } else {
+                    logger.warn("Could not find spine for direction: ${point.point.contentToString()}")
+                }
+
+            }
+
+            // Calculate means by dividing by cluster size
+            val clusterSize = cluster.points.size.toDouble()
+            meanDirArray[0] /= clusterSize
+            meanDirArray[1] /= clusterSize
+            meanDirArray[2] /= clusterSize
+
+            meanPosArray[0] /= clusterSize
+            meanPosArray[1] /= clusterSize
+            meanPosArray[2] /= clusterSize
+
+            val meanDir = Vector3f(meanDirArray[0].toFloat(), meanDirArray[1].toFloat(), meanDirArray[2].toFloat())
+            val meanPos = Vector3f(meanPosArray[0].toFloat(), meanPosArray[1].toFloat(), meanPosArray[2].toFloat())
+
+            logger.info("MeanDir for cluster is $meanDir")
+            logger.info("MeanPos for cluster is $meanPos")
+            (meanPos to meanDir)
+        }
+
+        // We only need this to access the smoothing and maxima search functions
+        val analyzer = HedgehogAnalysis(cleanedSpines, Matrix4f(volume.spatial().world))
+
+        start = TimeSource.Monotonic.markNow()
+        val spots = cluster_centers.map { (origin, direction) ->
+            // TODO THIS IS STILL BROKEN
+            // Either the sampling itself is broken (it definitely works in follow mode)
+            // or something about the mean calculation is still broken
+            val (samples, samplePos) = sampleRayThroughVolume(origin, direction, volume)
+            var spotPos: Vector3f? = null
+            if (samples != null && samplePos != null) {
+                val smoothed = analyzer.gaussSmoothing(samples, 4)
+                analyzer.localMaxima(smoothed).firstOrNull()?.let { (index, sample) ->
+                    spotPos = samplePos[index]
+                }
+            }
+            logger.info("Extracted spot at position $spotPos")
+            spotPos
+        }
+        logger.info("Sampling volume and spot extraction took ${TimeSource.Monotonic.markNow() - start}")
+        spots.filterNotNull().forEach { spot ->
+            spotCreateDeleteCallback?.invoke(volume.currentTimepoint, spot, 0.03f, false)
+        }
     }
 
     /** Toggles the VR rendering off, cleans up eyetracking-related scene objects and removes the light tetrahedron
      * that was created for the calibration routine. */
     override fun stop() {
-
         pupilTracker.unsubscribeFrames()
         logger.info("Stopped volume and hedgehog updater thread.")
         val n = sciview.find("eyeFrames")

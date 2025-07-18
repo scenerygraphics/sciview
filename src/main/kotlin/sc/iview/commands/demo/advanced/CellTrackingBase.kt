@@ -30,6 +30,7 @@ import sc.iview.controls.behaviours.VRGrabTheWorld
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.nio.file.Path
+import java.util.ArrayList
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 
@@ -838,7 +839,6 @@ open class CellTrackingBase(
                             notifyObservers(oldTimepoint + 1)
                         }
                     }
-                    val newTimepoint = volume.viewerState.currentTimepoint
 
 
                     if(hedgehogs.visible) {
@@ -859,14 +859,7 @@ open class CellTrackingBase(
                         }
                     }
 
-                    if(eyeTrackingActive && newTimepoint == 0) {
-                        eyeTrackingActive = false
-                        playing = false
-                        referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f)}
-                        logger.info("Deactivated eye tracking by reaching timepoint 0.")
-                        sciview.camera!!.showMessage("Tracking deactivated.",distance = 2f, size = 0.2f, centered = true)
-                        dumpHedgehog()
-                    }
+                    updateLoopActions.forEach { it.invoke() }
                 }
 
                 Thread.sleep((1000.0f/volumesPerSecond).toLong())
@@ -875,12 +868,35 @@ open class CellTrackingBase(
         }
     }
 
+    private val updateLoopActions: ArrayList<() -> Unit> = ArrayList()
+
+    /** Allows hooking lambdas into the main update loop. This is needed for eye tracking related actions. */
+    protected fun attachToLoop(action: () -> Unit) {
+        updateLoopActions.add(action)
+    }
+
+    /** Samples a given [volume] from an [origin] point along a [direction].
+     * @return a pair of lists, containing the samples and sample positions, respectively. */
+    protected fun sampleRayThroughVolume(origin: Vector3f, direction: Vector3f, volume: Volume): Pair<List<Float>?, List<Vector3f>?> {
+        val intersection = volume.spatial().intersectAABB(origin, direction.normalize(), ignoreChildren = true)
+
+        if (intersection is MaybeIntersects.Intersection) {
+            val localEntry = (intersection.relativeEntry)
+            val localExit = (intersection.relativeExit)
+            val (samples, samplePos) = volume.sampleRayGridTraversal(localEntry, localExit) ?: (null to null)
+            val volumeScale = (volume as RAIVolume).getVoxelScale()
+            return (samples?.map { it ?: 0.0f } to samplePos?.map { it?.mul(volumeScale) ?: Vector3f(0f) })
+        }
+        return (null to null)
+    }
+
     open fun addSpine(center: Vector3f, direction: Vector3f, volume: Volume, confidence: Float, timepoint: Int) {
         val cam = sciview.camera as? DetachedHeadCamera ?: return
         val sphere = volume.boundingBox?.getBoundingSphere() ?: return
 
         val sphereDirection = sphere.origin.minus(center)
-        val sphereDist = Math.sqrt(sphereDirection.x * sphereDirection.x + sphereDirection.y * sphereDirection.y + sphereDirection.z * sphereDirection.z) - sphere.radius
+        val sphereDist =
+            Math.sqrt(sphereDirection.x * sphereDirection.x + sphereDirection.y * sphereDirection.y + sphereDirection.z * sphereDirection.z) - sphere.radius
 
         val p1 = center
         val temp = direction.mul(sphereDist + 2.0f * sphere.radius)
@@ -932,72 +948,55 @@ open class CellTrackingBase(
         }
     }
 
-    /**
-     * Dumps a given hedgehog including created tracks to a file.
-     * If [hedgehog] is null, the last created hedgehog will be used, otherwise the given one.
-     * If [hedgehog] is not null, the cell track will not be added to the scene.
-     */
     fun dumpHedgehog(){
-        logger.info("dumping hedgehog...")
-        val lastHedgehog =  hedgehogs.children.last() as InstancedNode
-        val hedgehogId = hedgehogIds.incrementAndGet()
+        // Placeholder for now. This method was refactored to EyeTracking.analyzeEyeTrack
+    }
 
-        val hedgehogFile = sessionDirectory.resolve("Hedgehog_${hedgehogId}_${SystemHelpers.formatDateTime()}.csv").toFile()
+    protected fun writeHedgehogToFile(hedgehog: InstancedNode, hedgehogId: Int) {
+        val hedgehogFile =
+            sessionDirectory.resolve("Hedgehog_${hedgehogId}_${SystemHelpers.formatDateTime()}.csv").toFile()
         val hedgehogFileWriter = hedgehogFile.bufferedWriter()
         hedgehogFileWriter.write("Timepoint;Origin;Direction;LocalEntry;LocalExit;LocalDirection;HeadPosition;HeadOrientation;Position;Confidence;Samples\n")
 
+        val spines = hedgehog.instances.mapNotNull { spine ->
+            spine.metadata["spine"] as? SpineMetadata
+        }
+
+        spines.forEach { metadata ->
+            hedgehogFileWriter.write(
+                "${metadata.timepoint};${metadata.origin};${metadata.direction};${metadata.localEntry};${metadata.localExit};" +
+                        "${metadata.localDirection};${metadata.headPosition};${metadata.headOrientation};" +
+                        "${metadata.position};${metadata.confidence};${metadata.samples.joinToString(";")
+                }\n"
+            )
+        }
+        hedgehogFileWriter.close()
+        logger.info("Wrote hedgehog to file ${hedgehogFile.name}")
+    }
+
+    protected fun writeTrackToFile(
+        points: List<Pair<Vector3f, SpineGraphVertex>>,
+        hedgehogId: Int
+    ) {
         val trackFile = sessionDirectory.resolve("Tracks.tsv").toFile()
         val trackFileWriter = BufferedWriter(FileWriter(trackFile, true))
-        if(!trackFile.exists()) {
+        if (!trackFile.exists()) {
             trackFile.createNewFile()
             trackFileWriter.write("# BionicTracking cell track listing for ${sessionDirectory.fileName}\n")
             trackFileWriter.write("# TIME\tX\tYt\t\tZ\tTRACK_ID\tPARENT_TRACK_ID\tSPOT\tLABEL\n")
         }
 
-
-        val spines = lastHedgehog.instances.mapNotNull { spine ->
-            spine.metadata["spine"] as? SpineMetadata
-        }
-
-        spines.forEach { metadata ->
-            hedgehogFileWriter.write("${metadata.timepoint};${metadata.origin};${metadata.direction};${metadata.localEntry};${metadata.localExit};${metadata.localDirection};${metadata.headPosition};${metadata.headOrientation};${metadata.position};${metadata.confidence};${metadata.samples.joinToString(";")}\n")
-        }
-        hedgehogFileWriter.close()
-
-        val existingAnalysis = lastHedgehog.metadata["HedgehogAnalysis"] as? HedgehogAnalysis.Track
-        val track = if(existingAnalysis is HedgehogAnalysis.Track) {
-            existingAnalysis
-        } else {
-            val h = HedgehogAnalysis(spines, Matrix4f(volume.spatial().world))
-            h.run()
-        }
-
-        if(track == null) {
-            logger.warn("No track returned")
-            sciview.camera?.showMessage("No track returned", distance = 1.2f, size = 0.2f,messageColor = Vector4f(1.0f, 0.0f, 0.0f,1.0f))
-            return
-        }
-
-        lastHedgehog.metadata["HedgehogAnalysis"] = track
-        lastHedgehog.metadata["Spines"] = spines
-
+        trackFileWriter.newLine()
+        trackFileWriter.newLine()
         val parentId = 0
-        val volumeDimensions = volume.getDimensions()
-
-        trackFileWriter.newLine()
-        trackFileWriter.newLine()
         trackFileWriter.write("# START OF TRACK $hedgehogId, child of $parentId\n")
-        if (trackCreationCallback != null && rebuildGeometryCallback != null) {
-            trackCreationCallback?.invoke(track.points, false, null, null)
-            rebuildGeometryCallback?.invoke()
-        } else {
-            logger.warn("Tried to send track data to Mastodon but couldn't find the callbacks!")
-        }
-        track.points.windowed(2, 1).forEach { pair ->
+        val volumeDimensions = volume.getDimensions()
+        points.windowed(2, 1).forEach { pair ->
             val p = Vector3f(pair[0].first).mul(Vector3f(volumeDimensions)) // direct product
             val tp = pair[0].second.timepoint
             trackFileWriter.write("$tp\t${p.x()}\t${p.y()}\t${p.z()}\t${hedgehogId}\t$parentId\t0\t0\n")
         }
+
         trackFileWriter.close()
     }
 
