@@ -368,7 +368,7 @@ class EyeTracking(
         val hedgehogId = hedgehogIds.incrementAndGet()
 
         writeHedgehogToFile(lastHedgehog, hedgehogId)
-
+        // Get spines from the most recent hedgehog
         val spines = lastHedgehog.instances.mapNotNull { spine ->
             spine.metadata["spine"] as? SpineMetadata
         }
@@ -393,6 +393,7 @@ class EyeTracking(
         logger.info("After cleaning: ${cleanedSpines.size} spines remain")
 
         var start = TimeSource.Monotonic.markNow()
+        // Assuming ten times the median distance is a good clustering value...
         val clustering = DBSCANClusterer<Clusterable>((10 * medianSpeed).toDouble(), 3)
 
         // Create a map to efficiently find spine metadata by direction
@@ -409,10 +410,11 @@ class EyeTracking(
 
         // Extract the mean direction for each cluster,
         // and find the corresponding start positions and average them too
-        val cluster_centers = clusters.map { cluster ->
+        val clusterCenters = clusters.map { cluster ->
             val meanDirArray = arrayListOf(0.0, 0.0, 0.0)
             val meanPosArray = arrayListOf(0.0, 0.0, 0.0)
 
+            // Each "point" in the cluster is actually the ray direction
             cluster.points.forEach { point ->
                 meanDirArray[0] += point.point[0]
                 meanDirArray[1] += point.point[1]
@@ -420,9 +422,9 @@ class EyeTracking(
 
                 val spine = spineByDirection[point.point.contentHashCode()]
                 if (spine != null) {
-                    meanPosArray[0] += spine.position.x.toDouble()
-                    meanPosArray[1] += spine.position.y.toDouble()
-                    meanPosArray[2] += spine.position.z.toDouble()
+                    meanPosArray[0] += spine.origin.x.toDouble()
+                    meanPosArray[1] += spine.origin.y.toDouble()
+                    meanPosArray[2] += spine.origin.z.toDouble()
                 } else {
                     logger.warn("Could not find spine for direction: ${point.point.contentToString()}")
                 }
@@ -442,8 +444,8 @@ class EyeTracking(
             val meanDir = Vector3f(meanDirArray[0].toFloat(), meanDirArray[1].toFloat(), meanDirArray[2].toFloat())
             val meanPos = Vector3f(meanPosArray[0].toFloat(), meanPosArray[1].toFloat(), meanPosArray[2].toFloat())
 
-            logger.info("MeanDir for cluster is $meanDir")
-            logger.info("MeanPos for cluster is $meanPos")
+            logger.debug("MeanDir for cluster is $meanDir")
+            logger.debug("MeanPos for cluster is $meanPos")
             (meanPos to meanDir)
         }
 
@@ -451,7 +453,7 @@ class EyeTracking(
         val analyzer = HedgehogAnalysis(cleanedSpines, Matrix4f(volume.spatial().world))
 
         start = TimeSource.Monotonic.markNow()
-        val spots = cluster_centers.map { (origin, direction) ->
+        val spots = clusterCenters.map { (origin, direction) ->
             // TODO THIS IS STILL BROKEN
             // Either the sampling itself is broken (it definitely works in follow mode)
             // or something about the mean calculation is still broken
@@ -463,12 +465,11 @@ class EyeTracking(
                     spotPos = samplePos[index]
                 }
             }
-            logger.info("Extracted spot at position $spotPos")
             spotPos
         }
         logger.info("Sampling volume and spot extraction took ${TimeSource.Monotonic.markNow() - start}")
         spots.filterNotNull().forEach { spot ->
-            spotCreateDeleteCallback?.invoke(volume.currentTimepoint, spot, 0.03f, false)
+            spotCreateDeleteCallback?.invoke(volume.currentTimepoint, spot, 0.03f, false, false)
         }
     }
 

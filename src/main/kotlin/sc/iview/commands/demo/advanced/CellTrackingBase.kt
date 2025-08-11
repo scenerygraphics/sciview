@@ -77,11 +77,24 @@ open class CellTrackingBase(
      * Set the first boolean to true if the coordinates are in world space. The bridge will convert them to Mastodon coords.
      * The first Spot defines whether to start with an existing spot, so the lambda will use that as starting point.
      * The second spot defines whether we want to merge into this spot. */
-    var trackCreationCallback: ((List<Pair<Vector3f, SpineGraphVertex>>?, Boolean, Spot?, Spot?) -> Unit)? = null
-    /** Passes the current time point, the cursor position and its radius to the bridge to either create a new spot
-     * or delete an existing spot if there is a spot selected.
-     * The deleteBranch flag indicates whether we want to delete the whole branch or just a spot.  */
-    var spotCreateDeleteCallback: ((tp: Int, sciviewPos: Vector3f, radius: Float, deleteBranch: Boolean) -> Unit)? = null
+    var trackCreationCallback: ((
+        List<Pair<Vector3f, SpineGraphVertex>>?,
+        isWorldSpace: Boolean,
+        startSpot: Spot?,
+        mergeSpot: Spot?
+    ) -> Unit)? = null
+
+    /** Passes the current time point, a position and a radius to the bridge to either create a new spot
+     * or to delete an existing spot if there is a spot selected.
+     * The deleteBranch flag indicates whether we want to delete the whole branch or just a spot.
+     * isVoxelCoords indicates whether the coordinates are in sciview or in mastodon space */
+    var spotCreateDeleteCallback: ((
+        tp: Int,
+        sciviewPos: Vector3f,
+        radius: Float,
+        deleteBranch: Boolean,
+        isWorldSpace: Boolean
+    ) -> Unit)? = null
     /** Select a spot based on the controller tip's position, current time point and a multiple of the radius
      * in which a selection event is counted as valid. addOnly prevents deselection from clicking away. */
     var spotSelectCallback: ((sciviewPos: Vector3f, tp: Int, radiusFactor: Float, addOnly: Boolean) -> Pair<Spot?, Boolean>)? = null
@@ -734,7 +747,7 @@ open class CellTrackingBase(
             override fun drag(x: Int, y: Int) {
                 if (System.currentTimeMillis() - start > 500 && !wasExecuted) {
                     val p = cursor.getPosition()
-                    spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, cursor.radius, true)
+                    spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, cursor.radius, true, true)
                     wasExecuted = true
                 }
             }
@@ -745,7 +758,7 @@ open class CellTrackingBase(
                     val p = cursor.getPosition()
                     logger.debug("Got cursor position: $p")
                     if (!wasExecuted) {
-                        spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, cursor.radius, false)
+                        spotCreateDeleteCallback?.invoke(volume.currentTimepoint, p, cursor.radius, false, true)
                     }
                 }
             }
@@ -886,6 +899,8 @@ open class CellTrackingBase(
             val (samples, samplePos) = volume.sampleRayGridTraversal(localEntry, localExit) ?: (null to null)
             val volumeScale = (volume as RAIVolume).getVoxelScale()
             return (samples?.map { it ?: 0.0f } to samplePos?.map { it?.mul(volumeScale) ?: Vector3f(0f) })
+        } else {
+            logger.warn("Ray didn't intersect volume! Origin was $origin, direction was $direction.")
         }
         return (null to null)
     }
