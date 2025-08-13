@@ -192,31 +192,30 @@ open class CellTrackingBase(
             volume = v
         }
 
-        thread {
-            logger.info("Adding onDeviceConnect handlers")
-            hmd.events.onDeviceConnect.add { hmd, device, timestamp ->
-                logger.info("onDeviceConnect called, cam=${sciview.camera}")
-                if(device.type == TrackedDeviceType.Controller) {
-                    logger.info("Got device ${device.name} at $timestamp")
-                    device.model?.let { hmd.attachToNode(device, it, sciview.camera) }
-                    when (device.role) {
-                        TrackerRole.Invalid -> {}
-                        TrackerRole.LeftHand -> leftVRController = device
-                        TrackerRole.RightHand -> rightVRController = device
-                    }
-                    if (device.role == TrackerRole.RightHand) {
-                        attachCursorAndTPWidget()
-                        device.model?.name = "rightHand"
-                    } else if (device.role == TrackerRole.LeftHand) {
-                        device.model?.name = "leftHand"
-                        setupElephantMenu()
-                        setupGeneralMenu()
-                        inputSetup()
-                        logger.info("Set up navigation and editing controls.")
-                    }
+        logger.info("Adding onDeviceConnect handlers")
+        hmd.events.onDeviceConnect.add { hmd, device, timestamp ->
+            logger.info("onDeviceConnect called, cam=${sciview.camera}")
+            if (device.type == TrackedDeviceType.Controller) {
+                logger.info("Got device ${device.name} at $timestamp")
+                device.model?.let { hmd.attachToNode(device, it, sciview.camera) }
+                when (device.role) {
+                    TrackerRole.Invalid -> {}
+                    TrackerRole.LeftHand -> leftVRController = device
+                    TrackerRole.RightHand -> rightVRController = device
+                }
+                if (device.role == TrackerRole.RightHand) {
+                    attachCursorAndTPWidget()
+                    device.model?.name = "rightHand"
+                } else if (device.role == TrackerRole.LeftHand) {
+                    device.model?.name = "leftHand"
+                    setupElephantMenu()
+                    setupGeneralMenu()
+
+                    logger.info("Set up navigation and editing controls.")
                 }
             }
         }
+        inputSetup()
 
         cellTrackingActive = true
         launchUpdaterThread()
@@ -270,7 +269,7 @@ open class CellTrackingBase(
 
     /** Intermediate storage for a single track created with the controllers.
      * Once tracking is finished, this track is sent to Mastodon. */
-    var controllerTrackList = mutableListOf<Pair<Vector3f, SpineGraphVertex>>()
+    var controllerTrackList = mutableListOf<Vector3f>()
     var startWithExistingSpot: Spot? = null
 
     /** This lambda is called every time the user performs a click with controller-based tracking. */
@@ -293,6 +292,8 @@ open class CellTrackingBase(
             if (isValidSelection && controllerTrackList.size == 0) {
                 startWithExistingSpot = selected
                 logger.info("Set startWithExistingPost to $startWithExistingSpot")
+            } else {
+                controllerTrackList.add(p)
             }
             logger.debug("Tracked a new spot at position $p")
             logger.debug("Do we want to merge? $isValidSelection. Selected spot is $selected")
