@@ -32,10 +32,15 @@ class VR2HandNodeTransform(
     val positionLocked: Boolean = false,
     val lockYaxis: Boolean = true,
     val target: Node,
+    private val onStartCallback: (() -> Unit)? = null,
+    private val onDragCallback: (() -> Unit)? = null,
     private val onEndCallback: (() -> Unit)? = null,
     private val resetRotationBtnManager: MultiButtonManager? = null,
     private val resetRotationButton: MultiButtonManager.ButtonConfig? = null,
 ) : VRTwoHandDragBehavior(name, controller, offhand) {
+
+    /** To trigger the [onStartCallback] regardless of which order of buttons was used. */
+    private var startCallbackTriggered = false
 
     override fun init(x: Int, y: Int) {
         super.init(x, y)
@@ -46,6 +51,10 @@ class VR2HandNodeTransform(
         if (transformBtn != null) {
             resetRotationBtnManager?.pressButton(transformBtn)
         }
+        if (isBothPressed()) {
+            onStartCallback?.invoke()
+            startCallbackTriggered = true
+        }
     }
 
     override fun dragDelta(
@@ -54,6 +63,12 @@ class VR2HandNodeTransform(
         lastPositionMain: Vector3f,
         lastPositionOff: Vector3f
     ) {
+
+        // Test whether we now press both buttons but the startCallback wasn't triggered yet.
+        if (isBothPressed() && !startCallbackTriggered) {
+            onStartCallback?.invoke()
+            startCallbackTriggered = true
+        }
 
         val scaleDelta =
             VRScale.getScaleDelta(currentPositionMain, currentPositionOff, lastPositionMain, lastPositionOff)
@@ -93,6 +108,7 @@ class VR2HandNodeTransform(
                 }
             }
         }
+        onDragCallback?.invoke()
     }
 
     override fun end(x: Int, y: Int) {
@@ -103,6 +119,8 @@ class VR2HandNodeTransform(
         if (transformBtn != null) {
             resetRotationBtnManager?.releaseButton(transformBtn)
         }
+        // Reset this flag for the next event
+        startCallbackTriggered = false
     }
 
     companion object {
@@ -118,6 +136,8 @@ class VR2HandNodeTransform(
             positionLocked: Boolean = false,
             lockYaxis: Boolean = true,
             target: Node,
+            onStartCallback: (() -> Unit)? = null,
+            onDragCallback: (() -> Unit)? = null,
             onEndCallback: (() -> Unit)? = null,
             resetRotationBtnManager: MultiButtonManager? = null,
             resetRotationButton: MultiButtonManager.ButtonConfig? = null,
@@ -140,6 +160,8 @@ class VR2HandNodeTransform(
                     positionLocked,
                     lockYaxis,
                     target,
+                    onStartCallback,
+                    onDragCallback,
                     onEndCallback,
                     resetRotationBtnManager,
                     resetRotationButton

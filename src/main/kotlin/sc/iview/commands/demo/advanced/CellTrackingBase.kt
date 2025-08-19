@@ -123,6 +123,10 @@ open class CellTrackingBase(
     var getSelectionCallback: (() -> List<InstancedNode.Instance>)? = null
     /** Adjusts the radii of spots, both in sciview and Mastodon. */
     var scaleSpotsCallback: ((radius: Float, update: Boolean) -> Unit)? = null
+    /** Toggle the visibility of spots in the scene. */
+    var setSpotVisCallback: ((Boolean) -> Unit)? = null
+    /** Toggle the visibility of tracks in the scene. */
+    var setTrackVisCallback: ((Boolean) -> Unit)? = null
 
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
 
@@ -808,7 +812,15 @@ open class CellTrackingBase(
             sciview.currentScene,
             lockYaxis = false,
             target = volume,
-            onEndCallback = rebuildGeometryCallback,
+            onStartCallback = {
+                setSpotVisCallback?.invoke(false)
+                setTrackVisCallback?.invoke(false)
+            },
+            onEndCallback = {
+                rebuildGeometryCallback?.invoke()
+                setSpotVisCallback?.invoke(true)
+                setTrackVisCallback?.invoke(true)
+            },
             resetRotationBtnManager = resetRotationBtnManager,
             resetRotationButton = MultiButtonManager.ButtonConfig(leftAButtonBehavior.button, leftAButtonBehavior.role)
         )
