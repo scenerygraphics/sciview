@@ -22,6 +22,29 @@ Should you experience any issues, [please try the latest development version](ht
 
 ![Overview of sciview's user interface](https://gblobscdn.gitbook.com/assets%2F-LqBCy3SBefXis0YnrcI%2F-MK5WLQvMLIvw2GF6Rn2%2F-MK5WMGzmSavDTwlGro2%2Fmain-cheatsheet.jpg?alt=media&token=70c82549-e939-4752-af12-1756492a5f01)
 
+## API Features
+
+### Custom Window Dimensions
+
+SciView now supports setting custom window dimensions via API, which is essential for VR headsets that require specific resolutions:
+
+```kotlin
+// Create SciView with custom dimensions
+val sciview = SciView.create(1920, 1080)
+
+// Or resize an existing instance
+sciview.setWindowSize(2880, 1700)  // Example: Oculus Quest 2 resolution
+
+// Query current dimensions
+val (width, height) = sciview.getWindowSize()
+```
+
+This feature is particularly useful for:
+- VR headset integration requiring exact resolutions
+- Multi-monitor setups
+- Creating screenshots or recordings at specific resolutions
+- Kiosk or presentation modes
+
 ## Developers
 
 [Kyle Harrington](https://kyleharrington.com), University of Idaho & [Ulrik Guenther](https://ulrik.is/writing), MPI-CBG
