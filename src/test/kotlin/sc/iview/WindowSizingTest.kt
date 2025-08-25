@@ -40,6 +40,16 @@ import kotlin.test.assertTrue
  */
 class WindowSizingTest {
     
+    /**
+     * Tests the window sizing functionality including:
+     * - Setting initial window size via constructor
+     * - Getting current window dimensions
+     * - Resizing the window to new dimensions
+     * - Handling invalid dimensions appropriately
+     * 
+     * Note: This test requires a display environment and may be skipped
+     * in headless CI environments.
+     */
     @Test
     fun testWindowSizing() {
         // Note: This test requires a display environment to run
@@ -70,8 +80,12 @@ class WindowSizingTest {
             assertEquals(1080, unchangedHeight, "Height should remain unchanged after failed resize")
             
             sciview.closeWindow()
-        } catch (e: Exception) {
+        } catch (e: java.awt.HeadlessException) {
+            // Specific exception for headless environments
             println("Test skipped due to headless environment: ${e.message}")
+        } catch (e: UnsupportedOperationException) {
+            // May be thrown if display is not available
+            println("Test skipped - display not available: ${e.message}")
         }
     }
 }
