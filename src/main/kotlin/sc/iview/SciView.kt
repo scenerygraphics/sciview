@@ -1867,6 +1867,57 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     /**
+     * Set the window dimensions of the sciview rendering window.
+     * This is essential for VR headsets that require specific resolutions.
+     * 
+     * @param width The desired width of the window in pixels
+     * @param height The desired height of the window in pixels
+     * @return true if the window was successfully resized, false otherwise
+     */
+    fun setWindowSize(width: Int, height: Int): Boolean {
+        if (width <= 0 || height <= 0) {
+            log.error("Window dimensions must be positive: width=$width, height=$height")
+            return false
+        }
+        
+        try {
+            // Update internal dimensions
+            windowWidth = width
+            windowHeight = height
+            
+            // Update the main window frame if it exists
+            if (mainWindow is SwingMainWindow) {
+                val swingWindow = mainWindow as SwingMainWindow
+                swingWindow.frame.setSize(width, height)
+                
+                // Update the renderer dimensions
+                renderer?.let { r ->
+                    r.reshape(width, height)
+                }
+                
+                // Update camera aspect ratio
+                camera?.perspectiveCamera(50.0f, width, height, 0.1f, 1000.0f)
+            }
+            
+            log.info("Window resized to ${width}x${height}")
+            return true
+        } catch (e: Exception) {
+            log.error("Failed to resize window: ${e.message}")
+            e.printStackTrace()
+            return false
+        }
+    }
+    
+    /**
+     * Get the current window dimensions.
+     * 
+     * @return a Pair containing the width and height of the window
+     */
+    fun getWindowSize(): Pair<Int, Int> {
+        return Pair(windowWidth, windowHeight)
+    }
+
+    /**
      * Return the color table corresponding to the [lutName]
      * @param lutName a String represening an ImageJ style LUT name, like Fire.lut
      * @return a [ColorTable] corresponding to the LUT or null if LUT not available
