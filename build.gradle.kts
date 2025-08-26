@@ -39,7 +39,7 @@ dependencies {
     // Graphics dependencies
 
     // Attention! Manual version increment necessary here!
-    val scijavaCommonVersion = "2.99.0"
+    val scijavaCommonVersion = "2.98.0"
     annotationProcessor("org.scijava:scijava-common:$scijavaCommonVersion")
     kapt("org.scijava:scijava-common:$scijavaCommonVersion") {
         exclude("org.lwjgl")
