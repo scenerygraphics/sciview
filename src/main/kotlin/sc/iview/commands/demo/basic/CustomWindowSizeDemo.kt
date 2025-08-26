@@ -53,10 +53,10 @@ class CustomWindowSizeDemo : Command {
     @Parameter
     private lateinit var sciview: SciView
 
-    @Parameter(label = "Window Width", min = "100", max = "3840", value = "1920")
+    @Parameter(label = "Window Width", min = "100", max = "3840")
     private var width: Int = 1920
 
-    @Parameter(label = "Window Height", min = "100", max = "2160", value = "1080")
+    @Parameter(label = "Window Height", min = "100", max = "2160")
     private var height: Int = 1080
 
     override fun run() {
