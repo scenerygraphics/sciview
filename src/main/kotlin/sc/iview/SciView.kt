@@ -2023,26 +2023,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             sciView.setWindowSize(width, height)
             return sciView
         }
-        
-        /**
-         * Static launching method with custom window dimensions
-         *
-         * @param width The desired width of the window in pixels
-         * @param height The desired height of the window in pixels
-         * @return a newly created SciView with specified dimensions
-         */
-        @JvmStatic
-        @Throws(Exception::class)
-        fun create(width: Int, height: Int): SciView {
-            xinitThreads()
-            val context = Context(ImageJService::class.java, SciJavaService::class.java, SCIFIOService::class.java)
-            val objectService = context.service(ObjectService::class.java)
-            objectService.addObject(Utils.SciviewStandalone())
-            val sciViewService = context.service(SciViewService::class.java)
-            val sciView = sciViewService.orCreateActiveSciView
-            sciView.setWindowSize(width, height)
-            return sciView
-        }
 
         /**
          * Static launching method
