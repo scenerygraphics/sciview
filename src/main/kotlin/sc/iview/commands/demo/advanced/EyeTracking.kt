@@ -1,5 +1,6 @@
 package sc.iview.commands.demo.advanced
 
+import edu.mines.jtk.opt.Vect
 import graphics.scenery.*
 import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.eyetracking.PupilEyeTracker
@@ -10,10 +11,7 @@ import graphics.scenery.ui.Button
 import graphics.scenery.ui.Column
 import graphics.scenery.ui.ToggleButton
 import graphics.scenery.utils.SystemHelpers
-import graphics.scenery.utils.extensions.minus
-import graphics.scenery.utils.extensions.toFloatArray
-import graphics.scenery.utils.extensions.xyz
-import graphics.scenery.utils.extensions.xyzw
+import graphics.scenery.utils.extensions.*
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import org.apache.commons.math3.ml.clustering.Clusterable
 import org.apache.commons.math3.ml.clustering.DBSCANClusterer
@@ -24,6 +22,7 @@ import java.awt.image.DataBufferByte
 import java.io.ByteArrayInputStream
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.util.Vector
 import javax.imageio.ImageIO
 import kotlin.concurrent.thread
 import kotlin.math.PI
@@ -329,9 +328,7 @@ class EyeTracking(
 
         writeHedgehogToFile(lastHedgehog, hedgehogId)
 
-        val spines = lastHedgehog.instances.mapNotNull { spine ->
-            spine.metadata["spine"] as? SpineMetadata
-        }
+        val spines = getSpinesFromHedgehog(lastHedgehog)
 
         val existingAnalysis = lastHedgehog.metadata["HedgehogAnalysis"] as? HedgehogAnalysis.Track
         val track = if(existingAnalysis is HedgehogAnalysis.Track) {
@@ -348,7 +345,7 @@ class EyeTracking(
         }
 
         if (trackCreationCallback != null && rebuildGeometryCallback != null) {
-            trackCreationCallback?.invoke(track.points, false, null, null)
+            trackCreationCallback?.invoke(track.points, cursor.radius,false, null, null)
             rebuildGeometryCallback?.invoke()
         } else {
             logger.warn("Tried to send track data to Mastodon but couldn't find the callbacks!")
@@ -362,6 +359,21 @@ class EyeTracking(
         return this.toFloatArray().map { it.toDouble() }.toDoubleArray()
     }
 
+    fun DoubleArray.toVector3f(): Vector3f {
+        require(size == 3) { "DoubleArray must have exactly 3 elements" }
+        return Vector3f(this[0].toFloat(), this[1].toFloat(), this[2].toFloat())
+    }
+
+    private fun getSpinesFromHedgehog(hedgehog: InstancedNode): List<SpineMetadata> {
+        return hedgehog.instances.mapNotNull { spine ->
+            spine.metadata["spine"] as? SpineMetadata
+        }
+    }
+
+    /** Performs an analysis of collected gazes (hedgehogs) by first calculating the rotational distance between
+     * subsequent gazes, then discards all gazes larger than 0.3x median distance, clusters the remaining directions
+     * and samples the volume using the cluster centers as directions. It then extracts the first local minima and sends
+     * them as spots to Mastodon. */
     private fun analyzeGazeClusters() {
         logger.info("Starting analysis of gaze clusters...")
         val lastHedgehog =  hedgehogs.children.last() as InstancedNode
@@ -369,27 +381,17 @@ class EyeTracking(
 
         writeHedgehogToFile(lastHedgehog, hedgehogId)
         // Get spines from the most recent hedgehog
-        val spines = lastHedgehog.instances.mapNotNull { spine ->
-            spine.metadata["spine"] as? SpineMetadata
-        }
+        val spines = getSpinesFromHedgehog(lastHedgehog)
         logger.info("Starting with ${spines.size} spines")
 
         // Calculate the distance from each direction to its neighbor
-        val speeds = mutableListOf<Float>()
-        for (i in 0..< spines.size - 1) {
-            speeds.add(spines[i].direction.distance(spines[i+1].direction))
-        }
+        val speeds = spines.zipWithNext { a, b -> a.direction.distance(b.direction) }
         logger.info("Min speed: ${speeds.min()}, max speed: ${speeds.max()}")
         val medianSpeed = speeds.sorted()[speeds.size/2]
         logger.info("Median speed: $medianSpeed")
 
         // Clean the list of spines by removing the ones that are too far from their neighbors
-        val cleanedSpines = mutableListOf<SpineMetadata>()
-        speeds.forEachIndexed { index, speed ->
-            if (speed < 0.3 * medianSpeed) {
-                cleanedSpines.add(spines[index])
-            }
-        }
+        val cleanedSpines = spines.filterIndexed { index, _ -> speeds[index] < 0.3 * medianSpeed }
         logger.info("After cleaning: ${cleanedSpines.size} spines remain")
 
         var start = TimeSource.Monotonic.markNow()
@@ -411,57 +413,43 @@ class EyeTracking(
         // Extract the mean direction for each cluster,
         // and find the corresponding start positions and average them too
         val clusterCenters = clusters.map { cluster ->
-            val meanDirArray = arrayListOf(0.0, 0.0, 0.0)
-            val meanPosArray = arrayListOf(0.0, 0.0, 0.0)
+            val meanDir = Vector3f()
+            val meanPos = Vector3f()
 
             // Each "point" in the cluster is actually the ray direction
             cluster.points.forEach { point ->
-                meanDirArray[0] += point.point[0]
-                meanDirArray[1] += point.point[1]
-                meanDirArray[2] += point.point[2]
-
+                // Accumulate the directions
+                meanDir += point.point.toVector3f()
+                // Now grab the spine itself so we can also access its origin
                 val spine = spineByDirection[point.point.contentHashCode()]
                 if (spine != null) {
-                    meanPosArray[0] += spine.origin.x.toDouble()
-                    meanPosArray[1] += spine.origin.y.toDouble()
-                    meanPosArray[2] += spine.origin.z.toDouble()
+                    meanPos += spine.origin
                 } else {
                     logger.warn("Could not find spine for direction: ${point.point.contentToString()}")
                 }
-
             }
-
             // Calculate means by dividing by cluster size
-            val clusterSize = cluster.points.size.toDouble()
-            meanDirArray[0] /= clusterSize
-            meanDirArray[1] /= clusterSize
-            meanDirArray[2] /= clusterSize
-
-            meanPosArray[0] /= clusterSize
-            meanPosArray[1] /= clusterSize
-            meanPosArray[2] /= clusterSize
-
-            val meanDir = Vector3f(meanDirArray[0].toFloat(), meanDirArray[1].toFloat(), meanDirArray[2].toFloat())
-            val meanPos = Vector3f(meanPosArray[0].toFloat(), meanPosArray[1].toFloat(), meanPosArray[2].toFloat())
+            meanDir /= cluster.points.size.toFloat()
+            meanPos /= cluster.points.size.toFloat()
 
             logger.debug("MeanDir for cluster is $meanDir")
             logger.debug("MeanPos for cluster is $meanPos")
+
             (meanPos to meanDir)
         }
 
-        // We only need this to access the smoothing and maxima search functions
+        // We only need the analyzer to access the smoothing and maxima search functions
         val analyzer = HedgehogAnalysis(cleanedSpines, Matrix4f(volume.spatial().world))
 
         start = TimeSource.Monotonic.markNow()
         val spots = clusterCenters.map { (origin, direction) ->
-            // TODO THIS IS STILL BROKEN
-            // Either the sampling itself is broken (it definitely works in follow mode)
-            // or something about the mean calculation is still broken
             val (samples, samplePos) = sampleRayThroughVolume(origin, direction, volume)
             var spotPos: Vector3f? = null
             if (samples != null && samplePos != null) {
                 val smoothed = analyzer.gaussSmoothing(samples, 4)
-                analyzer.localMaxima(smoothed).firstOrNull()?.let { (index, sample) ->
+                val rayMax = smoothed.max()
+                // take the first local maximum that is at least 20% of the global maximum to prevent spot creation in noisy areas
+                analyzer.localMaxima(smoothed).firstOrNull {it.second > 0.2 * rayMax}?.let { (index, sample) ->
                     spotPos = samplePos[index]
                 }
             }
@@ -469,7 +457,7 @@ class EyeTracking(
         }
         logger.info("Sampling volume and spot extraction took ${TimeSource.Monotonic.markNow() - start}")
         spots.filterNotNull().forEach { spot ->
-            spotCreateDeleteCallback?.invoke(volume.currentTimepoint, spot, 0.03f, false, false)
+            spotCreateDeleteCallback?.invoke(volume.currentTimepoint, spot, cursor.radius, false, false)
         }
     }
 
