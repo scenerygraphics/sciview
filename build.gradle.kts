@@ -28,6 +28,7 @@ repositories {
         logger.warn("Using local Maven repository as source")
         mavenLocal()
     }
+    mavenCentral()
     maven("https://maven.scijava.org/content/groups/public")
 }
 
