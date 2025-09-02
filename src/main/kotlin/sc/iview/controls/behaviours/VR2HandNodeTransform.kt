@@ -51,7 +51,7 @@ class VR2HandNodeTransform(
         if (transformBtn != null) {
             resetRotationBtnManager?.pressButton(transformBtn)
         }
-        if (isBothPressed()) {
+        if (bothPressed) {
             onStartCallback?.invoke()
             startCallbackTriggered = true
         }
@@ -65,7 +65,7 @@ class VR2HandNodeTransform(
     ) {
 
         // Test whether we now press both buttons but the startCallback wasn't triggered yet.
-        if (isBothPressed() && !startCallbackTriggered) {
+        if (bothPressed && !startCallbackTriggered) {
             onStartCallback?.invoke()
             startCallbackTriggered = true
         }
