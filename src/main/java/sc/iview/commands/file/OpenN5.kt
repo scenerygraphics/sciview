@@ -140,6 +140,7 @@ class OpenN5 : DynamicCommand() {
                 DataType.OBJECT -> TODO()
                 DataType.STRING -> TODO()
                 null -> TODO()
+                DataType.STRING -> TODO()
             }
 
             val wrapped = VolatileViews.wrapAsVolatile(img)
