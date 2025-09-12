@@ -2,10 +2,7 @@ package sc.iview.commands.demo.advanced
 
 import graphics.scenery.*
 import graphics.scenery.attribute.material.Material
-import graphics.scenery.controls.OpenVRHMD
-import graphics.scenery.controls.TrackedDevice
-import graphics.scenery.controls.TrackedDeviceType
-import graphics.scenery.controls.TrackerRole
+import graphics.scenery.controls.*
 import graphics.scenery.controls.behaviours.AnalogInputWrapper
 import graphics.scenery.controls.behaviours.VRTouch
 import graphics.scenery.primitives.Cylinder
@@ -79,6 +76,7 @@ open class CellTrackingBase(
      * The second spot defines whether we want to merge into this spot. */
     var trackCreationCallback: ((
         List<Pair<Vector3f, SpineGraphVertex>>?,
+        radius: Float,
         isWorldSpace: Boolean,
         startSpot: Spot?,
         mergeSpot: Spot?
@@ -127,6 +125,10 @@ open class CellTrackingBase(
     var setSpotVisCallback: ((Boolean) -> Unit)? = null
     /** Toggle the visibility of tracks in the scene. */
     var setTrackVisCallback: ((Boolean) -> Unit)? = null
+    /** Toggle the visiblity of the volume in the scene while maintaining visibility of spots and links as child elements. */
+    var setVolumeVisCallback: ((Boolean) -> Unit)? = null
+    /** Merges overlapping spots in a given timepoint. */
+    var mergeOverlapsCallback: ((Int) -> Unit)? = null
 
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
 
@@ -135,6 +137,8 @@ open class CellTrackingBase(
     enum class ElephantMode { StageSpots, TrainAll, PredictTP, PredictAll, NNLinking }
 
     var hedgehogVisibility = HedgehogVisibility.Hidden
+    var trackVisibility = true
+    var spotVisibility = true
 
     var leftVRController: TrackedDevice? = null
     var rightVRController: TrackedDevice? = null
@@ -159,7 +163,6 @@ open class CellTrackingBase(
 
     open fun run() {
         sciview.toggleVRRendering()
-        logger.info("VR mode has been toggled")
         hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
 
         // Try to load the correct button mapping corresponding to the controller layout
@@ -185,14 +188,14 @@ open class CellTrackingBase(
         )
         lightTetrahedron.forEach { sciview.addNode(it) }
 
-        val volnodes = sciview.findNodes { node -> Volume::class.java.isAssignableFrom(node.javaClass) }
+        val volumeNodes = sciview.findNodes { node -> Volume::class.java.isAssignableFrom(node.javaClass) }
 
-        val v = (volnodes.firstOrNull() as? Volume)
+        val v = (volumeNodes.firstOrNull() as? Volume)
         if(v == null) {
             logger.warn("No volume found, bailing")
             return
         } else {
-            logger.info("found ${volnodes.size} volume nodes. Using the first one: ${volnodes.first()}")
+            logger.info("found ${volumeNodes.size} volume nodes. Using the first one: ${volumeNodes.first()}")
             volume = v
         }
 
@@ -324,7 +327,8 @@ open class CellTrackingBase(
         if (controllerTrackingActive) {
             logger.info("Ending controller tracking now and sending ${controllerTrackList.size} spots to Mastodon to chew on.")
             controllerTrackingActive = false
-            trackCreationCallback?.invoke(null, true, startWithExistingSpot, mergeSpot)
+            // Radius can be 0 because the actual radii were already captured during tracking
+            trackCreationCallback?.invoke(null, 0f, true, startWithExistingSpot, mergeSpot)
             controllerTrackList.clear()
             cursor.resetColor()
         }
@@ -480,6 +484,40 @@ open class CellTrackingBase(
         previewMenu.visible = false
         val timeMenu = createWristMenuColumn(timeControlRow, name = "Time Menu")
         timeMenu.visible = false
+
+        val toggleVolume = ToggleButton(
+            "Volume off", "Volume on", command = {
+                val state = volume.visible
+                setVolumeVisCallback?.invoke(!state)
+            }, byTouch = true,
+            color = color, pressedColor = pressedColor, touchingColor = touchingColor, default = true
+        )
+        val toggleTracks = ToggleButton(
+            "Track off", "Track on",
+            command = {
+                trackVisibility = !trackVisibility
+                setTrackVisCallback?.invoke(trackVisibility)
+            },
+            byTouch = true, color = color, pressedColor = pressedColor, touchingColor = touchingColor, default = true
+        )
+        val toggleSpots = ToggleButton(
+            "Spots off", "Spots on",
+            command = {
+                spotVisibility = !spotVisibility
+                setSpotVisCallback?.invoke(spotVisibility)
+            },
+            byTouch = true, color = color, pressedColor = pressedColor, touchingColor = touchingColor, default = true
+        )
+        val toggleVisMenu = createWristMenuColumn(toggleVolume, toggleTracks, toggleSpots)
+        toggleVisMenu.visible = false
+
+        val mergeButton = Button(
+            "Merge overlaps", command = {
+                mergeOverlapsCallback?.invoke(volume.currentTimepoint)
+            }, byTouch = true, depressDelay = 250, color = color, pressedColor = pressedColor, touchingColor = touchingColor
+        )
+        val cleanupMenu = createWristMenuColumn(mergeButton)
+        cleanupMenu.visible = false
     }
 
 
@@ -818,8 +856,9 @@ open class CellTrackingBase(
             },
             onEndCallback = {
                 rebuildGeometryCallback?.invoke()
-                setSpotVisCallback?.invoke(true)
-                setTrackVisCallback?.invoke(true)
+                // Only re-enable the spots or tracks if they were enabled in the first place
+                setSpotVisCallback?.invoke(spotVisibility)
+                setTrackVisCallback?.invoke(trackVisibility)
             },
             resetRotationBtnManager = resetRotationBtnManager,
             resetRotationButton = MultiButtonManager.ButtonConfig(leftAButtonBehavior.button, leftAButtonBehavior.role)
@@ -1033,6 +1072,7 @@ open class CellTrackingBase(
      * This method should be overridden if functionality is extended, to make sure any extra objects are also deleted.
      */
     open fun stop() {
+        logger.info("Objects in the scene: ${sciview.allSceneNodes.map { it.name }}")
         cellTrackingActive = false
         lightTetrahedron.forEach { sciview.deleteNode(it) }
         // Try to find and delete possibly existing VR objects
@@ -1040,9 +1080,13 @@ open class CellTrackingBase(
             val n = sciview.find(it)
             n?.let { sciview.deleteNode(n) }
         }
-        logger.info("Cleaned up basic VR objects.")
+        sciview.deleteNode(rightVRController?.model)
+        sciview.deleteNode(leftVRController?.model)
+
+        logger.info("Cleaned up basic VR objects. Objects left: ${sciview.allSceneNodes.map { it.name }}")
+
         sciview.toggleVRRendering()
-        logger.info("Shut down eye tracking environment and disabled VR.")
+        logger.info("Shut down and disabled VR environment.")
     }
 
 }
