@@ -1904,7 +1904,12 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             if (hub.has(SceneryElement.HMDInput)) {
                 val hmd = hub.get(SceneryElement.HMDInput) as? OpenVRHMD
                 hmd?.close()
-                // TODO hub.remove(hmd)
+                // Get the actual key that was used to store this element
+                val keyToRemove = hub.elements.entries.find { it.value == hmd }?.key
+                keyToRemove?.let {
+                    hub.elements.remove(it)
+                    logger.info("Removed ${it.name} from hub.")
+                }
                 logger.debug("Closed HMD.")
             }
         }
