@@ -137,8 +137,9 @@ class OpenN5 : DynamicCommand() {
                 DataType.INT64 -> N5Utils.openVolatile<LongType>(reader, dataset)
                 DataType.FLOAT32 -> N5Utils.openVolatile<FloatType>(reader, dataset)
                 DataType.FLOAT64 -> N5Utils.openVolatile<DoubleType>(reader, dataset)
-                DataType.OBJECT -> TODO()
+                DataType.STRING -> TODO()
                 null -> TODO()
+                DataType.OBJECT -> TODO()
             }
 
             val wrapped = VolatileViews.wrapAsVolatile(img)
