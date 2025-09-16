@@ -24,6 +24,7 @@ java {
 }
 
 repositories {
+    mavenCentral()
     if(project.properties["useMavenLocal"] == "true") {
         logger.warn("Using local Maven repository as source")
         mavenLocal()
