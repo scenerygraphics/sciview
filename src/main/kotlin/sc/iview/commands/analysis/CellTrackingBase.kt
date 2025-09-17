@@ -1,7 +1,10 @@
-package sc.iview.commands.demo.advanced
+package sc.iview.commands.analysis
 
-import com.intellij.ui.tabs.impl.ShapeTransform.Right
-import graphics.scenery.*
+import graphics.scenery.DetachedHeadCamera
+import graphics.scenery.Icosphere
+import graphics.scenery.InstancedNode
+import graphics.scenery.Mesh
+import graphics.scenery.ShaderMaterial
 import graphics.scenery.controls.OpenVRHMD
 import graphics.scenery.controls.TrackerRole
 import graphics.scenery.controls.behaviours.ControllerDrag
@@ -12,15 +15,15 @@ import graphics.scenery.utils.extensions.minus
 import graphics.scenery.utils.lazyLogger
 import graphics.scenery.volumes.RAIVolume
 import graphics.scenery.volumes.Volume
-import org.apache.commons.math3.geometry.partitioning.Side
 import org.joml.Math
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.joml.Vector4f
-import org.scijava.log.LogService
-import org.scijava.plugin.Parameter
 import org.scijava.ui.behaviour.ClickBehaviour
 import sc.iview.SciView
+import sc.iview.commands.analysis.ConfirmableClickBehaviour
+import sc.iview.commands.analysis.SpineMetadata
+import sc.iview.commands.analysis.TimepointObserver
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.nio.file.Path
@@ -31,7 +34,7 @@ import kotlin.concurrent.thread
  * Base class for different VR cell tracking purposes. It includes functionality to add spines and edgehogs,
  * as used by [EyeTracking], and registers controller bindings via [inputSetup]. It is possible to register observers
  * that listen to timepoint changes with [registerObserver].
- * @param [sciview] The [SciView] instance to use
+ * @param [sciview] The [sc.iview.SciView] instance to use
  */
 open class CellTrackingBase(
     open var sciview: SciView
@@ -95,7 +98,7 @@ open class CellTrackingBase(
         logger.info("added hedgehog")
         val hedgehog = Cylinder(0.005f, 1.0f, 16)
         hedgehog.visible = false
-        hedgehog.setMaterial(ShaderMaterial.fromFiles("DeferredInstancedColor.frag", "DeferredInstancedColor.vert"))
+        hedgehog.setMaterial(ShaderMaterial.Companion.fromFiles("DeferredInstancedColor.frag", "DeferredInstancedColor.vert"))
         val hedgehogInstanced = InstancedNode(hedgehog)
         hedgehogInstanced.instancedProperties["ModelMatrix"] = { hedgehog.spatial().world}
         hedgehogInstanced.instancedProperties["Metadata"] = { Vector4f(0.0f, 0.0f, 0.0f, 0.0f) }
@@ -124,21 +127,21 @@ open class CellTrackingBase(
             val current = HedgehogVisibility.entries.indexOf(hedgehogVisibility)
             hedgehogVisibility = HedgehogVisibility.entries.get((current + 1) % 3)
 
-            when(hedgehogVisibility) {
+            when (hedgehogVisibility) {
                 HedgehogVisibility.Hidden -> {
                     hedgehogs.visible = false
                     hedgehogs.runRecursive { it.visible = false }
-                    cam.showMessage("Hedgehogs hidden",distance = 2f, size = 0.2f, centered = true)
+                    cam.showMessage("Hedgehogs hidden", distance = 2f, size = 0.2f, centered = true)
                 }
 
                 HedgehogVisibility.PerTimePoint -> {
                     hedgehogs.visible = true
-                    cam.showMessage("Hedgehogs shown per timepoint",distance = 2f, size = 0.2f, centered = true)
+                    cam.showMessage("Hedgehogs shown per timepoint", distance = 2f, size = 0.2f, centered = true)
                 }
 
                 HedgehogVisibility.Visible -> {
                     hedgehogs.visible = true
-                    cam.showMessage("Hedgehogs visible",distance = 2f, size = 0.2f, centered = true)
+                    cam.showMessage("Hedgehogs visible", distance = 2f, size = 0.2f, centered = true)
                 }
             }
         }
@@ -152,31 +155,31 @@ open class CellTrackingBase(
         }
 
         val fasterOrScale = ClickBehaviour { _, _ ->
-            if(playing) {
-                volumesPerSecond = maxOf(minOf(volumesPerSecond+1, 20), 1)
-                cam.showMessage("Speed: $volumesPerSecond vol/s",distance = 1.2f, size = 0.2f, centered = true)
+            if (playing) {
+                volumesPerSecond = maxOf(minOf(volumesPerSecond + 1, 20), 1)
+                cam.showMessage("Speed: $volumesPerSecond vol/s", distance = 1.2f, size = 0.2f, centered = true)
             } else {
                 volumeScaleFactor = minOf(volumeScaleFactor * 1.2f, 3.0f)
-                volume.spatial().scale = Vector3f(1.0f) .mul(volumeScaleFactor)
+                volume.spatial().scale = Vector3f(1.0f).mul(volumeScaleFactor)
             }
         }
 
         val slowerOrScale = ClickBehaviour { _, _ ->
-            if(playing) {
-                volumesPerSecond = maxOf(minOf(volumesPerSecond-1, 20), 1)
-                cam.showMessage("Speed: $volumesPerSecond vol/s",distance = 2f, size = 0.2f, centered = true)
+            if (playing) {
+                volumesPerSecond = maxOf(minOf(volumesPerSecond - 1, 20), 1)
+                cam.showMessage("Speed: $volumesPerSecond vol/s", distance = 2f, size = 0.2f, centered = true)
             } else {
                 volumeScaleFactor = maxOf(volumeScaleFactor / 1.2f, 0.1f)
-                volume.spatial().scale = Vector3f(1.0f) .mul(volumeScaleFactor)
+                volume.spatial().scale = Vector3f(1.0f).mul(volumeScaleFactor)
             }
         }
 
         val playPause = ClickBehaviour { _, _ ->
             playing = !playing
-            if(playing) {
-                cam.showMessage("Playing",distance = 2f, size = 0.2f, centered = true)
+            if (playing) {
+                cam.showMessage("Playing", distance = 2f, size = 0.2f, centered = true)
             } else {
-                cam.showMessage("Paused",distance = 2f, size = 0.2f, centered = true)
+                cam.showMessage("Paused", distance = 2f, size = 0.2f, centered = true)
             }
         }
 
@@ -184,11 +187,13 @@ open class CellTrackingBase(
 
         val deleteLastHedgehog = ConfirmableClickBehaviour(
             armedAction = { timeout ->
-                cam.showMessage("Deleting last track, press again to confirm.",distance = 2f, size = 0.2f,
+                cam.showMessage(
+                    "Deleting last track, press again to confirm.", distance = 2f, size = 0.2f,
                     messageColor = Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
                     backgroundColor = Vector4f(1.0f, 0.2f, 0.2f, 1.0f),
                     duration = timeout.toInt(),
-                    centered = true)
+                    centered = true
+                )
 
             },
             confirmAction = {
@@ -197,14 +202,17 @@ open class CellTrackingBase(
                     volume.removeChild(lastTrack)
                 }
                 val hedgehogId = hedgehogIds.get()
-                val hedgehogFile = sessionDirectory.resolve("Hedgehog_${hedgehogId}_${SystemHelpers.formatDateTime()}.csv").toFile()
+                val hedgehogFile =
+                    sessionDirectory.resolve("Hedgehog_${hedgehogId}_${SystemHelpers.Companion.formatDateTime()}.csv")
+                        .toFile()
                 val hedgehogFileWriter = BufferedWriter(FileWriter(hedgehogFile, true))
                 hedgehogFileWriter.newLine()
                 hedgehogFileWriter.newLine()
                 hedgehogFileWriter.write("# WARNING: TRACK $hedgehogId IS INVALID\n")
                 hedgehogFileWriter.close()
 
-                cam.showMessage("Last track deleted.",distance = 2f, size = 0.2f,
+                cam.showMessage(
+                    "Last track deleted.", distance = 2f, size = 0.2f,
                     messageColor = Vector4f(1.0f, 0.2f, 0.2f, 1.0f),
                     backgroundColor = Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
                     duration = 1000,
@@ -213,7 +221,7 @@ open class CellTrackingBase(
             })
 
         hmd.addBehaviour("playback_direction", ClickBehaviour { _, _ ->
-            direction = if(direction == PlaybackDirection.Forward) {
+            direction = if (direction == PlaybackDirection.Forward) {
                 PlaybackDirection.Backward
             } else {
                 PlaybackDirection.Forward
@@ -257,21 +265,23 @@ open class CellTrackingBase(
      */
     fun launchUpdaterThread() {
         thread {
-            while(!sciview.isInitialized) { Thread.sleep(200) }
+            while (!sciview.isInitialized) {
+                Thread.sleep(200)
+            }
 
-            while(sciview.running && cellTrackingActive) {
-                if(playing || skipToNext || skipToPrevious) {
+            while (sciview.running && cellTrackingActive) {
+                if (playing || skipToNext || skipToPrevious) {
                     val oldTimepoint = volume.viewerState.currentTimepoint
                     if (skipToNext || playing) {
                         skipToNext = false
-                        if(direction == PlaybackDirection.Forward) {
+                        if (direction == PlaybackDirection.Forward) {
                             notifyObservers(oldTimepoint + 1)
                         } else {
                             notifyObservers(oldTimepoint - 1)
                         }
                     } else {
                         skipToPrevious = false
-                        if(direction == PlaybackDirection.Forward) {
+                        if (direction == PlaybackDirection.Forward) {
                             notifyObservers(oldTimepoint - 1)
                         } else {
                             notifyObservers(oldTimepoint + 1)
@@ -280,13 +290,14 @@ open class CellTrackingBase(
                     val newTimepoint = volume.viewerState.currentTimepoint
 
 
-                    if(hedgehogs.visible) {
-                        if(hedgehogVisibility == HedgehogVisibility.PerTimePoint) {
+                    if (hedgehogs.visible) {
+                        if (hedgehogVisibility == HedgehogVisibility.PerTimePoint) {
                             hedgehogs.children.forEach { hh ->
                                 val hedgehog = hh as InstancedNode
                                 hedgehog.instances.forEach {
                                     if (it.metadata.isNotEmpty()) {
-                                        it.visible = (it.metadata["spine"] as SpineMetadata).timepoint == volume.viewerState.currentTimepoint
+                                        it.visible =
+                                            (it.metadata["spine"] as SpineMetadata).timepoint == volume.viewerState.currentTimepoint
                                     }
                                 }
                             }
@@ -298,16 +309,16 @@ open class CellTrackingBase(
                         }
                     }
 
-                    if(tracking && oldTimepoint == (volume.timepointCount-1) && newTimepoint == 0) {
+                    if (tracking && oldTimepoint == (volume.timepointCount - 1) && newTimepoint == 0) {
                         tracking = false
 
-                        referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f)}
-                        sciview.camera!!.showMessage("Tracking deactivated.",distance = 1.2f, size = 0.2f)
+                        referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
+                        sciview.camera!!.showMessage("Tracking deactivated.", distance = 1.2f, size = 0.2f)
                         dumpHedgehog()
                     }
                 }
 
-                Thread.sleep((1000.0f/volumesPerSecond).toLong())
+                Thread.sleep((1000.0f / volumesPerSecond).toLong())
             }
             logger.info("CellTracking updater thread has stopped.")
         }
@@ -381,7 +392,7 @@ open class CellTrackingBase(
         val lastHedgehog =  hedgehogs.children.last() as InstancedNode
         val hedgehogId = hedgehogIds.incrementAndGet()
 
-        val hedgehogFile = sessionDirectory.resolve("Hedgehog_${hedgehogId}_${SystemHelpers.formatDateTime()}.csv").toFile()
+        val hedgehogFile = sessionDirectory.resolve("Hedgehog_${hedgehogId}_${SystemHelpers.Companion.formatDateTime()}.csv").toFile()
         val hedgehogFileWriter = hedgehogFile.bufferedWriter()
         hedgehogFileWriter.write("Timepoint,Origin,Direction,LocalEntry,LocalExit,LocalDirection,HeadPosition,HeadOrientation,Position,Confidence,Samples\n")
 
@@ -413,7 +424,13 @@ open class CellTrackingBase(
 
         if(track == null) {
             logger.warn("No track returned")
-            sciview.camera?.showMessage("No track returned", distance = 1.2f, size = 0.2f,messageColor = Vector4f(1.0f, 0.0f, 0.0f,1.0f))
+            sciview.camera?.showMessage("No track returned", distance = 1.2f, size = 0.2f,messageColor = Vector4f(
+                1.0f,
+                0.0f,
+                0.0f,
+                1.0f
+            )
+            )
             return
         }
 

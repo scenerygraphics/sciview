@@ -1,4 +1,4 @@
-package sc.iview.commands.demo.advanced
+package sc.iview.commands.analysis
 
 /**
  * Interface to allow subscription to timepoint updates, especially for updating sciview contents

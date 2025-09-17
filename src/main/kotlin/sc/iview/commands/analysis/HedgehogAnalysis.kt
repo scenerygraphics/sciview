@@ -1,4 +1,4 @@
-package sc.iview.commands.demo.advanced
+package sc.iview.commands.analysis
 
 import org.joml.Vector3f
 import org.joml.Matrix4f
@@ -6,6 +6,7 @@ import org.joml.Quaternionf
 import graphics.scenery.utils.extensions.*
 import graphics.scenery.utils.lazyLogger
 import org.slf4j.LoggerFactory
+import sc.iview.commands.analysis.SpineMetadata
 import java.io.File
 import kotlin.math.sqrt
 
@@ -27,7 +28,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		private set
 
 	/** Data class for collecting track points, consisting of positions and a [SpineGraphVertex], and the averaged
-	 * confidences of all spines. Returned by [sc.iview.commands.demo.advanced.HedgehogAnalysis.run]. */
+	 * confidences of all spines. Returned by [kotlin.run]. */
 	data class Track(
 		val points: List<Pair<Vector3f, SpineGraphVertex>>,
 		val confidence: Float
@@ -307,18 +308,19 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 				val samples = tokens.subList(2, tokens.size - 1).map { it.toFloat() }
 
 				val currentSpine = SpineMetadata(
-						timepoint,
-						Vector3f(0.0f),
-						Vector3f(0.0f),
-						0.0f,
-						Vector3f(0.0f),
-						Vector3f(0.0f),
-						Vector3f(0.0f),
-						Vector3f(0.0f),
-						Quaternionf(),
-						Vector3f(0.0f),
-						confidence,
-						samples)
+					timepoint,
+					Vector3f(0.0f),
+					Vector3f(0.0f),
+					0.0f,
+					Vector3f(0.0f),
+					Vector3f(0.0f),
+					Vector3f(0.0f),
+					Vector3f(0.0f),
+					Quaternionf(),
+					Vector3f(0.0f),
+					confidence,
+					samples
+				)
 
 				spines.add(currentSpine)
 			}
@@ -360,18 +362,19 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 				val samples = tokens.subList(10, tokens.size - 1).map { it.toFloat() }
 
 				val currentSpine = SpineMetadata(
-						timepoint,
-						origin,
-						direction,
-						0.0f,
-						localEntry,
-						localExit,
-						localDirection,
-						headPosition,
-						headOrientation,
-						position,
-						confidence,
-						samples)
+					timepoint,
+					origin,
+					direction,
+					0.0f,
+					localEntry,
+					localExit,
+					localDirection,
+					headPosition,
+					headOrientation,
+					position,
+					confidence,
+					samples
+				)
 
 				spines.add(currentSpine)
 			}
@@ -400,18 +403,19 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 				val samples = tokens.subList(10, tokens.size - 1).map { it.toFloat() }
 
 				val currentSpine = SpineMetadata(
-						timepoint,
-						origin,
-						direction,
-						0.0f,
-						localEntry,
-						localExit,
-						localDirection,
-						headPosition,
-						headOrientation,
-						position,
-						confidence,
-						samples)
+					timepoint,
+					origin,
+					direction,
+					0.0f,
+					localEntry,
+					localExit,
+					localDirection,
+					headPosition,
+					headOrientation,
+					position,
+					confidence,
+					samples
+				)
 
 				spines.add(currentSpine)
 			}

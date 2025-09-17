@@ -1,9 +1,15 @@
-package sc.iview.commands.demo.advanced
+package sc.iview.commands.analysis
 
-import graphics.scenery.*
+import graphics.scenery.BoundingGrid
+import graphics.scenery.Box
+import graphics.scenery.BufferUtils
+import graphics.scenery.DetachedHeadCamera
+import graphics.scenery.Icosphere
+import graphics.scenery.Light
+import graphics.scenery.Mesh
+import graphics.scenery.PointLight
 import graphics.scenery.attribute.material.Material
 import graphics.scenery.controls.OpenVRHMD
-import graphics.scenery.controls.OpenVRHMD.OpenVRButton
 import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.TrackerRole
 import graphics.scenery.controls.eyetracking.PupilEyeTracker
@@ -16,7 +22,11 @@ import graphics.scenery.utils.extensions.xyz
 import graphics.scenery.utils.extensions.xyzw
 import graphics.scenery.volumes.Volume
 import net.imglib2.type.numeric.integer.UnsignedByteType
-import org.joml.*
+import org.joml.Matrix4f
+import org.joml.Vector2f
+import org.joml.Vector3f
+import org.joml.Vector3i
+import org.joml.Vector4f
 import org.scijava.ui.behaviour.ClickBehaviour
 import sc.iview.SciView
 import java.awt.image.DataBufferByte
@@ -39,7 +49,10 @@ class EyeTracking(
     sciview: SciView
 ): CellTrackingBase(sciview) {
 
-    val pupilTracker = PupilEyeTracker(calibrationType = PupilEyeTracker.CalibrationType.WorldSpace, port = System.getProperty("PupilPort", "50020").toInt())
+    val pupilTracker = PupilEyeTracker(
+        calibrationType = PupilEyeTracker.CalibrationType.WorldSpace,
+        port = System.getProperty("PupilPort", "50020").toInt()
+    )
     val calibrationTarget = Icosphere(0.02f, 2)
     val laser = Cylinder(0.005f, 0.2f, 10)
 
@@ -54,7 +67,7 @@ class EyeTracking(
         cellTrackingActive = true
         logger.info("VR mode has been toggled")
         hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
-        sessionId = "BionicTracking-generated-${SystemHelpers.formatDateTime()}"
+        sessionId = "BionicTracking-generated-${SystemHelpers.Companion.formatDateTime()}"
         sessionDirectory = Files.createDirectory(Paths.get(System.getProperty("user.home"), "Desktop", sessionId))
 
         referenceTarget.visible = false
@@ -83,7 +96,8 @@ class EyeTracking(
         val shell = Box(Vector3f(20.0f, 20.0f, 20.0f), insideNormals = true)
         shell.ifMaterial{
             cullingMode = Material.CullingMode.Front
-            diffuse = Vector3f(0.4f, 0.4f, 0.4f) }
+            diffuse = Vector3f(0.4f, 0.4f, 0.4f)
+        }
 
         shell.spatial().position = Vector3f(0.0f, 0.0f, 0.0f)
         shell.name = "Shell"
@@ -141,8 +155,9 @@ class EyeTracking(
                     Vector3i(image.width, image.height, 1),
                     3,
                     UnsignedByteType(),
-                    BufferUtils.allocateByteAndPut(data)
-                ) }
+                    BufferUtils.Companion.allocateByteAndPut(data)
+                )
+            }
 
             lastFrame = System.nanoTime()
         }
@@ -156,7 +171,7 @@ class EyeTracking(
         debugBoard.visible = false
         sciview.camera?.addChild(debugBoard)
 
-        lightTetrahedron = Light.createLightTetrahedron<PointLight>(
+        lightTetrahedron = Light.Companion.createLightTetrahedron<PointLight>(
             Vector3f(0.0f, 0.0f, 0.0f),
             spread = 5.0f,
             radius = 15.0f,
@@ -168,13 +183,13 @@ class EyeTracking(
             logger.info("Adding onDeviceConnect handlers")
             hmd.events.onDeviceConnect.add { hmd, device, timestamp ->
                 logger.info("onDeviceConnect called, cam=${sciview.camera}")
-                if(device.type == TrackedDeviceType.Controller) {
+                if (device.type == TrackedDeviceType.Controller) {
                     logger.info("Got device ${device.name} at $timestamp")
                     device.model?.let { hmd.attachToNode(device, it, sciview.camera) }
                 }
             }
         }
-        thread{
+        thread {
             logger.info("started thread for inputSetup")
             inputSetup()
             setupCalibration()
@@ -184,8 +199,8 @@ class EyeTracking(
     }
 
     private fun setupCalibration(
-        keybindingCalibration: Pair<TrackerRole, OpenVRButton> = (TrackerRole.RightHand to OpenVRButton.Menu),
-        keybindingTracking: Pair<TrackerRole, OpenVRButton> = (TrackerRole.RightHand to OpenVRButton.Trigger)
+        keybindingCalibration: Pair<TrackerRole, OpenVRHMD.OpenVRButton> = (TrackerRole.RightHand to OpenVRHMD.OpenVRButton.Menu),
+        keybindingTracking: Pair<TrackerRole, OpenVRHMD.OpenVRButton> = (TrackerRole.RightHand to OpenVRHMD.OpenVRButton.Trigger)
     ) {
         val startCalibration = ClickBehaviour { _, _ ->
             thread {
@@ -194,18 +209,37 @@ class EyeTracking(
                 if (!pupilTracker.isCalibrated) {
                     logger.info("pupil is currently uncalibrated")
                     pupilTracker.onCalibrationInProgress = {
-                        cam.showMessage("Crunching equations ...",distance = 2f, size = 0.2f, messageColor = Vector4f(1.0f, 0.8f, 0.0f, 1.0f), duration = 15000, centered = true)
+                        cam.showMessage(
+                            "Crunching equations ...",
+                            distance = 2f,
+                            size = 0.2f,
+                            messageColor = Vector4f(1.0f, 0.8f, 0.0f, 1.0f),
+                            duration = 15000,
+                            centered = true
+                        )
                     }
 
                     pupilTracker.onCalibrationFailed = {
-                        cam.showMessage("Calibration failed.",distance = 2f, size = 0.2f, messageColor = Vector4f(1.0f, 0.0f, 0.0f, 1.0f), centered = true)
+                        cam.showMessage(
+                            "Calibration failed.",
+                            distance = 2f,
+                            size = 0.2f,
+                            messageColor = Vector4f(1.0f, 0.0f, 0.0f, 1.0f),
+                            centered = true
+                        )
                     }
 
                     pupilTracker.onCalibrationSuccess = {
-                        cam.showMessage("Calibration succeeded!", distance = 2f, size = 0.2f, messageColor = Vector4f(0.0f, 1.0f, 0.0f, 1.0f), centered = true)
+                        cam.showMessage(
+                            "Calibration succeeded!",
+                            distance = 2f,
+                            size = 0.2f,
+                            messageColor = Vector4f(0.0f, 1.0f, 0.0f, 1.0f),
+                            centered = true
+                        )
 
                         for (i in 0 until 20) {
-                            referenceTarget.ifMaterial{diffuse = Vector3f(0.0f, 1.0f, 0.0f) }
+                            referenceTarget.ifMaterial { diffuse = Vector3f(0.0f, 1.0f, 0.0f) }
                             Thread.sleep(100)
                             referenceTarget.ifMaterial { diffuse = Vector3f(0.8f, 0.8f, 0.8f) }
                             Thread.sleep(30)
@@ -218,13 +252,13 @@ class EyeTracking(
                             if (tracking) {
                                 logger.info("deactivating tracking...")
                                 referenceTarget.ifMaterial { diffuse = Vector3f(0.5f, 0.5f, 0.5f) }
-                                cam.showMessage("Tracking deactivated.",distance = 2f, size = 0.2f, centered = true)
+                                cam.showMessage("Tracking deactivated.", distance = 2f, size = 0.2f, centered = true)
                                 dumpHedgehog()
                             } else {
                                 logger.info("activating tracking...")
                                 addHedgehog()
                                 referenceTarget.ifMaterial { diffuse = Vector3f(1.0f, 0.0f, 0.0f) }
-                                cam.showMessage("Tracking active.",distance = 2f, size = 0.2f, centered = true)
+                                cam.showMessage("Tracking active.", distance = 2f, size = 0.2f, centered = true)
                             }
                             tracking = !tracking
                         }
@@ -239,10 +273,18 @@ class EyeTracking(
                     sciview.deleteNode(sciview.find("eyeFrames"))
 
                     logger.info("Starting eye tracker calibration")
-                    cam.showMessage("Follow the white rabbit.", distance = 2f, size = 0.2f,duration = 1500, centered = true)
-                    pupilTracker.calibrate(cam, hmd,
+                    cam.showMessage(
+                        "Follow the white rabbit.",
+                        distance = 2f,
+                        size = 0.2f,
+                        duration = 1500,
+                        centered = true
+                    )
+                    pupilTracker.calibrate(
+                        cam, hmd,
                         generateReferenceData = true,
-                        calibrationTarget = calibrationTarget)
+                        calibrationTarget = calibrationTarget
+                    )
 
                     pupilTracker.onGazeReceived = when (pupilTracker.calibrationType) {
 
@@ -252,14 +294,26 @@ class EyeTracking(
                                 referenceTarget.visible = true
                                 // Pupil has mm units, so we divide by 1000 here to get to scenery units
                                 referenceTarget.spatial().position = p
-                                (cam.children.find { it.name == "debugBoard" } as? TextBoard)?.text = "${String.format("%.2f", p.x())}, ${String.format("%.2f", p.y())}, ${String.format("%.2f", p.z())}"
+                                (cam.children.find { it.name == "debugBoard" } as? TextBoard)?.text =
+                                    "${String.format("%.2f", p.x())}, ${
+                                        String.format(
+                                            "%.2f",
+                                            p.y()
+                                        )
+                                    }, ${String.format("%.2f", p.z())}"
 
                                 val headCenter = cam.spatial().viewportToWorld(Vector2f(0.0f, 0.0f))
                                 val pointWorld = Matrix4f(cam.spatial().world).transform(p.xyzw()).xyz()
                                 val direction = (pointWorld - headCenter).normalize()
 
                                 if (tracking) {
-                                    addSpine(headCenter, direction, volume, gaze.confidence, volume.viewerState.currentTimepoint)
+                                    addSpine(
+                                        headCenter,
+                                        direction,
+                                        volume,
+                                        gaze.confidence,
+                                        volume.viewerState.currentTimepoint
+                                    )
                                 }
                             }
                         }
