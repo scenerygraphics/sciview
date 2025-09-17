@@ -64,7 +64,9 @@ open class CellTrackingBase(
     open var linkCreationCallback: ((HedgehogAnalysis.SpineGraphVertex) -> Unit)? = null
     open var finalTrackCallback: (() -> Unit)? = null
 
+    /** How to render the currently active hedgehog: all spines, only spines from the current time point, or none. */
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
+
     var hedgehogVisibility = HedgehogVisibility.Hidden
 
     enum class PlaybackDirection {
@@ -88,6 +90,7 @@ open class CellTrackingBase(
         observers.forEach { it.onTimePointChanged(timepoint) }
     }
 
+    /** Initialize new hedgehog, used for collecting spines (gaze rays) during eye tracking. */
     fun addHedgehog() {
         logger.info("added hedgehog")
         val hedgehog = Cylinder(0.005f, 1.0f, 16)
@@ -310,6 +313,7 @@ open class CellTrackingBase(
         }
     }
 
+    /** Adds a single spine to the currently active hedgehog. */
     open fun addSpine(center: Vector3f, direction: Vector3f, volume: Volume, confidence: Float, timepoint: Int) {
         val cam = sciview.camera as? DetachedHeadCamera ?: return
         val sphere = volume.boundingBox?.getBoundingSphere() ?: return

@@ -26,6 +26,8 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 	var totalSampleCount = 0
 		private set
 
+	/** Data class for collecting track points, consisting of positions and a [SpineGraphVertex], and the averaged
+	 * confidences of all spines. Returned by [sc.iview.commands.demo.advanced.HedgehogAnalysis.run]. */
 	data class Track(
 		val points: List<Pair<Vector3f, SpineGraphVertex>>,
 		val confidence: Float
@@ -70,6 +72,8 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		}.filterNotNull()
 	}
 
+	/** Cell positions extracted from gaze analysis are collected in this data class together with other information
+	 * such as the volume [value] at this point, and the [previous] and [next] vertices. */
 	data class SpineGraphVertex(val timepoint: Int,
 								val position: Vector3f,
 								val worldPosition: Vector3f,
