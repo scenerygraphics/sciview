@@ -413,8 +413,8 @@ class EyeTracking(
         // Extract the mean direction for each cluster,
         // and find the corresponding start positions and average them too
         val clusterCenters = clusters.map { cluster ->
-            val meanDir = Vector3f()
-            val meanPos = Vector3f()
+            var meanDir = Vector3f()
+            var meanPos = Vector3f()
 
             // Each "point" in the cluster is actually the ray direction
             cluster.points.forEach { point ->

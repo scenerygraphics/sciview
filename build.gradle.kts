@@ -1,4 +1,5 @@
 import org.gradle.kotlin.dsl.implementation
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URL
 import sciview.*
@@ -24,6 +25,7 @@ java {
 }
 
 repositories {
+    mavenCentral()
     if(project.properties["useMavenLocal"] == "true") {
         logger.warn("Using local Maven repository as source")
         mavenLocal()
@@ -165,9 +167,9 @@ tasks {
     withType<KotlinCompile>().all {
         val version = System.getProperty("java.version").substringBefore('.').toInt()
         val default = if (version == 1) "21" else "$version"
-        kotlinOptions {
-            jvmTarget = project.properties["jvmTarget"]?.toString() ?: default
-            freeCompilerArgs += listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
+        compilerOptions {
+            jvmTarget.set(JvmTarget.fromTarget( project.properties["jvmTarget"]?.toString() ?: default))
+            freeCompilerArgs.addAll(listOf("-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn"))
         }
 //        sourceCompatibility = project.properties["sourceCompatibility"]?.toString() ?: default
     }
