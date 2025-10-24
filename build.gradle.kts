@@ -22,11 +22,11 @@ java {
 }
 
 repositories {
+    mavenCentral()
     if(project.properties["useMavenLocal"] == "true") {
         logger.warn("Using local Maven repository as source")
         mavenLocal()
     }
-    mavenCentral()
     maven("https://maven.scijava.org/content/groups/public")
 }
 
@@ -44,7 +44,7 @@ dependencies {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "0.11.2"
+    val sceneryVersion = "0.12.0"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
