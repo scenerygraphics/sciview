@@ -125,7 +125,7 @@ class LoadCremiDatasetAndNeurons : Command {
     override fun run() {
         val task = sciview.taskManager.newTask("Cremi", "Loading dataset")
         val filter = FileFilter { file ->
-            val extension = file.name.substringAfterLast(".").toLowerCase()
+            val extension = file.name.substringAfterLast(".").lowercase()
 
             extension == "hdf5" || extension == "hdf"
         }
