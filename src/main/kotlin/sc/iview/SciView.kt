@@ -802,12 +802,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
         v.spatial().wantsComposeModel = true
         v.spatial().updateWorld(true)
-//        System.out.println("v.model: " + v.model)
-        addChild(v)
-//        System.out.println("v.getDimensions: "+ v.getDimensions())
-//
-//        System.out.println(" v.pixelToWorldRatio: "+  v.pixelToWorldRatio)
-//        System.out.println("v.world.matrix: " + v.spatial().world)
+        addNode(v)
     }
 
 

@@ -51,7 +51,7 @@ import static sc.iview.commands.MenuWeights.FILE_OPEN;
 @Plugin(type = Command.class, menuRoot = "SciView", //
         menu = { @Menu(label = "File", weight = FILE), //
                 @Menu(label = "Open Directory of tif...", weight = FILE_OPEN) })
-public class OpenDirofTif implements Command {
+public class OpenDirOfTIFF implements Command {
 
     @Parameter
     private IOService io;
