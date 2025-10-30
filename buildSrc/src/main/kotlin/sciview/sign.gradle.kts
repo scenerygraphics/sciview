@@ -16,6 +16,7 @@ signing {
 }
 
 tasks.withType<Sign>().configureEach {
-    onlyIf { project.hasProperty("release") }
+    val isRelease = hasProperty("release")
+    onlyIf { isRelease }
 }
 

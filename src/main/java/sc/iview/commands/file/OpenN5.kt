@@ -138,6 +138,7 @@ class OpenN5 : DynamicCommand() {
                 DataType.FLOAT32 -> N5Utils.openVolatile<FloatType>(reader, dataset)
                 DataType.FLOAT64 -> N5Utils.openVolatile<DoubleType>(reader, dataset)
                 DataType.OBJECT -> TODO()
+                DataType.STRING -> TODO()
                 null -> TODO()
                 DataType.STRING -> TODO()
             }
