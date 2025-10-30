@@ -1,4 +1,4 @@
-package sc.iview.commands.demo.advanced
+package sc.iview.commands.analysis
 
 import org.joml.Quaternionf
 import org.joml.Vector3f
