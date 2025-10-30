@@ -164,10 +164,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * The primary camera/observer in the scene
      */
     var camera: Camera? = null
-    set(value) {
-        field = value
-        setActiveObserver(field)
-    }
+        set(value) {
+            field = value
+            setActiveObserver(field)
+        }
 
     lateinit var controls: Controls
     val targetArcball: AnimatedCenteringBeforeArcBallControl
@@ -1709,11 +1709,24 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         return renderer
     }
 
+    private var originalFOV = camera?.fov
+
     /**
      * Enable VR rendering
      */
     fun toggleVRRendering() {
         var renderer = renderer ?: return
+
+        // Save camera's original settings if we switch from 2D to VR
+        if (!vrActive) {
+            originalFOV = camera?.fov
+        }
+
+        // If turning off VR, store the controls state before deactivating
+        if (vrActive) {
+            // We're about to turn off VR
+            controls.stashControls()
+        }
 
         vrActive = !vrActive
         val cam = scene.activeObserver as? DetachedHeadCamera ?: return
@@ -1750,6 +1763,15 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             // Convert back to normal Camera
             logger.info("Shutting down VR")
             cam.tracker = null
+
+            // Reset FOV to original value when turning off VR
+            originalFOV?.let { camera?.fov = it }
+
+            // Restore controls after turning off VR
+            controls.restoreControls()
+
+            // Reset input controls to ensure proper camera behavior
+            inputSetup()
         }
 
         // Enable push mode if VR is inactive, and the other way round
@@ -1775,7 +1797,12 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             if (hub.has(SceneryElement.HMDInput)) {
                 val hmd = hub.get(SceneryElement.HMDInput) as? OpenVRHMD
                 hmd?.close()
-                // TODO hub.remove(hmd)
+                // Get the actual key that was used to store this element
+                val keyToRemove = hub.elements.entries.find { it.value == hmd }?.key
+                keyToRemove?.let {
+                    hub.elements.remove(it)
+                    logger.info("Removed ${it.name} from hub.")
+                }
                 logger.debug("Closed HMD.")
             }
         }
