@@ -1,4 +1,4 @@
-package sc.iview.commands.demo.advanced
+package sc.iview.commands.analysis
 
 import org.joml.Vector3f
 import org.joml.Matrix4f
@@ -7,6 +7,7 @@ import graphics.scenery.utils.extensions.*
 import graphics.scenery.utils.lazyLogger
 import org.slf4j.LoggerFactory
 import java.io.File
+import kotlin.collections.iterator
 import kotlin.math.sqrt
 
 /**
@@ -336,7 +337,8 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 					Quaternionf(),
 					Vector3f(0.0f),
 					confidence,
-					samples)
+					samples
+				)
 
 				spines.add(currentSpine)
 			}
@@ -389,7 +391,8 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 					headOrientation,
 					position,
 					confidence,
-					samples)
+					samples
+				)
 
 				spines.add(currentSpine)
 			}
@@ -429,7 +432,8 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 					headOrientation,
 					position,
 					confidence,
-					samples)
+					samples
+				)
 
 				spines.add(currentSpine)
 			}
