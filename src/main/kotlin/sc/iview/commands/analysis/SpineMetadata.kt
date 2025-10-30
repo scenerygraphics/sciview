@@ -1,4 +1,4 @@
-package sc.iview.commands.analysis
+package sc.iview.commands.demo.advanced
 
 import org.joml.Quaternionf
 import org.joml.Vector3f
@@ -18,6 +18,6 @@ data class SpineMetadata(
     val headOrientation: Quaternionf,
     val position: Vector3f,
     val confidence: Float,
-    val samples: List<Float?>,
+    val samples: List<Float>,
     val samplePosList: List<Vector3f> = ArrayList()
 )
