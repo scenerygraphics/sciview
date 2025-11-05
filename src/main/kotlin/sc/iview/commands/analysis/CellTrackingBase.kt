@@ -65,7 +65,7 @@ open class CellTrackingBase(
 
     private lateinit var lightTetrahedron: List<PointLight>
 
-    val volumeTPWidget = TextBoard()
+    val volumeTimepointWidget = TextBoard()
 
     /** determines whether the volume and hedgehogs should keep listening for updates or not */
     var cellTrackingActive: Boolean = false
@@ -212,7 +212,7 @@ open class CellTrackingBase(
                     TrackerRole.RightHand -> rightVRController = device
                 }
                 if (device.role == TrackerRole.RightHand) {
-                    attachCursorAndTPWidget()
+                    attachCursorAndTimepointWidget()
                     device.model?.name = "rightHand"
                 } else if (device.role == TrackerRole.LeftHand) {
                     device.model?.name = "leftHand"
@@ -543,16 +543,16 @@ open class CellTrackingBase(
     }
 
     /** Attach a spherical cursor to the right controller. */
-    private fun attachCursorAndTPWidget(debug: Boolean = false) {
+    private fun attachCursorAndTimepointWidget(debug: Boolean = false) {
         // Only attach if not already attached
         if (sciview.findNodes { it.name == "VR Cursor" }.isNotEmpty()) {
             return
         }
 
-        volumeTPWidget.text = volume.currentTimepoint.toString()
-        volumeTPWidget.name = "Volume Timepoint Widget"
-        volumeTPWidget.fontColor = Vector4f(0.4f, 0.45f, 1f, 1f)
-        volumeTPWidget.spatial {
+        volumeTimepointWidget.text = volume.currentTimepoint.toString()
+        volumeTimepointWidget.name = "Volume Timepoint Widget"
+        volumeTimepointWidget.fontColor = Vector4f(0.4f, 0.45f, 1f, 1f)
+        volumeTimepointWidget.spatial {
             scale = Vector3f(0.07f)
             position = Vector3f(-0.05f, -0.05f, 0.12f)
             rotation = Quaternionf().rotationXYZ(-1.57f, -1.57f, 0f)
@@ -560,7 +560,7 @@ open class CellTrackingBase(
 
         rightVRController?.model?.let {
             cursor.attachCursor(sciview, it)
-            sciview.addNode(volumeTPWidget, activePublish = false, parent = it)
+            sciview.addNode(volumeTimepointWidget, activePublish = false, parent = it)
         }
     }
 
