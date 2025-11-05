@@ -446,8 +446,10 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 fun main(args: Array<String>) {
 	val logger = LoggerFactory.getLogger("HedgehogAnalysisMain")
 	// main should only be called for testing purposes
-	val file = File("C:/path/to/your/test/CSV")
-	val analysis = HedgehogAnalysis.fromCSV(file)
-	val results = analysis.run()
-	logger.info("Results: \n$results")
+    if (args.isNotEmpty()) {
+        val file = File(args[0])
+        val analysis = HedgehogAnalysis.fromCSV(file)
+        val results = analysis.run()
+        logger.info("Results: \n$results")
+    }
 }
