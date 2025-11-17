@@ -149,12 +149,29 @@ private fun update() {
         return
     }
 
+    // Check if the update site is already added
+    val listSites = runUpdater("list-update-sites")
+    val siteExists = listSites.lines().any { line ->
+        line.contains(updateSite) && !line.contains("DISABLED")
+    }
+
+    if (!siteExists) {
+        logger.lifecycle("Adding update site $updateSite")
+        try {
+            runUpdater("add-update-site", updateSite, updateSiteURL)
+        }
+        catch (exc: Exception) {
+            error("Failed to add update site: $exc")
+        }
+    } else {
+        logger.lifecycle("Update site $updateSite already added")
+    }
+
     try {
-        runUpdater("add-update-site", updateSite, updateSiteURL)
         runUpdater("update")
     }
-    catch (_: Exception) {
-        error("Failed to update Fiji")
+    catch (exc: Exception) {
+        error("Failed to update Fiji: $exc")
     }
 }
 
