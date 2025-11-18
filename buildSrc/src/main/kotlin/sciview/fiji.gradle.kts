@@ -206,7 +206,7 @@ private fun populate() {
     logger.info("--> Copying files into Fiji installation")
 
     // Get runtime classpath files, excluding known test-only libraries
-    val testLibraries = setOf("hamcrest-core", "junit", "kotlin-test-junit", "kotlin-test")
+    val testLibraries = setOf("hamcrest-core", "junit", "kotlin-test-junit", "kotlin-test", "slf4j-simple")
     // Exclude 32-bit artifacts since Fiji no longer supports x86-32 platforms
     val exclude32Bit = setOf("i686", "i586", "x86-32")
     val runtimeClasspath = configurations.named("runtimeClasspath").get()
