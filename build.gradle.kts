@@ -31,6 +31,30 @@ repositories {
     maven("https://maven.scijava.org/content/groups/public")
 }
 
+// Configuration for lwjgl natives with lenient resolution
+val lwjglNativesConfig by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+
+// Centralized list of lwjgl modules to avoid duplication
+val lwjglModules = listOf(
+    "",           // base lwjgl
+    "-glfw",
+    "-jemalloc",
+    "-opengl",
+    "-vulkan",
+    "-openvr",
+    "-xxhash",
+    "-remotery",
+    "-spvc",
+    "-shaderc",
+    "-lz4",
+    "-tinyexr",
+    "-zstd",
+    "-jawt",      // included for completeness
+)
+
 dependencies {
     val scijavaParentPomVersion = project.properties["scijavaParentPOMVersion"]
     val ktVersion = project.properties["kotlinVersion"]
@@ -133,6 +157,29 @@ dependencies {
     implementation("ome:formats-gpl")
 
     implementation("org.mastodon:mastodon:1.0.0-beta-34")
+
+    // Add lwjgl platform-specific natives as runtime dependencies
+    // Using a custom configuration with lenient resolution to skip missing artifacts
+    val lwjglVersion = "3.3.6"
+
+    lwjglNatives.forEach { nativePlatform ->
+        lwjglModules.forEach { lwjglProject ->
+            // Add to custom config; missing artifacts will be silently skipped
+            lwjglNativesConfig(group = "org.lwjgl", name = "lwjgl$lwjglProject", version = lwjglVersion) {
+                artifact {
+                    name = "lwjgl$lwjglProject"
+                    type = "jar"
+                    classifier = nativePlatform
+                }
+                isTransitive = false
+            }
+        }
+    }
+
+    // Also add the successfully resolved lwjgl natives to runtimeClasspath
+    configurations.named("runtimeClasspath") {
+        extendsFrom(lwjglNativesConfig)
+    }
 }
 
 //kapt {
@@ -208,23 +255,7 @@ tasks {
 
             // lwjgl natives
             lwjglNatives.forEach { nativePlatform ->
-                listOf(
-                    "",
-                    "-glfw",
-                    "-jemalloc",
-                    "-opengl",
-                    "-vulkan",
-                    "-openvr",
-                    "-xxhash",
-                    "-remotery",
-                    "-spvc",
-                    "-shaderc",
-                ).forEach project@ { lwjglProject ->
-                    // Vulkan natives only exist for macOS
-                    if(lwjglProject.endsWith("vulkan") && nativePlatform != "macos") {
-                        return@project
-                    }
-
+                lwjglModules.forEach { lwjglProject ->
                     val dependencyNode = dependenciesNode.appendNode("dependency")
                     dependencyNode.appendNode("groupId", "org.lwjgl")
                     dependencyNode.appendNode("artifactId", "lwjgl$lwjglProject")
@@ -252,32 +283,23 @@ tasks {
             // add bigvolumeviewer version
             propertiesNode.appendNode("bigvolumeviewer.version", "0.3.3")
 
-            val versionedArtifacts = listOf("scenery",
-                                            "flatlaf",
-                                            "kotlin-stdlib-common",
-                                            "kotlin-stdlib",
-                                            "kotlinx-coroutines-core",
-                                            "pom-scijava",
-                                            "lwjgl-bom",
-                                            "imagej-mesh",
-                                            "jackson-module-kotlin",
-                                            "jackson-dataformat-yaml",
-                                            "jackson-dataformat-msgpack",
-                                            "jogl-all",
-                                            "jna-platform",
-                                            "kotlin-bom",
-                                            "lwjgl",
-                                            "lwjgl-glfw",
-                                            "lwjgl-jemalloc",
-                                            "lwjgl-vulkan",
-                                            "lwjgl-opengl",
-                                            "lwjgl-openvr",
-                                            "lwjgl-xxhash",
-                                            "lwjgl-remotery",
-                                            "lwjgl-spvc",
-                                            "lwjgl-shaderc",
-                                            "lwjgl-jawt",
-                                            "log4j-1.2-api")
+            val versionedArtifacts = listOf(
+                "scenery",
+                "flatlaf",
+                "kotlin-stdlib-common",
+                "kotlin-stdlib",
+                "kotlinx-coroutines-core",
+                "pom-scijava",
+                "lwjgl-bom",
+                "imagej-mesh",
+                "jackson-module-kotlin",
+                "jackson-dataformat-yaml",
+                "jackson-dataformat-msgpack",
+                "jogl-all",
+                "jna-platform",
+                "kotlin-bom",
+                "log4j-1.2-api"
+            ) + lwjglModules.map { "lwjgl$it" }
 
             val toSkip = listOf("pom-scijava")
 

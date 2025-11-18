@@ -209,7 +209,10 @@ private fun populate() {
     val testLibraries = setOf("hamcrest-core", "junit", "kotlin-test-junit", "kotlin-test", "slf4j-simple")
     // Exclude 32-bit artifacts since Fiji no longer supports x86-32 platforms
     val exclude32Bit = setOf("i686", "i586", "x86-32")
+
+    // Use lenient resolution for runtimeClasspath to skip missing lwjgl natives
     val runtimeClasspath = configurations.named("runtimeClasspath").get()
+        .resolvedConfiguration.lenientConfiguration.files
 
     // Copy main artifact.
     val mainJar = project.tasks.getByName("jar").outputs.files.singleFile
