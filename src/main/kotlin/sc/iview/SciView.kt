@@ -392,27 +392,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             }
         })
 
-        // determine imagej-launcher version and to disable Vulkan if XInitThreads() fix
-        // is not deployed
-        try {
-            val launcherClass = Class.forName("net.imagej.launcher.ClassLauncher")
-            var versionString = VersionUtils.getVersion(launcherClass)
-            if (versionString != null && getPlatform() == ExtractsNatives.Platform.LINUX) {
-                versionString = versionString.substring(0, 5)
-                val launcherVersion = Version(versionString)
-                val nonWorkingVersion = Version("4.0.5")
-                if (launcherVersion <= nonWorkingVersion
-                        && !java.lang.Boolean.parseBoolean(System.getProperty("sciview.DisableLauncherVersionCheck", "false"))) {
-                    throw IllegalStateException("imagej-launcher version is outdated, please update your Fiji installation.")
-                } else {
-                    logger.info("imagej-launcher version bigger that non-working version ($versionString vs. 4.0.5), all good.")
-                }
-            }
-        } catch (cnfe: ClassNotFoundException) {
-            // Didn't find the launcher, so we're probably good.
-            logger.info("imagej-launcher not found, not touching renderer preferences.")
-        }
-
         animations = LinkedList()
         mainWindow = SwingMainWindow(this)
         controls = Controls(this)

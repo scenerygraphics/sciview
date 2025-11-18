@@ -91,6 +91,13 @@ tasks {
         doLast { populate() }
     }
 
+    register("fijiTest") {
+        group = "Fiji"
+        description = "Tests the Fiji installation at $fijiDir by running $fijiTestClass."
+        notCompatibleWithConfigurationCache("Uses project references in doLast block")
+        doLast { testFiji() }
+    }
+
     register("fijiUpload") {
         group = "Fiji"
         description = "Uploads $updateSite + dependencies from $fijiDir to the $updateSite update site."
@@ -198,6 +205,12 @@ private fun populate() {
 
     logger.info("--> Copying files into Fiji installation")
 
+    // Get runtime classpath files, excluding known test-only libraries
+    val testLibraries = setOf("hamcrest-core", "junit", "kotlin-test-junit", "kotlin-test")
+    // Exclude 32-bit artifacts since Fiji no longer supports x86-32 platforms
+    val exclude32Bit = setOf("i686", "i586", "x86-32")
+    val runtimeClasspath = configurations.named("runtimeClasspath").get()
+
     // Copy main artifact.
     val mainJar = project.tasks.getByName("jar").outputs.files.singleFile
     copy {
@@ -208,18 +221,38 @@ private fun populate() {
 
     // Copy platform-independent JAR files.
     copy {
-        from(configurations.named("runtimeClasspath"))
+        from(runtimeClasspath)
         into(jarsDir)
-        eachFile { prepareToCopyFile(file, jarsDir, "jars", info) ?: exclude() }
+        eachFile {
+            // Exclude test-only libraries by filename pattern
+            val isTestLib = testLibraries.any { file.name.startsWith("$it-") }
+            // Exclude 32-bit artifacts
+            val is32Bit = exclude32Bit.any { file.name.contains(it) }
+            if (isTestLib || is32Bit) {
+                exclude()
+            } else {
+                prepareToCopyFile(file, jarsDir, "jars", info) ?: exclude()
+            }
+        }
     }
 
     // Copy platform-specific JAR files.
     for (platform in listOf("linux-arm64", "linux64", "macos-arm64", "macos64", "win-arm64", "win64")) {
         val platformDir = jarsDir.resolve(platform)
         copy {
-            from(configurations.named("runtimeClasspath"))
+            from(runtimeClasspath)
             into(platformDir)
-            eachFile { prepareToCopyFile(file, platformDir, "jars/$platform", info) ?: exclude() }
+            eachFile {
+                // Exclude test-only libraries by filename pattern
+                val isTestLib = testLibraries.any { file.name.startsWith("$it-") }
+                // Exclude 32-bit artifacts
+                val is32Bit = exclude32Bit.any { file.name.contains(it) }
+                if (isTestLib || is32Bit) {
+                    exclude()
+                } else {
+                    prepareToCopyFile(file, platformDir, "jars/$platform", info) ?: exclude()
+                }
+            }
         }
     }
 
@@ -242,10 +275,27 @@ private fun populate() {
         }
     }
 
-    // Now that we populated Fiji, let's verify that it works.
+    // HACK: Fix humble-video-arch naming for JPMS compatibility.
+    // JPMS doesn't allow module names with numeric-only tokens like "64" in "x86.64",
+    // so we rename x86_64 to x64 to avoid "Invalid module name" errors.
+    for (file in project.fileTree(jarsDir).files) {
+        if (file.extension != "jar") continue
+        if (file.name.startsWith("humble-video-arch-") && file.name.contains("x86_64")) {
+            val newName = file.name.replace("x86_64", "x64")
+            val newFile = file.parentFile.resolve(newName)
+            logger.info("Renaming for JPMS: ${file.name} -> $newName")
+            file.renameTo(newFile)
+        }
+    }
+
+}
+
+private fun testFiji() {
+    validateFijiDir()
+
     // We launch the class given in fijiTestClass to check whether the update site was correctly installed.
     // Finally, the strings given in fijiTestClassExpectedOutput are tested against this command's output.
-    logger.info("--> Testing installation")
+    logger.lifecycle("Testing Fiji installation by running $fijiTestClass...")
     val stdout = runFiji("--run", fijiTestClass)
     logger.info(stdout)
     val gitHash: String = project.properties["gitHash"] as? String ?: "git rev-parse HEAD".runCommand(File("."))?.trim()?.substring(0, 7) ?: ""
@@ -321,42 +371,25 @@ private fun String.runCommand(workingDir: File): String? {
 }
 
 /**
- * Runs a Java program via the ImageJ Launcher's ClassLauncher, with the given arguments.
- *
- * Avoids using the ImageJ Launcher native binary, because it does not support Java 9+ well.
+ * Runs a Java program via the SciJava App Launcher's ClassLauncher, with the given arguments.
  */
 private fun runLauncher(jvmArgs: List<String>, launcherArgs: List<String>, mainClass: String, mainArgs: List<String>): String {
-    // Find the imagej-launcher-x.y.z.jar, needed on the classpath.
-    val launcherJar = fijiDir.resolve("jars").listFiles()
-        ?.firstOrNull { f -> f.name.startsWith("imagej-launcher-") }
-        ?: error("Where is your $fijiDir/jars/imagej-launcher.jar?!")
-
+    val cpSep = System.getProperty("path.separator")
+    val pathSep = System.getProperty("file.separator")
     val jvmArgsForJava = listOf(
         "-Dpython.cachedir.skip=true",
         "-Dplugins.dir=$fijiDir",
-        //"-Xmx...m",
         "-Djava.awt.headless=true",
         "-Dapple.awt.UIElement=true",
         "--add-opens=java.base/java.lang=ALL-UNNAMED",
-        "--add-opens=java.base/java.util=ALL-UNNAMED",
-        "-Djava.class.path=$launcherJar",
-        "-Dimagej.dir=$fijiDir",
-        "-Dij.dir=$fijiDir",
-        "-Dfiji.dir=$fijiDir",
-        //"-Dfiji.defaultLibPath=lib/amd64/server/libjvm.so",
-        //"-Dfiji.executable=./ImageJ-linux64",
-        //"-Dij.executable=./ImageJ-linux64",
-        //"-Djava.library.path=$fijiDir/lib/$platform:$fijiDir/mm/$platform",
+        "-Dscijava.app.unlock-modules=true",
+        "-cp", "jars${pathSep}*${cpSep}plugins${pathSep}*",
     ) + jvmArgs
-
-    val mainClassForJava = "net.imagej.launcher.ClassLauncher"
+    val mainClassForJava = "org.scijava.launcher.ClassLauncher"
 
     // Yes: the original main class is passed to the ClassLauncher as a main argument.
     // It's confusing. But thanks to the magic of ClassLoaders, we can and we will.
-    val mainArgsForJava = launcherArgs + listOf(
-        "-ijjarpath", "jars",
-        "-ijjarpath", "plugins",
-    ) + mainClass + mainArgs
+    val mainArgsForJava = launcherArgs + mainClass + mainArgs
 
     return runJava(jvmArgsForJava, mainClassForJava, mainArgsForJava)
 }
@@ -411,7 +444,9 @@ val String.davce: DAVCE
         val noExt = substring(0, length - e.length)
         val d = noExt.normalized.dirname
         val noDir = if (d.isEmpty()) noExt else noExt.substring(d.length + 1)
-        val cMatch = Regex(".*?-((native|windows|mac|linux).*)").matchEntire(noDir)
+        // Enhanced classifier matching to handle platform-specific JARs better
+        // Matches patterns like: natives-*, x86_64-*, x64-*, i686-*, aarch64-*, etc.
+        val cMatch = Regex(".*?-((native|windows|mac|linux|x86_64|x64|i686|aarch64|arm64|darwin|gnu|mingw).*)").matchEntire(noDir)
         val c = cMatch?.groups?.get(1)?.value ?: ""
         val noClass = if (c.isEmpty()) noDir else noDir.substring(0, noDir.length - c.length - 1)
         val vMatch = Regex(".*?-([a-f0-9]{6}[a-f0-9]*|[0-9].*)").matchEntire(noClass)
@@ -513,10 +548,11 @@ fun parseGzippedXml(gzippedXml: ByteArray): Document {
 
 data class AC(val artifactId: String, val classifier: String) {
     val pathGuess: String get() {
-        val isWin = classifier.contains("win")
-        val isMac = classifier.contains("mac")
-        val isLinux = classifier.contains("linux")
+        val isWin = classifier.contains("win") || classifier.contains("mingw")
+        val isMac = classifier.contains("mac") || classifier.contains("darwin")
+        val isLinux = classifier.contains("linux") || classifier.contains("gnu")
         val isArm64 = classifier.contains("arm64") || classifier.contains("aarch64")
+
         val subdir = when {
             isLinux && isArm64 -> "linux-arm64"
             isLinux -> "linux64"
