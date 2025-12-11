@@ -291,6 +291,24 @@ private fun populate() {
         }
     }
 
+    // HACK: Rename jinput-*-natives-all.jar to include groupId for ImageJ Updater compatibility.
+    // The ImageJ Updater misinterprets the classifier as a version string (e.g., "2.0.10-natives-all"
+    // instead of version "2.0.10" with classifier "natives-all"), so we rename to the format
+    // net.java.jinput.jinput-VERSION-natives-all.jar which the updater can parse correctly.
+    for (file in project.fileTree(jarsDir).files) {
+        if (file.extension != "jar") continue
+        if (file.name.startsWith("jinput-") && file.name.contains("-natives-all")) {
+            val versionMatch = Regex("jinput-([0-9.]+)-natives-all\\.jar").matchEntire(file.name)
+            if (versionMatch != null) {
+                val version = versionMatch.groupValues[1]
+                val newName = "net.java.jinput.jinput-$version-natives-all.jar"
+                val newFile = file.parentFile.resolve(newName)
+                logger.info("Renaming for ImageJ Updater compatibility: ${file.name} -> $newName")
+                file.renameTo(newFile)
+            }
+        }
+    }
+
 }
 
 private fun testFiji() {
