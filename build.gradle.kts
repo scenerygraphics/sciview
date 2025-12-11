@@ -31,7 +31,7 @@ repositories {
     maven("https://maven.scijava.org/content/groups/public")
 }
 
-// Configuration for lwjgl natives with lenient resolution
+// Custom configuration for lwjgl natives
 val lwjglNativesConfig by configurations.creating {
     isCanBeConsumed = false
     isCanBeResolved = true
@@ -159,12 +159,25 @@ dependencies {
     implementation("org.mastodon:mastodon:1.0.0-beta-34")
 
     // Add lwjgl platform-specific natives as runtime dependencies
-    // Using a custom configuration with lenient resolution to skip missing artifacts
     val lwjglVersion = "3.3.3"
 
     lwjglNatives.forEach { nativePlatform ->
         lwjglModules.forEach { lwjglProject ->
-            // Add to custom config; missing artifacts will be silently skipped
+            // Filter out combinations that don't exist in Maven Central
+            // Vulkan natives only exist for macOS
+            if(lwjglProject.endsWith("vulkan") && !nativePlatform.startsWith("natives-macos")) {
+                return@forEach
+            }
+            // OpenVR doesn't have Windows ARM64 or macOS ARM64 natives
+            if(lwjglProject.endsWith("openvr") && (nativePlatform == "natives-windows-arm64" || nativePlatform == "natives-macos-arm64")) {
+                return@forEach
+            }
+            // JAWT has no native variants
+            if(lwjglProject.endsWith("jawt")) {
+                return@forEach
+            }
+
+            // Add to custom config for inclusion in runtimeClasspath
             lwjglNativesConfig(group = "org.lwjgl", name = "lwjgl$lwjglProject", version = lwjglVersion) {
                 artifact {
                     name = "lwjgl$lwjglProject"
@@ -256,6 +269,20 @@ tasks {
             // lwjgl natives
             lwjglNatives.forEach { nativePlatform ->
                 lwjglModules.forEach { lwjglProject ->
+                    // Filter out combinations that don't exist in Maven Central
+                    // Vulkan natives only exist for macOS
+                    if(lwjglProject.endsWith("vulkan") && !nativePlatform.startsWith("natives-macos")) {
+                        return@forEach
+                    }
+                    // OpenVR doesn't have Windows ARM64 or macOS ARM64 natives
+                    if(lwjglProject.endsWith("openvr") && (nativePlatform == "natives-windows-arm64" || nativePlatform == "natives-macos-arm64")) {
+                        return@forEach
+                    }
+                    // JAWT has no native variants
+                    if(lwjglProject.endsWith("jawt")) {
+                        return@forEach
+                    }
+
                     val dependencyNode = dependenciesNode.appendNode("dependency")
                     dependencyNode.appendNode("groupId", "org.lwjgl")
                     dependencyNode.appendNode("artifactId", "lwjgl$lwjglProject")

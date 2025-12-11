@@ -210,7 +210,7 @@ private fun populate() {
     // Exclude 32-bit artifacts since Fiji no longer supports x86-32 platforms
     val exclude32Bit = setOf("i686", "i586", "x86-32")
 
-    // Use lenient resolution for runtimeClasspath to skip missing lwjgl natives
+    // Use lenient resolution for runtimeClasspath as a safety net for any unresolvable artifacts
     val runtimeClasspath = configurations.named("runtimeClasspath").get()
         .resolvedConfiguration.lenientConfiguration.files
 
