@@ -160,7 +160,7 @@ dependencies {
 
     // Add lwjgl platform-specific natives as runtime dependencies
     // Using a custom configuration with lenient resolution to skip missing artifacts
-    val lwjglVersion = "3.3.6"
+    val lwjglVersion = "3.3.3"
 
     lwjglNatives.forEach { nativePlatform ->
         lwjglModules.forEach { lwjglProject ->
