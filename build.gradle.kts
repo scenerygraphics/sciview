@@ -169,7 +169,8 @@ dependencies {
                 return@forEach
             }
             // OpenVR doesn't have Windows ARM64 or macOS ARM64 natives
-            if(lwjglProject.endsWith("openvr") && (nativePlatform == "natives-windows-arm64" || nativePlatform == "natives-macos-arm64")) {
+            // TODO: Remove natives-linux-arm64 clause when lwjgl updates beyond 3.3.3.
+            if(lwjglProject.endsWith("openvr") && (nativePlatform == "natives-windows-arm64" || nativePlatform == "natives-macos-arm64" || nativePlatform == "natives-linux-arm64")) {
                 return@forEach
             }
             // JAWT has no native variants
