@@ -173,6 +173,10 @@ dependencies {
             if(lwjglProject.endsWith("openvr") && (nativePlatform == "natives-windows-arm64" || nativePlatform == "natives-macos-arm64" || nativePlatform == "natives-linux-arm64")) {
                 return@forEach
             }
+            // Remotery doesn't have Windows ARM64 natives
+            if(lwjglProject.endsWith("remotery") && nativePlatform == "natives-windows-arm64") {
+                return@forEach
+            }
             // JAWT has no native variants
             if(lwjglProject.endsWith("jawt")) {
                 return@forEach
