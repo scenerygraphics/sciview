@@ -18,8 +18,8 @@ plugins {
 }
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_21
-  targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
@@ -31,6 +31,30 @@ repositories {
     maven("https://maven.scijava.org/content/groups/public")
 }
 
+// Custom configuration for lwjgl natives
+val lwjglNativesConfig by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+
+// Centralized list of lwjgl modules to avoid duplication
+val lwjglModules = listOf(
+    "",           // base lwjgl
+    "-glfw",
+    "-jemalloc",
+    "-opengl",
+    "-vulkan",
+    "-openvr",
+    "-xxhash",
+    "-remotery",
+    "-spvc",
+    "-shaderc",
+    "-lz4",
+    "-tinyexr",
+    "-zstd",
+    "-jawt",      // included for completeness
+)
+
 dependencies {
     val scijavaParentPomVersion = project.properties["scijavaParentPOMVersion"]
     val ktVersion = project.properties["kotlinVersion"]
@@ -39,13 +63,13 @@ dependencies {
     // Graphics dependencies
 
     // Attention! Manual version increment necessary here!
-    val scijavaCommonVersion = "2.98.0"
+    val scijavaCommonVersion = "2.99.2"
     annotationProcessor("org.scijava:scijava-common:$scijavaCommonVersion")
     kapt("org.scijava:scijava-common:$scijavaCommonVersion") {
         exclude("org.lwjgl")
     }
 
-    val sceneryVersion = "0.12.0"
+    val sceneryVersion = "1.0.0-beta-2"
     api("graphics.scenery:scenery:$sceneryVersion") {
         version { strictly(sceneryVersion) }
         exclude("org.biojava.thirdparty", "forester")
@@ -131,6 +155,49 @@ dependencies {
     // OME
     implementation("ome:formats-bsd")
     implementation("ome:formats-gpl")
+
+    implementation("org.mastodon:mastodon:1.0.0-beta-34")
+
+    // Add lwjgl platform-specific natives as runtime dependencies
+    val lwjglVersion = "3.3.3"
+
+    lwjglNatives.forEach { nativePlatform ->
+        lwjglModules.forEach { lwjglProject ->
+            // Filter out combinations that don't exist in Maven Central
+            // Vulkan natives only exist for macOS
+            if(lwjglProject.endsWith("vulkan") && !nativePlatform.startsWith("natives-macos")) {
+                return@forEach
+            }
+            // OpenVR doesn't have Windows ARM64 or macOS ARM64 natives
+            // TODO: Remove natives-linux-arm64 clause when lwjgl updates beyond 3.3.3.
+            if(lwjglProject.endsWith("openvr") && (nativePlatform == "natives-windows-arm64" || nativePlatform == "natives-macos-arm64" || nativePlatform == "natives-linux-arm64")) {
+                return@forEach
+            }
+            // Remotery doesn't have Windows ARM64 natives
+            if(lwjglProject.endsWith("remotery") && nativePlatform == "natives-windows-arm64") {
+                return@forEach
+            }
+            // JAWT has no native variants
+            if(lwjglProject.endsWith("jawt")) {
+                return@forEach
+            }
+
+            // Add to custom config for inclusion in runtimeClasspath
+            lwjglNativesConfig(group = "org.lwjgl", name = "lwjgl$lwjglProject", version = lwjglVersion) {
+                artifact {
+                    name = "lwjgl$lwjglProject"
+                    type = "jar"
+                    classifier = nativePlatform
+                }
+                isTransitive = false
+            }
+        }
+    }
+
+    // Also add the successfully resolved lwjgl natives to runtimeClasspath
+    configurations.named("runtimeClasspath") {
+        extendsFrom(lwjglNativesConfig)
+    }
 }
 
 //kapt {
@@ -206,21 +273,19 @@ tasks {
 
             // lwjgl natives
             lwjglNatives.forEach { nativePlatform ->
-                listOf(
-                    "",
-                    "-glfw",
-                    "-jemalloc",
-                    "-opengl",
-                    "-vulkan",
-                    "-openvr",
-                    "-xxhash",
-                    "-remotery",
-                    "-spvc",
-                    "-shaderc",
-                ).forEach project@ { lwjglProject ->
+                lwjglModules.forEach { lwjglProject ->
+                    // Filter out combinations that don't exist in Maven Central
                     // Vulkan natives only exist for macOS
-                    if(lwjglProject.endsWith("vulkan") && nativePlatform != "macos") {
-                        return@project
+                    if(lwjglProject.endsWith("vulkan") && !nativePlatform.startsWith("natives-macos")) {
+                        return@forEach
+                    }
+                    // OpenVR doesn't have Windows ARM64 or macOS ARM64 natives
+                    if(lwjglProject.endsWith("openvr") && (nativePlatform == "natives-windows-arm64" || nativePlatform == "natives-macos-arm64")) {
+                        return@forEach
+                    }
+                    // JAWT has no native variants
+                    if(lwjglProject.endsWith("jawt")) {
+                        return@forEach
                     }
 
                     val dependencyNode = dependenciesNode.appendNode("dependency")
@@ -250,32 +315,23 @@ tasks {
             // add bigvolumeviewer version
             propertiesNode.appendNode("bigvolumeviewer.version", "0.3.3")
 
-            val versionedArtifacts = listOf("scenery",
-                                            "flatlaf",
-                                            "kotlin-stdlib-common",
-                                            "kotlin-stdlib",
-                                            "kotlinx-coroutines-core",
-                                            "pom-scijava",
-                                            "lwjgl-bom",
-                                            "imagej-mesh",
-                                            "jackson-module-kotlin",
-                                            "jackson-dataformat-yaml",
-                                            "jackson-dataformat-msgpack",
-                                            "jogl-all",
-                                            "jna-platform",
-                                            "kotlin-bom",
-                                            "lwjgl",
-                                            "lwjgl-glfw",
-                                            "lwjgl-jemalloc",
-                                            "lwjgl-vulkan",
-                                            "lwjgl-opengl",
-                                            "lwjgl-openvr",
-                                            "lwjgl-xxhash",
-                                            "lwjgl-remotery",
-                                            "lwjgl-spvc",
-                                            "lwjgl-shaderc",
-                                            "lwjgl-jawt",
-                                            "log4j-1.2-api")
+            val versionedArtifacts = listOf(
+                "scenery",
+                "flatlaf",
+                "kotlin-stdlib-common",
+                "kotlin-stdlib",
+                "kotlinx-coroutines-core",
+                "pom-scijava",
+                "lwjgl-bom",
+                "imagej-mesh",
+                "jackson-module-kotlin",
+                "jackson-dataformat-yaml",
+                "jackson-dataformat-msgpack",
+                "jogl-all",
+                "jna-platform",
+                "kotlin-bom",
+                "log4j-1.2-api"
+            ) + lwjglModules.map { "lwjgl$it" }
 
             val toSkip = listOf("pom-scijava")
 

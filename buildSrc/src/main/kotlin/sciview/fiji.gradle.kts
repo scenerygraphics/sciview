@@ -20,9 +20,9 @@ plugins {
     id("de.undercouch.download")
 }
 
-// Discern the path to the Fiji.app folder we are working with.
+// Discern the path to the Fiji folder we are working with.
 val fijiDir: File = properties["fiji.dir"]?.toString()?.let(::File)
-    ?: layout.buildDirectory.dir("fiji/Fiji.app").get().asFile
+    ?: layout.buildDirectory.dir("fiji/Fiji").get().asFile
 
 // For really shaky connections, we retry a few times by default.
 val maxRetries = 16
@@ -37,8 +37,8 @@ val pass = project.properties["fijiUpdateSitePassword"]
 val fijiTestClass = project.properties["fijiTestClass"] as String
 val fijiTestClassExpectedOutput = project.properties["fijiTestClassExpectedOutput"] as String
 
-val fijiDownloadURL = "https://downloads.imagej.net/fiji/latest/fiji-nojre.zip"
-val fijiZipFile = layout.buildDirectory.file("fiji-nojre.zip")
+val fijiDownloadURL = "https://downloads.imagej.net/fiji/latest/fiji-latest-portable-nojava.zip"
+val fijiZipFile = layout.buildDirectory.file("fiji-latest-portable-nojava.zip")
 val fijiChecksumDisable = (project.properties["fijiChecksumDisable"] as? String)?.toBoolean() ?: false
 
 tasks {
@@ -54,12 +54,14 @@ tasks {
 
     register("fijiChecksum") {
         onlyIf { !fijiChecksumDisable }
+        notCompatibleWithConfigurationCache("Uses project references in doLast block")
         doLast { checksum() }
     }
 
     register<Copy>("fijiUnpack") {
         group = "Fiji"
-        description = "Unpacks the fiji-nojre.zip archive into $fijiDir, downloading it as needed."
+        description = "Unpacks the fiji zip archive into $fijiDir, downloading it as needed."
+        notCompatibleWithConfigurationCache("Uses project references in doFirst block")
         onlyIf {
             fijiDir.listFiles()?.isEmpty() == true || !fijiDir.exists()
         }
@@ -76,21 +78,31 @@ tasks {
         group = "Fiji"
         description = "Updates the Fiji installation at $fijiDir."
         dependsOn("fijiUnpack")
+        notCompatibleWithConfigurationCache("Uses project references in doLast block")
         doLast { update() }
     }
 
     register("fijiPopulate") {
         group = "Fiji"
         description = "Installs $updateSite into the Fiji installation at $fijiDir."
-        dependsOn("jar", "fijiUpdate")
+        dependsOn("jar", "fijiUnpack")
         mustRunAfter("jar")
+        notCompatibleWithConfigurationCache("Uses project references in doLast block")
         doLast { populate() }
+    }
+
+    register("fijiTest") {
+        group = "Fiji"
+        description = "Tests the Fiji installation at $fijiDir by running $fijiTestClass."
+        notCompatibleWithConfigurationCache("Uses project references in doLast block")
+        doLast { testFiji() }
     }
 
     register("fijiUpload") {
         group = "Fiji"
         description = "Uploads $updateSite + dependencies from $fijiDir to the $updateSite update site."
         dependsOn("fijiPopulate")
+        notCompatibleWithConfigurationCache("Uses project references in doLast block")
         doLast { upload() }
     }
 
@@ -98,28 +110,28 @@ tasks {
         group = "Fiji"
         description = "Deletes the Fiji installation at $fijiDir."
         doLast {
-            logger.lifecycle("Removing Fiji.app directory $fijiDir")
+            logger.lifecycle("Removing Fiji directory $fijiDir")
             fijiDir.deleteRecursively()
         }
     }
 
     register("fijiDistClean") {
         group = "Fiji"
-        description = "Deletes the Fiji installation at $fijiDir, as well as the downloaded fiji-nojre.zip archive."
+        description = "Deletes the Fiji installation at $fijiDir, as well as the downloaded fiji zip archive."
         doLast {
-            logger.lifecycle("Removing Fiji.app directory")
+            logger.lifecycle("Removing Fiji directory")
             fijiDir.deleteRecursively()
-            logger.lifecycle("Removing fiji-nojre.zip")
-            fijiDir.parentFile.resolve("fiji-nojre.zip").delete()
+            logger.lifecycle("Removing fiji-latest-portable-nojava.zip")
+            fijiDir.parentFile.resolve("fiji-latest-portable-nojava.zip").delete()
         }
     }
 
 }
 
 private fun checksum() {
-    val checksumFile = fijiZipFile.get().asFile.resolveSibling("fiji-nojre.zip.sha256")
+    val checksumFile = fijiZipFile.get().asFile.resolveSibling("fiji-latest-portable-nojava.zip.sha256")
 
-    logger.lifecycle("Checking SHA256 checksum of fiji-nojre.zip")
+    logger.lifecycle("Checking SHA256 checksum of fiji-latest-portable-nojava.zip")
     download.run {
         src("$fijiDownloadURL.sha256")
         dest(checksumFile)
@@ -144,12 +156,29 @@ private fun update() {
         return
     }
 
+    // Check if the update site is already added
+    val listSites = runUpdater("list-update-sites")
+    val siteExists = listSites.lines().any { line ->
+        line.contains(updateSite) && !line.contains("DISABLED")
+    }
+
+    if (!siteExists) {
+        logger.lifecycle("Adding update site $updateSite")
+        try {
+            runUpdater("add-update-site", updateSite, updateSiteURL)
+        }
+        catch (exc: Exception) {
+            error("Failed to add update site: $exc")
+        }
+    } else {
+        logger.lifecycle("Update site $updateSite already added")
+    }
+
     try {
-        runUpdater("add-update-site", updateSite, updateSiteURL)
         runUpdater("update")
     }
-    catch (_: Exception) {
-        error("Failed to update Fiji")
+    catch (exc: Exception) {
+        error("Failed to update Fiji: $exc")
     }
 }
 
@@ -160,9 +189,7 @@ private fun populate() {
     // Parse relevant update site databases. This information is useful
     // for deciding which JAR files to copy, and which ones to leave alone.
     val info = Info(
-        db("ImageJ", "https://update.imagej.net"),
-        db("Fiji", "https://update.fiji.sc"),
-        db("Java-8", "https://sites.imagej.net/Java-8"),
+        db("Fiji-Latest", "https://sites.imagej.net/Fiji"),
         db(updateSite, updateSiteURL),
         mutableMapOf()
     )
@@ -178,6 +205,15 @@ private fun populate() {
 
     logger.info("--> Copying files into Fiji installation")
 
+    // Get runtime classpath files, excluding known test-only libraries
+    val testLibraries = setOf("hamcrest-core", "junit", "kotlin-test-junit", "kotlin-test", "slf4j-simple")
+    // Exclude 32-bit artifacts since Fiji no longer supports x86-32 platforms
+    val exclude32Bit = setOf("i686", "i586", "x86-32")
+
+    // Use lenient resolution for runtimeClasspath as a safety net for any unresolvable artifacts
+    val runtimeClasspath = configurations.named("runtimeClasspath").get()
+        .resolvedConfiguration.lenientConfiguration.files
+
     // Copy main artifact.
     val mainJar = project.tasks.getByName("jar").outputs.files.singleFile
     copy {
@@ -188,18 +224,38 @@ private fun populate() {
 
     // Copy platform-independent JAR files.
     copy {
-        from(configurations.named("runtimeClasspath"))
+        from(runtimeClasspath)
         into(jarsDir)
-        eachFile { prepareToCopyFile(file, jarsDir, "jars", info) ?: exclude() }
+        eachFile {
+            // Exclude test-only libraries by filename pattern
+            val isTestLib = testLibraries.any { file.name.startsWith("$it-") }
+            // Exclude 32-bit artifacts
+            val is32Bit = exclude32Bit.any { file.name.contains(it) }
+            if (isTestLib || is32Bit) {
+                exclude()
+            } else {
+                prepareToCopyFile(file, jarsDir, "jars", info) ?: exclude()
+            }
+        }
     }
 
     // Copy platform-specific JAR files.
-    for (platform in listOf("linux64", "macosx-arm64", "macosx", "win64")) {
+    for (platform in listOf("linux-arm64", "linux64", "macos-arm64", "macos64", "win-arm64", "win64")) {
         val platformDir = jarsDir.resolve(platform)
         copy {
-            from(configurations.named("runtimeClasspath"))
+            from(runtimeClasspath)
             into(platformDir)
-            eachFile { prepareToCopyFile(file, platformDir, "jars/$platform", info) ?: exclude() }
+            eachFile {
+                // Exclude test-only libraries by filename pattern
+                val isTestLib = testLibraries.any { file.name.startsWith("$it-") }
+                // Exclude 32-bit artifacts
+                val is32Bit = exclude32Bit.any { file.name.contains(it) }
+                if (isTestLib || is32Bit) {
+                    exclude()
+                } else {
+                    prepareToCopyFile(file, platformDir, "jars/$platform", info) ?: exclude()
+                }
+            }
         }
     }
 
@@ -222,10 +278,45 @@ private fun populate() {
         }
     }
 
-    // Now that we populated Fiji, let's verify that it works.
+    // HACK: Fix humble-video-arch naming for JPMS compatibility.
+    // JPMS doesn't allow module names with numeric-only tokens like "64" in "x86.64",
+    // so we rename x86_64 to x64 to avoid "Invalid module name" errors.
+    for (file in project.fileTree(jarsDir).files) {
+        if (file.extension != "jar") continue
+        if (file.name.startsWith("humble-video-arch-") && file.name.contains("x86_64")) {
+            val newName = file.name.replace("x86_64", "x64")
+            val newFile = file.parentFile.resolve(newName)
+            logger.info("Renaming for JPMS: ${file.name} -> $newName")
+            file.renameTo(newFile)
+        }
+    }
+
+    // HACK: Rename jinput-*-natives-all.jar to include groupId for ImageJ Updater compatibility.
+    // The ImageJ Updater misinterprets the classifier as a version string (e.g., "2.0.10-natives-all"
+    // instead of version "2.0.10" with classifier "natives-all"), so we rename to the format
+    // net.java.jinput.jinput-VERSION-natives-all.jar which the updater can parse correctly.
+    for (file in project.fileTree(jarsDir).files) {
+        if (file.extension != "jar") continue
+        if (file.name.startsWith("jinput-") && file.name.contains("-natives-all")) {
+            val versionMatch = Regex("jinput-([0-9.]+)-natives-all\\.jar").matchEntire(file.name)
+            if (versionMatch != null) {
+                val version = versionMatch.groupValues[1]
+                val newName = "net.java.jinput.jinput-$version-natives-all.jar"
+                val newFile = file.parentFile.resolve(newName)
+                logger.info("Renaming for ImageJ Updater compatibility: ${file.name} -> $newName")
+                file.renameTo(newFile)
+            }
+        }
+    }
+
+}
+
+private fun testFiji() {
+    validateFijiDir()
+
     // We launch the class given in fijiTestClass to check whether the update site was correctly installed.
     // Finally, the strings given in fijiTestClassExpectedOutput are tested against this command's output.
-    logger.info("--> Testing installation")
+    logger.lifecycle("Testing Fiji installation by running $fijiTestClass...")
     val stdout = runFiji("--run", fijiTestClass)
     logger.info(stdout)
     val gitHash: String = project.properties["gitHash"] as? String ?: "git rev-parse HEAD".runCommand(File("."))?.trim()?.substring(0, 7) ?: ""
@@ -301,42 +392,25 @@ private fun String.runCommand(workingDir: File): String? {
 }
 
 /**
- * Runs a Java program via the ImageJ Launcher's ClassLauncher, with the given arguments.
- *
- * Avoids using the ImageJ Launcher native binary, because it does not support Java 9+ well.
+ * Runs a Java program via the SciJava App Launcher's ClassLauncher, with the given arguments.
  */
 private fun runLauncher(jvmArgs: List<String>, launcherArgs: List<String>, mainClass: String, mainArgs: List<String>): String {
-    // Find the imagej-launcher-x.y.z.jar, needed on the classpath.
-    val launcherJar = fijiDir.resolve("jars").listFiles()
-        ?.firstOrNull { f -> f.name.startsWith("imagej-launcher-") }
-        ?: error("Where is your $fijiDir/jars/imagej-launcher.jar?!")
-
+    val cpSep = System.getProperty("path.separator")
+    val pathSep = System.getProperty("file.separator")
     val jvmArgsForJava = listOf(
         "-Dpython.cachedir.skip=true",
         "-Dplugins.dir=$fijiDir",
-        //"-Xmx...m",
         "-Djava.awt.headless=true",
         "-Dapple.awt.UIElement=true",
         "--add-opens=java.base/java.lang=ALL-UNNAMED",
-        "--add-opens=java.base/java.util=ALL-UNNAMED",
-        "-Djava.class.path=$launcherJar",
-        "-Dimagej.dir=$fijiDir",
-        "-Dij.dir=$fijiDir",
-        "-Dfiji.dir=$fijiDir",
-        //"-Dfiji.defaultLibPath=lib/amd64/server/libjvm.so",
-        //"-Dfiji.executable=./ImageJ-linux64",
-        //"-Dij.executable=./ImageJ-linux64",
-        //"-Djava.library.path=$fijiDir/lib/$platform:$fijiDir/mm/$platform",
+        "-Dscijava.app.unlock-modules=true",
+        "-cp", "jars${pathSep}*${cpSep}plugins${pathSep}*",
     ) + jvmArgs
-
-    val mainClassForJava = "net.imagej.launcher.ClassLauncher"
+    val mainClassForJava = "org.scijava.launcher.ClassLauncher"
 
     // Yes: the original main class is passed to the ClassLauncher as a main argument.
     // It's confusing. But thanks to the magic of ClassLoaders, we can and we will.
-    val mainArgsForJava = launcherArgs + listOf(
-        "-ijjarpath", "jars",
-        "-ijjarpath", "plugins",
-    ) + mainClass + mainArgs
+    val mainArgsForJava = launcherArgs + mainClass + mainArgs
 
     return runJava(jvmArgsForJava, mainClassForJava, mainArgsForJava)
 }
@@ -391,7 +465,9 @@ val String.davce: DAVCE
         val noExt = substring(0, length - e.length)
         val d = noExt.normalized.dirname
         val noDir = if (d.isEmpty()) noExt else noExt.substring(d.length + 1)
-        val cMatch = Regex(".*?-((native|windows|macos|linux).*)").matchEntire(noDir)
+        // Enhanced classifier matching to handle platform-specific JARs better
+        // Matches patterns like: natives-*, x86_64-*, x64-*, i686-*, aarch64-*, etc.
+        val cMatch = Regex(".*?-((native|windows|mac|linux|x86_64|x64|i686|aarch64|arm64|darwin|gnu|mingw).*)").matchEntire(noDir)
         val c = cMatch?.groups?.get(1)?.value ?: ""
         val noClass = if (c.isEmpty()) noDir else noDir.substring(0, noDir.length - c.length - 1)
         val vMatch = Regex(".*?-([a-f0-9]{6}[a-f0-9]*|[0-9].*)").matchEntire(noClass)
@@ -493,14 +569,17 @@ fun parseGzippedXml(gzippedXml: ByteArray): Document {
 
 data class AC(val artifactId: String, val classifier: String) {
     val pathGuess: String get() {
-        val isWin = classifier.contains("win")
-        val isMac = classifier.contains("mac")
-        val isLinux = classifier.contains("linux")
-        val isArm64 = classifier.contains("arm64")
+        val isWin = classifier.contains("win") || classifier.contains("mingw")
+        val isMac = classifier.contains("mac") || classifier.contains("darwin")
+        val isLinux = classifier.contains("linux") || classifier.contains("gnu")
+        val isArm64 = classifier.contains("arm64") || classifier.contains("aarch64")
+
         val subdir = when {
+            isLinux && isArm64 -> "linux-arm64"
             isLinux -> "linux64"
-            isMac && isArm64 -> "macosx-arm64"
-            isMac -> "macosx"
+            isMac && isArm64 -> "macos-arm64"
+            isMac -> "macos64"
+            isWin && isArm64 -> "win-arm64"
             isWin -> "win64"
             else -> return "jars"
         }
@@ -525,9 +604,7 @@ data class DAVCE(
     }
 }
 data class Info(
-    val imagej: Map<AC, Element>,
     val fiji: Map<AC, Element>,
-    val java8: Map<AC, Element>,
     val updateSite: Map<AC, Element>,
     val localFiles: MutableMap<AC, MutableList<File>>
 )
@@ -542,7 +619,7 @@ data class Info(
 fun prepareToCopyFile(file: File, destDir: File, pathPrefix: String, info: Info): Boolean? {
     val davce = file.name.davce
     val ac = davce.acKey
-    val corePlugin = info.java8[ac] ?: info.fiji[ac] ?: info.imagej[ac]
+    val corePlugin = info.fiji[ac]
     val updateSiteContents = info.updateSite[ac]
     val plugin = updateSiteContents ?: corePlugin
     val pluginPath = plugin?.filename?.dirname ?: ac.pathGuess
@@ -568,7 +645,7 @@ fun prepareToCopyFile(file: File, destDir: File, pathPrefix: String, info: Info)
         return null
     }
     else {
-        // Delete existing versions of this file already in the Fiji.app installation.
+        // Delete existing versions of this file already in the Fiji installation.
         for (localFile in info.localFiles[ac] ?: emptyList()) {
             logger.info("Deleting: $localFile")
             localFile.delete()

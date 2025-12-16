@@ -55,9 +55,9 @@ import graphics.scenery.utils.ExtractsNatives.Companion.getPlatform
 import graphics.scenery.utils.LogbackUtils
 import graphics.scenery.utils.SceneryPanel
 import graphics.scenery.utils.Statistics
-import graphics.scenery.utils.extensions.times
 import graphics.scenery.volumes.Colormap
 import graphics.scenery.volumes.RAIVolume
+import graphics.scenery.volumes.TransferFunction
 import graphics.scenery.volumes.Volume
 import graphics.scenery.volumes.Volume.Companion.fromXML
 import graphics.scenery.volumes.Volume.Companion.setupId
@@ -85,6 +85,7 @@ import net.imglib2.type.numeric.integer.UnsignedByteType
 import net.imglib2.view.Views
 import org.joml.Quaternionf
 import org.joml.Vector3f
+import org.joml.Vector4f
 import org.scijava.Context
 import org.scijava.`object`.ObjectService
 import org.scijava.display.Display
@@ -100,6 +101,7 @@ import org.scijava.thread.ThreadService
 import org.scijava.util.ColorRGB
 import org.scijava.util.Colors
 import org.scijava.util.VersionUtils
+import sc.iview.commands.demo.animation.ParticleDemo
 import sc.iview.commands.edit.InspectorInteractiveCommand
 import sc.iview.event.NodeActivatedEvent
 import sc.iview.event.NodeAddedEvent
@@ -110,7 +112,6 @@ import sc.iview.ui.CustomPropertyUI
 import sc.iview.ui.MainWindow
 import sc.iview.ui.SwingMainWindow
 import sc.iview.ui.TaskManager
-import ucar.units.ConversionException
 import java.awt.event.WindowListener
 import java.io.File
 import java.io.IOException
@@ -118,6 +119,7 @@ import java.net.JarURLConnection
 import java.net.URL
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
+import java.nio.file.Path
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -134,6 +136,7 @@ import kotlin.concurrent.thread
 import javax.swing.JOptionPane
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.system.measureTimeMillis
 
 /**
  * Main SciView class.
@@ -161,10 +164,10 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
      * The primary camera/observer in the scene
      */
     var camera: Camera? = null
-    set(value) {
-        field = value
-        setActiveObserver(field)
-    }
+        set(value) {
+            field = value
+            setActiveObserver(field)
+        }
 
     lateinit var controls: Controls
     val targetArcball: AnimatedCenteringBeforeArcBallControl
@@ -388,27 +391,6 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                 LogbackUtils.setLogLevel("", System.getProperty(name, "info"))
             }
         })
-
-        // determine imagej-launcher version and to disable Vulkan if XInitThreads() fix
-        // is not deployed
-        try {
-            val launcherClass = Class.forName("net.imagej.launcher.ClassLauncher")
-            var versionString = VersionUtils.getVersion(launcherClass)
-            if (versionString != null && getPlatform() == ExtractsNatives.Platform.LINUX) {
-                versionString = versionString.substring(0, 5)
-                val launcherVersion = Version(versionString)
-                val nonWorkingVersion = Version("4.0.5")
-                if (launcherVersion <= nonWorkingVersion
-                        && !java.lang.Boolean.parseBoolean(System.getProperty("sciview.DisableLauncherVersionCheck", "false"))) {
-                    throw IllegalStateException("imagej-launcher version is outdated, please update your Fiji installation.")
-                } else {
-                    logger.info("imagej-launcher version bigger that non-working version ($versionString vs. 4.0.5), all good.")
-                }
-            }
-        } catch (cnfe: ClassNotFoundException) {
-            // Didn't find the launcher, so we're probably good.
-            logger.info("imagej-launcher not found, not touching renderer preferences.")
-        }
 
         animations = LinkedList()
         mainWindow = SwingMainWindow(this)
@@ -783,6 +765,25 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             light.spatial().position = Vector3f(x, y, z)
         }
     }
+
+    @Throws(IOException::class)
+    fun openDirTiff(source: Path, onlyFirst: Int? = null)
+    {
+        val v = Volume.fromPath(source, hub, onlyFirst)
+        v.name = "volume"
+        v.spatial().position = Vector3f(-3.0f, 10.0f, 0.0f)
+        v.colormap = Colormap.get("jet")
+        v.spatial().scale = Vector3f(15.0f, 15.0f,45.0f)
+        v.transferFunction = TransferFunction.ramp(0.05f, 0.8f)
+        v.metadata["animating"] = true
+        v.converterSetups.firstOrNull()?.setDisplayRange(0.0, 1500.0)
+        v.visible = true
+
+        v.spatial().wantsComposeModel = true
+        v.spatial().updateWorld(true)
+        addNode(v)
+    }
+
 
     /**
      * Open a file specified by the source path. The file can be anything that SciView knows about: mesh, volume, point cloud
@@ -1687,38 +1688,73 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         return renderer
     }
 
+    private var originalFOV = camera?.fov
+
     /**
      * Enable VR rendering
      */
     fun toggleVRRendering() {
         var renderer = renderer ?: return
 
+        // Save camera's original settings if we switch from 2D to VR
+        if (!vrActive) {
+            originalFOV = camera?.fov
+        }
+
+        // If turning off VR, store the controls state before deactivating
+        if (vrActive) {
+            // We're about to turn off VR
+            controls.stashControls()
+        }
+
         vrActive = !vrActive
         val cam = scene.activeObserver as? DetachedHeadCamera ?: return
         var ti: TrackerInput? = null
         var hmdAdded = false
-        if (!hub.has(SceneryElement.HMDInput)) {
-            try {
-                val hmd = OpenVRHMD(false, true)
-                if (hmd.initializedAndWorking()) {
-                    hub.add(SceneryElement.HMDInput, hmd)
-                    ti = hmd
-                } else {
-                    logger.warn("Could not initialise VR headset, just activating stereo rendering.")
+
+        if (vrActive) {
+
+            // VR activation logic
+            if (!hub.has(SceneryElement.HMDInput)) {
+                try {
+                    val hmd = OpenVRHMD(false, true)
+                    if (hmd.initializedAndWorking()) {
+                        hub.add(SceneryElement.HMDInput, hmd)
+                        ti = hmd
+                    } else {
+                        logger.warn("Could not initialise VR headset, just activating stereo rendering.")
+                    }
+                } catch (e: Exception) {
+                    logger.error("Could not add OpenVRHMD: $e")
                 }
                 hmdAdded = true
-            } catch (e: Exception) {
-                logger.error("Could not add OpenVRHMD: $e")
+            } else {
+                ti = hub.getWorkingHMD()
+            }
+
+            // Set tracker on the DetachedHeadCamera
+            if (ti != null) {
+                cam.tracker = ti
+                logger.info("tracker set")
             }
         } else {
-            ti = hub.getWorkingHMD()
-        }
-        if (vrActive && ti != null) {
-            cam.tracker = ti
-        } else {
+            // VR deactivation logic
+            // Convert back to normal Camera
+            logger.info("Shutting down VR")
             cam.tracker = null
+
+            // Reset FOV to original value when turning off VR
+            originalFOV?.let { camera?.fov = it }
+
+            // Restore controls after turning off VR
+            controls.restoreControls()
+
+            // Reset input controls to ensure proper camera behavior
+            inputSetup()
         }
-        renderer.pushMode = false
+
+        // Enable push mode if VR is inactive, and the other way round
+        renderer.pushMode = !vrActive
 
         // we need to force reloading the renderer as the HMD might require device or instance extensions
         if (renderer is VulkanRenderer && hmdAdded) {
@@ -1732,8 +1768,22 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                     e.printStackTrace()
                 }
             }
-
-            renderer.toggleVR()
+        }
+        logger.debug("Replaced renderer.")
+        renderer.toggleVR()
+        // Cleanup HMD after VR has been toggled off
+        if (!vrActive) {
+            if (hub.has(SceneryElement.HMDInput)) {
+                val hmd = hub.get(SceneryElement.HMDInput) as? OpenVRHMD
+                hmd?.close()
+                // Get the actual key that was used to store this element
+                val keyToRemove = hub.elements.entries.find { it.value == hmd }?.key
+                keyToRemove?.let {
+                    hub.elements.remove(it)
+                    logger.info("Removed ${it.name} from hub.")
+                }
+                logger.debug("Closed HMD.")
+            }
         }
     }
 
