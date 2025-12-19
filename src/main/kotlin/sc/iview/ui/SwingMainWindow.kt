@@ -52,6 +52,7 @@ import java.util.*
 import javax.script.ScriptException
 import javax.swing.*
 import kotlin.concurrent.thread
+import kotlin.math.log
 import kotlin.math.roundToInt
 
 
@@ -235,6 +236,12 @@ class SwingMainWindow(val sciview: SciView) : MainWindow() {
             frame.add(mainSplitPane, BorderLayout.CENTER)
             frame.add(toolbar, BorderLayout.EAST)
             frame.defaultCloseOperation = JFrame.DO_NOTHING_ON_CLOSE
+            frame.addComponentListener(object : ComponentAdapter() {
+                override fun componentResized(e: ComponentEvent) {
+                    sciview.windowWidth = e.component.width
+                    sciview.windowHeight = e.component.height
+                }
+            })
             frame.addWindowListener(object : WindowAdapter() {
                 override fun windowClosing(e: WindowEvent) {
                     logger.debug("Closing SciView window.")
