@@ -50,8 +50,6 @@ import graphics.scenery.controls.TrackerInput
 import graphics.scenery.primitives.*
 import graphics.scenery.proteins.Protein
 import graphics.scenery.proteins.RibbonDiagram
-import graphics.scenery.utils.ExtractsNatives
-import graphics.scenery.utils.ExtractsNatives.Companion.getPlatform
 import graphics.scenery.utils.LogbackUtils
 import graphics.scenery.utils.SceneryPanel
 import graphics.scenery.utils.Statistics
@@ -84,8 +82,8 @@ import net.imglib2.type.numeric.RealType
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import net.imglib2.view.Views
 import org.joml.Quaternionf
+import org.joml.Vector2f
 import org.joml.Vector3f
-import org.joml.Vector4f
 import org.scijava.Context
 import org.scijava.`object`.ObjectService
 import org.scijava.display.Display
@@ -100,8 +98,6 @@ import org.scijava.service.SciJavaService
 import org.scijava.thread.ThreadService
 import org.scijava.util.ColorRGB
 import org.scijava.util.Colors
-import org.scijava.util.VersionUtils
-import sc.iview.commands.demo.animation.ParticleDemo
 import sc.iview.commands.edit.InspectorInteractiveCommand
 import sc.iview.event.NodeActivatedEvent
 import sc.iview.event.NodeAddedEvent
@@ -131,12 +127,10 @@ import java.util.function.Predicate
 import java.util.stream.Collectors
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
-import kotlin.collections.LinkedHashMap
 import kotlin.concurrent.thread
 import javax.swing.JOptionPane
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.system.measureTimeMillis
 
 /**
  * Main SciView class.
@@ -1689,22 +1683,28 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     private var originalFOV = camera?.fov
+    private var originalWinSize = getWindowSize()
 
     /**
-     * Enable VR rendering
+     * Enable or disable VR rendering. Automatically stores the original controls and FOV and restores them
+     * after VR is toggled off again.
+     * @param resizeWindow changes the window resolution to match the stereo rendering of the selected headset.
+     * @param resolutionScale Factor that allows changing the VR resolution
      */
-    fun toggleVRRendering() {
+    fun toggleVRRendering(resizeWindow: Boolean = true, resolutionScale: Float = 1f) {
         var renderer = renderer ?: return
 
         // Save camera's original settings if we switch from 2D to VR
         if (!vrActive) {
             originalFOV = camera?.fov
+            originalWinSize = getWindowSize()
         }
 
         // If turning off VR, store the controls state before deactivating
         if (vrActive) {
             // We're about to turn off VR
             controls.stashControls()
+            setWindowSize(originalWinSize.first, originalWinSize.second)
         }
 
         vrActive = !vrActive
@@ -1721,6 +1721,20 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
                     if (hmd.initializedAndWorking()) {
                         hub.add(SceneryElement.HMDInput, hmd)
                         ti = hmd
+                        // Disable the sidebar if it was still open
+                        if ((mainWindow as SwingMainWindow).sidebarOpen) {
+                            toggleSidebar()
+                        }
+                        if (resizeWindow) {
+                            val perEyeResolution = hmd.getRenderTargetSize()
+                            // Recommended resolution is about x1.33 larger than the actual headset resolution
+                            // due to distortion compensation.
+                            // Too high resolution gets in the way of volume rendering, so we scale it down a bit again
+                            setWindowSize(
+                                (perEyeResolution.x * 2f / 1.33f * resolutionScale).toInt(),
+                                (perEyeResolution.y / 1.33f * resolutionScale).toInt()
+                            )
+                        }
                     } else {
                         logger.warn("Could not initialise VR headset, just activating stereo rendering.")
                     }
@@ -1917,6 +1931,57 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
     }
 
     /**
+     * Set the window dimensions of the sciview rendering window.
+     * This is essential for VR headsets that require specific resolutions.
+     * 
+     * @param width The desired width of the window in pixels
+     * @param height The desired height of the window in pixels
+     * @return true if the window was successfully resized, false otherwise
+     */
+    fun setWindowSize(width: Int, height: Int): Boolean {
+        if (width <= 0 || height <= 0) {
+            log.error("Window dimensions must be positive: width=$width, height=$height")
+            return false
+        }
+        
+        try {
+            // Update internal dimensions
+            windowWidth = width
+            windowHeight = height
+            
+            // Update the main window frame if it exists
+            if (mainWindow is SwingMainWindow) {
+                val swingWindow = mainWindow as SwingMainWindow
+                val scale = getScenerySettings().get("Renderer.SurfaceScale") ?: Vector2f(1f)
+                val scaledWidth = (width / scale.x()).toInt()
+                val scaleHeight = (height / scale.y()).toInt()
+                // We need to scale the swing window with taking the surface scale into account
+                swingWindow.frame.setSize(scaledWidth, scaleHeight)
+                
+                // Update the renderer dimensions
+                // TODO Is this even needed? Since outdated semaphores will trigger a swapchain recreation anyway
+                renderer?.reshape(width, height)
+            }
+            
+            log.info("Window resized to ${width}x${height}")
+            return true
+        } catch (e: Exception) {
+            log.error("Failed to resize window: ${e.message}")
+            e.printStackTrace()
+            return false
+        }
+    }
+    
+    /**
+     * Get the current window dimensions.
+     * 
+     * @return a Pair containing the width and height of the window
+     */
+    fun getWindowSize(): Pair<Int, Int> {
+        return Pair(windowWidth, windowHeight)
+    }
+
+    /**
      * Return the color table corresponding to the [lutName]
      * @param lutName a String represening an ImageJ style LUT name, like Fire.lut
      * @return a [ColorTable] corresponding to the LUT or null if LUT not available
@@ -2001,6 +2066,26 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             objectService.addObject(Utils.SciviewStandalone())
             val sciViewService = context.service(SciViewService::class.java)
             return sciViewService.orCreateActiveSciView
+        }
+        
+        /**
+         * Static launching method with custom window dimensions
+         *
+         * @param width The desired width of the window in pixels
+         * @param height The desired height of the window in pixels
+         * @return a newly created SciView with specified dimensions
+         */
+        @JvmStatic
+        @Throws(Exception::class)
+        fun create(width: Int, height: Int): SciView {
+            xinitThreads()
+            val context = Context(ImageJService::class.java, SciJavaService::class.java, SCIFIOService::class.java)
+            val objectService = context.service(ObjectService::class.java)
+            objectService.addObject(Utils.SciviewStandalone())
+            val sciViewService = context.service(SciViewService::class.java)
+            val sciView = sciViewService.orCreateActiveSciView
+            sciView.setWindowSize(width, height)
+            return sciView
         }
 
         /**

@@ -109,6 +109,7 @@ object MenuWeights {
     const val DEMO_BASIC_IMAGEPLANE = 4.0
     const val DEMO_BASIC_VOLUME = 6.0
     const val DEMO_BASIC_POINTCLOUD = 7.0
+    const val DEMO_BASIC_CUSTOM_WINDOW = 8.0
     // Demo/Animation
     const val DEMO_ANIMATION_PARTICLE = 0.0
     const val DEMO_ANIMATION_VOLUMETIMESERIES = 1.0
