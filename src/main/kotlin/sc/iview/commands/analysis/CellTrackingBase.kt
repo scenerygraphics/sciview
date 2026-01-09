@@ -130,6 +130,8 @@ open class CellTrackingBase(
     var setVolumeVisCallback: ((Boolean) -> Unit)? = null
     /** Merges overlapping spots in a given timepoint. */
     var mergeOverlapsCallback: ((Int) -> Unit)? = null
+    /** Merges selected spots. */
+    var mergeSelectedCallback: (() -> Unit)? = null
 
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
 
@@ -146,12 +148,8 @@ open class CellTrackingBase(
 
     var cursor = CursorTool
     var leftElephantColumn: Column? = null
-    var leftColumnPredict: Column? = null
-    var leftColumnLink: Column? = null
-    var leftUndoMenu: Column? = null
-
+    var generalMenu: Column? = null
     var enableTrackingPreview = true
-
     val leftMenuList = mutableListOf<Column>()
     var leftMenuIndex = 0
 
@@ -163,7 +161,7 @@ open class CellTrackingBase(
     private val observers = mutableListOf<TimepointObserver>()
 
     open fun run() {
-        sciview.toggleVRRendering()
+        sciview.toggleVRRendering(resolutionScale = 0.75f)
         hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
 
         // Try to load the correct button mapping corresponding to the controller layout
@@ -284,7 +282,7 @@ open class CellTrackingBase(
     val trackCellsWithController = ClickBehaviour { _, _ ->
         if (!controllerTrackingActive) {
             controllerTrackingActive = true
-            cursor.setTrackingColor()
+            cursor.activateTrackingColor()
             // we dont want animation, because we track step by step
             playing = false
             // Assume the user didn't click on an existing spot to start the track.
@@ -299,7 +297,7 @@ open class CellTrackingBase(
             // If this is the first spot we track, and its a valid existing spot, mark it as such
             if (isValidSelection && controllerTrackList.size == 0) {
                 startWithExistingSpot = selected
-                logger.info("Set startWithExistingPost to $startWithExistingSpot")
+                logger.debug("Set startWithExistingPost to $startWithExistingSpot")
             } else {
                 controllerTrackList.add(p)
             }
@@ -361,12 +359,8 @@ open class CellTrackingBase(
             color = unpressedColor, touchingColor = touchingColor, pressedColor = pressedColor)
 
         leftElephantColumn =
-            createWristMenuColumn(stageSpotsButton, name = "Stage Menu")
+            createWristMenuColumn(stageSpotsButton, trainAllButton, predictTPButton, predictAllButton, linkingButton, name = "Stage Menu")
         leftElephantColumn?.visible = false
-        leftColumnPredict = createWristMenuColumn(trainAllButton, predictTPButton, predictAllButton, name = "Train/Predict Menu")
-        leftColumnPredict?.visible = false
-        leftColumnLink = createWristMenuColumn(linkingButton, name = "Linking Menu")
-        leftColumnLink?.visible = false
     }
 
     var lastButtonTime = System.currentTimeMillis()
@@ -478,13 +472,9 @@ open class CellTrackingBase(
         )
 
         val timeControlRow = Row(goToFirstBtn, playSlowerBtn, togglePlaybackDirBtn, playFasterBtn, goToLastBtn)
-
-        leftUndoMenu = createWristMenuColumn(undoButton, redoButton, name = "Left Undo Menu")
-        leftUndoMenu?.visible = false
-        val previewMenu = createWristMenuColumn(toggleTrackingPreviewBtn, name = "Preview Menu")
-        previewMenu.visible = false
-        val timeMenu = createWristMenuColumn(timeControlRow, name = "Time Menu")
-        timeMenu.visible = false
+        val undoRedoRow = Row(undoButton, redoButton)
+        generalMenu = createWristMenuColumn(timeControlRow, undoRedoRow, name = "Left Undo Menu")
+        generalMenu?.visible = false
 
         val toggleVolume = ToggleButton(
             "Volume off", "Volume on", command = {
@@ -509,15 +499,20 @@ open class CellTrackingBase(
             },
             byTouch = true, color = color, pressedColor = pressedColor, touchingColor = touchingColor, default = true
         )
-        val toggleVisMenu = createWristMenuColumn(toggleVolume, toggleTracks, toggleSpots)
+        val toggleVisMenu = createWristMenuColumn(toggleVolume, toggleTracks, toggleSpots, toggleTrackingPreviewBtn)
         toggleVisMenu.visible = false
 
-        val mergeButton = Button(
+        val mergeOverlapsButton = Button(
             "Merge overlaps", command = {
                 mergeOverlapsCallback?.invoke(volume.currentTimepoint)
             }, byTouch = true, depressDelay = 250, color = color, pressedColor = pressedColor, touchingColor = touchingColor
         )
-        val cleanupMenu = createWristMenuColumn(mergeButton)
+        val mergeSelectedButton = Button(
+            "Merge selected", command = {
+                mergeSelectedCallback?.invoke()
+            }, byTouch = true, depressDelay = 250, color = color, pressedColor = pressedColor, touchingColor = touchingColor
+        )
+        val cleanupMenu = createWristMenuColumn(mergeOverlapsButton, mergeSelectedButton)
         cleanupMenu.visible = false
     }
 
@@ -567,7 +562,7 @@ open class CellTrackingBase(
     /** Object that represents the 3D cursor in form of a sphere. It needs to be attached to a VR controller via [attachCursor].
      * The current cursor position can be obtained with [getPosition]. The current radius is stored in [radius].
      * The tool can be scaled up and down with [scaleByFactor].
-     * [resetColor], [setSelectColor] and [setTrackingColor] allow changing the cursor's color to reflect the currently active operation. */
+     * [resetColor], [activateSelectColor] and [activateTrackingColor] allow changing the cursor's color to reflect the currently active operation. */
     object CursorTool {
         private val logger by lazyLogger()
         var radius: Float = 0.007f
@@ -611,11 +606,12 @@ open class CellTrackingBase(
             cursor.material().diffuse = Vector3f(0.15f, 0.2f, 1f)
         }
 
-        fun setSelectColor() {
+        // TODO rename to activate
+        fun activateSelectColor() {
             cursor.material().diffuse = Vector3f(1f, 0.25f, 0.25f)
         }
 
-        fun setTrackingColor() {
+        fun activateTrackingColor() {
             cursor.material().diffuse = Vector3f(0.65f, 1f, 0.22f)
         }
 
@@ -814,7 +810,7 @@ open class CellTrackingBase(
             override fun init(x: Int, y: Int) {
                 time = System.currentTimeMillis()
                 val p = cursor.getPosition()
-                cursor.setSelectColor()
+                cursor.activateSelectColor()
                 spotSelectCallback?.invoke(p, volume.currentTimepoint, cursor.radius, false)
             }
             override fun drag(x: Int, y: Int) {
