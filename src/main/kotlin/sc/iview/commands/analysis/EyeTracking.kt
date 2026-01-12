@@ -502,9 +502,13 @@ class EyeTracking(
         n?.let { sciview.deleteNode(it) }
         // Delete definitely existing objects
         listOf(referenceTarget, calibrationTarget, laser, debugBoard, hedgehogs).forEach {
-            sciview.deleteNode(it)
+            try {
+                sciview.deleteNode(it)
+            } catch (e: Exception) {
+                logger.warn("Failed to delete $it")
+            }
         }
-        logger.info("Successfully cleaned up eye tracking environemt.")
+        logger.info("Successfully cleaned up eye tracking environment.")
         super.stop()
     }
 

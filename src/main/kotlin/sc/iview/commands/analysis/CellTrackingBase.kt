@@ -1087,14 +1087,20 @@ open class CellTrackingBase(
     open fun stop() {
         logger.info("Objects in the scene: ${sciview.allSceneNodes.map { it.name }}")
         cellTrackingActive = false
-        lightTetrahedron.forEach { sciview.deleteNode(it) }
+        if (::lightTetrahedron.isInitialized) {
+            lightTetrahedron.forEach { sciview.deleteNode(it) }
+        }
         // Try to find and delete possibly existing VR objects
         listOf("Shell", "leftHand", "rightHand").forEach {
             val n = sciview.find(it)
             n?.let { sciview.deleteNode(n) }
         }
-        sciview.deleteNode(rightVRController?.model)
-        sciview.deleteNode(leftVRController?.model)
+        rightVRController?.model?.let {
+            sciview.deleteNode(it)
+        }
+        leftVRController?.model?.let {
+            sciview.deleteNode(it)
+        }
 
         logger.info("Cleaned up basic VR objects. Objects left: ${sciview.allSceneNodes.map { it.name }}")
 
