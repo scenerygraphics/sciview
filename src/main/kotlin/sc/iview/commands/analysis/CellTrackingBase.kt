@@ -137,6 +137,8 @@ open class CellTrackingBase(
     var deleteGraphCallback: (() -> Unit)? = null
     /** Deletes all annotations from this timepoint. */
     var deleteTimepointCallback: (() -> Unit)? = null
+    /** Recenter and set default scaling for volume, then center camera on volume. */
+    var resetViewCallback: (() -> Unit)? = null
 
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
 
@@ -229,6 +231,7 @@ open class CellTrackingBase(
         inputSetup()
 
         cellTrackingActive = true
+        rebuildGeometryCallback?.invoke()
         launchUpdaterThread()
     }
 
@@ -476,8 +479,15 @@ open class CellTrackingBase(
             color = color, pressedColor = pressedColor, touchingColor = touchingColor
         )
 
+        val resetViewButton = Button(
+            "Recenter", command = {
+                resetViewCallback?.invoke()
+            }, byTouch = true, depressDelay = 250,
+            color = color, pressedColor = pressedColor, touchingColor = touchingColor
+        )
+
         val timeControlRow = Row(goToFirstBtn, playSlowerBtn, togglePlaybackDirBtn, playFasterBtn, goToLastBtn)
-        val undoRedoRow = Row(undoButton, redoButton)
+        val undoRedoRow = Row(undoButton, redoButton, resetViewButton)
         generalMenu = createWristMenuColumn(timeControlRow, undoRedoRow, name = "Left Undo Menu")
         generalMenu?.visible = false
 
@@ -1106,6 +1116,7 @@ open class CellTrackingBase(
 
         sciview.toggleVRRendering()
         logger.info("Shut down and disabled VR environment.")
+        rebuildGeometryCallback?.invoke()
     }
 
 }
