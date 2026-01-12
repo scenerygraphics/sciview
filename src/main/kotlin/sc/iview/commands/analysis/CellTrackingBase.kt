@@ -132,6 +132,10 @@ open class CellTrackingBase(
     var mergeOverlapsCallback: ((Int) -> Unit)? = null
     /** Merges selected spots. */
     var mergeSelectedCallback: (() -> Unit)? = null
+    /** Deletes the whole graph. */
+    var deleteGraphCallback: (() -> Unit)? = null
+    /** Deletes all annotations from this timepoint. */
+    var deleteTimepointCallback: (() -> Unit)? = null
 
     enum class HedgehogVisibility { Hidden, PerTimePoint, Visible }
 
@@ -512,7 +516,20 @@ open class CellTrackingBase(
                 mergeSelectedCallback?.invoke()
             }, byTouch = true, depressDelay = 250, color = color, pressedColor = pressedColor, touchingColor = touchingColor
         )
-        val cleanupMenu = createWristMenuColumn(mergeOverlapsButton, mergeSelectedButton)
+
+        val deleteGraphButton = Button(
+            "Delete Graph", command = {
+                deleteGraphCallback?.invoke()
+            }, byTouch = true, depressDelay = 250, color = color, pressedColor = pressedColor, touchingColor = touchingColor
+        )
+        val deleteTimepointButton = Button(
+            "Delete TP", command = {
+                deleteTimepointCallback?.invoke()
+            }, byTouch = true, depressDelay = 250, color = color, pressedColor = pressedColor, touchingColor = touchingColor
+        )
+        val mergeRow = Row(mergeOverlapsButton, mergeSelectedButton)
+        val deleteRow = Row(deleteGraphButton, deleteTimepointButton)
+        val cleanupMenu = createWristMenuColumn(mergeRow, deleteRow)
         cleanupMenu.visible = false
     }
 
