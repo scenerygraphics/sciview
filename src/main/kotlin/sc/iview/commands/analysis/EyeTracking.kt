@@ -11,6 +11,8 @@ import graphics.scenery.ui.Column
 import graphics.scenery.ui.ToggleButton
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.*
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import net.imglib2.type.numeric.integer.UnsignedByteType
 import org.apache.commons.math3.ml.clustering.Clusterable
 import org.apache.commons.math3.ml.clustering.DBSCANClusterer
@@ -21,6 +23,9 @@ import java.awt.image.DataBufferByte
 import java.io.ByteArrayInputStream
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import javax.imageio.ImageIO
 import kotlin.concurrent.thread
 import kotlin.math.PI
@@ -35,10 +40,7 @@ class EyeTracking(
     sciview: SciView
 ): CellTrackingBase(sciview) {
 
-    val pupilTracker = PupilEyeTracker(
-        calibrationType = PupilEyeTracker.CalibrationType.WorldSpace,
-        port = System.getProperty("PupilPort", "50020").toInt()
-    )
+    lateinit var pupilTracker: PupilEyeTracker
     val calibrationTarget = Icosphere(0.02f, 2)
     val laser = Cylinder(0.005f, 0.2f, 10)
 
@@ -52,7 +54,35 @@ class EyeTracking(
 
     private var currentTrackingType = TrackingType.Follow
 
+    fun establishEyeTrackerConnection(): Boolean {
+        return try {
+            val future = CompletableFuture.supplyAsync {
+                PupilEyeTracker(
+                    calibrationType = PupilEyeTracker.CalibrationType.WorldSpace,
+                    port = System.getProperty("PupilPort", "50020").toInt()
+                )
+            }
+            pupilTracker = future.get(4, TimeUnit.SECONDS)
+            true
+        } catch (e: TimeoutException) {
+            logger.warn("Eye tracker initialization timed out after 2 seconds. Resuming with default VR.")
+            false
+        } catch (e: Exception) {
+            logger.error("Eye tracker initialization failed with ${e.message}")
+            false
+        }
+    }
+
     override fun run() {
+        // Check whether we already initialized the pupilTracker or not
+        if (!::pupilTracker.isInitialized) {
+            if (!establishEyeTrackerConnection()) {
+                logger.error("Failed to initialize eye tracker")
+                // Handle the failure - maybe throw an exception or set a flag
+                return
+            }
+        }
+
         // Do all the things for general VR startup before setting up the eye tracking environment
         super.run()
 
