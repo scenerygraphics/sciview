@@ -39,7 +39,8 @@ import kotlin.concurrent.thread
  * @param [sciview] The [SciView] instance to use
  */
 open class CellTrackingBase(
-    open var sciview: SciView
+    open var sciview: SciView,
+    val resolutionScale: Float = 1f
 ) {
     val logger by lazyLogger(System.getProperty("scenery.LogLevel", "info"))
 
@@ -165,7 +166,7 @@ open class CellTrackingBase(
     private val observers = mutableListOf<TimepointObserver>()
 
     open fun run() {
-        sciview.toggleVRRendering(resolutionScale = 0.75f)
+        sciview.toggleVRRendering(resolutionScale = resolutionScale)
         hmd = sciview.hub.getWorkingHMD() as? OpenVRHMD ?: throw IllegalStateException("Could not find headset")
 
         // Try to load the correct button mapping corresponding to the controller layout

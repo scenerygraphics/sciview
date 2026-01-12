@@ -37,8 +37,9 @@ import kotlin.time.TimeSource
  * [trackCreationCallback], which is called on every spine graph vertex that is extracted
  */
 class EyeTracking(
-    sciview: SciView
-): CellTrackingBase(sciview) {
+    sciview: SciView,
+    resolutionScale: Float = 1f,
+): CellTrackingBase(sciview, resolutionScale) {
 
     lateinit var pupilTracker: PupilEyeTracker
     val calibrationTarget = Icosphere(0.02f, 2)
