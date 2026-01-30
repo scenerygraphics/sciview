@@ -6,6 +6,7 @@ import graphics.scenery.attribute.spatial.Spatial
 import graphics.scenery.controls.OpenVRHMD
 import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.TrackerRole
+import graphics.scenery.controls.behaviours.MultiButtonManager
 import graphics.scenery.utils.extensions.minus
 import graphics.scenery.utils.extensions.plusAssign
 import graphics.scenery.utils.extensions.times

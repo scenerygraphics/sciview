@@ -11,6 +11,9 @@ import graphics.scenery.ui.Column
 import graphics.scenery.ui.ToggleButton
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.*
+import graphics.scenery.utils.gaussSmoothing
+import graphics.scenery.utils.localMaxima
+import graphics.scenery.utils.toVector3f
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import net.imglib2.type.numeric.integer.UnsignedByteType
@@ -387,15 +390,6 @@ class EyeTracking(
 
     }
 
-    private fun Vector3f.toDoubleArray(): DoubleArray {
-        return this.toFloatArray().map { it.toDouble() }.toDoubleArray()
-    }
-
-    fun DoubleArray.toVector3f(): Vector3f {
-        require(size == 3) { "DoubleArray must have exactly 3 elements" }
-        return Vector3f(this[0].toFloat(), this[1].toFloat(), this[2].toFloat())
-    }
-
     private fun getSpinesFromHedgehog(hedgehog: InstancedNode): List<SpineMetadata> {
         return hedgehog.instances.mapNotNull { spine ->
             spine.metadata["spine"] as? SpineMetadata
@@ -478,10 +472,10 @@ class EyeTracking(
             val (samples, samplePos) = sampleRayThroughVolume(origin, direction, volume)
             var spotPos: Vector3f? = null
             if (samples != null && samplePos != null) {
-                val smoothed = analyzer.gaussSmoothing(samples, 4)
+                val smoothed = gaussSmoothing(samples, 4)
                 val rayMax = smoothed.max()
                 // take the first local maximum that is at least 20% of the global maximum to prevent spot creation in noisy areas
-                analyzer.localMaxima(smoothed).firstOrNull {it.second > 0.2 * rayMax}?.let { (index, sample) ->
+                localMaxima(smoothed).firstOrNull {it.second > 0.2 * rayMax}?.let { (index, sample) ->
                     spotPos = samplePos[index]
                 }
             }

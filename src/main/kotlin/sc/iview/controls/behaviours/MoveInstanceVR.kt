@@ -4,6 +4,7 @@ import graphics.scenery.Scene
 import graphics.scenery.controls.OpenVRHMD
 import graphics.scenery.controls.TrackedDeviceType
 import graphics.scenery.controls.TrackerRole
+import graphics.scenery.controls.behaviours.MultiButtonManager
 import org.joml.Vector3f
 import org.scijava.ui.behaviour.DragBehaviour
 import kotlin.collections.forEach

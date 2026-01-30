@@ -4,7 +4,10 @@ import org.joml.Vector3f
 import org.joml.Matrix4f
 import org.joml.Quaternionf
 import graphics.scenery.utils.extensions.*
+import graphics.scenery.utils.gaussSmoothing
 import graphics.scenery.utils.lazyLogger
+import graphics.scenery.utils.localMaxima
+import graphics.scenery.utils.stdDev
 import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.collections.iterator
@@ -54,24 +57,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		avgConfidence /= totalSampleCount
 	}
 
-	/**
-	 * From a [list] of Floats, return both the index of local maxima, and their value,
-	 * packaged nicely as a Pair<Int, Float>
-	 */
-	fun localMaxima(list: List<Float>): List<Pair<Int, Float>> {
-		return list.windowed(3, 1).mapIndexed { index, l ->
-			val left = l[0]
-			val center = l[1]
-			val right = l[2]
 
-			// we have a match at center
-			if (left < center && center > right) {
-				index * 1 + 1 to center
-			} else {
-				null
-			}
-		}.filterNotNull()
-	}
 
 	/** Cell positions extracted from gaze analysis are collected in this data class together with other information
 	 * such as the volume [value] at this point, and the [previous] and [next] vertices. */
@@ -104,38 +90,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		}
 	}
 
-	fun Iterable<Float>.stddev() = sqrt((this.map { (it - this.average()) * (it - this.average()) }.sum() / this.count()))
-
-	fun Vector3f.toQuaternionf(forward: Vector3f = Vector3f(0.0f, 0.0f, -1.0f)): Quaternionf {
-		val cross = forward.cross(this)
-		val q = Quaternionf(cross.x(), cross.y(), cross.z(), this.dot(forward))
-
-		val x = sqrt((q.w + sqrt(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w)) / 2.0f)
-
-		return Quaternionf(q.x/(2.0f * x), q.y/(2.0f * x), q.z/(2.0f * x), x)
-	}
-
 	data class VertexWithDistance(val vertex: SpineGraphVertex, val distance: Float)
-
-	fun gaussSmoothing(samples: List<Float>, iterations: Int): List<Float> {
-		var smoothed = samples.toList()
-		val kernel = listOf(0.25f, 0.5f, 0.25f)
-		for (i in 0 until iterations) {
-			val newSmoothed = ArrayList<Float>(smoothed.size)
-			// Handle the first element
-			newSmoothed.add(smoothed[0] * 0.75f + smoothed[1] * 0.25f)
-			// Apply smoothing to the middle elements
-			for (j in 1 until smoothed.size - 1) {
-				val value = kernel[0] * smoothed[j-1] + kernel[1] * smoothed[j] + kernel[2] * smoothed[j+1]
-				newSmoothed.add(value)
-			}
-			// Handle the last element
-			newSmoothed.add(smoothed[smoothed.size - 2] * 0.25f + smoothed[smoothed.size - 1] * 0.75f)
-
-			smoothed = newSmoothed
-		}
-		return smoothed
-	}
 
 	fun run(): Track? {
 
@@ -249,7 +204,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		// calculate average path lengths over all
 		val beforeCount = shortestPath.size
 		var avgPathLength = shortestPath.map { it.distance() }.average().toFloat()
-		var stdDevPathLength = shortestPath.map { it.distance() }.stddev().toFloat()
+		var stdDevPathLength = shortestPath.map { it.distance() }.stdDev()
 		logger.info("Average path length=$avgPathLength, stddev=$stdDevPathLength")
 
 		fun zScore(value: Float, m: Float, sd: Float) = ((value - m)/sd)
@@ -269,7 +224,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 
 		// recalculate statistics after offending vertex removal
 		avgPathLength = shortestPath.map { it.distance() }.average().toFloat()
-		stdDevPathLength = shortestPath.map { it.distance() }.stddev().toFloat()
+		stdDevPathLength = shortestPath.map { it.distance() }.stdDev().toFloat()
 
 		//step5: remove some vertices according to zscoreThreshold
 //		var remaining = shortestPath.count { zScore(it.distance(), avgPathLength, stdDevPathLength) > zscoreThreshold }
