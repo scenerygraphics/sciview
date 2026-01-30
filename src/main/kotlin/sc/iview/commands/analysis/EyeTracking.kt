@@ -11,6 +11,7 @@ import graphics.scenery.ui.Column
 import graphics.scenery.ui.ToggleButton
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.*
+import graphics.scenery.utils.localMaxima
 import graphics.scenery.utils.toVector3f
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
@@ -473,7 +474,7 @@ class EyeTracking(
                 val smoothed = analyzer.gaussSmoothing(samples, 4)
                 val rayMax = smoothed.max()
                 // take the first local maximum that is at least 20% of the global maximum to prevent spot creation in noisy areas
-                analyzer.localMaxima(smoothed).firstOrNull {it.second > 0.2 * rayMax}?.let { (index, sample) ->
+                localMaxima(smoothed).firstOrNull {it.second > 0.2 * rayMax}?.let { (index, sample) ->
                     spotPos = samplePos[index]
                 }
             }
