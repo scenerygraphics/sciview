@@ -73,7 +73,7 @@ open class CellTrackingBase(
 
     /** Takes a list of [SpineGraphVertex] and its positions to create the corresponding track in Mastodon.
      * In the case of controller tracking, the points were already sent to Mastodon one by one via [singleLinkTrackedCallback] and the list is not needed.
-     * Set the first boolean to true if the coordinates are in world space. The bridge will convert them to Mastodon coords.
+     * Set the first boolean to true if the coordinates are in world space. The manvr3d will convert them to Mastodon coords.
      * The first Spot defines whether to start with an existing spot, so the lambda will use that as starting point.
      * The second spot defines whether we want to merge into this spot. */
     var trackCreationCallback: ((
@@ -84,7 +84,7 @@ open class CellTrackingBase(
         mergeSpot: Spot?
     ) -> Unit)? = null
 
-    /** Passes the current time point, a position and a radius to the bridge to either create a new spot
+    /** Passes the current time point, a position and a radius to manvr3d to either create a new spot
      * or to delete an existing spot if there is a spot selected.
      * The deleteBranch flag indicates whether we want to delete the whole branch or just a spot.
      * isVoxelCoords indicates whether the coordinates are in sciview or in mastodon space */
@@ -104,7 +104,7 @@ open class CellTrackingBase(
     /** Links a selected spot to the closest spot to handle merge events. */
     var spotLinkCallback: (() -> Unit)? = null
     /** Generates a single link between a new position and the previously annotated one.
-     * Sends the position data to the bridge for intermediary keeping. The integer is the timepoint.
+     * Sends the position data to manvr3d for intermediary keeping. The integer is the timepoint.
      * The Float contains the cursor's radius in sciview space.
      * The boolean specifies whether the link preview should be rendered. */
     var singleLinkTrackedCallback: ((pos: Vector3f, tp: Int, radius: Float, preview: Boolean) -> Unit)? = null
