@@ -11,6 +11,7 @@ import graphics.scenery.ui.Column
 import graphics.scenery.ui.ToggleButton
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.*
+import graphics.scenery.utils.gaussSmoothing
 import graphics.scenery.utils.localMaxima
 import graphics.scenery.utils.toVector3f
 import kotlinx.coroutines.runBlocking
@@ -471,7 +472,7 @@ class EyeTracking(
             val (samples, samplePos) = sampleRayThroughVolume(origin, direction, volume)
             var spotPos: Vector3f? = null
             if (samples != null && samplePos != null) {
-                val smoothed = analyzer.gaussSmoothing(samples, 4)
+                val smoothed = gaussSmoothing(samples, 4)
                 val rayMax = smoothed.max()
                 // take the first local maximum that is at least 20% of the global maximum to prevent spot creation in noisy areas
                 localMaxima(smoothed).firstOrNull {it.second > 0.2 * rayMax}?.let { (index, sample) ->
