@@ -22,8 +22,8 @@ import org.scijava.ui.behaviour.DragBehaviour
 import sc.iview.SciView
 import sc.iview.commands.analysis.HedgehogAnalysis.SpineGraphVertex
 import sc.iview.controls.behaviours.MoveInstanceVR
-import sc.iview.controls.behaviours.MultiButtonManager
-import sc.iview.controls.behaviours.VR2HandNodeTransform
+import graphics.scenery.controls.behaviours.MultiButtonManager
+import graphics.scenery.controls.behaviours.VR2HandNodeTransform
 import sc.iview.controls.behaviours.VRGrabTheWorld
 import java.io.BufferedWriter
 import java.io.FileWriter
