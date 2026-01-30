@@ -6,6 +6,7 @@ import org.joml.Quaternionf
 import graphics.scenery.utils.extensions.*
 import graphics.scenery.utils.lazyLogger
 import graphics.scenery.utils.localMaxima
+import graphics.scenery.utils.stdDev
 import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.collections.iterator
@@ -88,7 +89,6 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		}
 	}
 
-	fun Iterable<Float>.stddev() = sqrt((this.map { (it - this.average()) * (it - this.average()) }.sum() / this.count()))
 
 	fun Vector3f.toQuaternionf(forward: Vector3f = Vector3f(0.0f, 0.0f, -1.0f)): Quaternionf {
 		val cross = forward.cross(this)
@@ -233,7 +233,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		// calculate average path lengths over all
 		val beforeCount = shortestPath.size
 		var avgPathLength = shortestPath.map { it.distance() }.average().toFloat()
-		var stdDevPathLength = shortestPath.map { it.distance() }.stddev().toFloat()
+		var stdDevPathLength = shortestPath.map { it.distance() }.stdDev()
 		logger.info("Average path length=$avgPathLength, stddev=$stdDevPathLength")
 
 		fun zScore(value: Float, m: Float, sd: Float) = ((value - m)/sd)
@@ -253,7 +253,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 
 		// recalculate statistics after offending vertex removal
 		avgPathLength = shortestPath.map { it.distance() }.average().toFloat()
-		stdDevPathLength = shortestPath.map { it.distance() }.stddev().toFloat()
+		stdDevPathLength = shortestPath.map { it.distance() }.stdDev().toFloat()
 
 		//step5: remove some vertices according to zscoreThreshold
 //		var remaining = shortestPath.count { zScore(it.distance(), avgPathLength, stdDevPathLength) > zscoreThreshold }
