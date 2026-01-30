@@ -5,6 +5,7 @@ import org.joml.Matrix4f
 import org.joml.Quaternionf
 import graphics.scenery.utils.extensions.*
 import graphics.scenery.utils.lazyLogger
+import graphics.scenery.utils.localMaxima
 import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.collections.iterator
@@ -54,24 +55,7 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		avgConfidence /= totalSampleCount
 	}
 
-	/**
-	 * From a [list] of Floats, return both the index of local maxima, and their value,
-	 * packaged nicely as a Pair<Int, Float>
-	 */
-	fun localMaxima(list: List<Float>): List<Pair<Int, Float>> {
-		return list.windowed(3, 1).mapIndexed { index, l ->
-			val left = l[0]
-			val center = l[1]
-			val right = l[2]
 
-			// we have a match at center
-			if (left < center && center > right) {
-				index * 1 + 1 to center
-			} else {
-				null
-			}
-		}.filterNotNull()
-	}
 
 	/** Cell positions extracted from gaze analysis are collected in this data class together with other information
 	 * such as the volume [value] at this point, and the [previous] and [next] vertices. */
