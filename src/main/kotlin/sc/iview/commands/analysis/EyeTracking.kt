@@ -11,6 +11,7 @@ import graphics.scenery.ui.Column
 import graphics.scenery.ui.ToggleButton
 import graphics.scenery.utils.SystemHelpers
 import graphics.scenery.utils.extensions.*
+import graphics.scenery.utils.toVector3f
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import net.imglib2.type.numeric.integer.UnsignedByteType
@@ -385,11 +386,6 @@ class EyeTracking(
 
         writeTrackToFile(track.points, hedgehogId)
 
-    }
-
-    fun DoubleArray.toVector3f(): Vector3f {
-        require(size == 3) { "DoubleArray must have exactly 3 elements" }
-        return Vector3f(this[0].toFloat(), this[1].toFloat(), this[2].toFloat())
     }
 
     private fun getSpinesFromHedgehog(hedgehog: InstancedNode): List<SpineMetadata> {
