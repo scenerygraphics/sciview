@@ -89,16 +89,6 @@ class HedgehogAnalysis(val spines: List<SpineMetadata>, val localToWorld: Matrix
 		}
 	}
 
-
-	fun Vector3f.toQuaternionf(forward: Vector3f = Vector3f(0.0f, 0.0f, -1.0f)): Quaternionf {
-		val cross = forward.cross(this)
-		val q = Quaternionf(cross.x(), cross.y(), cross.z(), this.dot(forward))
-
-		val x = sqrt((q.w + sqrt(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w)) / 2.0f)
-
-		return Quaternionf(q.x/(2.0f * x), q.y/(2.0f * x), q.z/(2.0f * x), x)
-	}
-
 	data class VertexWithDistance(val vertex: SpineGraphVertex, val distance: Float)
 
 	fun gaussSmoothing(samples: List<Float>, iterations: Int): List<Float> {
