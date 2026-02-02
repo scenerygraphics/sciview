@@ -24,7 +24,7 @@ import sc.iview.commands.analysis.HedgehogAnalysis.SpineGraphVertex
 import sc.iview.controls.behaviours.MoveInstanceVR
 import graphics.scenery.controls.behaviours.MultiButtonManager
 import graphics.scenery.controls.behaviours.VR2HandNodeTransform
-import sc.iview.controls.behaviours.VRGrabTheWorld
+import graphics.scenery.controls.behaviours.VRGrabTheWorld
 import java.io.BufferedWriter
 import java.io.FileWriter
 import java.nio.file.Path
