@@ -61,6 +61,9 @@ import graphics.scenery.volumes.Volume.Companion.fromXML
 import graphics.scenery.volumes.Volume.Companion.setupId
 import graphics.scenery.volumes.Volume.VolumeDataSource.RAISource
 import io.scif.SCIFIOService
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.runBlocking
 import net.imagej.Dataset
 import net.imagej.ImageJService
 import net.imagej.axis.CalibratedAxis
@@ -1772,10 +1775,19 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
 
         // we need to force reloading the renderer as the HMD might require device or instance extensions
         if (renderer is VulkanRenderer && hmdAdded) {
+            // Ensure all in-flight GPU work on the old renderer is complete
+            // before we tear it down and hand the device to a new instance.
+            renderer.let { vkr ->
+                vkr.textureScope.coroutineContext[Job]?.cancelChildren()
+                runBlocking {
+                    vkr.textureScope.coroutineContext[Job]?.children?.forEach { it.join() }
+                }
+            }
+
             replaceRenderer(renderer.javaClass.simpleName, true, true)
             while (renderer.initialized == false || renderer.firstImageReady == false) {
                 renderer = this.renderer!!
-                logger.info("Waiting for renderer reinitialisation (init: ${renderer.initialized} ready: ${renderer.firstImageReady}")
+                logger.info("Waiting for renderer reinitialisation ...")
                 try {
                     Thread.sleep(200)
                 } catch (e: InterruptedException) {
