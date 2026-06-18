@@ -9,6 +9,6 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.dokka:dokka-gradle-plugin:1.9.20")
+    implementation("org.jetbrains.dokka:dokka-gradle-plugin:2.1.0")
     implementation("de.undercouch:gradle-download-task:5.6.0")
 }
