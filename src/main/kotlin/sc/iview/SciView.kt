@@ -45,7 +45,7 @@ import graphics.scenery.attribute.material.Material
 import graphics.scenery.backends.Renderer
 import graphics.scenery.backends.vulkan.VulkanRenderer
 import graphics.scenery.controls.InputHandler
-import graphics.scenery.controls.OpenVRHMD
+import graphics.scenery.controls.OpenXRHMD
 import graphics.scenery.controls.TrackerInput
 import graphics.scenery.primitives.*
 import graphics.scenery.proteins.Protein
@@ -1717,7 +1717,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
             // VR activation logic
             if (!hub.has(SceneryElement.HMDInput)) {
                 try {
-                    val hmd = OpenVRHMD(false, true)
+                    val hmd = OpenXRHMD(false, true)
                     if (hmd.initializedAndWorking()) {
                         hub.add(SceneryElement.HMDInput, hmd)
                         ti = hmd
@@ -1788,7 +1788,7 @@ class SciView : SceneryBase, CalibratedRealInterval<CalibratedAxis> {
         // Cleanup HMD after VR has been toggled off
         if (!vrActive) {
             if (hub.has(SceneryElement.HMDInput)) {
-                val hmd = hub.get(SceneryElement.HMDInput) as? OpenVRHMD
+                val hmd = hub.get(SceneryElement.HMDInput) as? OpenXRHMD
                 hmd?.close()
                 // Get the actual key that was used to store this element
                 val keyToRemove = hub.elements.entries.find { it.value == hmd }?.key
