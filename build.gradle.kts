@@ -115,6 +115,9 @@ dependencies {
     implementation("net.imglib2:imglib2")
     implementation("net.imglib2:imglib2-roi")
 
+    // Needed for Albert's tutorials
+    implementation("sc.fiji:legacy-imglib1")
+
     // XDG support
     implementation("dev.dirs:directories:26")
 
